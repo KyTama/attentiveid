@@ -1,0 +1,159 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.App {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.App-header {
+  padding: 2rem;
+}
+
+.subtitle {
+  font-size: 1.2em;
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+.status-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 2rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loading {
+  color: #646cff;
+  font-size: 1.1em;
+}
+
+.error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem;
+  color: #ff6b6b;
+}
+
+.error .hint {
+  margin-top: 1rem;
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.error code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.success {
+  color: #4ade80;
+}
+
+.info-box {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: left;
+}
+
+.info-box h4 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.info-box pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  color: #a0e7a0;
+}
+
+.links {
+  margin-top: 1.5rem;
+}
+
+.link-button {
+  display: inline-block;
+  background: #646cff;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.link-button:hover {
+  background: #535bf2;
+}
+
+.next-steps {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: rgba(100, 108, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(100, 108, 255, 0.3);
+}
+
+.next-steps h3 {
+  color: #646cff;
+  margin-top: 0;
+}
+
+.next-steps .hint {
+  font-size: 0.95em;
+  color: #aaa;
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  
+  .status-container {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .link-button {
+    background-color: #646cff;
+  }
+}

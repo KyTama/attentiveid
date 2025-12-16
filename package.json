@@ -1,0 +1,22 @@
+{
+    "name": "attentiveid",
+    "version": "0.1.0",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "bun run dev:api & bun run dev:web",
+        "dev:api": "bun --watch run apps/api/src/index.ts",
+        "dev:web": "cd apps/web && bun run dev",
+        "build": "bun run build:api && bun run build:web",
+        "build:api": "cd apps/api && bun build src/index.ts --outfile=dist/index.js --target=bun",
+        "build:web": "cd apps/web && bun run build",
+        "start": "bun run apps/api/dist/index.js"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.0.0"
+    }
+}
