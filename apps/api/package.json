@@ -9,12 +9,12 @@
         "start": "bun run dist/index.js"
     },
     "dependencies": {
-        "elysia": "^1.2.0",
-        "@elysiajs/swagger": "^1.2.0",
         "@elysiajs/cors": "^1.2.0",
+        "@elysiajs/swagger": "^1.2.0",
+        "@sinclair/typebox": "^0.34.49",
         "drizzle-orm": "^0.30.0",
-        "postgres": "^3.4.4",
-        "@sinclair/typebox": "^0.32.0"
+        "elysia": "^1.2.0",
+        "postgres": "^3.4.4"
     },
     "devDependencies": {
         "@types/bun": "latest",
