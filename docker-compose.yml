@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+    env_file:
+      - .env
+
+networks:
+  default:
+    name: n8n-network
+    external: true
