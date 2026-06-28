@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1.1: Project Scaffolding & PostgreSQL Integration** - Scaffold Elysia api, React web, local PostgreSQL container, and Drizzle/Prisma setup.
+- [x] **Phase 1.1: Project Scaffolding & PostgreSQL Integration** - Scaffold Elysia api, React web, local PostgreSQL container, and Drizzle/Prisma setup.
 - [ ] **Phase 1.2: Vex Page Sections Porting & Tailwind v4 Customization** - Re-create Vex landing page layout using React + Tailwind v4.
 - [ ] **Phase 1.3: Internationalization (i18n) Logic** - Integrate react-i18next with English & Bahasa Indonesia toggles.
 - [ ] **Phase 1.4: Staging Deployment on Tencent VPS** - Staging deployment configuration on Tencent Cloud VPS via Docker Compose.
@@ -36,7 +36,7 @@
 **Plans**: TBD
 
 Plans:
-- [ ] 1.1-01: Scaffold monorepo workspace and Docker database
+- [x] 1.1-01: Scaffold monorepo workspace and Docker database
 
 ### Phase 1.2: Vex Page Sections Porting & Tailwind v4 Customization
 **Goal**: Re-create landing page using React + Tailwind v4 CSS.
@@ -189,7 +189,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1.1: Scaffolding | v1.0 | 0/1 | Not started | - |
+| 1.1: Scaffolding | v1.0 | 1/1 | Completed | 2026-06-29 |
 | 1.2: Vex Porting | v1.0 | 0/1 | Not started | - |
 | 1.3: i18n Logic  | v1.0 | 0/1 | Not started | - |
 | 1.4: Staging VPS | v1.0 | 0/1 | Not started | - |
