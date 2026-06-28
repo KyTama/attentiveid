@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: "Milestone 1: Web, Surveys & Domain Switch"
 status: not_started
-stopped_at: Phase 1.1 context gathered
-last_updated: "2026-06-28T18:07:57.346Z"
+stopped_at: Phase 1.1 UI-SPEC approved
+last_updated: "2026-06-28T18:17:47.389Z"
 progress:
   total_phases: 14
   completed_phases: 0
@@ -34,6 +34,6 @@ Phase 1: Web, Surveys & Domain Switch (Not Started)
 
 ## Session Continuity
 
-Last session: 2026-06-28T18:07:57.338Z
-Stopped at: Phase 1.1 context gathered
-Resume file: .planning/phases/01.1-project-scaffolding-postgresql-integration/01.1-CONTEXT.md
+Last session: 2026-06-28T18:17:47.383Z
+Stopped at: Phase 1.1 UI-SPEC approved
+Resume file: .planning/phases/01.1-project-scaffolding-postgresql-integration/01.1-UI-SPEC.md
