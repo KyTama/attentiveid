@@ -42,6 +42,7 @@ const app = new Elysia()
             description: 'Returns the health status of the API',
         },
     })
+    .get('/api/health', () => "OK")
     // API info endpoint
     .get('/api/info', () => ({
         name: 'AttentiveId API',
