@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: "Milestone 1: Web, Surveys & Domain Switch"
-status: not_started
-stopped_at: Phase 1.1 UI-SPEC approved
-last_updated: "2026-06-28T18:17:47.389Z"
+status: in_progress
+stopped_at: "Completed 01.1-PLAN.md"
+last_updated: "2026-06-29T02:32:00.000Z"
 progress:
   total_phases: 14
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 1
+  completed_plans: 1
+  percent: 7
 ---
 
 # 🧠 Project State Memory
@@ -22,18 +22,22 @@ Reference context extracted from `business_proposal.md` and `implementation_plan
 
 ## Current Phase
 
-Phase 1: Web, Surveys & Domain Switch (Not Started)
+Phase 1.1: Project Scaffolding & PostgreSQL Integration (Complete)
 
 ## Decisions
 
 - Using Plane for issue tracking, syncing GSD Phases -> Plane Epics.
+- Used `@sinclair/typebox@latest` to fix Elysia 1.4 compatibility issue.
+- Upgraded `drizzle-kit` to latest to access proper generate commands.
 
 ## Open Issues
 
 - Initial Plane sync required to push Phase 1-3 to the ATTN project.
+- Docker daemon not running locally: Tasks 1.1-06 (docker-compose up), 1.1-07 (schema migration), and 1.1-08 (db validation) skipped locally.
+- Plane Auth 403 Forbidden: Plane API needs authentication before auto-sync (Task 1.1-09 skipped).
 
 ## Session Continuity
 
-Last session: 2026-06-28T18:17:47.383Z
-Stopped at: Phase 1.1 UI-SPEC approved
-Resume file: .planning/phases/01.1-project-scaffolding-postgresql-integration/01.1-UI-SPEC.md
+Last session: 2026-06-28T19:31:23.692Z
+Stopped at: Completed 01.1-PLAN.md
+Resume file: None
