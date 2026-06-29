@@ -4,3 +4,6 @@ export * from './About';
 export * from './WhyUs';
 export * from './Insights';
 export * from './CtaScreening';
+export * from './Products';
+export * from './Psychologists';
+export * from './Contact';
