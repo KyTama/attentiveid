@@ -1,0 +1,151 @@
+{
+  "whyUs": {
+    "title": "Kenapa memilih Attentive?",
+    "items": [
+      {
+        "id": "certified",
+        "title": "Psikolog Tersertifikasi",
+        "description": "Pakar profesional berlisensi."
+      },
+      {
+        "id": "confidential",
+        "title": "100% Rahasia",
+        "description": "Privasi Anda adalah prioritas kami."
+      },
+      {
+        "id": "flexible",
+        "title": "Jadwal Fleksibel",
+        "description": "Tersedia konseling online & offline."
+      },
+      {
+        "id": "holistic",
+        "title": "Pendekatan Holistik",
+        "description": "Perawatan kesehatan mental komprehensif."
+      }
+    ]
+  },
+  "psychologists": {
+    "title": "Tim Psikolog Attentive",
+    "items": [
+      {
+        "id": "psy1",
+        "name": "Dr. Sarah",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy2",
+        "name": "Dr. Budi",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy3",
+        "name": "Dr. Andi",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy4",
+        "name": "Dr. Rina",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy5",
+        "name": "Dr. Joko",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy6",
+        "name": "Dr. Siti",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy7",
+        "name": "Dr. Ayu",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy8",
+        "name": "Dr. Doni",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy9",
+        "name": "Dr. Eka",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy10",
+        "name": "Dr. Fajar",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy11",
+        "name": "Dr. Gita",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy12",
+        "name": "Dr. Hadi",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy13",
+        "name": "Dr. Ina",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy14",
+        "name": "Dr. Jaka",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy15",
+        "name": "Dr. Kiki",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy16",
+        "name": "Dr. Lita",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy17",
+        "name": "Dr. Maya",
+        "specialty": "Anak"
+      }
+    ]
+  },
+  "insights": {
+    "title": "Wawasan Kesehatan Mental",
+    "items": [
+      {
+        "id": "art1",
+        "title": "Memahami Kecemasan",
+        "url": "#"
+      },
+      {
+        "id": "art2",
+        "title": "Mengatasi Stres",
+        "url": "#"
+      }
+    ]
+  },
+  "ctaScreening": {
+    "title": "Mulai Langkah Pertama Bersama Attentive",
+    "button": "Mulai Skrining"
+  },
+  "locations": {
+    "title": "Klinik Kami",
+    "items": [
+      {
+        "id": "jkt",
+        "name": "Attentive. Jakarta",
+        "address": "Jl. Sudirman"
+      },
+      {
+        "id": "bsd",
+        "name": "Attentive. BSD",
+        "address": "BSD City"
+      }
+    ]
+  }
+}
