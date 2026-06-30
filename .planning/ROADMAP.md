@@ -10,7 +10,7 @@
 
 - [x] **Phase 1.1: Project Scaffolding & PostgreSQL Integration** - Scaffold Elysia api, React web, local PostgreSQL container, and Drizzle/Prisma setup.
 - [x] **Phase 1.2: Vex Page Sections Porting & Tailwind v4 Customization** - Re-create Vex landing page layout using React + Tailwind v4.
-- [ ] **Phase 1.3: Internationalization (i18n) Logic** - Integrate react-i18next with English & Bahasa Indonesia toggles.
+- [x] **Phase 1.3: Internationalization (i18n) Logic** - Integrate react-i18next with English & Bahasa Indonesia toggles. (completed 2026-06-30)
 - [ ] **Phase 1.4: Staging Deployment on Tencent VPS** - Staging deployment configuration on Tencent Cloud VPS via Docker Compose.
 - [ ] **Phase 1.5: Dynamic Intake Survey / Screening UI** - Multi-step interactive screening form.
 - [ ] **Phase 1.6: Survey API & PostgreSQL Storage** - Backend screening survey storage API endpoint.
