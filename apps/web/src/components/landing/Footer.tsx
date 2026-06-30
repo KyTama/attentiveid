@@ -11,10 +11,10 @@ export function Footer() {
           {/* Brand Info */}
           <div className="col-span-1 md:col-span-1">
             <h3 className="text-xl font-bold font-sans text-secondary mb-4">
-              {t("landing.hero.brand", "AttentiveId")}
+              {t("hero.brand", "AttentiveId")}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {t("landing.hero.tagline", "Professional psychological services for your well-being.")}
+              {t("hero.tagline", "Professional psychological services for your well-being.")}
             </p>
             <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
@@ -38,22 +38,22 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a href="#hero" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.nav.home", "Home")}
+                  {t("nav.home", "Home")}
                 </a>
               </li>
               <li>
                 <a href="#services" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.nav.services", "Services")}
+                  {t("nav.services", "Services")}
                 </a>
               </li>
               <li>
                 <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.nav.about", "About Us")}
+                  {t("nav.about", "About Us")}
                 </a>
               </li>
               <li>
                 <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.nav.contact", "Contact")}
+                  {t("nav.contact", "Contact")}
                 </a>
               </li>
             </ul>
@@ -65,17 +65,17 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.services.items.consultation.title", "Consultation")}
+                  {t("services.items.consultation.title", "Consultation")}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.services.items.assessment.title", "Assessment")}
+                  {t("services.items.assessment.title", "Assessment")}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("landing.services.items.therapy.title", "Therapy")}
+                  {t("services.items.therapy.title", "Therapy")}
                 </a>
               </li>
             </ul>
@@ -103,7 +103,7 @@ export function Footer() {
 
         <div className="border-t border-border pt-8 text-center">
           <p className="text-muted-foreground">
-            &copy; {new Date().getFullYear()} {t("landing.hero.brand", "AttentiveId")}. {t("landing.footer.copyright", "All rights reserved.")}
+            &copy; {new Date().getFullYear()} {t("hero.brand", "AttentiveId")}. {t("footer.copyright", "All rights reserved.")}
           </p>
         </div>
       </div>

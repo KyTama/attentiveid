@@ -147,5 +147,48 @@
         "address": "BSD City"
       }
     ]
+  },
+  "about": {
+    "title": "Tentang Kami",
+    "subtitle": "Misi dan nilai-nilai kami",
+    "heading": "Berdedikasi untuk Kesehatan Mental Anda",
+    "content": "Kami menyediakan layanan psikologi komprehensif yang disesuaikan dengan kebutuhan Anda.",
+    "content2": "Tim psikolog berpengalaman kami menyediakan lingkungan yang aman dan mendukung bagi Anda untuk mengeksplorasi pikiran dan perasaan Anda."
+  },
+  "hero": {
+    "hello": "Halo",
+    "brand": "AttentiveId",
+    "tagline": "Layanan psikologi profesional untuk kesejahteraan Anda.",
+    "weAre": "Kami Adalah",
+    "cta_book": "Pesan Sekarang"
+  },
+  "services": {
+    "title": "Layanan Kami",
+    "subtitle": "Apa yang kami tawarkan",
+    "items": {
+      "consultation": {
+        "title": "Konsultasi",
+        "desc": "Konsultasi psikologi profesional untuk pertumbuhan pribadi dan kesejahteraan."
+      },
+      "assessment": {
+        "title": "Asesmen",
+        "desc": "Asesmen dan evaluasi psikologi komprehensif."
+      },
+      "therapy": {
+        "title": "Terapi",
+        "desc": "Intervensi terapeutik berbasis bukti yang disesuaikan dengan kebutuhan Anda."
+      }
+    }
+  },
+  "nav": {
+    "home": "Beranda",
+    "services": "Layanan",
+    "about": "Tentang Kami",
+    "contact": "Kontak",
+    "psychologists": "Psikolog",
+    "products": "Produk"
+  },
+  "footer": {
+    "copyright": "Hak cipta dilindungi."
   }
 }

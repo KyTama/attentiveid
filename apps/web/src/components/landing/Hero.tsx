@@ -15,7 +15,7 @@ export function Hero() {
           transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
           viewport={{ once: true }}
         >
-          {t("landing.hero.hello")}
+          {t("hero.hello")}
         </motion.p>
         
         <motion.h1 
@@ -25,7 +25,7 @@ export function Hero() {
           transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }} 
           viewport={{ once: true }}
         >
-          {t("landing.hero.weAre")} <span className="text-primary">{t("landing.hero.brand")}</span>
+          {t("hero.weAre")} <span className="text-primary">{t("hero.brand")}</span>
         </motion.h1>
 
         <motion.p
@@ -35,7 +35,7 @@ export function Hero() {
           transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          {t("landing.hero.tagline")}
+          {t("hero.tagline")}
         </motion.p>
 
         <motion.div
@@ -45,7 +45,7 @@ export function Hero() {
           viewport={{ once: true }}
         >
           <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full px-8 py-6 text-lg font-medium shadow-lg transition-all duration-300">
-            {t("landing.hero.cta_book")}
+            {t("hero.cta_book")}
           </Button>
         </motion.div>
       </div>

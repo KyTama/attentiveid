@@ -9,8 +9,8 @@ export function About() {
     <section id="about" className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="section-heading animate-fade-in-up">
-          <h2>{t("landing.about.title", "About Us")}</h2>
-          <p>{t("landing.about.subtitle", "Our mission and values")}</p>
+          <h2>{t("about.title", "About Us")}</h2>
+          <p>{t("about.subtitle", "Our mission and values")}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -35,11 +35,11 @@ export function About() {
             viewport={{ once: true }}
           >
             <h3 className="text-3xl font-bold text-foreground">
-              {t("landing.about.heading", "Dedicated to Your Mental Health")}
+              {t("about.heading", "Dedicated to Your Mental Health")}
             </h3>
             <div className="text-lg text-muted-foreground leading-relaxed space-y-4">
-              <p>{t("landing.about.content")}</p>
-              <p>{t("landing.about.content2", "Our team of experienced psychologists provides a safe and supportive environment for you to explore your thoughts and feelings.")}</p>
+              <p>{t("about.content")}</p>
+              <p>{t("about.content2", "Our team of experienced psychologists provides a safe and supportive environment for you to explore your thoughts and feelings.")}</p>
             </div>
             
             <div className="pt-4 flex flex-col sm:flex-row gap-4">

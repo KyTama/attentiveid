@@ -147,5 +147,48 @@
         "address": "BSD City"
       }
     ]
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Our mission and values",
+    "heading": "Dedicated to Your Mental Health",
+    "content": "We provide comprehensive psychological services tailored to your needs.",
+    "content2": "Our team of experienced psychologists provides a safe and supportive environment for you to explore your thoughts and feelings."
+  },
+  "hero": {
+    "hello": "Hello",
+    "brand": "AttentiveId",
+    "tagline": "Professional psychological services for your well-being.",
+    "weAre": "We Are",
+    "cta_book": "Book Now"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "What we offer",
+    "items": {
+      "consultation": {
+        "title": "Consultation",
+        "desc": "Professional psychological consultation for personal growth and well-being."
+      },
+      "assessment": {
+        "title": "Assessment",
+        "desc": "Comprehensive psychological assessments and evaluations."
+      },
+      "therapy": {
+        "title": "Therapy",
+        "desc": "Evidence-based therapeutic interventions tailored to your needs."
+      }
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "about": "About Us",
+    "contact": "Contact",
+    "psychologists": "Psychologists",
+    "products": "Products"
+  },
+  "footer": {
+    "copyright": "All rights reserved."
   }
 }
