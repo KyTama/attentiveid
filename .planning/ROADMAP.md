@@ -62,7 +62,7 @@ Plans:
 Plans:
 - [ ] 1.3-01: Set up react-i18next and translation catalogs
 
-### Phase 01.3.2: Refactor Landing Page UI and Migrate Legacy Content (INSERTED)
+### Phase 1.3.2: Refactor Landing Page UI and Migrate Legacy Content (INSERTED)
 
 **Goal:** [Urgent work - to be planned]
 **Requirements**: TBD
@@ -70,7 +70,7 @@ Plans:
 **Plans:** 1/1 plans complete
 
 Plans:
-- [x] TBD (run /gsd-plan-phase 01.3.2 to break down) (completed 2026-06-30)
+- [x] TBD (run /gsd-plan-phase 1.3.2 to break down) (completed 2026-06-30)
 
 ### Phase 1.4: Staging Deployment on Tencent VPS
 **Goal**: Configure and test Docker Compose deployment on staging.

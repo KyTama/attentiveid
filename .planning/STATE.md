@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: "Milestone 1: Web, Surveys & Domain Switch"
 status: ready_to_plan
-stopped_at: Phase 01.3.2 UI-SPEC approved
+stopped_at: Phase 1.3.2 UI-SPEC approved
 last_updated: "2026-06-30T19:34:49.964Z"
 progress:
   total_phases: 15
@@ -40,10 +40,10 @@ Phase 1.2: Vex Page Sections Porting & Tailwind v4 Customization (Complete)
 
 ### Roadmap Evolution
 
-- Phase 01.3.2 inserted after Phase 1.3: Refactor Landing Page UI and Migrate Legacy Content (URGENT)
+- Phase 1.3.2 inserted after Phase 1.3: Refactor Landing Page UI and Migrate Legacy Content (URGENT)
 
 ## Session Continuity
 
 Last session: 2026-06-30T19:04:48.686Z
-Stopped at: Phase 01.3.2 UI-SPEC approved
-Resume file: .planning/phases/01.3.2-refactor-landing-page-ui-and-migrate-legacy-content/01.3.2-UI-SPEC.md
+Stopped at: Phase 1.3.2 UI-SPEC approved
+Resume file: .planning/phases/1.3.2-refactor-landing-page-ui-and-migrate-legacy-content/1.3.2-UI-SPEC.md
