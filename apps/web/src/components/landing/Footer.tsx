@@ -65,17 +65,17 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("services.items.consultation.title", "Consultation")}
+                  {t("services.items.adult.title", "Adult Psychotherapy")}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("services.items.assessment.title", "Assessment")}
+                  {t("services.items.child.title", "Child & Adolescent Psychotherapy")}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  {t("services.items.therapy.title", "Therapy")}
+                  {t("services.items.family.title", "Family or Couple Therapy")}
                 </a>
               </li>
             </ul>

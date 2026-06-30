@@ -166,17 +166,17 @@
     "title": "Our Services",
     "subtitle": "What we offer",
     "items": {
-      "consultation": {
-        "title": "Consultation",
+      "adult": {
+        "title": "Adult Psychotherapy",
         "desc": "Professional psychological consultation for personal growth and well-being."
       },
-      "assessment": {
-        "title": "Assessment",
-        "desc": "Comprehensive psychological assessments and evaluations."
+      "child": {
+        "title": "Child & Adolescent Psychotherapy",
+        "desc": "Comprehensive psychological assessments and evaluations for children and adolescents."
       },
-      "therapy": {
-        "title": "Therapy",
-        "desc": "Evidence-based therapeutic interventions tailored to your needs."
+      "family": {
+        "title": "Family or Couple Therapy",
+        "desc": "Evidence-based therapeutic interventions tailored to family and couples needs."
       }
     }
   },

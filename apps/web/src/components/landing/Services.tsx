@@ -7,23 +7,23 @@ export function Services() {
 
   const services = [
     {
-      id: "consultation",
-      title: t("services.items.consultation.title", "Consultation"),
-      description: t("services.items.consultation.desc", "Professional psychological consultation for personal growth and well-being."),
+      id: "adult",
+      title: t("services.items.adult.title", "Adult Psychotherapy"),
+      description: t("services.items.adult.desc", "Professional psychological consultation for personal growth and well-being."),
       icon: <Users className="w-10 h-10 text-primary mb-4" />,
       delayClass: "delay-100"
     },
     {
-      id: "assessment",
-      title: t("services.items.assessment.title", "Assessment"),
-      description: t("services.items.assessment.desc", "Comprehensive psychological assessments and evaluations."),
+      id: "child",
+      title: t("services.items.child.title", "Child & Adolescent Psychotherapy"),
+      description: t("services.items.child.desc", "Comprehensive psychological assessments and evaluations for children and adolescents."),
       icon: <Brain className="w-10 h-10 text-primary mb-4" />,
       delayClass: "delay-200"
     },
     {
-      id: "therapy",
-      title: t("services.items.therapy.title", "Therapy"),
-      description: t("services.items.therapy.desc", "Evidence-based therapeutic interventions tailored to your needs."),
+      id: "family",
+      title: t("services.items.family.title", "Family or Couple Therapy"),
+      description: t("services.items.family.desc", "Evidence-based therapeutic interventions tailored to family and couples needs."),
       icon: <Activity className="w-10 h-10 text-primary mb-4" />,
       delayClass: "delay-300"
     }

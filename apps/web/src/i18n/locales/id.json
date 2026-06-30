@@ -166,17 +166,17 @@
     "title": "Layanan Kami",
     "subtitle": "Apa yang kami tawarkan",
     "items": {
-      "consultation": {
-        "title": "Konsultasi",
+      "adult": {
+        "title": "Psikoterapi Dewasa",
         "desc": "Konsultasi psikologi profesional untuk pertumbuhan pribadi dan kesejahteraan."
       },
-      "assessment": {
-        "title": "Asesmen",
-        "desc": "Asesmen dan evaluasi psikologi komprehensif."
+      "child": {
+        "title": "Psikoterapi Anak & Remaja",
+        "desc": "Asesmen dan evaluasi psikologi komprehensif untuk anak dan remaja."
       },
-      "therapy": {
-        "title": "Terapi",
-        "desc": "Intervensi terapeutik berbasis bukti yang disesuaikan dengan kebutuhan Anda."
+      "family": {
+        "title": "Terapi Keluarga atau Pasangan",
+        "desc": "Intervensi terapeutik berbasis bukti yang disesuaikan dengan kebutuhan keluarga dan pasangan."
       }
     }
   },
