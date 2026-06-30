@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { BRAND } from "@/assets/images";
 
 export function Hero() {
   const { t } = useTranslation();
 
   return (
-    <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-dominant">
-      <div className="container mx-auto px-4 text-center z-10">
+    <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-[url('/images/hero.webp')] bg-cover bg-center">
+      <div className="absolute inset-0 bg-dominant/80"></div>
+      <div className="container mx-auto px-4 text-center z-10 relative">
         <motion.p
-          className="text-lg md:text-xl text-secondary mb-2 font-medium"
+          className="text-3xl md:text-4xl text-secondary mb-2 font-medium"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
@@ -19,17 +20,18 @@ export function Hero() {
         </motion.p>
         
         <motion.h1 
-          className="text-5xl md:text-7xl font-bold tracking-tight mb-4 font-sans text-secondary" 
+          className="flex flex-col md:flex-row items-center justify-center gap-4 text-5xl md:text-7xl font-bold tracking-tight mb-4 font-sans text-secondary" 
           initial={{ opacity: 0, y: 20 }} 
           whileInView={{ opacity: 1, y: 0 }} 
           transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }} 
           viewport={{ once: true }}
         >
-          {t("hero.weAre")} <span className="text-primary">{t("hero.brand")}</span>
+          <span>{t("hero.weAre")}</span>
+          <span className="text-primary">{t("hero.brand")}</span>
         </motion.h1>
 
         <motion.p
-          className="text-lg md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+          className="text-2xl md:text-3xl font-semibold tracking-wide text-white/90 max-w-2xl mx-auto drop-shadow-md"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.3 }}
@@ -37,22 +39,11 @@ export function Hero() {
         >
           {t("hero.tagline")}
         </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.4 }}
-          viewport={{ once: true }}
-        >
-          <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full px-8 py-6 text-lg font-medium shadow-lg transition-all duration-300">
-            {t("hero.cta_book")}
-          </Button>
-        </motion.div>
       </div>
 
       {/* Background Decorative Elements */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl -z-10" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl z-0 animate-pulse pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl z-0 pointer-events-none" />
     </section>
   );
 }

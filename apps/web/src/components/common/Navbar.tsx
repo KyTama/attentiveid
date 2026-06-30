@@ -9,9 +9,9 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 
 const NAV_ITEMS = [
     { key: 'about', href: '#about' },
-    { key: 'services', href: '#services' },
+    { key: 'why_attentive', href: '#why-us' },
     { key: 'psychologists', href: '#psychologists' },
-    { key: 'products', href: '#products' },
+    { key: 'services', href: '#services' },
     { key: 'contact', href: '#contact' },
 ] as const
 
@@ -67,11 +67,11 @@ export function Navbar() {
         >
             <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
                 {/* Logo */}
-                <a href="#" className="flex items-center gap-2">
+                <a href="#" className="flex items-center gap-2 shrink-0">
                     <img
                         src={BRAND.logo}
                         alt="Attentive.id"
-                        className="h-10 w-auto"
+                        className="h-10 w-auto shrink-0 object-contain"
                     />
                 </a>
 
@@ -93,12 +93,12 @@ export function Navbar() {
                 </div>
 
                 {/* Mobile Menu */}
-                <div className="md:hidden flex items-center gap-2">
+                <div className="md:hidden flex items-center gap-2 shrink-0">
                     <LanguageSwitcher />
                     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className={isAtTop ? 'text-white' : ''}>
-                                <Menu className="h-6 w-6" />
+                            <Button variant="ghost" size="icon" className={cn(isAtTop ? 'text-white' : '', 'shrink-0')}>
+                                <Menu className="h-6 w-6 shrink-0" />
                                 <span className="sr-only">Open menu</span>
                             </Button>
                         </SheetTrigger>

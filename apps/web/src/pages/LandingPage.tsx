@@ -1,30 +1,30 @@
-import React from 'react';
-import { Navbar } from '../components/common/Navbar';
-import { Hero } from '../components/landing/Hero';
-import { AboutUs } from '../components/landing/AboutUs';
-import { WhyAttentive } from '../components/landing/WhyAttentive';
-import { Psychologists } from '../components/landing/Psychologists';
-import { Testimonials } from '../components/landing/Testimonials';
-import { Services } from '../components/landing/Services';
-import { PartnerContent } from '../components/landing/PartnerContent';
-import { CtaScreening as CtaTakeFirstStep } from '../components/landing/CtaScreening';
-import { ClinicsLocations } from '../components/landing/ClinicsLocations';
-import { Footer } from '../components/landing/Footer';
+import { Navbar } from "../components/common/Navbar";
+import { Footer } from "../components/landing/Footer";
+import { Hero } from "../components/landing/Hero";
+import { About } from "../components/landing/About";
+import { WhyUs } from "../components/landing/WhyUs";
+import { PsychologistsSection } from "../components/landing/PsychologistsSection";
+import { TestimonialsSection } from "../components/landing/TestimonialsSection";
+import { Services } from "../components/landing/Services";
+import { Products } from "../components/landing/Products";
+import { CtaScreening } from "../components/landing/CtaScreening";
+import { Contact } from "../components/landing/Contact";
 
-export const LandingPage = () => {
+export function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="landing-page-wrapper relative flex min-h-screen flex-col">
       <Navbar />
-      <Hero />
-      <AboutUs />
-      <WhyAttentive />
-      <Psychologists />
-      <Testimonials />
-      <Services />
-      <PartnerContent />
-      <CtaTakeFirstStep />
-      <ClinicsLocations />
+      <main className="flex-1">
+        <Hero />
+        <About />
+        <WhyUs />
+        <PsychologistsSection />
+        <TestimonialsSection />
+        <Products />
+        <CtaScreening />
+        <Contact />
+      </main>
       <Footer />
     </div>
   );
-};
+}

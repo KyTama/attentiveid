@@ -1,15 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { changeLanguage, getCurrentLanguage } from '@/i18n/config'
-
 export function LanguageSwitcher() {
     const { i18n } = useTranslation()
-    const currentLang = getCurrentLanguage()
+    const currentLang = i18n.language || 'en'
 
     const toggleLanguage = () => {
-        const newLang = currentLang === 'en' ? 'id' : 'en'
-        changeLanguage(newLang)
+        const newLang = currentLang.startsWith('en') ? 'id' : 'en'
+        i18n.changeLanguage(newLang)
     }
 
     return (

@@ -1,200 +1,505 @@
 {
-  "whyUs": {
-    "title": "Why Choose Attentive?",
-    "items": [
-      {
-        "id": "certified",
-        "title": "Certified Psychologists",
-        "description": "Professional and licensed experts."
-      },
-      {
-        "id": "confidential",
-        "title": "100% Confidential",
-        "description": "Your privacy is our priority."
-      },
-      {
-        "id": "flexible",
-        "title": "Flexible Schedule",
-        "description": "Online and offline counseling available."
-      },
-      {
-        "id": "holistic",
-        "title": "Holistic Approach",
-        "description": "Comprehensive mental health care."
-      }
-    ]
-  },
-  "psychologists": {
-    "title": "Attentive Psychologist Team",
-    "items": [
-      {
-        "id": "psy1",
-        "name": "Dr. Sarah",
-        "specialty": "Clinical"
-      },
-      {
-        "id": "psy2",
-        "name": "Dr. Budi",
-        "specialty": "Child"
-      },
-      {
-        "id": "psy3",
-        "name": "Dr. Andi",
-        "specialty": "Family"
-      },
-      {
-        "id": "psy4",
-        "name": "Dr. Rina",
-        "specialty": "Clinical"
-      },
-      {
-        "id": "psy5",
-        "name": "Dr. Joko",
-        "specialty": "Child"
-      },
-      {
-        "id": "psy6",
-        "name": "Dr. Siti",
-        "specialty": "Family"
-      },
-      {
-        "id": "psy7",
-        "name": "Dr. Ayu",
-        "specialty": "Clinical"
-      },
-      {
-        "id": "psy8",
-        "name": "Dr. Doni",
-        "specialty": "Child"
-      },
-      {
-        "id": "psy9",
-        "name": "Dr. Eka",
-        "specialty": "Family"
-      },
-      {
-        "id": "psy10",
-        "name": "Dr. Fajar",
-        "specialty": "Clinical"
-      },
-      {
-        "id": "psy11",
-        "name": "Dr. Gita",
-        "specialty": "Child"
-      },
-      {
-        "id": "psy12",
-        "name": "Dr. Hadi",
-        "specialty": "Family"
-      },
-      {
-        "id": "psy13",
-        "name": "Dr. Ina",
-        "specialty": "Clinical"
-      },
-      {
-        "id": "psy14",
-        "name": "Dr. Jaka",
-        "specialty": "Child"
-      },
-      {
-        "id": "psy15",
-        "name": "Dr. Kiki",
-        "specialty": "Family"
-      },
-      {
-        "id": "psy16",
-        "name": "Dr. Lita",
-        "specialty": "Clinical"
-      },
-      {
-        "id": "psy17",
-        "name": "Dr. Maya",
-        "specialty": "Child"
-      }
-    ]
-  },
-  "insights": {
-    "title": "Mental Health Insights",
-    "items": [
-      {
-        "id": "art1",
-        "title": "Understanding Anxiety",
-        "url": "#"
-      },
-      {
-        "id": "art2",
-        "title": "Dealing with Stress",
-        "url": "#"
-      }
-    ]
-  },
-  "ctaScreening": {
-    "title": "Take the First Step with Attentive",
-    "button": "Start Screening"
-  },
-  "locations": {
-    "title": "Our Clinics",
-    "items": [
-      {
-        "id": "jkt",
-        "name": "Attentive. Jakarta",
-        "address": "Jl. Sudirman"
-      },
-      {
-        "id": "bsd",
-        "name": "Attentive. BSD",
-        "address": "BSD City"
-      }
-    ]
-  },
-  "about": {
-    "title": "About Us",
-    "subtitle": "Our mission and values",
-    "heading": "Dedicated to Your Mental Health",
-    "content": "We provide comprehensive psychological services tailored to your needs.",
-    "content2": "Our team of experienced psychologists provides a safe and supportive environment for you to explore your thoughts and feelings."
+  "nav": {
+    "about": "About Us",
+    "why_attentive": "Why Attentive",
+    "psychologists": "Psychologists",
+    "services": "Services",
+    "contact": "Contact"
   },
   "hero": {
-    "hello": "Hello",
-    "brand": "AttentiveId",
-    "tagline": "Professional psychological services for your well-being.",
+    "hello": "Hello,",
     "weAre": "We Are",
-    "cta_book": "Book Now"
+    "brand": "Attentive",
+    "tagline": "#WeFocusOnYou"
   },
-  "services": {
-    "title": "Our Services",
-    "subtitle": "What we offer",
-    "items": {
-      "adult": {
-        "title": "Adult Psychotherapy",
-        "desc": "Professional psychological consultation for personal growth and well-being."
+  "whyUs": {
+    "title": "Why Attentive?",
+    "items": [
+      {
+        "title": "Personalized Care",
+        "description": "Every story is different. Attentive helps you find a psychologist and approach that fits your needs."
       },
-      "child": {
-        "title": "Child & Adolescent Psychotherapy",
-        "desc": "Comprehensive psychological assessments and evaluations for children and adolescents."
+      {
+        "title": "Professional Psychologists",
+        "description": "Our team of experienced psychologists is here to support you through various mental health concerns and personal challenges."
       },
-      "family": {
-        "title": "Family or Couple Therapy",
-        "desc": "Evidence-based therapeutic interventions tailored to family and couples needs."
+      {
+        "title": "Flexible and Convenient",
+        "description": "Attentive provides online consultations and in-person sessions in Jakarta and BSD, so you can choose what works best for you."
+      },
+      {
+        "title": "Private and Confidential Space",
+        "description": "Consult with licensed clinical psychologists in a safe, comfortable space that supports your personal growth."
       }
+    ]
+  },
+  "about_us": {
+    "title": "About Us",
+    "content1": "Attentive (əˈten(t)iv) is a psychology service bureau that was established in 2020. Attentive provides scientific-based, measurable, and reliable psychology services in helping clients.",
+    "content2": "Attentive seeks to understand human thoughts, feelings, and behavior with the aim of providing appropriate and effective assistance according to the needs of each client. All forms of treatment from professional counseling and psychoeducation to research are our way of showing our concern for your mental health."
+  },
+  "why_attentive": {
+    "title": "How can we help?",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quia vel labore, deleniti minima nisi, velit atque quaerat impedit ea maxime sunt accusamus at obcaecati dolor iure iusto omnis quis eum. <br><br> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facilis commodi odit, illo, qui aliquam dol"
+  },
+  "services": [
+    {
+      "title": "Adult Psychotherapy",
+      "icon": "images/core-icon-1.webp",
+      "content": "Our experienced therapists provide a safe and supportive environment to address various mental health concerns, develop coping strategies, and foster personal growth."
+    },
+    {
+      "title": "Child & Adolescent Psychotherapy",
+      "icon": "images/core-icon-2.webp",
+      "content": "Provide a safe and supportive space for young individuals to explore their emotions, develop coping strategies, address various mental health concerns, improve their mental well-being, and enhance their overall emotional health."
+    },
+    {
+      "title": "Family or Couple Therapy",
+      "icon": "images/core-icon-3.webp",
+      "content": "Our experienced therapists aim to help families and couples overcome challenges, strengthen their bond, and find effective solutions for a familial cohesiveness and more fulfilling partnership."
     }
+  ],
+  "psychologists": [
+    {
+      "name": "Syazka Kirani Narindra",
+      "nickname": "Syazka",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Syazka.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Personality Disorders",
+        "Trauma",
+        "Mood Disorders (Depression, Dysthymia, Bipolar)",
+        "ADHD",
+        "Interpersonal Relations / Romantic Relationships",
+        "Anxiety Disorders",
+        "Self-Development",
+        "OCD"
+      ],
+      "experience": "6 Tahun",
+      "sipp": "20190974-2021-02-1552",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Syazka.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Anggita Panjaitan",
+      "nickname": "Gita",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Anggita.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Trauma & Emotion-related Issues",
+        "Adult ADHD",
+        "Anxiety Disorders",
+        "Personality Disorders",
+        "Interpersonal/Romantic Relationships",
+        "Work, Career, and Self-Development Issues",
+        "Gender-related Issues",
+        "Brainspotting Practitioner"
+      ],
+      "experience": "5 Tahun",
+      "sipp": "20200657-2023-02-2669",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Gita.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Ni Putu Mayda A. A",
+      "nickname": "Mayda",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Mayda.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Romantic Relationships",
+        "Interpersonal Relationship Issues",
+        "Family Relationship Issues",
+        "Anxiety",
+        "Mood and Emotional Issues",
+        "Work and Career",
+        "Stress and Burnout",
+        "Personality Disorders"
+      ],
+      "experience": "5 Tahun",
+      "sipp": "20191405-2024-02-3405",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Ni%20Mayda.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Jeanete Ophilia Papilaya,",
+      "nickname": "Jeanette",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Jeanete.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Emotional Regulation",
+        "Anxiety",
+        "Depression",
+        "Trauma",
+        "Pre-marital Counseling",
+        "Family Counseling",
+        "Relationship Issues"
+      ],
+      "experience": "16 Tahun",
+      "sipp": "440/3378/Dinkes/2020",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Jeanete.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Anggriana Angguningtyas",
+      "nickname": "Anggun",
+      "title": "M.Psi., Psikolog",
+      "category": "Child & Adolescent Clinical Psychologist",
+      "image": "images/psychologists/Anggun.webp",
+      "icon": "images/family.webp",
+      "specializations": [
+        "Developmental Disorders",
+        "Learning Disabilities / Intelligence",
+        "ADHD",
+        "Autism",
+        "Behavioral Problems",
+        "Social Relations and Socialization",
+        "Emotional Regulation",
+        "Adolescent Trauma and Stress"
+      ],
+      "experience": "7 Tahun",
+      "sipp": "20161132-2024-01-4335",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Anggun.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Risky Adinda",
+      "nickname": "Dinda",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Dinda.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Depression",
+        "Anxiety",
+        "Mood and Emotional Issues",
+        "Interpersonal Relationship Issues",
+        "Romantic and Premarital Relationships",
+        "Career and Education",
+        "Stress and Burnout",
+        "Self-Development"
+      ],
+      "experience": "5 Tahun",
+      "sipp": "20200628-2020-01-1289",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Dinda.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Ilham Anggi P",
+      "nickname": "Ilham",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Ilham.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Anxiety",
+        "Insecurity & Overthinking",
+        "Depression",
+        "Loneliness and Interpersonal Relationship Issues",
+        "Emotional Regulation",
+        "Work and Career Stress",
+        "Self-Development",
+        "Romantic Relationships"
+      ],
+      "experience": "6 Tahun",
+      "sipp": "20190006-2021-02-0709",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Ilham.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "BSD"
+      ]
+    },
+    {
+      "name": "Dwi Ningsih A",
+      "nickname": "Dwi",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Dwi.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Depression",
+        "Mood and Emotional Disorders",
+        "Stress and Burnout",
+        "Self Esteem",
+        "Anxiety",
+        "Self-Development",
+        "Family and Relationship",
+        "Personality Disorders"
+      ],
+      "experience": "4 Tahun",
+      "sipp": "20181094-2020-01-0404",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Dwi.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Sekarini Andika Permatasari",
+      "nickname": "Sekar",
+      "title": "M.Psi., Psikolog",
+      "category": "Educational Psychologist",
+      "image": "images/psychologists/Sekarini.webp",
+      "icon": "images/research-class.webp",
+      "specializations": [
+        "Learning Problems",
+        "School Readiness",
+        "Stress, Anxiety, & Self-Control",
+        "Friendship Relations",
+        "Child Parenting",
+        "Interest, Talent, & Major Exploration",
+        "Career Problems & Development",
+        "Self-Potential Development"
+      ],
+      "experience": ">1 Tahun",
+      "sipp": "20231126-2024-01-3432",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Sekar.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Disa Nisrina Listiani",
+      "nickname": "Disa",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Disa.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Anxiety",
+        "Depression",
+        "Personality Disorders",
+        "Emotional Regulation",
+        "Stress Management",
+        "Life Transitions",
+        "Self-Development",
+        "Grief and Loss"
+      ],
+      "experience": ">1 Tahun",
+      "sipp": "20240760-2024-01-3829",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Disa.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Mohammad Andri Khaeranu",
+      "nickname": "Andri",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Andri.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Emotional Disorders",
+        "Anxiety",
+        "Relationship Issues",
+        "Academic Anxiety",
+        "Self-Development",
+        "Career Anxiety"
+      ],
+      "experience": ">1 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Andri.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    },
+    {
+      "name": "Jessica Raphaela",
+      "nickname": "Jessica",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Jessica.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Anxiety",
+        "Academic and Work Issues",
+        "Non-suicidal Self-injury / Self-harm",
+        "Emotional Management",
+        "Self-Development and Adjustment",
+        "Interpersonal Relations",
+        "Stress and Burnout"
+      ],
+      "experience": ">1 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Jessica.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "BSD"
+      ]
+    },
+    {
+      "name": "Valencia Yang",
+      "nickname": "Cia",
+      "title": "M.Psi., Psikolog",
+      "category": "Adult Clinical Psychologist",
+      "image": "images/psychologists/Valencia.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Anxiety",
+        "Stress and Somatic Symptoms",
+        "Depression",
+        "OCD",
+        "Personal / Romantic Relationship Conflicts",
+        "ADHD",
+        "Self-harm / Suicidal Thoughts",
+        "Pornography Addiction"
+      ],
+      "experience": ">1 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Cia.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "BSD"
+      ]
+    },
+    {
+      "name": "Audria Putri Salsabila Syarif",
+      "nickname": "Audria",
+      "title": "S.Psi., Psikolog",
+      "category": "General Psychologist",
+      "image": "images/psychologists/Audria.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Work and Career Stress",
+        "Romantic Relationship Issues",
+        "Gender / Identity Issues",
+        "Mood Issues",
+        "Social Relationship Issues",
+        "Stress Management",
+        "Trauma",
+        "Depression"
+      ],
+      "experience": "1 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Audria.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "BSD"
+      ]
+    },
+    {
+      "name": "Farahdilla",
+      "nickname": "Farah",
+      "title": "S.Psi., Psikolog",
+      "category": "General Psychologist",
+      "image": "images/psychologists/Farah.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Anxiety",
+        "Self-worth",
+        "Relationship (partner, family, friends)",
+        "Emotional Regulation",
+        "Grief",
+        "Career & Academic"
+      ],
+      "experience": "1 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Farah.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "BSD"
+      ]
+    },
+    {
+      "name": "Angelina Gabriella Suliyanto",
+      "nickname": "Angel",
+      "title": "S.Psi., Psikolog",
+      "category": "General Psychologist",
+      "image": "images/psychologists/Angel.webp",
+      "icon": "images/adult-clinical.webp",
+      "specializations": [
+        "Self-esteem",
+        "Emotional Regulation",
+        "Interpersonal Relationships (friends, family, partners)",
+        "Self-Development",
+        "Anxiety",
+        "Grief",
+        "Career & Academic"
+      ],
+      "experience": "1 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Psikolog%20Angel.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "BSD"
+      ]
+    },
+    {
+      "name": "Dr. Haykal Hafizul Arifin",
+      "nickname": "Haykal",
+      "title": "S.Psi., M.Si.",
+      "category": "Social Psychologist",
+      "image": "images/psychologists/Haykal.webp",
+      "icon": "images/research-class.webp",
+      "specializations": [
+        "Meaning and Purpose in Life",
+        "Critical Thinking",
+        "Personality Structure",
+        "Learning, Efficacy, and Procrastination",
+        "Research Methods and Experimental Psychology",
+        "Self Control",
+        "Violent Extremism",
+        "Freedom and Autonomy"
+      ],
+      "experience": "12 Tahun",
+      "sipp": "-",
+      "reservationlink": "https://wa.me/6285156410912?text=Halo%20admin%20Attentive.id,%20saya%20ingin%20melakukan%20reservasi%20sesi%20konsultasi%20dengan%20Dr.%20Haykal.%20Saya%20menghubungi%20dari%20website%20Attentive.id.%20Mohon%20informasinya%20mengenai%20ketersediaan%20jadwal.%20Terima%20kasih.%20",
+      "locations": [
+        "Jakarta"
+      ]
+    }
+  ],
+  "testimonials": [
+    {
+      "name": "Client - Online Counseling, 28 y.o.",
+      "image": "images/q.webp",
+      "content": "Patient and adaptive in handling clients with fluctuating commitment and progress, consistently providing tools that are feasible and actionable."
+    },
+    {
+      "name": "Client - Offline Psychotherapy, 24 y.o.",
+      "image": "images/q.webp",
+      "content": "Going therapy here, was a truly bittersweet journey for me. It was very challenging but very deeply moving and growing for me… I always tell me friends about going here, and always recommend them to go here as #1 reference."
+    },
+    {
+      "name": "Client - Online Psychotherapy, 31 y.o.",
+      "image": "images/q.webp",
+      "content": "The psychologist shows great understanding of my needs, avoiding pressure and allowing me to progress at my own pace. They provide a safe and comfortable space for me to share my thoughts and feelings."
+    }
+  ],
+  "partner_content": {
+    "title": "Coming soon",
+    "description": "We are currently preparing this section. Check back later!"
   },
-  "nav": {
-    "home": "Home",
-    "services": "Services",
-    "about": "About Us",
-    "contact": "Contact",
-    "psychologists": "Psychologists",
-    "products": "Products"
+  "cta": {
+    "title": "Contact Us",
+    "button": "Take the First Step"
   },
-  "footer": {
-    "copyright": "All rights reserved."
-  },
-  "contact": {
-    "address": "123 Therapy Lane, Wellness District, Jakarta",
-    "phone": "+62 812 3456 7890",
-    "email": "hello@attentiveid.com",
-    "viewOnMaps": "View on Maps"
+  "clinics_locations": {
+    "title": "Our Locations",
+    "locations": [
+      {
+        "name": "Attentive. Jakarta",
+        "address": "Jl. Teratai IV No.4, RT.3/RW.2, Tj. Barat, Kec. Jagakarsa, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12530",
+        "maps_link": "https://maps.app.goo.gl/RKguhwdeM1w9LwC29"
+      },
+      {
+        "name": "Attentive. BSD",
+        "address": "Delrey BizTown BSD Unit B8-9 Lt 2 Jalan Lkr Botanika Utara, Lengkong Kulon, Kec. Pagedangan, Kabupaten Tangerang, Banten 15531",
+        "maps_link": "https://maps.app.goo.gl/8vfKnYFdj3GEQWYQ7"
+      }
+    ]
   }
 }

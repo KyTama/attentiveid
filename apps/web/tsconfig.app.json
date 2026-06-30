@@ -22,6 +22,9 @@
     "jsx": "react-jsx",
     /* Path aliases for type imports */
     "paths": {
+      "@/*": [
+        "./src/*"
+      ],
       "@api/*": [
         "../api/src/*"
       ]

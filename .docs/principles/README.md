@@ -20,3 +20,4 @@ verbatim — distil it to a transferable principle first.
 | 2 | Look up before answering — read the catalog first | [catalog-lookup-first.md](./catalog-lookup-first.md) |
 | 3 | Distill and harvest learnings before commit | [learnings-before-commit.md](./learnings-before-commit.md) |
 | 4 | Namespace numbered options in multi-turn dialogs to avoid context collision | [namespace-options-multi-turn.md](./namespace-options-multi-turn.md) |
+| 5 | Verify visual layout order using coordinates when extracting data from Figma | [figma-visual-order.md](./figma-visual-order.md) |
