@@ -190,5 +190,11 @@
   },
   "footer": {
     "copyright": "Hak cipta dilindungi."
+  },
+  "contact": {
+    "address": "123 Therapy Lane, Wellness District, Jakarta",
+    "phone": "+62 812 3456 7890",
+    "email": "hello@attentiveid.com",
+    "viewOnMaps": "Lihat di Peta"
   }
 }

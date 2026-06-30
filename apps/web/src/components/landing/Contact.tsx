@@ -14,7 +14,10 @@ export const Contact = () => {
           {items.map((loc, idx) => (
             <div key={idx} className="border border-slate-200 p-6 rounded-lg">
               <h3 className="font-semibold text-lg mb-2">{loc.name}</h3>
-              <p className="text-slate-600">{loc.address}</p>
+              <p className="text-slate-600 mb-4">{loc.address}</p>
+              <a href="#" className="text-primary font-medium hover:underline">
+                {t('contact.viewOnMaps', { defaultValue: 'View on Maps' })}
+              </a>
             </div>
           ))}
         </div>
