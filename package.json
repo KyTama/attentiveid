@@ -7,13 +7,15 @@
         "packages/*"
     ],
     "scripts": {
-        "dev": "bun run dev:api & bun run dev:web",
+        "dev": "bun run --watch apps/api/src/index.ts",
         "dev:api": "bun --watch run apps/api/src/index.ts",
         "dev:web": "cd apps/web && bun run dev",
         "build": "bun run build:api && bun run build:web",
         "build:api": "cd apps/api && bun build src/index.ts --outfile=dist/index.js --target=bun",
         "build:web": "cd apps/web && bun run build",
-        "start": "bun run apps/api/dist/index.js"
+        "start": "bun run apps/api/src/index.ts",
+        "db:generate": "cd apps/api && bunx drizzle-kit generate",
+        "db:migrate": "cd apps/api && bunx drizzle-kit migrate"
     },
     "devDependencies": {
         "@types/bun": "latest",

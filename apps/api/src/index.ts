@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
 import { cors } from '@elysiajs/cors';
+import { env } from './config/env';
 
 const app = new Elysia()
     // Swagger documentation
@@ -25,7 +26,7 @@ const app = new Elysia()
     // Enable CORS for frontend
     .use(
         cors({
-            origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+            origin: env.FRONTEND_URL || 'http://localhost:5173',
             credentials: true,
         })
     )
@@ -41,6 +42,7 @@ const app = new Elysia()
             description: 'Returns the health status of the API',
         },
     })
+    .get('/api/health', () => "OK")
     // API info endpoint
     .get('/api/info', () => ({
         name: 'AttentiveId API',
@@ -58,7 +60,7 @@ const app = new Elysia()
         },
     })
     // Listen
-    .listen(Number(process.env.PORT) || 3000);
+    .listen(Number(env.PORT) || 3000);
 
 console.log(
     `🦊 AttentiveId API is running at ${app.server?.hostname}:${app.server?.port}`

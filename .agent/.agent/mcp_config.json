@@ -1,0 +1,35 @@
+{
+    "mcpServers": {
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp",
+                "--api-key",
+                "YOUR_API_KEY"
+            ]
+        },
+        "shadcn": {
+            "command": "npx",
+            "args": [
+                "shadcn@latest",
+                "mcp"
+            ]
+        },
+        "plane": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@makeplane/plane-mcp-server"
+            ],
+            "env": {
+                "PLANE_API_KEY": "plane_api_93e8288aca3c403d8e47893cbfde481a",
+                "PLANE_HOST": "https://app.plane.so"
+            }
+        }
+        //other mcp servers
+    }
+}
+
+// setup mcp server in  ~/.gemini\antigravity\mcp_config.json
+

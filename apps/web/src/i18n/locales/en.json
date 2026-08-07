@@ -1,0 +1,200 @@
+{
+  "whyUs": {
+    "title": "Why Choose Attentive?",
+    "items": [
+      {
+        "id": "certified",
+        "title": "Certified Psychologists",
+        "description": "Professional and licensed experts."
+      },
+      {
+        "id": "confidential",
+        "title": "100% Confidential",
+        "description": "Your privacy is our priority."
+      },
+      {
+        "id": "flexible",
+        "title": "Flexible Schedule",
+        "description": "Online and offline counseling available."
+      },
+      {
+        "id": "holistic",
+        "title": "Holistic Approach",
+        "description": "Comprehensive mental health care."
+      }
+    ]
+  },
+  "psychologists": {
+    "title": "Attentive Psychologist Team",
+    "items": [
+      {
+        "id": "psy1",
+        "name": "Dr. Sarah",
+        "specialty": "Clinical"
+      },
+      {
+        "id": "psy2",
+        "name": "Dr. Budi",
+        "specialty": "Child"
+      },
+      {
+        "id": "psy3",
+        "name": "Dr. Andi",
+        "specialty": "Family"
+      },
+      {
+        "id": "psy4",
+        "name": "Dr. Rina",
+        "specialty": "Clinical"
+      },
+      {
+        "id": "psy5",
+        "name": "Dr. Joko",
+        "specialty": "Child"
+      },
+      {
+        "id": "psy6",
+        "name": "Dr. Siti",
+        "specialty": "Family"
+      },
+      {
+        "id": "psy7",
+        "name": "Dr. Ayu",
+        "specialty": "Clinical"
+      },
+      {
+        "id": "psy8",
+        "name": "Dr. Doni",
+        "specialty": "Child"
+      },
+      {
+        "id": "psy9",
+        "name": "Dr. Eka",
+        "specialty": "Family"
+      },
+      {
+        "id": "psy10",
+        "name": "Dr. Fajar",
+        "specialty": "Clinical"
+      },
+      {
+        "id": "psy11",
+        "name": "Dr. Gita",
+        "specialty": "Child"
+      },
+      {
+        "id": "psy12",
+        "name": "Dr. Hadi",
+        "specialty": "Family"
+      },
+      {
+        "id": "psy13",
+        "name": "Dr. Ina",
+        "specialty": "Clinical"
+      },
+      {
+        "id": "psy14",
+        "name": "Dr. Jaka",
+        "specialty": "Child"
+      },
+      {
+        "id": "psy15",
+        "name": "Dr. Kiki",
+        "specialty": "Family"
+      },
+      {
+        "id": "psy16",
+        "name": "Dr. Lita",
+        "specialty": "Clinical"
+      },
+      {
+        "id": "psy17",
+        "name": "Dr. Maya",
+        "specialty": "Child"
+      }
+    ]
+  },
+  "insights": {
+    "title": "Mental Health Insights",
+    "items": [
+      {
+        "id": "art1",
+        "title": "Understanding Anxiety",
+        "url": "#"
+      },
+      {
+        "id": "art2",
+        "title": "Dealing with Stress",
+        "url": "#"
+      }
+    ]
+  },
+  "ctaScreening": {
+    "title": "Take the First Step with Attentive",
+    "button": "Start Screening"
+  },
+  "locations": {
+    "title": "Our Clinics",
+    "items": [
+      {
+        "id": "jkt",
+        "name": "Attentive. Jakarta",
+        "address": "Jl. Sudirman"
+      },
+      {
+        "id": "bsd",
+        "name": "Attentive. BSD",
+        "address": "BSD City"
+      }
+    ]
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Our mission and values",
+    "heading": "Dedicated to Your Mental Health",
+    "content": "We provide comprehensive psychological services tailored to your needs.",
+    "content2": "Our team of experienced psychologists provides a safe and supportive environment for you to explore your thoughts and feelings."
+  },
+  "hero": {
+    "hello": "Hello",
+    "brand": "AttentiveId",
+    "tagline": "Professional psychological services for your well-being.",
+    "weAre": "We Are",
+    "cta_book": "Book Now"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "What we offer",
+    "items": {
+      "adult": {
+        "title": "Adult Psychotherapy",
+        "desc": "Professional psychological consultation for personal growth and well-being."
+      },
+      "child": {
+        "title": "Child & Adolescent Psychotherapy",
+        "desc": "Comprehensive psychological assessments and evaluations for children and adolescents."
+      },
+      "family": {
+        "title": "Family or Couple Therapy",
+        "desc": "Evidence-based therapeutic interventions tailored to family and couples needs."
+      }
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "about": "About Us",
+    "contact": "Contact",
+    "psychologists": "Psychologists",
+    "products": "Products"
+  },
+  "footer": {
+    "copyright": "All rights reserved."
+  },
+  "contact": {
+    "address": "123 Therapy Lane, Wellness District, Jakarta",
+    "phone": "+62 812 3456 7890",
+    "email": "hello@attentiveid.com",
+    "viewOnMaps": "View on Maps"
+  }
+}

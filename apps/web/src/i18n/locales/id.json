@@ -1,0 +1,200 @@
+{
+  "whyUs": {
+    "title": "Kenapa memilih Attentive?",
+    "items": [
+      {
+        "id": "certified",
+        "title": "Psikolog Tersertifikasi",
+        "description": "Pakar profesional berlisensi."
+      },
+      {
+        "id": "confidential",
+        "title": "100% Rahasia",
+        "description": "Privasi Anda adalah prioritas kami."
+      },
+      {
+        "id": "flexible",
+        "title": "Jadwal Fleksibel",
+        "description": "Tersedia konseling online & offline."
+      },
+      {
+        "id": "holistic",
+        "title": "Pendekatan Holistik",
+        "description": "Perawatan kesehatan mental komprehensif."
+      }
+    ]
+  },
+  "psychologists": {
+    "title": "Tim Psikolog Attentive",
+    "items": [
+      {
+        "id": "psy1",
+        "name": "Dr. Sarah",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy2",
+        "name": "Dr. Budi",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy3",
+        "name": "Dr. Andi",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy4",
+        "name": "Dr. Rina",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy5",
+        "name": "Dr. Joko",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy6",
+        "name": "Dr. Siti",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy7",
+        "name": "Dr. Ayu",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy8",
+        "name": "Dr. Doni",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy9",
+        "name": "Dr. Eka",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy10",
+        "name": "Dr. Fajar",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy11",
+        "name": "Dr. Gita",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy12",
+        "name": "Dr. Hadi",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy13",
+        "name": "Dr. Ina",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy14",
+        "name": "Dr. Jaka",
+        "specialty": "Anak"
+      },
+      {
+        "id": "psy15",
+        "name": "Dr. Kiki",
+        "specialty": "Keluarga"
+      },
+      {
+        "id": "psy16",
+        "name": "Dr. Lita",
+        "specialty": "Klinis"
+      },
+      {
+        "id": "psy17",
+        "name": "Dr. Maya",
+        "specialty": "Anak"
+      }
+    ]
+  },
+  "insights": {
+    "title": "Wawasan Kesehatan Mental",
+    "items": [
+      {
+        "id": "art1",
+        "title": "Memahami Kecemasan",
+        "url": "#"
+      },
+      {
+        "id": "art2",
+        "title": "Mengatasi Stres",
+        "url": "#"
+      }
+    ]
+  },
+  "ctaScreening": {
+    "title": "Mulai Langkah Pertama Bersama Attentive",
+    "button": "Mulai Skrining"
+  },
+  "locations": {
+    "title": "Klinik Kami",
+    "items": [
+      {
+        "id": "jkt",
+        "name": "Attentive. Jakarta",
+        "address": "Jl. Sudirman"
+      },
+      {
+        "id": "bsd",
+        "name": "Attentive. BSD",
+        "address": "BSD City"
+      }
+    ]
+  },
+  "about": {
+    "title": "Tentang Kami",
+    "subtitle": "Misi dan nilai-nilai kami",
+    "heading": "Berdedikasi untuk Kesehatan Mental Anda",
+    "content": "Kami menyediakan layanan psikologi komprehensif yang disesuaikan dengan kebutuhan Anda.",
+    "content2": "Tim psikolog berpengalaman kami menyediakan lingkungan yang aman dan mendukung bagi Anda untuk mengeksplorasi pikiran dan perasaan Anda."
+  },
+  "hero": {
+    "hello": "Halo",
+    "brand": "AttentiveId",
+    "tagline": "Layanan psikologi profesional untuk kesejahteraan Anda.",
+    "weAre": "Kami Adalah",
+    "cta_book": "Pesan Sekarang"
+  },
+  "services": {
+    "title": "Layanan Kami",
+    "subtitle": "Apa yang kami tawarkan",
+    "items": {
+      "adult": {
+        "title": "Psikoterapi Dewasa",
+        "desc": "Konsultasi psikologi profesional untuk pertumbuhan pribadi dan kesejahteraan."
+      },
+      "child": {
+        "title": "Psikoterapi Anak & Remaja",
+        "desc": "Asesmen dan evaluasi psikologi komprehensif untuk anak dan remaja."
+      },
+      "family": {
+        "title": "Terapi Keluarga atau Pasangan",
+        "desc": "Intervensi terapeutik berbasis bukti yang disesuaikan dengan kebutuhan keluarga dan pasangan."
+      }
+    }
+  },
+  "nav": {
+    "home": "Beranda",
+    "services": "Layanan",
+    "about": "Tentang Kami",
+    "contact": "Kontak",
+    "psychologists": "Psikolog",
+    "products": "Produk"
+  },
+  "footer": {
+    "copyright": "Hak cipta dilindungi."
+  },
+  "contact": {
+    "address": "123 Therapy Lane, Wellness District, Jakarta",
+    "phone": "+62 812 3456 7890",
+    "email": "hello@attentiveid.com",
+    "viewOnMaps": "Lihat di Peta"
+  }
+}

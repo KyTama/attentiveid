@@ -1,0 +1,16 @@
+{
+  "mcp": {
+    "plane": {
+      "enabled": true,
+      "project_key": "ATTN",
+      "project_id": "bb0fb06c-40d5-47d9-98de-da7aded1a7e5",
+      "mapping": {
+        "phase": "epic",
+        "task": "sub-issue"
+      }
+    }
+  },
+  "workflow": {
+    "_auto_chain_active": false
+  }
+}
