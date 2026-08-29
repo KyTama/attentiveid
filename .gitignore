@@ -3,6 +3,39 @@ node_modules/
 .pnp
 .pnp.js
 
+# Local AI agents and coding assistants
+.agent/
+.agents/
+.claude/
+.cursor/
+.docs/
+.kiro/
+.planning/
+.github/copilot-instructions.md
+.clinerules
+.cursorrules
+.mcp.json
+.opencode.json
+.windsurfrules
+.worktree_mode
+AGENTS.md
+CLAUDE.md
+CONVENTIONS.md
+GEMINI.md
+
+# Local workspace and migration utilities
+attentiveid.code-workspace
+convert-yml.js
+assign_plane_modules.js
+list_tools.js
+run_mcp.js
+sync_plane_issues.js
+sync_plane_modules.js
+test_mcp.js
+test_mcp_module.js
+test_plane_api.js
+test_plane_module_issues.js
+
 # Build outputs
 dist/
 build/
@@ -46,5 +79,8 @@ coverage/
 *.tsbuildinfo
 .cache/
 
-#docs
+
 docs/*
+
+# Local code review graph
+.code-review-graph/
