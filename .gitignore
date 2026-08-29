@@ -24,6 +24,7 @@ CONVENTIONS.md
 GEMINI.md
 
 # Local workspace and migration utilities
+.local/
 attentiveid.code-workspace
 convert-yml.js
 assign_plane_modules.js
