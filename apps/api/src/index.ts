@@ -30,6 +30,16 @@ const app = new Elysia()
             credentials: true,
         })
     )
+    .get('/ready', () => ({
+        status: 'ready',
+        service: 'attentiveid-api',
+    }), {
+        detail: {
+            tags: ['Health'],
+            summary: 'Readiness check',
+            description: 'Confirms that the API process is ready to receive traffic',
+        },
+    })
     // Health check endpoint
     .get('/health', () => ({
         status: 'healthy',
@@ -60,7 +70,10 @@ const app = new Elysia()
         },
     })
     // Listen
-    .listen(Number(env.PORT) || 3000);
+    .listen({
+        hostname: '0.0.0.0',
+        port: Number(env.PORT) || 3000,
+    });
 
 console.log(
     `🦊 AttentiveId API is running at ${app.server?.hostname}:${app.server?.port}`
