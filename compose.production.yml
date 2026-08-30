@@ -1,0 +1,80 @@
+name: ${COMPOSE_PROJECT_NAME:?COMPOSE_PROJECT_NAME is required}
+
+services:
+  web:
+    image: ${WEB_IMAGE:?WEB_IMAGE digest is required}
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /config:size=16m,uid=10001,gid=10001,mode=0700
+      - /data:size=16m,uid=10001,gid=10001,mode=0700
+    healthcheck:
+      test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/healthz]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      ingress:
+        aliases:
+          - attentive-web
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.attentive-web.rule: Host(`${DOMAIN:?DOMAIN is required}`)
+      traefik.http.routers.attentive-web.entrypoints: websecure
+      traefik.http.services.attentive-web.loadbalancer.server.port: "8080"
+
+  api:
+    image: ${API_IMAGE:?API_IMAGE digest is required}
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,uid=1000,gid=1000,mode=0700
+    env_file:
+      - ${HOST_SECRET_FILE:?HOST_SECRET_FILE is required}
+    environment:
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL is required}
+      PORT: "3000"
+    healthcheck:
+      test: [CMD, bun, -e, "const response = await fetch('http://127.0.0.1:3000/ready'); if (!response.ok) process.exit(1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      ingress:
+        aliases:
+          - attentive-api
+      postgres: {}
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.attentive-api.rule: Host(`${DOMAIN:?DOMAIN is required}`) && PathPrefix(`/api`)
+      traefik.http.routers.attentive-api.priority: "100"
+      traefik.http.routers.attentive-api.entrypoints: websecure
+      traefik.http.services.attentive-api.loadbalancer.server.port: "3000"
+
+networks:
+  ingress:
+    name: ${INGRESS_NETWORK:?INGRESS_NETWORK is required}
+    external: true
+  postgres:
+    name: ${POSTGRES_NETWORK:?POSTGRES_NETWORK is required}
+    external: true

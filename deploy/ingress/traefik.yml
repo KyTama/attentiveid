@@ -1,0 +1,14 @@
+entryPoints:
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+    watch: true
+
+api:
+  dashboard: false
+
+log:
+  level: INFO

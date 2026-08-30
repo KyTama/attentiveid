@@ -1,0 +1,20 @@
+# GitHub Environment variable
+COMPOSE_PROJECT_NAME=attentive-production
+# Trusted staged manifest value
+WEB_IMAGE=ghcr.io/attentiveid/attentiveid-web@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+# Trusted staged manifest value
+API_IMAGE=ghcr.io/attentiveid/attentiveid-api@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+# GitHub Environment variable
+DOMAIN=attentive.example
+# Host inventory variable
+INGRESS_NETWORK=shared-ingress
+# Host inventory variable
+POSTGRES_NETWORK=shared-postgres
+# Host-local secret path; file contains DATABASE_URL only
+HOST_SECRET_FILE=/etc/attentive/production.env
+# GitHub Environment variable
+FRONTEND_URL=https://attentive.example
+# Dedicated host-local PostgreSQL identity
+DATABASE_NAME=attentive_production
+# Dedicated host-local PostgreSQL identity
+DATABASE_ROLE=attentive_production
