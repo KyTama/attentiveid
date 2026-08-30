@@ -1,11 +1,8 @@
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Check, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const Products = () => {
-  const { t } = useTranslation();
-
   const planIcons = {
     "checkup": '/images/services/service-checkup.png',
     "online": '/images/services/service-online.png',
@@ -67,13 +64,13 @@ export const Products = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
-          {pricingPlans.map((plan, idx) => (
+          {pricingPlans.map((plan, planIndex) => (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.1, duration: 0.5 }}
+              transition={{ delay: planIndex * 0.1, duration: 0.5 }}
               className={`relative flex flex-col p-8 rounded-3xl border ${plan.popular ? 'border-primary shadow-lg bg-[#FFFDF8]' : 'border-border shadow-sm bg-card'}`}
             >
               {plan.popular && (
@@ -102,8 +99,8 @@ export const Products = () => {
               </div>
 
               <div className="space-y-4 mb-8">
-                {plan.features.map((feature, i) => (
-                  <div key={i} className="flex items-start gap-3">
+                {plan.features.map((feature, featureIndex) => (
+                  <div key={featureIndex} className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-primary shrink-0" />
                     <span className="text-sm text-foreground">{feature}</span>
                   </div>

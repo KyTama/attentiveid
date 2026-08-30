@@ -5,7 +5,6 @@ import { About } from "../components/landing/About";
 import { WhyUs } from "../components/landing/WhyUs";
 import { PsychologistsSection } from "../components/landing/PsychologistsSection";
 import { TestimonialsSection } from "../components/landing/TestimonialsSection";
-import { Services } from "../components/landing/Services";
 import { Products } from "../components/landing/Products";
 import { CtaScreening } from "../components/landing/CtaScreening";
 import { Contact } from "../components/landing/Contact";

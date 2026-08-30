@@ -1,19 +1,24 @@
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
+
+interface WhyUsItem {
+  description: string;
+  title: string;
+}
 
 export const WhyUs = () => {
   const { t } = useTranslation();
   const title = t('whyUs.title', { defaultValue: 'Why Choose Attentive?' });
-  const items = t('whyUs.items', { returnObjects: true, defaultValue: [] }) as any[];
+  const items = t('whyUs.items', { returnObjects: true, defaultValue: [] }) as WhyUsItem[];
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 30 } }
   };
 
   const icons = [
@@ -42,14 +47,14 @@ export const WhyUs = () => {
           whileInView="visible"
           viewport={{ once: true }}
         >
-          {items.map((item, idx) => (
+          {items.map((item, itemIndex) => (
             <motion.div 
-              key={idx} 
+              key={itemIndex}
               variants={itemVariants}
               className="bg-card p-8 rounded-3xl shadow-sm border border-border hover:shadow-md transition-shadow text-center flex flex-col items-center"
             >
               <div className="w-full h-40 flex items-center justify-center mb-6">
-                <img src={icons[idx]} alt={item.title} className="max-w-full max-h-full object-contain" />
+                <img src={icons[itemIndex]} alt={item.title} className="max-w-full max-h-full object-contain" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-4">{item.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{item.description}</p>

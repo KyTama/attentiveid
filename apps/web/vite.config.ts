@@ -6,6 +6,17 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          i18n: ['i18next', 'i18next-browser-languagedetector', 'react-i18next'],
+          motion: ['framer-motion'],
+          react: ['react', 'react-dom'],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -20,4 +31,3 @@ export default defineConfig({
     }
   }
 })
-

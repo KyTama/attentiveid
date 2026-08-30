@@ -1,21 +1,26 @@
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Quote } from "lucide-react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 
+interface TestimonialItem {
+  content: string;
+  name: string;
+}
+
 export function TestimonialsSection() {
   const { t } = useTranslation();
-  const items = t("testimonials", { returnObjects: true }) || [];
-  const title = t("testimonials.title", { defaultValue: "Pengalaman Klien Bersama Attentive" });
+  const items = t("testimonials", { returnObjects: true, defaultValue: [] }) as TestimonialItem[];
+  const title = t("testimonialSection.title", { defaultValue: "Pengalaman Klien Bersama Attentive" });
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80 } }
+    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 30 } }
   };
 
   return (
@@ -41,8 +46,8 @@ export function TestimonialsSection() {
           whileInView="visible"
           viewport={{ once: true }}
         >
-          {Array.isArray(items) && items.map((item: any, i: number) => (
-            <motion.div key={i} variants={itemVariants}>
+          {Array.isArray(items) && items.map((item, itemIndex) => (
+            <motion.div key={itemIndex} variants={itemVariants}>
               <Card className="h-full flex flex-col border-border shadow-sm hover:shadow-md transition-shadow bg-card relative z-10">
                 <CardContent className="flex-grow pt-8 px-8 relative">
                   <Quote className="w-10 h-10 text-primary/20 absolute top-4 left-4 -z-10" />

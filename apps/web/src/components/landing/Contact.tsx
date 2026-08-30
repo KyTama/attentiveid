@@ -3,10 +3,16 @@ import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
+interface ClinicLocation {
+  address: string;
+  maps_link: string;
+  name: string;
+}
+
 export const Contact = () => {
   const { t } = useTranslation();
-  const title = t('locations.title', { defaultValue: 'Lokasi Klinik Kami' });
-  const items = t('locations.items', { returnObjects: true, defaultValue: [] }) as any[];
+  const title = t('clinics_locations.title', { defaultValue: 'Lokasi Klinik Kami' });
+  const items = t('clinics_locations.locations', { returnObjects: true, defaultValue: [] }) as ClinicLocation[];
 
   return (
     <section className="py-24 bg-muted">
@@ -21,10 +27,10 @@ export const Contact = () => {
         </motion.h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {items.map((loc, idx) => (
+          {items.map((location, locationIndex) => (
             <motion.div
-              key={idx}
-              initial={{ opacity: 0, x: idx % 2 === 0 ? -30 : 30 }}
+              key={locationIndex}
+              initial={{ opacity: 0, x: locationIndex % 2 === 0 ? -30 : 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
@@ -35,9 +41,9 @@ export const Contact = () => {
                     <MapPin className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-xl text-foreground mb-3">{loc.name}</h3>
-                    <p className="text-muted-foreground leading-relaxed mb-6">{loc.address}</p>
-                    <a href="#" className="inline-flex items-center text-primary font-semibold hover:underline">
+                    <h3 className="font-semibold text-xl text-foreground mb-3">{location.name}</h3>
+                    <p className="text-muted-foreground leading-relaxed mb-6">{location.address}</p>
+                    <a href={location.maps_link} className="inline-flex items-center text-primary font-semibold hover:underline">
                       {t('contact.viewOnMaps', { defaultValue: 'Lihat di Google Maps' })}
                     </a>
                   </div>
