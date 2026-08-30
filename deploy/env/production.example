@@ -1,9 +1,9 @@
 # GitHub Environment variable
 COMPOSE_PROJECT_NAME=attentive-production
 # Trusted staged manifest value
-WEB_IMAGE=ghcr.io/attentiveid/attentiveid-web@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+WEB_IMAGE=ghcr.io/kytama/attentiveid-web@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 # Trusted staged manifest value
-API_IMAGE=ghcr.io/attentiveid/attentiveid-api@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+API_IMAGE=ghcr.io/kytama/attentiveid-api@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 # GitHub Environment variable
 DOMAIN=attentive.example
 # Host inventory variable
