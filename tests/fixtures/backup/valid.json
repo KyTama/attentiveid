@@ -1,0 +1,7 @@
+{
+  "remote_object": "s3://fixture-bucket/attentive/backup.dump.age",
+  "checksum": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "postgres_major": 17,
+  "target_database": "attentive_restore_fixture",
+  "encrypted": true
+}

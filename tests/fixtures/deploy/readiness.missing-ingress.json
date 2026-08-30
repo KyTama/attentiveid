@@ -1,0 +1,9 @@
+{
+  "environment": "staging",
+  "github": { "environment": true, "required_reviewer": true, "prevent_self_review": true, "restricted_refs": true },
+  "ssh": { "deploy_key_configured": true, "host_key": "SHA256:fixtureHostKey" },
+  "registry": { "pull_access": true },
+  "runtime": { "ingress_owner": "", "ingress_network": "shared-ingress", "postgres_network": "shared-postgres" },
+  "database": { "host": "postgres", "database": "attentive_staging", "role": "attentive_staging" },
+  "dns": { "hostname": "staging.example.test", "configured": true }
+}

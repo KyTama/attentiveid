@@ -1,0 +1,8 @@
+{
+  "actions_pinned_to_full_sha": true,
+  "strict_ssh_host_checking": true,
+  "staging_provenance_verified": true,
+  "production_environment_protected": true,
+  "digest_preserved": true,
+  "rebuild_in_promotion": true
+}

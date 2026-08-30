@@ -1,0 +1,5 @@
+{
+  "bundle_version": "fixture-bundle",
+  "archive": "tests/fixtures/deploy/fixture-bundle.tar.gz",
+  "checksum": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}

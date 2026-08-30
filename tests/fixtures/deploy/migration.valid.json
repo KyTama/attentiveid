@@ -1,0 +1,10 @@
+{
+  "clean_host": true,
+  "provider": "fixture-provider",
+  "restored_backup_checksum": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "web_image": "ghcr.io/attentiveid/attentiveid-web@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "api_image": "ghcr.io/attentiveid/attentiveid-api@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "https": { "web": true, "api": true },
+  "rollback": { "passed": true },
+  "tencent_specific_changes": false
+}

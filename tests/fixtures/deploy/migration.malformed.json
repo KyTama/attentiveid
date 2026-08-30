@@ -1,0 +1,10 @@
+{
+  "clean_host": false,
+  "provider": "",
+  "restored_backup_checksum": "mutable",
+  "web_image": "attentive-web:latest",
+  "api_image": "attentive-api:latest",
+  "https": { "web": false, "api": false },
+  "rollback": { "passed": false },
+  "tencent_specific_changes": true
+}
