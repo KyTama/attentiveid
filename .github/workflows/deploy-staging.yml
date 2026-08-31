@@ -1,0 +1,129 @@
+name: Deploy Staging
+
+on:
+  workflow_run:
+    workflows:
+      - Build Images
+    branches:
+      - master
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master'
+    environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BUILD_RUN_ID: ${{ github.event.workflow_run.id }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Check out trusted release commit
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: .bun-version
+
+      - name: Verify staging readiness evidence
+        run: ./scripts/ci/verify-environment-readiness.sh --evidence deploy/readiness/staging.json
+
+      - name: Download trusted build artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: release-${{ github.event.workflow_run.head_sha }}
+          path: release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Verify release identity
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/ci/verify-release-manifest.sh release/release.env
+          source release/release.env
+          [[ "$COMMIT_SHA" == "$RELEASE_SHA" ]]
+          mapfile -t bundles < <(find release -maxdepth 1 -type f -name '*.tar.gz' -print)
+          [[ "${#bundles[@]}" -eq 1 ]]
+          bundle="${bundles[0]}"
+          checksum="$bundle.sha256"
+          [[ -f "$checksum" ]]
+          [[ "$(awk '{ print $1 }' "$checksum")" == "$BUNDLE_SHA256" ]]
+          [[ "$(sha256sum "$bundle" | awk '{ print $1 }')" == "$BUNDLE_SHA256" ]]
+          printf 'bundle=%s\nchecksum=%s\nmanifest=%s\n' "$bundle" "$checksum" "release/release.env" >>"$GITHUB_OUTPUT"
+
+      - name: Connect runner to tailnet
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: ${{ vars.DEPLOY_SSH_HOST }}
+
+      - name: Prepare strict SSH identity
+        shell: bash
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$RUNNER_TEMP/attentive-ssh"
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" >"$RUNNER_TEMP/attentive-ssh/id_ed25519"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >"$RUNNER_TEMP/attentive-ssh/known_hosts"
+          chmod 0600 "$RUNNER_TEMP/attentive-ssh/id_ed25519" "$RUNNER_TEMP/attentive-ssh/known_hosts"
+
+      - name: Deploy immutable staging release
+        run: |
+          ./scripts/deploy/remote-deploy.sh \
+            --host "${{ vars.DEPLOY_SSH_HOST }}" \
+            --user "${{ vars.DEPLOY_SSH_USER }}" \
+            --port "${{ vars.DEPLOY_SSH_PORT }}" \
+            --identity "$RUNNER_TEMP/attentive-ssh/id_ed25519" \
+            --known-hosts "$RUNNER_TEMP/attentive-ssh/known_hosts" \
+            --bundle "${{ steps.release.outputs.bundle }}" \
+            --checksum "${{ steps.release.outputs.checksum }}" \
+            --manifest "${{ steps.release.outputs.manifest }}" \
+            --environment staging
+
+      - name: Verify public staging health
+        run: ./scripts/deploy/healthcheck.sh --web-url "${{ vars.PUBLIC_WEB_URL }}" --api-url "${{ vars.PUBLIC_API_URL }}"
+
+      - name: Record successful staging provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat >release/staging-provenance.env <<EOF
+          STAGING_WORKFLOW_RUN_ID=$GITHUB_RUN_ID
+          BUILD_WORKFLOW_RUN_ID=$BUILD_RUN_ID
+          COMMIT_SHA=$RELEASE_SHA
+          EOF
+
+      - name: Retain production candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: staging-candidate-${{ github.event.workflow_run.head_sha }}
+          path: |
+            release/*.tar.gz
+            release/*.tar.gz.sha256
+            release/release.env
+            release/staging-provenance.env
+          if-no-files-found: error
+          retention-days: 30

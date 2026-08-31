@@ -2,7 +2,10 @@
   "actions_pinned_to_full_sha": false,
   "strict_ssh_host_checking": true,
   "staging_provenance_verified": true,
+  "staging_source_run_verified": true,
+  "candidate_published_after_healthcheck": true,
   "production_environment_protected": true,
   "digest_preserved": true,
-  "rebuild_in_promotion": false
+  "rebuild_in_promotion": false,
+  "production_rollback_on_failure": true
 }

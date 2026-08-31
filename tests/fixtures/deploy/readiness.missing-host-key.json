@@ -1,8 +1,8 @@
 {
   "environment": "staging",
-  "github": { "environment": true, "required_reviewer": true, "prevent_self_review": true, "restricted_refs": true },
-  "ssh": { "deploy_key_configured": true, "host_key": "" },
-  "registry": { "pull_access": true },
+  "github": { "environment": true, "environment_name": "staging", "required_reviewer": true, "prevent_self_review": true, "restricted_refs": true },
+  "ssh": { "transport": "tailscale", "host": "staging-host.example.ts.net", "port": 22, "deploy_key_configured": true, "host_key": "" },
+  "registry": { "visibility": "private", "pull_access": true },
   "runtime": { "ingress_owner": "caddy", "ingress_network": "shared-ingress", "postgres_network": "shared-postgres" },
   "database": { "host": "postgres", "database": "attentive_staging", "role": "attentive_staging" },
   "dns": { "hostname": "staging.example.test", "configured": true }

@@ -1,5 +1,6 @@
 compose.production.yml
 deploy/Caddyfile
+deploy/install-manifest.txt
 deploy/ingress/nginx.conf
 deploy/ingress/traefik.yml
 scripts/deploy/activate-ingress.sh
