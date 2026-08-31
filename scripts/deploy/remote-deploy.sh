@@ -45,7 +45,9 @@ release_manifest='$remote_root/uploads/$(basename "$manifest")'
 bundle_version=\$(sed -n 's/^BUNDLE_VERSION=//p' \"\$release_manifest\")
 '$remote_root/current/scripts/deploy/install-release-bundle.sh' --bundle \"\$bundle\" --checksum \"\$checksum\" --version \"\$bundle_version\" --root '$remote_root'
 candidate='$remote_root/manifests/$environment/candidate.env'
-cat '/etc/attentive/$environment.env' \"\$release_manifest\" >\"\$candidate\"
+host_inventory='/etc/attentive/$environment.deploy.env'
+[[ -f \"\$host_inventory\" ]] || { printf 'Host deployment inventory is missing: %s\n' \"\$host_inventory\" >&2; exit 1; }
+cat \"\$host_inventory\" \"\$release_manifest\" >\"\$candidate\"
 '$remote_root/current/scripts/deploy/deploy.sh' --env-file \"\$candidate\" --root '$remote_root'
 "
 

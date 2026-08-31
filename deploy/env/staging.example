@@ -10,8 +10,8 @@ DOMAIN=staging.attentive.example
 INGRESS_NETWORK=shared-ingress
 # Host inventory variable
 POSTGRES_NETWORK=shared-postgres
-# Host-local secret path; file contains DATABASE_URL only
-HOST_SECRET_FILE=/etc/attentive/staging.env
+# Host-local API secret path; file contains DATABASE_URL only
+HOST_SECRET_FILE=/etc/attentive/staging.secret.env
 # GitHub Environment variable
 FRONTEND_URL=https://staging.attentive.example
 # Dedicated host-local PostgreSQL identity

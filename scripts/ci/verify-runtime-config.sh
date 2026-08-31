@@ -53,6 +53,9 @@ production="$root_dir/deploy/env/production.example"
 [[ "$(read_value "$staging" COMPOSE_PROJECT_NAME)" != "$(read_value "$production" COMPOSE_PROJECT_NAME)" ]]
 [[ "$(read_value "$staging" DATABASE_NAME)" != "$(read_value "$production" DATABASE_NAME)" ]]
 [[ "$(read_value "$staging" DATABASE_ROLE)" != "$(read_value "$production" DATABASE_ROLE)" ]]
+[[ "$(read_value "$staging" HOST_SECRET_FILE)" == '/etc/attentive/staging.secret.env' ]]
+[[ "$(read_value "$production" HOST_SECRET_FILE)" == '/etc/attentive/production.secret.env' ]]
+grep -Fq '/etc/attentive/$environment.deploy.env' "$root_dir/scripts/deploy/remote-deploy.sh"
 
 if grep -RinE 'tencent|cvm|cos\.tencent' "$compose_file" "$root_dir/deploy/Caddyfile" "$root_dir/deploy/ingress" "$root_dir/deploy/env"; then
     printf 'Runtime configuration must remain provider-neutral\n' >&2
