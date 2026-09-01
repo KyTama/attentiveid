@@ -6,6 +6,11 @@ env_file=''
 fixture=false
 dry_run=false
 
+file_mode() {
+    local path="$1"
+    stat -c '%a' "$path" 2>/dev/null || stat -f '%Lp' "$path"
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --env-file) env_file="$2"; shift 2 ;;
@@ -37,7 +42,7 @@ fi
 
 if [[ "$fixture" == false ]]; then
     [[ -f "${HOST_SECRET_FILE:-}" ]] || { printf 'Host-local secret file is required\n' >&2; exit 1; }
-    secret_mode="$(stat -f '%Lp' "$HOST_SECRET_FILE" 2>/dev/null || stat -c '%a' "$HOST_SECRET_FILE")"
+    secret_mode="$(file_mode "$HOST_SECRET_FILE")"
     [[ "$secret_mode" == '600' || "$secret_mode" == '400' ]] || { printf 'Host-local secret file must use mode 0600 or 0400\n' >&2; exit 1; }
     docker network inspect "$INGRESS_NETWORK" >/dev/null
     docker network inspect "$POSTGRES_NETWORK" >/dev/null

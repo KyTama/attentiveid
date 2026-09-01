@@ -56,6 +56,8 @@ production="$root_dir/deploy/env/production.example"
 [[ "$(read_value "$staging" HOST_SECRET_FILE)" == '/etc/attentive/staging.secret.env' ]]
 [[ "$(read_value "$production" HOST_SECRET_FILE)" == '/etc/attentive/production.secret.env' ]]
 grep -Fq '/etc/attentive/$environment.deploy.env' "$root_dir/scripts/deploy/remote-deploy.sh"
+grep -Fq "stat -c '%a'" "$root_dir/scripts/deploy/preflight.sh"
+grep -Fq "stat -f '%Lp'" "$root_dir/scripts/deploy/preflight.sh"
 
 if grep -RinE 'tencent|cvm|cos\.tencent' "$compose_file" "$root_dir/deploy/Caddyfile" "$root_dir/deploy/ingress" "$root_dir/deploy/env"; then
     printf 'Runtime configuration must remain provider-neutral\n' >&2
