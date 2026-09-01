@@ -39,11 +39,17 @@ trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
 manifest_dir="$deploy_root/manifests/$ENVIRONMENT"
 install -d -m 0750 "$manifest_dir"
 [[ ! -f "$manifest_dir/current.env" ]] || cp -p "$manifest_dir/current.env" "$manifest_dir/previous.env"
-install -m 0600 "$env_file" "$manifest_dir/candidate.env"
+candidate_env="$manifest_dir/candidate.env"
+if [[ "$env_file" -ef "$candidate_env" ]]; then
+    chmod 0600 "$candidate_env"
+else
+    install -m 0600 "$env_file" "$candidate_env"
+fi
+env_file="$candidate_env"
 
 docker compose --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" pull
 docker compose --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" up -d --remove-orphans --wait
 "$deploy_root/current/scripts/deploy/healthcheck.sh" --web-url "$PUBLIC_WEB_URL" --api-url "$PUBLIC_API_URL"
-mv "$manifest_dir/candidate.env" "$manifest_dir/current.env"
+mv "$candidate_env" "$manifest_dir/current.env"
 
 printf 'Deployment passed: %s\n' "$ENVIRONMENT"
