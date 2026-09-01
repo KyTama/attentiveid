@@ -1,0 +1,35 @@
+{
+  "environment": "staging",
+  "github": {
+    "environment": true,
+    "environment_name": "staging",
+    "required_reviewer": false,
+    "prevent_self_review": false,
+    "restricted_refs": true
+  },
+  "ssh": {
+    "transport": "tailscale",
+    "host": "vm-0-12-ubuntu.tailc61f14.ts.net",
+    "port": 22,
+    "deploy_key_configured": true,
+    "host_key": "SHA256:hT144ynFZJ3u7yYMWTP8BWKifHlpMMQoIL1/BTSiFNo"
+  },
+  "registry": {
+    "visibility": "private",
+    "pull_access": true
+  },
+  "runtime": {
+    "ingress_owner": "caddy",
+    "ingress_network": "caddy-proxy",
+    "postgres_network": "postgres-shared"
+  },
+  "database": {
+    "host": "postgres-shared",
+    "database": "attentive_staging",
+    "role": "attentive_staging"
+  },
+  "dns": {
+    "hostname": "staging.enialslab.duckdns.org",
+    "configured": true
+  }
+}
