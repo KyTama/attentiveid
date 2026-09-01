@@ -57,6 +57,7 @@ jobs:
           push-to-registry: true
       - id: bundle
         run: |
+          mkdir -p release
           ./scripts/deploy/package-release-bundle.sh --output "release/attentive-${GITHUB_SHA}" | tee release/bundle.env
           cat release/bundle.env >>"$GITHUB_OUTPUT"
       - run: |

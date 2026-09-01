@@ -49,6 +49,7 @@ for workflow in "${required_workflows[@]}"; do
 done
 
 grep -q 'environment: staging' "$root_dir/.github/workflows/deploy-staging.yml"
+grep -q 'mkdir -p release' "$root_dir/.github/workflows/build-images.yml"
 grep -q 'workflow_run:' "$root_dir/.github/workflows/deploy-staging.yml"
 grep -q "workflow_run.conclusion == 'success'" "$root_dir/.github/workflows/deploy-staging.yml"
 grep -q "workflow_run.event == 'push'" "$root_dir/.github/workflows/deploy-staging.yml"
