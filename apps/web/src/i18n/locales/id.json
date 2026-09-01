@@ -501,5 +501,240 @@
         "maps_link": "https://maps.app.goo.gl/8vfKnYFdj3GEQWYQ7"
       }
     ]
+  },
+  "homepage": {
+    "nav": {
+      "label": "Navigasi utama",
+      "support": "Dukungan",
+      "psychologists": "Psikolog kami",
+      "process": "Cara kerja",
+      "faq": "Tanya jawab",
+      "find": "Temukan psikologmu",
+      "openMenu": "Buka menu navigasi",
+      "closeMenu": "Tutup menu navigasi",
+      "languageSwitch": "Ganti bahasa ke {{language}}"
+    },
+    "hero": {
+      "title": "Dukungan dimulai saat kamu merasa dipahami.",
+      "description": "Setiap cerita berbeda. Kami meluangkan waktu untuk memahami kamu sebelum membantu menemukan dukungan psikologis yang terasa tepat.",
+      "primaryAction": "Temukan psikologmu",
+      "secondaryAction": "Lihat pilihan dukungan",
+      "reassurance": "Tidak perlu diagnosis. Mulai dari hal yang sedang memenuhi pikiranmu.",
+      "imageAlt": "Psikolog Attentive yang siap mendengarkan",
+      "imageCardTitle": "Dukungan yang mengikuti kebutuhanmu",
+      "imageCardBody": "Mulai dari ceritamu, kenyamananmu, dan dukungan yang sedang kamu butuhkan.",
+      "metrics": [
+        { "value": "3.000+", "label": "Sesi terlaksana" },
+        { "value": "18", "label": "Psikolog" },
+        { "value": "5,0", "label": "Rating Google" },
+        { "value": "53", "label": "Ulasan Google" }
+      ]
+    },
+    "support": {
+      "title": "Apa yang sedang memenuhi pikiranmu?",
+      "description": "Kamu tidak harus langsung tahu jenis bantuan yang tepat. Mulailah dari area yang paling dekat dengan pengalamanmu.",
+      "selectedLabel": "Tempat untuk memulai",
+      "action": "Lihat psikolog yang sesuai",
+      "topics": [
+        { "id": "adult", "title": "Konseling individual", "description": "Ruang privat untuk kecemasan, suasana hati, trauma, kepercayaan diri, regulasi emosi, dan pengembangan diri." },
+        { "id": "relationships", "title": "Pasangan dan relasi", "description": "Dukungan untuk komunikasi, kepercayaan, konflik, persiapan pernikahan, dan pola relasi yang ingin diubah." },
+        { "id": "child", "title": "Anak dan remaja", "description": "Dukungan sesuai usia untuk perkembangan, emosi, perilaku, pembelajaran, relasi sosial, dan kebutuhan keluarga." },
+        { "id": "family", "title": "Terapi keluarga", "description": "Ruang terpandu untuk memahami konflik berulang, membangun kembali kedekatan, dan menemukan cara yang lebih sehat." },
+        { "id": "assessment", "title": "Asesmen psikologis", "description": "Asesmen terstruktur untuk memahami kekuatan, kebutuhan, pola belajar, atau langkah lanjutan yang sesuai." },
+        { "id": "career", "title": "Karier dan pekerjaan", "description": "Dukungan untuk burnout, stres kerja, arah karier, kepercayaan diri, pengambilan keputusan, dan perkembangan profesional." }
+      ]
+    },
+    "promise": {
+      "title": "Dukungan yang dimulai dari kamu.",
+      "description": "Tidak ada dua orang yang menjalani hidup dengan cara yang sama. Peran kami adalah mendengarkan, membuat proses lebih jelas, dan membantu kamu memilih dukungan dengan yakin.",
+      "items": [
+        { "title": "Tanpa menghakimi. Tanpa berasumsi.", "description": "Ruang privat agar ceritamu bisa didengar tanpa tekanan." },
+        { "title": "Dukungan yang mengikuti dirimu.", "description": "Kebutuhan, kesiapan, preferensi, dan batasanmu memandu proses." },
+        { "title": "Seseorang yang bisa terhubung denganmu.", "description": "Temukan profesional dengan pengalaman yang sesuai dengan kebutuhanmu." },
+        { "title": "Berbasis ilmu, tetap penuh empati.", "description": "Layanan psikologi profesional yang disampaikan dengan hangat dan hormat." }
+      ]
+    },
+    "featured": {
+      "title": "Temukan seseorang yang benar-benar bisa diajak bicara.",
+      "description": "Setiap psikolog membawa pengalaman dan cara kerja yang berbeda. Kenali beberapa profesional kami sebelum menjelajahi direktori lengkap.",
+      "viewAll": "Kenali semua psikolog",
+      "available": "Psikolog pilihan",
+      "experience": "pengalaman profesional",
+      "viewProfile": "Lihat profil {{name}}",
+      "select": "Tampilkan {{name}}"
+    },
+    "journey": {
+      "title": "Mulai dengan cara yang terasa tepat untukmu.",
+      "description": "Kamu tidak harus memahami semuanya sebelum sesi pertama. Pilih titik awal yang terasa paling nyaman.",
+      "step": "Langkah",
+      "steps": [
+        { "title": "Temukan kecocokanmu", "description": "Jelajahi area dukungan atau profil psikolog tanpa perlu terburu-buru mengambil keputusan.", "points": ["Cari berdasarkan kebutuhan", "Bandingkan area pengalaman", "Tanya kami saat masih ragu"] },
+        { "title": "Pilih cara bertemu", "description": "Pilih format online atau tatap muka dan tanyakan jadwal melalui WhatsApp.", "points": ["Konsultasi online", "Klinik Jakarta dan BSD", "Penjadwalan dibantu admin"] },
+        { "title": "Terhubung sesuai ritmemu", "description": "Percakapan pertama membantu memahami tujuanmu dan apakah hubungan terapeutiknya terasa tepat.", "points": ["Privat dan rahasia", "Langkah lanjutan yang jelas", "Tanpa tekanan untuk melanjutkan"] }
+      ]
+    },
+    "stories": {
+      "title": "Cerita yang dibagikan klien kami.",
+      "description": "Pengalaman nyata dari orang-orang yang pernah kami dampingi dalam perjalanannya."
+    },
+    "pricing": {
+      "title": "Ketahui prosesnya sebelum memulai.",
+      "description": "Memulai terapi sudah menjadi keputusan yang berarti. Proses dan biaya seharusnya memberi kejelasan, bukan menambah kekhawatiran.",
+      "sessionLabel": "Konsultasi online mulai dari",
+      "price": "Rp475.000",
+      "perSession": "per sesi konsultasi",
+      "included": ["Psikolog profesional sesuai kebutuhan", "Konsultasi online yang privat", "Penjadwalan dibantu melalui WhatsApp", "Informasi jelas sebelum konfirmasi"],
+      "onlineTitle": "Bertemu dari tempat yang terasa aman",
+      "onlineDescription": "Konsultasi melalui video atau suara dengan jadwal yang dikoordinasikan sesuai ketersediaan.",
+      "offlineTitle": "Bertemu di ruang yang tenang dan privat",
+      "offlineDescription": "Sesi tatap muka tersedia di Attentive Jakarta dan BSD.",
+      "action": "Tanya jadwal dan biaya"
+    },
+    "faq": {
+      "title": "Tidak apa-apa kalau masih punya pertanyaan.",
+      "description": "Memulai dukungan psikologis bisa terasa asing. Berikut jawaban jelas untuk hal-hal yang sering ditanyakan di awal.",
+      "items": [
+        { "question": "Bagaimana cara memilih psikolog yang tepat?", "answer": "Mulailah dari hal yang ingin kamu bahas, lalu lihat pengalaman dan pendekatan tiap psikolog. Kalau masih ragu, admin kami dapat membantu mempersempit pilihan melalui WhatsApp." },
+        { "question": "Bolehkah berkonsultasi meski belum tahu pasti masalah saya?", "answer": "Tentu. Kamu tidak membutuhkan diagnosis atau masalah yang sudah terdefinisi dengan sempurna. Menceritakan apa yang terasa sulit belakangan ini sudah cukup untuk memulai." },
+        { "question": "Apakah sesi tersedia online dan tatap muka?", "answer": "Ya. Konsultasi online tersedia, dan sesi tatap muka dapat dijadwalkan di lokasi Jakarta atau BSD sesuai ketersediaan psikolog." },
+        { "question": "Apakah psikolog dapat memahami latar budaya dan pengalaman saya?", "answer": "Kamu dapat melihat area pengalaman di setiap profil dan menyampaikan preferensi yang penting kepada admin. Hubungan terapeutik yang nyaman merupakan bagian penting dari proses." },
+        { "question": "Apakah sesi bersifat privat dan rahasia?", "answer": "Sesi dilakukan secara privat dan kerahasiaan profesional berlaku sesuai batas praktik psikologi serta kewajiban keselamatan yang relevan." },
+        { "question": "Apa yang terjadi pada sesi pertama?", "answer": "Sesi pertama biasanya berfokus untuk memahami keluhan, tujuan, latar belakang yang relevan, dan bentuk dukungan yang mungkin berguna. Kamu juga dapat menilai apakah hubungannya terasa cocok." }
+      ]
+    },
+    "closing": {
+      "title": "Mulai dari tempatmu sekarang.",
+      "description": "Kamu tidak membutuhkan kata-kata yang sempurna, diagnosis, atau jawaban untuk semuanya. Kamu hanya membutuhkan tempat untuk memulai.",
+      "primaryAction": "Temukan psikologmu",
+      "secondaryAction": "Ngobrol dengan kami dulu"
+    },
+    "footer": {
+      "statement": "Dukungan psikologis profesional yang dibangun dari proses mendengarkan, kejelasan, dan koneksi yang terasa tepat untukmu.",
+      "explore": "Jelajahi",
+      "contact": "Kontak",
+      "rights": "Seluruh hak dilindungi."
+    }
+  },
+  "routes": {
+    "common": {
+      "home": "Kembali ke beranda",
+      "loading": "Memuat informasi psikolog…",
+      "error": "Informasi belum dapat dimuat. Silakan coba lagi."
+    },
+    "psychologists": {
+      "eyebrow": "Psikolog kami",
+      "title": "Temukan seseorang yang terasa tepat untukmu.",
+      "description": "Setiap psikolog membawa perspektif dan cara kerja yang berbeda. Jelajahi tim kami, pilih hal yang penting bagimu, lalu mulai dari sosok yang terasa paling mudah diajak bicara.",
+      "introAction": "Temukan yang cocok",
+      "introFacts": {
+        "formats": "Pilihan online dan tatap muka",
+        "lifeStages": "Dukungan di berbagai tahap hidup"
+      },
+      "empty": "Belum ada psikolog yang sesuai dengan filter ini.",
+      "viewProfile": "Lihat profil {{name}}",
+      "finder": {
+        "eyebrow": "Temukan yang cocok",
+        "title": "Dukungan seperti apa yang sedang kamu cari?",
+        "description": "Gunakan filter untuk mempersempit pilihan, atau cari nama dan area pengalaman. Pilihanmu dapat diubah kapan saja.",
+        "reassuranceTitle": "Pilihan pertamamu tidak harus langsung sempurna.",
+        "reassuranceDescription": "Profil adalah titik awal. Percakapan pertama juga membantumu menilai apakah koneksinya terasa nyaman."
+      },
+      "filters": {
+        "supportLegend": "Area dukungan",
+        "support": {
+          "all": "Semua area dukungan",
+          "adultClinical": "Dewasa",
+          "childAdolescent": "Anak dan remaja",
+          "educational": "Pendidikan dan perkembangan"
+        },
+        "experienceLegend": "Pengalaman profesional",
+        "experience": {
+          "all": "Semua tingkat pengalaman",
+          "earlyCareer": "Di bawah 3 tahun",
+          "midLevel": "3–6 tahun",
+          "seniorLevel": "7–9 tahun",
+          "principalLevel": "10+ tahun"
+        },
+        "searchLabel": "Cari di direktori",
+        "searchPlaceholder": "Cari nama atau area pengalaman",
+        "resultCount": "{{count}} psikolog",
+        "clear": "Hapus filter"
+      },
+      "cards": {
+        "supportArea": {
+          "adultClinical": "Klinis dewasa",
+          "childAdolescent": "Anak dan remaja",
+          "educational": "Pendidikan"
+        },
+        "experience": "{{count}}+ tahun pengalaman",
+        "supportAreasLabel": "Area pengalaman"
+      },
+      "states": {
+        "emptyTitle": "Belum ada yang benar-benar cocok.",
+        "emptyDescription": "Coba area dukungan yang lebih luas, tingkat pengalaman lain, atau kata pencarian yang lebih singkat. Kamu juga bisa meminta admin membantu mempersempit pilihan.",
+        "reset": "Atur ulang filter",
+        "askAdmin": "Tanya admin kami",
+        "errorTitle": "Direktori belum dapat dimuat.",
+        "errorDescription": "Ada gangguan saat memuat daftar psikolog. Pilihan filtermu masih tersimpan, jadi kamu bisa mencoba kembali dengan aman.",
+        "retry": "Coba lagi"
+      },
+      "comparison": {
+        "eyebrow": "Belum yakin memilih siapa?",
+        "title": "Kamu tidak perlu membandingkan semua profil.",
+        "description": "Mulai dari satu atau dua orang dengan pengalaman yang terasa relevan. Daftar pendek sudah cukup untuk membuat langkah berikutnya lebih ringan.",
+        "action": "Tinjau filterku"
+      },
+      "help": {
+        "eyebrow": "Masih mempertimbangkan?",
+        "title": "Menemukan orang yang tepat kadang membutuhkan waktu.",
+        "description": "Ceritakan kepada admin apa yang kamu cari dan hal yang penting bagimu. Kami dapat membantu mempersempit pilihan saat ini tanpa mengklaim adanya pencocokan otomatis.",
+        "action": "Chat dengan admin"
+      }
+    },
+    "profile": {
+      "back": "Kembali ke daftar psikolog",
+      "bookWhatsApp": "Tanya jadwal {{name}} via WhatsApp",
+      "bookingHandoff": "WhatsApp akan membuka percakapan dengan admin Attentive. Sesi baru diatur setelah jadwal dan format konsultasi dikonfirmasi bersamamu.",
+      "supportLabel": "Area dukungan yang tercantum",
+      "experienceLabel": "Pengalaman",
+      "credentialLabel": "Kredensial",
+      "supportAreasTitle": "Hal-hal yang bisa kamu bawa ke ruang konsultasi",
+      "supportAreasDescription": "Berikut adalah topik yang saat ini tercantum untuk {{name}}. Kamu tidak perlu memaksakan pengalamanmu masuk ke satu label yang sempurna sebelum menghubungi kami.",
+      "conversationQuote": "Kamu bisa mulai dari bagian yang paling sulit dijelaskan.",
+      "conversationDescription": "Percakapan pertama adalah ruang untuk memperjelas apa yang sedang terjadi, apa yang kamu butuhkan, dan apakah melanjutkan bersama terasa tepat. Halaman ini tidak mengklaim pendekatan terapi personal yang belum diberikan langsung oleh psikolog.",
+      "firstStepTitle": "Langkah pertama yang jelas dan manusiawi",
+      "firstSteps": [
+        {
+          "title": "Ceritakan alasanmu datang",
+          "description": "Bagikan konteks sebanyak atau sesedikit yang terasa nyaman kepada admin Attentive."
+        },
+        {
+          "title": "Konfirmasi detail praktis",
+          "description": "Admin membantu mengonfirmasi jadwal yang tersedia dan format konsultasi."
+        },
+        {
+          "title": "Putuskan saat kamu merasa siap",
+          "description": "Pesan WhatsApp memulai percakapan dan tidak otomatis mengonfirmasi reservasi."
+        }
+      ],
+      "bookingTitle": "Tanya dulu. Putuskan saat kamu merasa siap.",
+      "bookingDescription": "Hubungi admin untuk menanyakan {{name}}, ketersediaan terbaru, dan format konsultasi. Profil placeholder ini tidak mengklaim reservasi atau jadwal tersedia secara otomatis.",
+      "bookingAction": "Lanjutkan via WhatsApp",
+      "licenseLabel": "Nomor izin praktik",
+      "relatedTitle": "Jelajahi pilihan lain sesuai ritmemu",
+      "relatedDescription": "Profil berikut adalah pilihan placeholder saat ini dalam area dukungan yang serupa. Kamu bisa membandingkannya tanpa kehilangan konteks dari daftar psikolog.",
+      "viewDirectory": "Lihat semua psikolog",
+      "notFoundTitle": "Profil psikolog tidak ditemukan",
+      "notFoundDescription": "Profil ini mungkin telah dipindahkan atau sudah tidak tersedia. Kembali ke daftar atau minta bantuan admin untuk menemukan pilihan yang tersedia saat ini.",
+      "notFoundAction": "Kembali ke daftar psikolog",
+      "helpAction": "Tanya admin kami",
+      "errorTitle": "Profil ini belum berhasil dimuat",
+      "errorDescription": "Layanan profil tidak merespons seperti yang diharapkan. Coba lagi atau kembali ke daftar psikolog jika masalah berlanjut.",
+      "retry": "Coba muat lagi"
+    },
+    "notFound": {
+      "title": "Halaman tidak ditemukan",
+      "description": "Halaman yang kamu cari mungkin telah dipindahkan atau tidak tersedia."
+    }
   }
 }

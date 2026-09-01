@@ -62,6 +62,8 @@ wait_for_url() {
 wait_for_url 'Web image' "http://127.0.0.1:$web_port/healthz"
 wait_for_url 'Web root' "http://127.0.0.1:$web_port/"
 wait_for_url 'Web client route' "http://127.0.0.1:$web_port/future-interactive-route"
+wait_for_url 'Psychologist directory route' "http://127.0.0.1:$web_port/psychologists"
+wait_for_url 'Psychologist profile route' "http://127.0.0.1:$web_port/psychologists/syazka"
 wait_for_url 'API readiness' "http://127.0.0.1:$api_port/ready"
 
 wait_for_health() {

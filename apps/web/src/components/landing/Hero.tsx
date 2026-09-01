@@ -19,6 +19,8 @@ export function Hero() {
         </motion.p>
         
         <motion.h1 
+          data-route-heading
+          tabIndex={-1}
           className="flex flex-col md:flex-row items-center justify-center gap-4 text-5xl md:text-7xl font-bold tracking-tight mb-4 font-sans text-secondary" 
           initial={{ opacity: 0, y: 20 }} 
           whileInView={{ opacity: 1, y: 0 }} 

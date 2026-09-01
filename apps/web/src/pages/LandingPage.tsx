@@ -8,8 +8,9 @@ import { TestimonialsSection } from "../components/landing/TestimonialsSection";
 import { Products } from "../components/landing/Products";
 import { CtaScreening } from "../components/landing/CtaScreening";
 import { Contact } from "../components/landing/Contact";
+import { Homepage } from "../components/landing/Homepage";
 
-export function LandingPage() {
+export function LegacyLandingPage() {
   return (
     <div className="landing-page-wrapper relative flex min-h-screen flex-col">
       <Navbar />
@@ -26,4 +27,8 @@ export function LandingPage() {
       <Footer />
     </div>
   );
+}
+
+export function LandingPage() {
+  return <Homepage />;
 }

@@ -501,5 +501,242 @@
         "maps_link": "https://maps.app.goo.gl/8vfKnYFdj3GEQWYQ7"
       }
     ]
+  },
+  "homepage": {
+    "nav": {
+      "label": "Primary navigation",
+      "support": "Support",
+      "psychologists": "Our psychologists",
+      "process": "How it works",
+      "faq": "FAQ",
+      "find": "Find your psychologist",
+      "openMenu": "Open navigation menu",
+      "closeMenu": "Close navigation menu",
+      "languageSwitch": "Switch language to {{language}}"
+    },
+    "hero": {
+      "title": "Support starts with feeling understood.",
+      "description": "Every story is different. We take the time to understand you before helping you find psychological support that feels right for you.",
+      "primaryAction": "Find your psychologist",
+      "secondaryAction": "Explore support options",
+      "reassurance": "No diagnosis needed. Start with what has been on your mind.",
+      "imageAlt": "Attentive psychologist ready to listen",
+      "imageCardTitle": "Care shaped around you",
+      "imageCardBody": "Start with your story, your comfort, and the kind of support you need.",
+      "metrics": [
+        { "value": "3,000+", "label": "Sessions delivered" },
+        { "value": "18", "label": "Psychologists" },
+        { "value": "5.0", "label": "Google rating" },
+        { "value": "53", "label": "Google reviews" }
+      ]
+    },
+    "support": {
+      "title": "What has been on your mind?",
+      "description": "You do not need to know exactly what kind of support to ask for. Begin with the area closest to your experience.",
+      "selectedLabel": "A place to begin",
+      "action": "See matching psychologists",
+      "topics": [
+        { "id": "adult", "title": "Individual counseling", "description": "A private space for anxiety, mood, trauma, self-esteem, emotional regulation, and personal growth." },
+        { "id": "relationships", "title": "Couples and relationships", "description": "Support for communication, trust, conflict, premarital concerns, and changing relationship patterns." },
+        { "id": "child", "title": "Child and adolescent support", "description": "Age-appropriate support for development, emotions, behavior, learning, social relationships, and family concerns." },
+        { "id": "family", "title": "Family therapy", "description": "A guided space for families to understand recurring conflict, rebuild connection, and find healthier ways forward." },
+        { "id": "assessment", "title": "Psychological assessment", "description": "Structured assessment to better understand strengths, needs, learning patterns, or the next suitable step." },
+        { "id": "career", "title": "Career and work", "description": "Support for burnout, workplace stress, career direction, confidence, decision-making, and professional growth." }
+      ]
+    },
+    "promise": {
+      "title": "Care that starts with you.",
+      "description": "No two people move through life in the same way. Our role is to listen carefully, make the process clearer, and help you choose support with confidence.",
+      "items": [
+        { "title": "No judgment. No assumptions.", "description": "A private space where your concerns can be heard without pressure." },
+        { "title": "Care shaped around you.", "description": "Your needs, readiness, preferences, and boundaries guide the process." },
+        { "title": "Someone you can connect with.", "description": "Explore professionals whose experience fits what you want to work through." },
+        { "title": "Evidence with empathy.", "description": "Professional psychological care delivered with warmth and respect." }
+      ]
+    },
+    "featured": {
+      "title": "Find someone you can actually talk to.",
+      "description": "Different psychologists bring different experience and ways of working. Meet a few of our professionals before exploring the full directory.",
+      "viewAll": "Meet all psychologists",
+      "available": "Featured psychologist",
+      "experience": "professional experience",
+      "viewProfile": "View {{name}}'s profile",
+      "select": "Show {{name}}"
+    },
+    "journey": {
+      "title": "Start in the way that feels right for you.",
+      "description": "You do not need everything figured out before your first session. Choose the entry point that feels most comfortable.",
+      "step": "Step",
+      "steps": [
+        { "title": "Find your fit", "description": "Explore support areas or browse psychologist profiles without rushing a decision.", "points": ["Search by what you need", "Compare areas of experience", "Ask us when you are unsure"] },
+        { "title": "Choose how to meet", "description": "Pick an online or in-person format and ask about the available schedule through WhatsApp.", "points": ["Online consultation", "Jakarta and BSD clinics", "Schedule assisted by admin"] },
+        { "title": "Connect at your pace", "description": "Your first conversation is a space to understand what you want from support and whether the fit feels right.", "points": ["Private and confidential", "Clear next steps", "No pressure to continue"] }
+      ]
+    },
+    "stories": {
+      "title": "What our clients have shared.",
+      "description": "Real experiences from people we have supported on their journey."
+    },
+    "pricing": {
+      "title": "Know what to expect before you begin.",
+      "description": "Starting therapy is already a meaningful decision. The process and pricing should be another source of clarity, not uncertainty.",
+      "sessionLabel": "Online consultation starts from",
+      "price": "IDR 475,000",
+      "perSession": "per consultation session",
+      "included": ["Professional psychologist matched to your needs", "Private online consultation", "WhatsApp-assisted scheduling", "Clear information before confirmation"],
+      "onlineTitle": "Meet from wherever feels safe",
+      "onlineDescription": "Consult through video or voice call with a schedule coordinated around availability.",
+      "offlineTitle": "Meet in a calm, private space",
+      "offlineDescription": "In-person sessions are available at Attentive Jakarta and BSD.",
+      "action": "Ask about schedule and pricing"
+    },
+    "faq": {
+      "title": "It is okay to have questions.",
+      "description": "Starting psychological support can feel unfamiliar. Here are clear answers to the things people often ask first.",
+      "items": [
+        { "question": "How do I know which psychologist is right for me?", "answer": "Begin with the concern you want to work through, then review each psychologist's experience and approach. If you are still unsure, our admin can help narrow the options through WhatsApp." },
+        { "question": "Can I talk to someone even if I am not sure what I need help with?", "answer": "Yes. You do not need a diagnosis or a perfectly defined problem before reaching out. Describing what has been difficult lately is enough to begin." },
+        { "question": "Are sessions available online and in person?", "answer": "Yes. Online consultations are available, and in-person sessions can be arranged at our Jakarta and BSD locations depending on psychologist availability." },
+        { "question": "Will my psychologist understand my cultural background and experience?", "answer": "You can review areas of experience in each profile and ask the admin about preferences that matter to you. A comfortable therapeutic relationship is an important part of the process." },
+        { "question": "Are sessions private and confidential?", "answer": "Sessions are conducted in a private setting and professional confidentiality applies within the boundaries of psychological practice and applicable safety obligations." },
+        { "question": "What happens during the first session?", "answer": "The first session usually focuses on understanding your concerns, goals, relevant background, and what kind of support may be useful. You can also decide whether the connection feels right." }
+      ]
+    },
+    "closing": {
+      "title": "Start wherever you are.",
+      "description": "You do not need the right words, a diagnosis, or everything figured out. You just need somewhere to begin.",
+      "primaryAction": "Find your psychologist",
+      "secondaryAction": "Chat with us first"
+    },
+    "footer": {
+      "statement": "Professional psychological support built around listening, clarity, and a connection that feels right for you.",
+      "explore": "Explore",
+      "contact": "Contact",
+      "rights": "All rights reserved."
+    }
+  },
+  "routes": {
+    "common": {
+      "home": "Back to home",
+      "loading": "Loading psychologist information…",
+      "error": "We could not load this information. Please try again."
+    },
+    "psychologists": {
+      "eyebrow": "Our psychologists",
+      "title": "Find someone who feels right for you.",
+      "description": "Every psychologist brings a different perspective and way of working. Explore the team, filter by what matters to you, and begin with the person who feels easiest to talk to.",
+      "introAction": "Find your fit",
+      "introFacts": {
+        "formats": "Online and in-person options",
+        "lifeStages": "Support across life stages"
+      },
+      "empty": "No psychologists match these filters yet.",
+      "viewProfile": "View {{name}}'s profile",
+      "finder": {
+        "eyebrow": "Find your fit",
+        "title": "What kind of support are you looking for?",
+        "description": "Use the filters to narrow the directory, or search for a name or area of experience. You can change your choices at any time.",
+        "reassuranceTitle": "Your first choice does not have to be perfect.",
+        "reassuranceDescription": "A profile is a starting point. The first conversation also helps you decide whether the connection feels comfortable."
+      },
+      "filters": {
+        "supportLegend": "Support area",
+        "support": {
+          "all": "All support areas",
+          "adultClinical": "Adults",
+          "childAdolescent": "Children and adolescents",
+          "educational": "Education and development"
+        },
+        "experienceLegend": "Professional experience",
+        "experience": {
+          "all": "Any experience level",
+          "earlyCareer": "Under 3 years",
+          "midLevel": "3–6 years",
+          "seniorLevel": "7–9 years",
+          "principalLevel": "10+ years"
+        },
+        "searchLabel": "Search the directory",
+        "searchPlaceholder": "Search by name or area of experience",
+        "resultCount_one": "{{count}} psychologist",
+        "resultCount_other": "{{count}} psychologists",
+        "clear": "Clear filters"
+      },
+      "cards": {
+        "supportArea": {
+          "adultClinical": "Adult clinical",
+          "childAdolescent": "Child and adolescent",
+          "educational": "Educational"
+        },
+        "experience_one": "{{count}}+ year of experience",
+        "experience_other": "{{count}}+ years of experience",
+        "supportAreasLabel": "Areas of experience"
+      },
+      "states": {
+        "emptyTitle": "No exact match yet.",
+        "emptyDescription": "Try a broader support area, another experience level, or fewer search terms. You can also ask our admin to help narrow the options.",
+        "reset": "Reset filters",
+        "askAdmin": "Ask our admin",
+        "errorTitle": "The directory could not load.",
+        "errorDescription": "Something interrupted the psychologist list. Your filter choices are still here, so you can safely try again.",
+        "retry": "Try again"
+      },
+      "comparison": {
+        "eyebrow": "Not sure who to choose?",
+        "title": "You do not have to compare every profile.",
+        "description": "Start with one or two people whose experience feels relevant. A short list is enough to make the next step feel manageable.",
+        "action": "Review my filters"
+      },
+      "help": {
+        "eyebrow": "Still deciding?",
+        "title": "Finding the right person can take a little time.",
+        "description": "Tell our admin what you are looking for and what matters to you. We can help you narrow the current options without claiming an automated match.",
+        "action": "Chat with our admin"
+      }
+    },
+    "profile": {
+      "back": "Back to psychologists",
+      "bookWhatsApp": "Ask about {{name}} on WhatsApp",
+      "bookingHandoff": "WhatsApp opens a conversation with Attentive's admin. Your session is arranged only after the schedule and format are confirmed with you.",
+      "supportLabel": "Listed support areas",
+      "experienceLabel": "Experience",
+      "credentialLabel": "Credential",
+      "supportAreasTitle": "What you can bring into the room",
+      "supportAreasDescription": "These are the concerns currently listed for {{name}}. You do not need to fit your experience into one perfect label before reaching out.",
+      "conversationQuote": "You can start with the part that feels hardest to explain.",
+      "conversationDescription": "A first conversation is a place to clarify what has been happening, what you need, and whether continuing together feels right. This page does not claim a personal therapy approach that has not yet been provided by the psychologist.",
+      "firstStepTitle": "A clear, human first step",
+      "firstSteps": [
+        {
+          "title": "Tell us what brings you here",
+          "description": "Share as much or as little context as feels comfortable with Attentive's admin."
+        },
+        {
+          "title": "Confirm the practical details",
+          "description": "The admin helps confirm the available schedule and consultation format."
+        },
+        {
+          "title": "Decide when you feel ready",
+          "description": "A WhatsApp message starts a conversation; it does not confirm a booking automatically."
+        }
+      ],
+      "bookingTitle": "Ask first. Decide when you feel ready.",
+      "bookingDescription": "Message our admin to ask about {{name}}, current availability, and the consultation format. There is no automatic booking or availability claim on this placeholder profile.",
+      "bookingAction": "Continue on WhatsApp",
+      "licenseLabel": "Practice license",
+      "relatedTitle": "Keep exploring at your own pace",
+      "relatedDescription": "These profiles are current placeholder options in a similar support area. Review them without losing your place in the directory.",
+      "viewDirectory": "View every psychologist",
+      "notFoundTitle": "Psychologist profile not found",
+      "notFoundDescription": "This profile may have moved or is no longer available. Return to the directory or ask our admin for help finding the right current option.",
+      "notFoundAction": "Return to the directory",
+      "helpAction": "Ask our admin",
+      "errorTitle": "We could not load this profile",
+      "errorDescription": "The profile service did not respond as expected. Try again, or return to the directory if the problem continues.",
+      "retry": "Try loading again"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you are looking for may have moved or does not exist."
+    }
   }
 }

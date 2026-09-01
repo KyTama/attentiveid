@@ -85,3 +85,4 @@ docs/*
 
 # Local code review graph
 .code-review-graph/
+.output/
