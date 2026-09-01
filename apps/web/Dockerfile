@@ -13,7 +13,8 @@ RUN bun run build:web
 
 FROM caddy:2.10.2-alpine AS runtime
 
-RUN addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app && \
+RUN setcap -r /usr/bin/caddy && \
+    addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app && \
     chown -R app:app /config /data /etc/caddy
 
 COPY --chown=app:app apps/web/Caddyfile /etc/caddy/Caddyfile

@@ -19,8 +19,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-docker image inspect "$web_image" >/dev/null
-docker image inspect "$api_image" >/dev/null
+docker image inspect "$web_image" >/dev/null 2>&1 || docker pull "$web_image" >/dev/null
+docker image inspect "$api_image" >/dev/null 2>&1 || docker pull "$api_image" >/dev/null
 docker network create "$network" >/dev/null
 
 docker run -d \
@@ -34,6 +34,11 @@ docker run -d \
 docker run -d \
     --name "$web_container" \
     --network "$network" \
+    --read-only \
+    --cap-drop ALL \
+    --security-opt no-new-privileges:true \
+    --tmpfs /config:size=16m,uid=10001,gid=10001,mode=0700 \
+    --tmpfs /data:size=16m,uid=10001,gid=10001,mode=0700 \
     -p 127.0.0.1::8080 \
     "$web_image" >/dev/null
 

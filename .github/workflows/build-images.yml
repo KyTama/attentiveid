@@ -55,6 +55,11 @@ jobs:
           subject-name: ghcr.io/kytama/attentiveid-api
           subject-digest: ${{ steps.api.outputs.digest }}
           push-to-registry: true
+      - name: Smoke test hardened images
+        env:
+          WEB_IMAGE: ghcr.io/kytama/attentiveid-web:${{ github.sha }}
+          API_IMAGE: ghcr.io/kytama/attentiveid-api:${{ github.sha }}
+        run: ./scripts/ci/smoke-images.sh
       - id: bundle
         run: |
           mkdir -p release
