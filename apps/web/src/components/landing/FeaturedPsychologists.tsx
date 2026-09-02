@@ -42,7 +42,7 @@ export function FeaturedPsychologists() {
             <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{t('homepage.featured.title')}</h2>
             <p className="mt-5 max-w-2xl text-base leading-7 text-secondary/65">{t('homepage.featured.description')}</p>
           </div>
-          <Link className="inline-flex items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8" to="/psychologists">
+          <Link className="inline-flex min-h-11 items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8" to="/psychologists">
             {t('homepage.featured.viewAll')} <ArrowRight aria-hidden="true" size={18} />
           </Link>
         </div>
@@ -113,4 +113,3 @@ export function FeaturedPsychologists() {
     </section>
   )
 }
-

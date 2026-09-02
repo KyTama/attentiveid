@@ -13,7 +13,7 @@ export function ConsultationReassurance() {
     <section className="px-5 py-24 lg:px-8 lg:py-32">
       <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2.5rem] bg-[#eee5d8] lg:grid-cols-[1.08fr_0.92fr]">
         <div className="p-7 sm:p-12 lg:p-16">
-          <h2 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{t('homepage.pricing.title')}</h2>
+          <h2 className="max-w-2xl text-[2rem] font-semibold tracking-[-0.03em] text-secondary sm:text-balance sm:text-5xl">{t('homepage.pricing.title')}</h2>
           <p className="mt-5 max-w-xl text-base leading-7 text-secondary/65">{t('homepage.pricing.description')}</p>
           <div className="mt-10 rounded-3xl bg-white/70 p-6 sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary/45">{t('homepage.pricing.sessionLabel')}</p>
@@ -57,4 +57,3 @@ export function ConsultationReassurance() {
     </section>
   )
 }
-

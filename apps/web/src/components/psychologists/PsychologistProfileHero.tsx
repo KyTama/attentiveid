@@ -16,7 +16,7 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
     <section className="px-5 pb-20 pt-8 lg:px-8 lg:pb-28 lg:pt-12">
       <div className="mx-auto max-w-7xl">
         <Link
-          className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-secondary/65 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
+          className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-secondary/65 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
           to="/psychologists"
         >
           <ArrowLeft aria-hidden="true" size={18} />

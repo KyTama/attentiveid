@@ -26,7 +26,7 @@ export function RelatedPsychologists({ psychologists }: RelatedPsychologistsProp
             </p>
           </div>
           <Link
-            className="inline-flex items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex min-h-11 items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8 outline-none focus-visible:ring-2 focus-visible:ring-primary"
             to="/psychologists"
           >
             {t('routes.profile.viewDirectory')}

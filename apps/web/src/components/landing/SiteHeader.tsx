@@ -21,7 +21,7 @@ function LanguageToggle() {
   return (
     <motion.button
       aria-label={t('homepage.nav.languageSwitch', { language: targetLanguage })}
-      className="rounded-full border border-secondary/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      className="min-h-11 min-w-11 rounded-full border border-secondary/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       onClick={() => i18n.changeLanguage(isEnglish ? 'id' : 'en')}
       transition={INTERACTIVE_SPRING}
       type="button"
@@ -53,7 +53,7 @@ export function SiteHeader() {
         <div className="hidden items-center gap-7 lg:flex">
           {navItems.map((item) => (
             <motion.a
-              className="text-sm font-medium text-secondary/75 outline-none focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-secondary/75 outline-none focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
               href={item.href}
               key={item.key}
               transition={INTERACTIVE_SPRING}
@@ -125,4 +125,3 @@ export function SiteHeader() {
     </motion.header>
   )
 }
-

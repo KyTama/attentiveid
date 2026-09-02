@@ -16,9 +16,9 @@ export function HomepageHero() {
   return (
     <section className="relative border-b border-secondary/10" id="home">
       <div className="mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl items-stretch lg:grid-cols-[1.02fr_0.98fr]">
-        <div className="flex flex-col justify-center px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+        <div className="min-w-0 flex flex-col justify-center px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
           <h1
-            className="max-w-3xl text-balance font-sans text-[clamp(3.25rem,7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.04em] text-secondary outline-none"
+            className="max-w-3xl text-balance font-sans text-[clamp(3rem,7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.04em] text-secondary outline-none"
             data-route-heading
             tabIndex={-1}
           >
@@ -51,7 +51,7 @@ export function HomepageHero() {
           <p className="mt-6 text-sm text-secondary/50">{t('homepage.hero.reassurance')}</p>
         </div>
 
-        <div className="relative min-h-[34rem] overflow-hidden bg-[#ded8cd] lg:min-h-full">
+        <div className="relative min-w-0 min-h-[34rem] overflow-hidden bg-[#ded8cd] lg:min-h-full">
           <img
             alt={t('homepage.hero.imageAlt')}
             className="absolute inset-0 h-full w-full object-cover object-top"
@@ -74,7 +74,7 @@ export function HomepageHero() {
 
       <dl className="mx-auto grid max-w-7xl grid-cols-2 border-x border-secondary/10 sm:grid-cols-4">
         {metrics.map((metric) => (
-          <div className="border-b border-r border-secondary/10 px-5 py-8 sm:border-b-0 lg:px-8" key={metric.label}>
+          <div className="min-w-0 border-b border-r border-secondary/10 px-4 py-8 sm:border-b-0 sm:px-5 lg:px-8" key={metric.label}>
             <dt className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-secondary/50">{metric.label}</dt>
             <dd className="order-first text-4xl font-semibold tracking-[-0.03em] text-secondary">{metric.value}</dd>
           </div>

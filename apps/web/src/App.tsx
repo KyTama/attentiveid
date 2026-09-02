@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { MotionConfig } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { PublicLayout } from './components/common/PublicLayout'
@@ -9,14 +10,16 @@ import { PsychologistsPage } from './pages/PsychologistsPage'
 
 export function AppRoutes() {
   return (
-    <Routes>
-      <Route element={<PublicLayout />}>
-        <Route index element={<LandingPage />} />
-        <Route path="psychologists" element={<PsychologistsPage />} />
-        <Route path="psychologists/:slug" element={<PsychologistProfilePage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
+    <MotionConfig reducedMotion="user">
+      <Routes>
+        <Route element={<PublicLayout />}>
+          <Route index element={<LandingPage />} />
+          <Route path="psychologists" element={<PsychologistsPage />} />
+          <Route path="psychologists/:slug" element={<PsychologistProfilePage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </MotionConfig>
   )
 }
 

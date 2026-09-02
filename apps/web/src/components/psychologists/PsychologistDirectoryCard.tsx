@@ -51,7 +51,7 @@ export function PsychologistDirectoryCard({ psychologist }: PsychologistDirector
 
         <motion.div className="mt-auto pt-8" transition={INTERACTIVE_SPRING} whileHover={{ x: 4 }}>
           <Link
-            className="inline-flex items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex min-h-11 items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8 outline-none focus-visible:ring-2 focus-visible:ring-primary"
             to={`/psychologists/${psychologist.slug}`}
           >
             {t('routes.psychologists.viewProfile', { name: psychologist.nickname })}

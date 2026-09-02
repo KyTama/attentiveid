@@ -13,7 +13,7 @@ export function PsychologistDirectoryReassurance() {
       <section className="bg-[#f3ede3] px-5 py-20 text-center lg:px-8 lg:py-24">
         <div className="mx-auto max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t('routes.psychologists.comparison.eyebrow')}</p>
-          <h2 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">
+          <h2 className="mt-4 text-[2rem] font-semibold tracking-[-0.03em] text-secondary sm:text-balance sm:text-5xl">
             {t('routes.psychologists.comparison.title')}
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/60">{t('routes.psychologists.comparison.description')}</p>

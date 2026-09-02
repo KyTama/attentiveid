@@ -107,10 +107,11 @@ export function PsychologistDirectoryFilters({
           <div className="grid gap-4 border-t border-secondary/10 pt-8 md:grid-cols-[1fr_auto] md:items-end">
             <label className="block">
               <span className="text-sm font-semibold text-secondary">{t('routes.psychologists.filters.searchLabel')}</span>
-              <span className="mt-3 flex items-center gap-3 rounded-2xl border border-secondary/15 bg-white px-4 py-3 focus-within:ring-2 focus-within:ring-primary">
+              <span className="mt-3 flex min-h-12 items-center gap-3 rounded-2xl border border-secondary/15 bg-white px-4 focus-within:ring-2 focus-within:ring-primary">
                 <Search aria-hidden="true" className="shrink-0 text-secondary/40" size={19} />
                 <input
-                  className="min-w-0 flex-1 bg-transparent text-base text-secondary outline-none placeholder:text-secondary/35"
+                  aria-label={t('routes.psychologists.filters.searchLabel')}
+                  className="h-12 min-w-0 flex-1 bg-transparent text-base text-secondary outline-none placeholder:text-secondary/35"
                   onChange={(event) => onSearchChange(event.target.value)}
                   placeholder={t('routes.psychologists.filters.searchPlaceholder')}
                   type="search"

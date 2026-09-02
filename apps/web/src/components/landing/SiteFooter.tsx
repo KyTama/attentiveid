@@ -17,24 +17,24 @@ export function SiteFooter() {
         </div>
         <div>
           <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-secondary">{t('homepage.footer.explore')}</h2>
-          <div className="mt-5 grid gap-3 text-sm text-secondary/70">
-            <a href="/#support">{t('homepage.nav.support')}</a>
-            <Link to="/psychologists">{t('homepage.nav.psychologists')}</Link>
-            <a href="/#faq">{t('homepage.nav.faq')}</a>
+          <div className="mt-3 grid text-sm text-secondary/70">
+            <a className="inline-flex min-h-11 items-center" href="/#support">{t('homepage.nav.support')}</a>
+            <Link className="inline-flex min-h-11 items-center" to="/psychologists">{t('homepage.nav.psychologists')}</Link>
+            <a className="inline-flex min-h-11 items-center" href="/#faq">{t('homepage.nav.faq')}</a>
           </div>
         </div>
         <div id="contact">
           <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-secondary">{t('homepage.footer.contact')}</h2>
           <div className="mt-5 grid gap-4 text-sm text-secondary/70">
-            <a className="flex items-start gap-3" href={whatsappUrl} rel="noopener noreferrer" target="_blank">
+            <a className="flex min-h-11 items-center gap-3" href={whatsappUrl} rel="noopener noreferrer" target="_blank">
               <MessageCircle aria-hidden="true" className="mt-0.5 shrink-0 text-primary" size={18} />
               {contact.whatsapp.displayNumber}
             </a>
-            <a className="flex items-start gap-3" href={contact.location.mapsUrl} rel="noopener noreferrer" target="_blank">
+            <a className="flex min-h-11 items-start gap-3 py-2" href={contact.location.mapsUrl} rel="noopener noreferrer" target="_blank">
               <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-primary" size={18} />
               {contact.location.address}
             </a>
-            <a className="flex items-center gap-3" href={contact.social.instagram} rel="noopener noreferrer" target="_blank">
+            <a className="flex min-h-11 items-center gap-3" href={contact.social.instagram} rel="noopener noreferrer" target="_blank">
               <Instagram aria-hidden="true" className="text-primary" size={18} />
               @attentive.id
             </a>
@@ -47,4 +47,3 @@ export function SiteFooter() {
     </footer>
   )
 }
-
