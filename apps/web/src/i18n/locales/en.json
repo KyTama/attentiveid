@@ -534,7 +534,7 @@
       "title": "What has been on your mind?",
       "description": "You do not need to know exactly what kind of support to ask for. Begin with the area closest to your experience.",
       "selectedLabel": "A place to begin",
-      "action": "See matching psychologists",
+      "action": "Explore psychologists",
       "topics": [
         { "id": "adult", "title": "Individual counseling", "description": "A private space for anxiety, mood, trauma, self-esteem, emotional regulation, and personal growth." },
         { "id": "relationships", "title": "Couples and relationships", "description": "Support for communication, trust, conflict, premarital concerns, and changing relationship patterns." },
@@ -556,12 +556,16 @@
     },
     "featured": {
       "title": "Find someone you can actually talk to.",
-      "description": "Different psychologists bring different experience and ways of working. Meet a few of our professionals before exploring the full directory.",
+      "description": "Every psychologist brings different experience and areas of focus. Review the complete team, their practice license, and the concerns they commonly support.",
       "viewAll": "Meet all psychologists",
       "available": "Featured psychologist",
       "experience": "professional experience",
       "viewProfile": "View {{name}}'s profile",
-      "select": "Show {{name}}"
+      "select": "Show {{name}}",
+      "licenseUnavailable": "Not currently listed",
+      "specializationsLabel": "Highlighted areas of experience",
+      "previous": "Previous psychologists",
+      "next": "More psychologists"
     },
     "journey": {
       "title": "Start in the way that feels right for you.",
@@ -575,7 +579,10 @@
     },
     "stories": {
       "title": "What our clients have shared.",
-      "description": "Real experiences from people we have supported on their journey."
+      "description": "Real experiences from people we have supported on their journey.",
+      "reviewPrompt": "Take your time reading public feedback before deciding whether our approach feels right for you.",
+      "googleRating": "5.0 on Google · 53 reviews",
+      "googleAction": "Read our Google reviews"
     },
     "pricing": {
       "title": "Know what to expect before you begin.",
@@ -588,7 +595,9 @@
       "onlineDescription": "Consult through video or voice call with a schedule coordinated around availability.",
       "offlineTitle": "Meet in a calm, private space",
       "offlineDescription": "In-person sessions are available at Attentive Jakarta and BSD.",
-      "action": "Ask about schedule and pricing"
+      "action": "Ask about schedule and pricing",
+      "imageAlt": "An online psychological consultation",
+      "imageCaption": "Meet online from a private place that feels comfortable."
     },
     "faq": {
       "title": "It is okay to have questions.",
@@ -684,16 +693,17 @@
         "eyebrow": "Not sure who to choose?",
         "title": "You do not have to compare every profile.",
         "description": "Start with one or two people whose experience feels relevant. A short list is enough to make the next step feel manageable.",
-        "action": "Review my filters"
+        "action": "Ask for guidance on WhatsApp"
       },
       "help": {
         "eyebrow": "Still deciding?",
         "title": "Finding the right person can take a little time.",
-        "description": "Tell our admin what you are looking for and what matters to you. We can help you narrow the current options without claiming an automated match.",
+        "description": "Tell our admin what you are looking for and what matters to you. We will help you explore your options, at your pace.",
         "action": "Chat with our admin"
       }
     },
     "profile": {
+      "noteTitle": "A space to begin with {{name}}.",
       "back": "Back to psychologists",
       "bookWhatsApp": "Ask about {{name}} on WhatsApp",
       "bookingHandoff": "WhatsApp opens a conversation with Attentive's admin. Your session is arranged only after the schedule and format are confirmed with you.",
@@ -703,7 +713,7 @@
       "supportAreasTitle": "What you can bring into the room",
       "supportAreasDescription": "These are the concerns currently listed for {{name}}. You do not need to fit your experience into one perfect label before reaching out.",
       "conversationQuote": "You can start with the part that feels hardest to explain.",
-      "conversationDescription": "A first conversation is a place to clarify what has been happening, what you need, and whether continuing together feels right. This page does not claim a personal therapy approach that has not yet been provided by the psychologist.",
+      "conversationDescription": "A first conversation is a place to clarify what has been happening, what you need, and whether continuing together feels right. You can take your time, ask questions, and share only what you feel ready to share.",
       "firstStepTitle": "A clear, human first step",
       "firstSteps": [
         {
@@ -720,11 +730,11 @@
         }
       ],
       "bookingTitle": "Ask first. Decide when you feel ready.",
-      "bookingDescription": "Message our admin to ask about {{name}}, current availability, and the consultation format. There is no automatic booking or availability claim on this placeholder profile.",
+      "bookingDescription": "Message our admin to ask about {{name}}, current availability, and the consultation format. We will confirm the details with you before arranging a session.",
       "bookingAction": "Continue on WhatsApp",
       "licenseLabel": "Practice license",
       "relatedTitle": "Keep exploring at your own pace",
-      "relatedDescription": "These profiles are current placeholder options in a similar support area. Review them without losing your place in the directory.",
+      "relatedDescription": "Explore psychologists working in similar support areas, and take your time finding someone you feel comfortable talking to.",
       "viewDirectory": "View every psychologist",
       "notFoundTitle": "Psychologist profile not found",
       "notFoundDescription": "This profile may have moved or is no longer available. Return to the directory or ask our admin for help finding the right current option.",

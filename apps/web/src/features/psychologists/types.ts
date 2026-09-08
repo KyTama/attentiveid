@@ -25,10 +25,10 @@ export interface PsychologistSummary {
   experienceYears: number
   experienceLabel: string
   bookingUrl: string
+  licenseNumber?: string
 }
 
 export interface PsychologistProfile extends PsychologistSummary {
-  licenseNumber?: string
   premiumBookingUrl?: string
 }
 

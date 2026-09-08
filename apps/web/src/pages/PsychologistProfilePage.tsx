@@ -57,7 +57,7 @@ export function PsychologistProfilePage() {
     if (state.status === 'loading') return
 
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>('[data-route-heading]')?.focus()
+      document.querySelector<HTMLElement>('[data-route-heading]')?.focus({ preventScroll: true })
     })
 
     return () => window.cancelAnimationFrame(frame)

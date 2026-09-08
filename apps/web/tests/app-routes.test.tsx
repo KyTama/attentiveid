@@ -77,7 +77,11 @@ describe('public routes', () => {
       supportArea: 'adultClinical',
     }
 
-    render(<PsychologistProfileDetails psychologist={psychologist} />)
+    render(
+      <MemoryRouter>
+        <PsychologistProfileDetails psychologist={psychologist} />
+      </MemoryRouter>,
+    )
 
     expect(screen.queryByText(/practice license/i)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /continue on whatsapp/i })).toHaveAttribute(

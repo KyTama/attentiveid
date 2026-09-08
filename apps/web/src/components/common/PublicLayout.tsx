@@ -7,11 +7,11 @@ export function PublicLayout() {
 
   useEffect(() => {
     if (navigationType !== 'POP') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }
 
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>('[data-route-heading]')?.focus()
+      document.querySelector<HTMLElement>('[data-route-heading]')?.focus({ preventScroll: true })
     })
 
     return () => window.cancelAnimationFrame(frame)

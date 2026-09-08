@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowLeft, BadgeCheck, Clock3, MessageCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PsychologistProfile } from '@/features/psychologists'
@@ -13,89 +13,37 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
   const { t } = useTranslation()
 
   return (
-    <section className="px-5 pb-20 pt-8 lg:px-8 lg:pb-28 lg:pt-12">
+    <section className="bg-white px-5 pb-12 pt-6 lg:px-8 lg:pb-16">
       <div className="mx-auto max-w-7xl">
-        <Link
-          className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-secondary/65 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
-          to="/psychologists"
-        >
-          <ArrowLeft aria-hidden="true" size={18} />
-          {t('routes.profile.back')}
+        <Link className="inline-flex min-h-11 items-center gap-2 text-sm text-secondary/80 underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/psychologists">
+          <ArrowLeft aria-hidden="true" size={16} />{t('routes.profile.back')}
         </Link>
-
-        <div className="mt-8 grid overflow-hidden rounded-[2.5rem] bg-secondary text-white lg:grid-cols-[0.92fr_1.08fr]">
-          <div className="relative min-h-[31rem] overflow-hidden bg-[#dfe3df] sm:min-h-[40rem] lg:min-h-[46rem]">
-            <img
-              alt={psychologist.name}
-              className="absolute inset-0 h-full w-full object-cover object-top"
-              decoding="async"
-              fetchPriority="high"
-              height="900"
-              src={psychologist.imageUrl}
-              width="720"
-            />
+        <div className="mt-6 grid items-start gap-8 md:grid-cols-[0.8fr_1.2fr] xl:grid-cols-[0.85fr_1.25fr_0.65fr]">
+          <div className="mx-auto aspect-[3/4] w-full max-w-80 overflow-hidden rounded-[3rem_3rem_1rem_1rem] border-2 border-primary bg-[#f5efe5]">
+            <img alt={psychologist.name} className="h-full w-full object-cover object-top" decoding="async" fetchPriority="high" height="800" src={psychologist.imageUrl} width="600" />
           </div>
-
-          <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14 xl:p-16">
-            <div>
-              <p className="inline-flex rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">
-                {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
-              </p>
-              <h1
-                className="mt-7 max-w-3xl text-balance text-[clamp(3rem,7vw,6rem)] font-semibold leading-[0.94] tracking-[-0.04em] text-white outline-none"
-                data-route-heading
-                tabIndex={-1}
-              >
-                {psychologist.name}
-              </h1>
-              <p className="mt-5 text-lg text-white/60">{psychologist.credential}</p>
-
-              <div className="mt-9 flex flex-wrap gap-2" aria-label={t('routes.profile.supportLabel')}>
-                {psychologist.specializations.slice(0, 5).map((specialization) => (
-                  <span
-                    className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm leading-6 text-white/70"
-                    key={specialization}
-                  >
-                    {specialization}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-14">
-              <dl className="grid gap-px overflow-hidden rounded-2xl bg-white/15 sm:grid-cols-2">
-                <div className="bg-secondary p-5">
-                  <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-white/45">
-                    <Clock3 aria-hidden="true" className="text-primary" size={17} />
-                    {t('routes.profile.experienceLabel')}
-                  </dt>
-                  <dd className="mt-3 font-semibold text-white">
-                    {t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}
-                  </dd>
-                </div>
-                <div className="bg-secondary p-5">
-                  <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-white/45">
-                    <BadgeCheck aria-hidden="true" className="text-primary" size={17} />
-                    {t('routes.profile.credentialLabel')}
-                  </dt>
-                  <dd className="mt-3 font-semibold text-white">{psychologist.credential}</dd>
-                </div>
-              </dl>
-
-              <motion.a
-                className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-primary px-7 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary sm:w-auto"
-                href={psychologist.bookingUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-                transition={INTERACTIVE_SPRING}
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <MessageCircle aria-hidden="true" size={19} />
+          <div className="py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#946a22]">{t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}</p>
+            <h1 className="mt-5 text-balance text-3xl font-bold leading-tight tracking-[-0.03em] text-secondary outline-none sm:text-4xl" data-route-heading tabIndex={-1}>{psychologist.name}</h1>
+            <p className="mt-3 text-base text-secondary">{psychologist.credential}</p>
+            <p className="mt-7 text-sm italic text-secondary/80">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <motion.a className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
                 {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
               </motion.a>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/50">{t('routes.profile.bookingHandoff')}</p>
+              <a className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 px-4 py-3 text-sm text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary" href="#profile-booking">
+                {t('routes.profile.helpAction')}<ArrowRight aria-hidden="true" size={16} />
+              </a>
             </div>
+            <p className="mt-4 text-sm leading-6 text-secondary/75">{t('routes.profile.bookingHandoff')}</p>
+          </div>
+          <div className="md:col-span-2 xl:col-span-1">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#946a22]">{t('routes.profile.supportLabel')}</h2>
+            <ul className="mt-4 flex flex-wrap gap-2 xl:flex-col">
+              {psychologist.specializations.map((specialization) => (
+                <li className="rounded-full border border-primary/30 bg-[#fcf8f1] px-4 py-2 text-xs leading-5 text-secondary" key={specialization}>{specialization}</li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

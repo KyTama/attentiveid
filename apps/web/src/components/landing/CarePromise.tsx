@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { UserRound } from 'lucide-react'
 
 interface PromiseItem {
   description: string
@@ -17,10 +18,17 @@ export function CarePromise() {
         <p className="mt-5 max-w-2xl text-base leading-7 text-white/65">{t('homepage.promise.description')}</p>
         <ol className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((item, itemIndex) => (
-            <li className="border-t border-white/20 pt-6" key={item.title}>
+            <li className="border-l border-primary/30 pl-6" key={item.title}>
+              {itemIndex === 1 ? (
+                <span aria-hidden="true" className="mb-5 grid size-16 place-items-center rounded-full border border-primary text-primary">
+                  <UserRound size={34} strokeWidth={1.6} />
+                </span>
+              ) : (
+                <img alt="" className="mb-5 size-16 object-contain" height="64" loading="lazy" src={`/images/figma/care-${itemIndex + 1}.webp`} width="64" />
+              )}
               <span className="text-sm font-bold text-primary">0{itemIndex + 1}</span>
-              <h3 className="mt-8 text-xl font-semibold">{item.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/60">{item.description}</p>
+              <h3 className="mt-5 text-xl font-semibold">{item.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-white/80">{item.description}</p>
             </li>
           ))}
         </ol>
@@ -28,4 +36,3 @@ export function CarePromise() {
     </section>
   )
 }
-

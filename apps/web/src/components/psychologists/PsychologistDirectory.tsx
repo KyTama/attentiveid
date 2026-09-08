@@ -24,8 +24,8 @@ function DirectoryLoadingState() {
   return (
     <div aria-label={t('routes.common.loading')} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="status">
       {Array.from({ length: 6 }, (_, index) => (
-        <div className="overflow-hidden rounded-[2rem] border border-secondary/10 bg-white" key={index}>
-          <div className="aspect-[4/5] bg-[#e9ece9]" />
+        <div className="overflow-hidden rounded-xl border border-secondary/10 bg-white" key={index}>
+          <div className="aspect-[1.65/1] bg-[#e9ece9]" />
           <div className="space-y-4 p-7">
             <div className="h-7 w-3/4 rounded-full bg-[#eee8df]" />
             <div className="h-4 w-1/2 rounded-full bg-[#eee8df]" />
@@ -110,22 +110,24 @@ export function PsychologistDirectory() {
     <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
       <main>
-        <section className="relative overflow-hidden px-5 py-20 text-center lg:px-8 lg:py-28">
+        <section className="relative overflow-hidden bg-white px-5 py-16 text-center lg:px-8 lg:py-20">
           <div aria-hidden="true" className="absolute -right-28 top-4 size-[28rem] rounded-full border border-primary/15" />
           <div aria-hidden="true" className="absolute -right-10 top-24 size-[18rem] rounded-full border border-primary/15" />
           <div className="relative mx-auto max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t('routes.psychologists.eyebrow')}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#946a22]">{t('routes.psychologists.eyebrow')}</p>
             <h1
-              className="mt-5 text-balance text-[clamp(3rem,7vw,6rem)] font-semibold leading-[0.96] tracking-[-0.04em] text-secondary outline-none"
+              className="mt-5 text-balance mx-auto max-w-3xl text-[clamp(2.25rem,4.5vw,3.5rem)] font-bold leading-[1.15] tracking-[-0.04em] text-secondary outline-none"
               data-route-heading
               tabIndex={-1}
             >
               {t('routes.psychologists.title')}
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-secondary/60 sm:text-lg">{t('routes.psychologists.description')}</p>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-secondary/80 sm:text-lg">{t('routes.psychologists.description')}</p>
             <motion.a
-              className="mt-8 inline-flex rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
-              href="#finder"
+              className="mt-8 inline-flex min-h-11 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
+              href={whatsappUrl}
+              rel="noopener noreferrer"
+              target="_blank"
               transition={INTERACTIVE_SPRING}
               whileHover={{ y: -3 }}
               whileTap={{ scale: 0.98 }}
@@ -151,7 +153,7 @@ export function PsychologistDirectory() {
           supportArea={supportArea}
         />
 
-        <section aria-busy={state.status === 'loading'} aria-live="polite" className="px-5 py-20 lg:px-8 lg:py-28" id="directory-results">
+        <section aria-busy={state.status === 'loading'} aria-live="polite" className="bg-white px-5 pb-16 pt-6 lg:px-8 lg:pb-20" id="directory-results">
           <div className="mx-auto max-w-7xl">
             {state.status === 'loading' && <DirectoryLoadingState />}
 
@@ -164,9 +166,9 @@ export function PsychologistDirectory() {
             )}
 
             {state.status === 'empty' && (
-              <div className="mx-auto max-w-2xl rounded-[2rem] border border-secondary/10 bg-white p-8 text-center sm:p-12">
+              <div className="mx-auto max-w-2xl rounded-xl border border-secondary/10 bg-white p-8 text-center sm:p-12">
                 <h2 className="text-3xl font-semibold tracking-[-0.03em] text-secondary">{t('routes.psychologists.states.emptyTitle')}</h2>
-                <p className="mt-4 text-base leading-7 text-secondary/60">{t('routes.psychologists.states.emptyDescription')}</p>
+                <p className="mt-4 text-base leading-7 text-secondary/80">{t('routes.psychologists.states.emptyDescription')}</p>
                 <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                   <motion.button
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
@@ -196,9 +198,9 @@ export function PsychologistDirectory() {
             )}
 
             {state.status === 'error' && (
-              <div className="mx-auto max-w-2xl rounded-[2rem] border border-secondary/10 bg-white p-8 text-center sm:p-12">
+              <div className="mx-auto max-w-2xl rounded-xl border border-secondary/10 bg-white p-8 text-center sm:p-12">
                 <h2 className="text-3xl font-semibold tracking-[-0.03em] text-secondary">{t('routes.psychologists.states.errorTitle')}</h2>
-                <p className="mt-4 text-base leading-7 text-secondary/60">{t('routes.psychologists.states.errorDescription')}</p>
+                <p className="mt-4 text-base leading-7 text-secondary/80">{t('routes.psychologists.states.errorDescription')}</p>
                 <motion.button
                   className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   onClick={() => setRequestVersion((current) => current + 1)}

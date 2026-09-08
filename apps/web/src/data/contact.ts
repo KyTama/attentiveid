@@ -22,6 +22,7 @@ export const contact = {
         icon: CONTACT.location,
         // Future: Google Maps embed URL
         mapsUrl: 'https://maps.google.com/?q=Jl.+Teratai+IV+No.4+Jagakarsa+Jakarta+Selatan',
+        reviewsUrl: 'https://www.google.com/maps/search/?api=1&query=Attentive.id%20Jl.%20Teratai%20IV%20No.4%20Jagakarsa%20Jakarta%20Selatan',
     },
     social: {
         instagram: 'https://instagram.com/attentive.id',

@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import i18n from '../src/i18n'
 import { Homepage } from '../src/components/landing/Homepage'
+import { psychologists } from '../src/data/psychologists'
 
 function renderHomepage() {
   return render(
@@ -19,6 +20,7 @@ describe('homepage', () => {
   })
 
   it('presents the new care narrative and directory routes', async () => {
+    const user = userEvent.setup()
     renderHomepage()
 
     expect(screen.getByRole('heading', { name: /support starts with feeling understood/i })).toBeInTheDocument()
@@ -30,6 +32,15 @@ describe('homepage', () => {
     expect(await screen.findByRole('link', { name: /view syazka's profile/i })).toHaveAttribute(
       'href',
       '/psychologists/syazka',
+    )
+    expect(await screen.findAllByRole('button', { name: /show .*$/i })).toHaveLength(psychologists.length)
+    expect(screen.getByText('20190974-2021-02-1552')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /show jeanete ophilia papilaya/i }))
+    expect(screen.getByText('440/3378/Dinkes/2020')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /view jeanette's profile/i })).toHaveAttribute('href', '/psychologists/jean')
+    expect(screen.getByRole('link', { name: /read our google reviews/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('google.com/maps'),
     )
   })
 
@@ -83,5 +94,28 @@ describe('homepage', () => {
       expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
       expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
     }
+  })
+
+  it('shows all six support choices without hiding content behind tabs', async () => {
+    renderHomepage()
+
+    const links = screen.getAllByRole('link', { name: /explore psychologists:/i })
+    expect(links).toHaveLength(6)
+    for (const link of links) expect(link).toHaveAttribute('href', '/psychologists')
+    expect(screen.getByRole('heading', { name: /child and adolescent support/i })).toBeInTheDocument()
+    await screen.findByRole('link', { name: /view syazka's profile/i })
+  })
+
+  it('closes mobile navigation with Escape and restores toggle focus', async () => {
+    const user = userEvent.setup()
+    renderHomepage()
+
+    const toggle = screen.getByRole('button', { name: /open navigation menu/i })
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await user.tab()
+    await user.keyboard('{Escape}')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveFocus()
   })
 })

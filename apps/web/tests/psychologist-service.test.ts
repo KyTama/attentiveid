@@ -6,6 +6,7 @@ import {
   listRelatedPsychologists,
   parsePsychologistListQuery,
 } from '../src/features/psychologists'
+import { psychologists } from '../src/data/psychologists'
 
 describe('psychologist service', () => {
   it('normalizes case and whitespace when searching names', async () => {
@@ -39,6 +40,17 @@ describe('psychologist service', () => {
     })
 
     expect(result).toEqual({ status: 'empty', psychologists: [] })
+  })
+
+  it('keeps practice licenses available in list summaries', async () => {
+    const result = await listPsychologists()
+
+    expect(result.status).toBe('success')
+    if (result.status === 'success') {
+      expect(result.psychologists).toHaveLength(psychologists.length)
+      expect(result.psychologists.find((psychologist) => psychologist.slug === 'syazka')?.licenseNumber)
+        .toBe('20190974-2021-02-1552')
+    }
   })
 
   it('ignores invalid URL filters and writes canonical query parameters', () => {

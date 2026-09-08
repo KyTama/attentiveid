@@ -14,14 +14,14 @@ export function RelatedPsychologists({ psychologists }: RelatedPsychologistsProp
   if (psychologists.length === 0) return null
 
   return (
-    <section className="bg-white px-5 py-24 lg:px-8 lg:py-32">
+    <section className="bg-white px-5 py-16 lg:px-8 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">
+            <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">
               {t('routes.profile.relatedTitle')}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-secondary/65">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-secondary/80">
               {t('routes.profile.relatedDescription')}
             </p>
           </div>

@@ -54,6 +54,7 @@ const mapPsychologistSummary = (fixture: Psychologist): PsychologistSummary => (
   experienceYears: parseExperienceYears(fixture.experience),
   experienceLabel: fixture.experience,
   bookingUrl: fixture.reservationLink,
+  licenseNumber: fixture.sipp === '-' ? undefined : fixture.sipp,
 })
 
 const matchesQuery = (psychologist: PsychologistSummary, query: PsychologistListQuery) => {

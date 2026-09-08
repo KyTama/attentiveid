@@ -534,7 +534,7 @@
       "title": "Apa yang sedang memenuhi pikiranmu?",
       "description": "Kamu tidak harus langsung tahu jenis bantuan yang tepat. Mulailah dari area yang paling dekat dengan pengalamanmu.",
       "selectedLabel": "Tempat untuk memulai",
-      "action": "Lihat psikolog yang sesuai",
+      "action": "Jelajahi psikolog",
       "topics": [
         { "id": "adult", "title": "Konseling individual", "description": "Ruang privat untuk kecemasan, suasana hati, trauma, kepercayaan diri, regulasi emosi, dan pengembangan diri." },
         { "id": "relationships", "title": "Pasangan dan relasi", "description": "Dukungan untuk komunikasi, kepercayaan, konflik, persiapan pernikahan, dan pola relasi yang ingin diubah." },
@@ -556,12 +556,16 @@
     },
     "featured": {
       "title": "Temukan seseorang yang benar-benar bisa diajak bicara.",
-      "description": "Setiap psikolog membawa pengalaman dan cara kerja yang berbeda. Kenali beberapa profesional kami sebelum menjelajahi direktori lengkap.",
+      "description": "Setiap psikolog membawa pengalaman dan area fokus yang berbeda. Kenali seluruh tim, nomor izin praktik, dan kebutuhan yang biasa mereka dampingi.",
       "viewAll": "Kenali semua psikolog",
       "available": "Psikolog pilihan",
       "experience": "pengalaman profesional",
       "viewProfile": "Lihat profil {{name}}",
-      "select": "Tampilkan {{name}}"
+      "select": "Tampilkan {{name}}",
+      "licenseUnavailable": "Belum tercantum",
+      "specializationsLabel": "Sorotan area pengalaman",
+      "previous": "Psikolog sebelumnya",
+      "next": "Psikolog berikutnya"
     },
     "journey": {
       "title": "Mulai dengan cara yang terasa tepat untukmu.",
@@ -575,7 +579,10 @@
     },
     "stories": {
       "title": "Cerita yang dibagikan klien kami.",
-      "description": "Pengalaman nyata dari orang-orang yang pernah kami dampingi dalam perjalanannya."
+      "description": "Pengalaman nyata dari orang-orang yang pernah kami dampingi dalam perjalanannya.",
+      "reviewPrompt": "Luangkan waktu membaca pengalaman publik lainnya sebelum memutuskan apakah pendekatan kami terasa tepat untukmu.",
+      "googleRating": "5,0 di Google · 53 ulasan",
+      "googleAction": "Baca ulasan kami di Google"
     },
     "pricing": {
       "title": "Ketahui prosesnya sebelum memulai.",
@@ -588,7 +595,9 @@
       "onlineDescription": "Konsultasi melalui video atau suara dengan jadwal yang dikoordinasikan sesuai ketersediaan.",
       "offlineTitle": "Bertemu di ruang yang tenang dan privat",
       "offlineDescription": "Sesi tatap muka tersedia di Attentive Jakarta dan BSD.",
-      "action": "Tanya jadwal dan biaya"
+      "action": "Tanya jadwal dan biaya",
+      "imageAlt": "Konsultasi psikologi secara online",
+      "imageCaption": "Bertemu secara online dari tempat privat yang terasa nyaman."
     },
     "faq": {
       "title": "Tidak apa-apa kalau masih punya pertanyaan.",
@@ -682,16 +691,17 @@
         "eyebrow": "Belum yakin memilih siapa?",
         "title": "Kamu tidak perlu membandingkan semua profil.",
         "description": "Mulai dari satu atau dua orang dengan pengalaman yang terasa relevan. Daftar pendek sudah cukup untuk membuat langkah berikutnya lebih ringan.",
-        "action": "Tinjau filterku"
+        "action": "Minta panduan melalui WhatsApp"
       },
       "help": {
         "eyebrow": "Masih mempertimbangkan?",
         "title": "Menemukan orang yang tepat kadang membutuhkan waktu.",
-        "description": "Ceritakan kepada admin apa yang kamu cari dan hal yang penting bagimu. Kami dapat membantu mempersempit pilihan saat ini tanpa mengklaim adanya pencocokan otomatis.",
+        "description": "Ceritakan kepada admin apa yang kamu cari dan hal yang penting bagimu. Kami akan membantu mengenali pilihanmu, tanpa terburu-buru.",
         "action": "Chat dengan admin"
       }
     },
     "profile": {
+      "noteTitle": "Ruang untuk memulai bersama {{name}}.",
       "back": "Kembali ke daftar psikolog",
       "bookWhatsApp": "Tanya jadwal {{name}} via WhatsApp",
       "bookingHandoff": "WhatsApp akan membuka percakapan dengan admin Attentive. Sesi baru diatur setelah jadwal dan format konsultasi dikonfirmasi bersamamu.",
@@ -701,7 +711,7 @@
       "supportAreasTitle": "Hal-hal yang bisa kamu bawa ke ruang konsultasi",
       "supportAreasDescription": "Berikut adalah topik yang saat ini tercantum untuk {{name}}. Kamu tidak perlu memaksakan pengalamanmu masuk ke satu label yang sempurna sebelum menghubungi kami.",
       "conversationQuote": "Kamu bisa mulai dari bagian yang paling sulit dijelaskan.",
-      "conversationDescription": "Percakapan pertama adalah ruang untuk memperjelas apa yang sedang terjadi, apa yang kamu butuhkan, dan apakah melanjutkan bersama terasa tepat. Halaman ini tidak mengklaim pendekatan terapi personal yang belum diberikan langsung oleh psikolog.",
+      "conversationDescription": "Percakapan pertama adalah ruang untuk memperjelas apa yang sedang terjadi, apa yang kamu butuhkan, dan apakah melanjutkan bersama terasa tepat. Kamu boleh mengambil waktu, bertanya, dan bercerita sebatas yang membuatmu nyaman.",
       "firstStepTitle": "Langkah pertama yang jelas dan manusiawi",
       "firstSteps": [
         {
@@ -718,11 +728,11 @@
         }
       ],
       "bookingTitle": "Tanya dulu. Putuskan saat kamu merasa siap.",
-      "bookingDescription": "Hubungi admin untuk menanyakan {{name}}, ketersediaan terbaru, dan format konsultasi. Profil placeholder ini tidak mengklaim reservasi atau jadwal tersedia secara otomatis.",
+      "bookingDescription": "Hubungi admin untuk menanyakan {{name}}, ketersediaan terbaru, dan format konsultasi. Kami akan mengonfirmasi detailnya bersamamu sebelum mengatur sesi.",
       "bookingAction": "Lanjutkan via WhatsApp",
       "licenseLabel": "Nomor izin praktik",
       "relatedTitle": "Jelajahi pilihan lain sesuai ritmemu",
-      "relatedDescription": "Profil berikut adalah pilihan placeholder saat ini dalam area dukungan yang serupa. Kamu bisa membandingkannya tanpa kehilangan konteks dari daftar psikolog.",
+      "relatedDescription": "Kenali psikolog dengan area dukungan serupa. Luangkan waktu untuk menemukan seseorang yang membuatmu nyaman bercerita.",
       "viewDirectory": "Lihat semua psikolog",
       "notFoundTitle": "Profil psikolog tidak ditemukan",
       "notFoundDescription": "Profil ini mungkin telah dipindahkan atau sudah tidak tersedia. Kembali ke daftar atau minta bantuan admin untuk menemukan pilihan yang tersedia saat ini.",

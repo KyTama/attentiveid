@@ -1,7 +1,6 @@
 import { Instagram, MapPin, MessageCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { BRAND } from '@/assets/images'
 import { contact, createWhatsAppLink, defaultContactMessage } from '@/data/contact'
 
 export function SiteFooter() {
@@ -12,8 +11,8 @@ export function SiteFooter() {
     <footer className="border-t border-secondary/10 bg-[#f3ede3] px-5 py-12 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="max-w-sm">
-          <img alt="Attentive.id" height="56" src={BRAND.logo} width="179" />
-          <p className="mt-5 text-sm leading-6 text-secondary/65">{t('homepage.footer.statement')}</p>
+          <img alt="Attentive.id" className="h-auto w-44" height="144" loading="lazy" src="/images/figma/attentive-logo.webp" width="528" />
+          <p className="mt-5 text-sm leading-6 text-secondary/80">{t('homepage.footer.statement')}</p>
         </div>
         <div>
           <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-secondary">{t('homepage.footer.explore')}</h2>
@@ -41,7 +40,7 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <p className="mx-auto mt-12 max-w-7xl border-t border-secondary/10 pt-6 text-xs text-secondary/50">
+      <p className="mx-auto mt-12 max-w-7xl border-t border-secondary/10 pt-6 text-xs text-secondary/80">
         © {new Date().getFullYear()} Attentive.id. {t('homepage.footer.rights')}
       </p>
     </footer>

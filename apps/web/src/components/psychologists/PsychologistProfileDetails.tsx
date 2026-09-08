@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
-import { Check, MessageCircle, Quote } from 'lucide-react'
+import { BadgeCheck, Clock3, MessageCircle, Quote } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import type { PsychologistProfile } from '@/features/psychologists'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
@@ -19,92 +20,67 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
 
   return (
     <>
-      <section className="bg-white px-5 py-24 lg:px-8 lg:py-32">
-        <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+      <section className="bg-white px-5 py-16 lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 lg:gap-24">
           <div>
-            <h2 className="max-w-xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">
-              {t('routes.profile.supportAreasTitle')}
-            </h2>
-            <p className="mt-5 max-w-lg text-base leading-7 text-secondary/65">
-              {t('routes.profile.supportAreasDescription', { name: psychologist.nickname })}
-            </p>
+            <h2 className="text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{t('routes.profile.noteTitle', { name: psychologist.nickname })}</h2>
+            <p className="mt-6 text-base leading-8 text-secondary/80">{t('routes.profile.conversationDescription')}</p>
+            <p className="mt-5 text-base leading-8 text-secondary/80">{t('routes.profile.supportAreasDescription', { name: psychologist.nickname })}</p>
           </div>
-
-          <ul className="border-t border-secondary/15">
-            {psychologist.specializations.map((specialization) => (
-              <li
-                className="flex items-start gap-4 border-b border-secondary/15 py-5 text-base font-medium leading-7 text-secondary sm:text-lg"
-                key={specialization}
-              >
-                <span className="mt-1 grid size-6 shrink-0 place-items-center rounded-full bg-[#eee5d8] text-primary">
-                  <Check aria-hidden="true" size={14} strokeWidth={2.5} />
-                </span>
-                {specialization}
+          <figure className="self-center">
+            <Quote aria-hidden="true" className="text-primary" size={40} />
+            <blockquote className="mt-4 font-serif text-3xl font-semibold leading-relaxed text-secondary sm:text-4xl">{t('routes.profile.conversationQuote')}</blockquote>
+          </figure>
+        </div>
+      </section>
+      <section className="relative overflow-hidden bg-[#faf3e7] px-5 py-16 lg:px-8 lg:py-24">
+        <img alt="" className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 object-contain object-right opacity-40" height="758" loading="lazy" src="/images/figma/profile-rings.webp" width="327" />
+        <div className="relative mx-auto max-w-6xl">
+          <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{t('routes.profile.firstStepTitle')}</h2>
+          <ol className="mt-8 max-w-3xl">
+            {firstSteps.map((step, stepIndex) => (
+              <li className="grid grid-cols-[auto_1fr] gap-6 border-b border-primary/20 py-6 sm:gap-10" key={step.title}>
+                <span className="text-4xl font-light tabular-nums text-[#946a22]">0{stepIndex + 1}</span>
+                <div>
+                  <h3 className="text-base font-bold text-secondary">{step.title}</h3>
+                  <p className="mt-2 max-w-xl text-sm leading-7 text-secondary/80">{step.description}</p>
+                </div>
               </li>
             ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="px-5 py-24 lg:px-8 lg:py-32">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div className="max-w-3xl">
-            <Quote aria-hidden="true" className="text-primary" size={34} />
-            <blockquote className="mt-8 text-balance text-4xl font-semibold leading-tight tracking-[-0.03em] text-secondary sm:text-5xl">
-              “{t('routes.profile.conversationQuote')}”
-            </blockquote>
-            <p className="mt-7 max-w-2xl text-base leading-7 text-secondary/65">
-              {t('routes.profile.conversationDescription')}
-            </p>
-          </div>
-
-          <div className="rounded-[2rem] bg-[#eee5d8] p-7 sm:p-10">
-            <h2 className="text-3xl font-semibold tracking-[-0.02em] text-secondary">
-              {t('routes.profile.firstStepTitle')}
-            </h2>
-            <ol className="mt-8 border-t border-secondary/15">
-              {firstSteps.map((step, stepIndex) => (
-                <li className="grid grid-cols-[auto_1fr] gap-5 border-b border-secondary/15 py-6" key={step.title}>
-                  <span className="font-semibold tabular-nums text-primary">0{stepIndex + 1}</span>
-                  <div>
-                    <h3 className="font-semibold text-secondary">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-secondary/60">{step.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-secondary px-5 py-24 text-white lg:px-8 lg:py-28">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
-            <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">
-              {t('routes.profile.bookingTitle')}
-            </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/65">
-              {t('routes.profile.bookingDescription', { name: psychologist.nickname })}
-            </p>
+          </ol>
+          <dl className="mt-12 grid gap-7 border-t border-primary/20 pt-8 md:grid-cols-3">
+            <div>
+              <dt className="flex items-center gap-2 text-sm font-semibold"><Clock3 aria-hidden="true" className="text-[#946a22]" size={20} />{t('routes.profile.experienceLabel')}</dt>
+              <dd className="mt-3 text-sm text-secondary/80">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</dd>
+            </div>
+            <div>
+              <dt className="flex items-center gap-2 text-sm font-semibold"><BadgeCheck aria-hidden="true" className="text-[#946a22]" size={20} />{t('routes.profile.credentialLabel')}</dt>
+              <dd className="mt-3 text-sm text-secondary/80">{psychologist.credential}</dd>
+            </div>
             {psychologist.licenseNumber && (
-              <p className="mt-8 text-sm text-white/45">
-                {t('routes.profile.licenseLabel')}: {psychologist.licenseNumber}
-              </p>
+              <div>
+                <dt className="text-sm font-semibold">{t('routes.profile.licenseLabel')}</dt>
+                <dd className="mt-3 break-words text-sm text-secondary/80">{psychologist.licenseNumber}</dd>
+              </div>
             )}
+          </dl>
+        </div>
+      </section>
+      <section className="bg-secondary px-5 py-16 text-white lg:px-8 lg:py-20" id="profile-booking">
+        <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <h2 className="max-w-xl text-balance text-3xl font-bold tracking-[-0.03em] sm:text-4xl">{t('routes.profile.bookingTitle')}</h2>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/80">{t('routes.profile.bookingDescription', { name: psychologist.nickname })}</p>
+            <motion.a className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-md bg-primary px-7 py-4 font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary sm:w-auto" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
+              <MessageCircle aria-hidden="true" size={19} />{t('routes.profile.bookingAction')}
+            </motion.a>
           </div>
-
-          <motion.a
-            className="inline-flex items-center justify-center gap-3 rounded-full bg-primary px-7 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
-            href={psychologist.bookingUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-            transition={INTERACTIVE_SPRING}
-            whileHover={{ y: -4 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <MessageCircle aria-hidden="true" size={19} />
-            {t('routes.profile.bookingAction')}
-          </motion.a>
+          <aside className="border-t border-white/20 pt-8 md:border-l md:border-t-0 md:pl-10">
+            <MessageCircle aria-hidden="true" className="text-primary" size={28} />
+            <h3 className="mt-5 text-xl font-bold">{t('routes.psychologists.help.eyebrow')}</h3>
+            <p className="mt-4 text-sm leading-7 text-white/80">{t('routes.psychologists.help.description')}</p>
+            <Link className="mt-6 inline-flex min-h-11 items-center rounded-md border border-primary/50 px-4 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/psychologists">{t('routes.profile.viewDirectory')}</Link>
+          </aside>
         </div>
       </section>
     </>
