@@ -16,10 +16,11 @@ function LanguageToggle() {
   const { i18n, t } = useTranslation()
   const isEnglish = i18n.resolvedLanguage?.startsWith('en') ?? true
   const targetLanguage = isEnglish ? 'Bahasa Indonesia' : 'English'
+  const languageCode = isEnglish ? 'ID' : 'EN'
 
   return (
     <motion.button
-      aria-label={t('homepage.nav.languageSwitch', { language: targetLanguage })}
+      aria-label={`${languageCode} — ${t('homepage.nav.languageSwitch', { language: targetLanguage })}`}
       className="min-h-11 min-w-11 rounded-md border border-secondary/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       onClick={() => i18n.changeLanguage(isEnglish ? 'id' : 'en')}
       transition={INTERACTIVE_SPRING}
@@ -27,7 +28,7 @@ function LanguageToggle() {
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.96 }}
     >
-      {isEnglish ? 'ID' : 'EN'}
+      {languageCode}
     </motion.button>
   )
 }

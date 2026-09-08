@@ -10,7 +10,7 @@ export function CarePromise() {
   const items = t('homepage.promise.items', { returnObjects: true }) as PromiseItem[]
 
   return (
-    <section className="relative overflow-hidden bg-secondary px-5 py-24 text-white lg:px-8 lg:py-28">
+    <section className="deferred-section relative overflow-hidden bg-secondary px-5 py-24 text-white lg:px-8 lg:py-28">
       <div className="absolute -right-28 top-10 size-96 rounded-full border border-primary/25" />
       <div className="absolute -right-14 top-24 size-72 rounded-full border border-primary/20" />
       <div className="relative mx-auto max-w-7xl">

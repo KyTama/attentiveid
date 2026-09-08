@@ -3,8 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/webp" href="/images/favicon.webp" />
+    <link rel="preload" href="/fonts/montserrat-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Attentive.id membantu Anda menemukan layanan psikologi profesional yang ramah, jelas, dan sesuai kebutuhan." />
     <title>Attentive.id</title>
+    <script>
+      const pathname = window.location.pathname.replace(/\/$/, '') || '/'
+      const psychologistSlugs = new Set(['syazka', 'gita', 'mayda', 'anggun', 'dinda', 'ilham', 'nichi', 'dewinta', 'sekar', 'kia', 'disa', 'jean'])
+      const profileMatch = pathname.match(/^\/psychologists\/([a-z0-9-]+)$/)
+      const profileSlug = profileMatch?.[1]
+      const imageHref = pathname === '/'
+        ? '/images/figma/consultation-hero.webp'
+        : profileSlug && psychologistSlugs.has(profileSlug)
+          ? `/images/psychologists/${profileSlug.charAt(0).toUpperCase()}${profileSlug.slice(1)}.webp`
+          : null
+
+      if (imageHref) {
+        const imagePreload = document.createElement('link')
+        imagePreload.rel = 'preload'
+        imagePreload.as = 'image'
+        imagePreload.href = imageHref
+        imagePreload.fetchPriority = 'high'
+        document.head.append(imagePreload)
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

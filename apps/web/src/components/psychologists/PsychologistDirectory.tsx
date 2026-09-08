@@ -134,7 +134,7 @@ export function PsychologistDirectory() {
             >
               {t('routes.psychologists.introAction')}
             </motion.a>
-            <div className="mx-auto mt-10 flex max-w-2xl flex-col items-center justify-center gap-3 border-t border-secondary/10 pt-6 text-sm text-secondary/55 sm:flex-row sm:gap-8">
+            <div className="mx-auto mt-10 flex max-w-2xl flex-col items-center justify-center gap-3 border-t border-secondary/10 pt-6 text-sm text-secondary/75 sm:flex-row sm:gap-8">
               <p className="flex items-center gap-2"><CheckCircle2 aria-hidden="true" className="text-primary" size={17} />{t('routes.psychologists.introFacts.formats')}</p>
               <p className="flex items-center gap-2"><CheckCircle2 aria-hidden="true" className="text-primary" size={17} />{t('routes.psychologists.introFacts.lifeStages')}</p>
             </div>

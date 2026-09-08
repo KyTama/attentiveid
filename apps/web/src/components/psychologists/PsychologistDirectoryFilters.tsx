@@ -56,7 +56,7 @@ export function PsychologistDirectoryFilters({
         <div className="mt-8 grid gap-6">
           <fieldset>
             <legend className="text-sm font-semibold text-secondary">{t('routes.psychologists.filters.supportLegend')}</legend>
-            <div className="mt-4 flex flex-wrap gap-2" role="list">
+            <div className="mt-4 flex flex-wrap gap-2">
               {psychologistSupportAreaOptions.map((option) => {
                 const active = option === supportArea
                 return (
@@ -81,7 +81,7 @@ export function PsychologistDirectoryFilters({
 
           <fieldset>
             <legend className="text-sm font-semibold text-secondary">{t('routes.psychologists.filters.experienceLegend')}</legend>
-            <div className="mt-4 flex flex-wrap gap-2" role="list">
+            <div className="mt-4 flex flex-wrap gap-2">
               {psychologistExperienceOptions.map((option) => {
                 const active = option === experienceLevel
                 return (

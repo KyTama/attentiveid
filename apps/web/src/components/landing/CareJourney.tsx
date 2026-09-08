@@ -17,7 +17,7 @@ export function CareJourney() {
   const steps = t('homepage.journey.steps', { returnObjects: true }) as JourneyStep[]
 
   return (
-    <section className="px-5 py-20 lg:px-8 lg:py-28" id="process">
+    <section className="deferred-section px-5 py-20 lg:px-8 lg:py-28" id="process">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-16">
           <h2 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{t('homepage.journey.title')}</h2>

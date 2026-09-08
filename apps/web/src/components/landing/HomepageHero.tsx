@@ -67,9 +67,11 @@ export function HomepageHero() {
       <dl className="mx-auto grid max-w-7xl grid-cols-2 bg-white py-10 text-center sm:grid-cols-4">
         {metrics.map((metric, metricIndex) => (
           <div className="flex min-w-0 flex-col items-center border-r border-primary/30 px-4 py-6 last:border-r-0 sm:px-5 lg:px-8" key={metric.label}>
-            <img alt="" className="mb-4 size-9 object-contain" height="36" loading="lazy" src={`/images/figma/trust-${metricIndex + 1}.svg`} width="36" />
             <dt className="order-2 mt-3 text-xs font-semibold text-secondary/75">{metric.label}</dt>
-            <dd className="text-4xl font-bold tracking-[-0.03em] text-secondary sm:text-5xl">{metric.value}</dd>
+            <dd className="flex flex-col items-center text-4xl font-bold tracking-[-0.03em] text-secondary sm:text-5xl">
+              <img alt="" className="mb-4 size-9 object-contain" height="36" loading="lazy" src={`/images/figma/trust-${metricIndex + 1}.svg`} width="36" />
+              {metric.value}
+            </dd>
           </div>
         ))}
       </dl>

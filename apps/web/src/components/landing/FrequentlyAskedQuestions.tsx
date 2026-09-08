@@ -15,7 +15,7 @@ export function FrequentlyAskedQuestions() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section className="bg-white px-5 py-24 lg:px-8 lg:py-32" id="faq">
+    <section className="deferred-section bg-white px-5 py-24 lg:px-8 lg:py-32" id="faq">
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="min-w-0">
           <h2 className="max-w-lg text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{t('homepage.faq.title')}</h2>

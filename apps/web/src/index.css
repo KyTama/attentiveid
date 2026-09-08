@@ -1,5 +1,19 @@
-/* ========== Google Fonts (must be first) ========== */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=optional');
+/* ========== Local Fonts (must be first) ========== */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: optional;
+  src: url('/fonts/montserrat-latin-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 400;
+  font-display: optional;
+  src: url('/fonts/montserrat-latin-italic.woff2') format('woff2');
+}
 
 @import "tailwindcss";
 
@@ -167,6 +181,13 @@
 
   h4 {
     @apply text-xl leading-normal font-normal;
+  }
+}
+
+@layer utilities {
+  .deferred-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 48rem;
   }
 }
 

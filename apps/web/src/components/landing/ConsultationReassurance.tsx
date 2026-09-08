@@ -10,7 +10,7 @@ export function ConsultationReassurance() {
   const whatsappUrl = createWhatsAppLink(defaultContactMessage)
 
   return (
-    <section className="relative overflow-hidden bg-[#fcf8f1] px-5 py-20 lg:px-8 lg:py-28">
+    <section className="deferred-section relative overflow-hidden bg-[#fcf8f1] px-5 py-20 lg:px-8 lg:py-28">
       <div aria-hidden="true" className="absolute left-1/2 top-8 size-72 -translate-x-1/2 rounded-full border border-primary/10" />
       <div aria-hidden="true" className="absolute left-1/2 top-20 size-48 -translate-x-1/2 rounded-full border border-primary/15" />
       <div className="relative mx-auto max-w-7xl">

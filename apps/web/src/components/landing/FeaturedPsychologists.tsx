@@ -40,7 +40,7 @@ export function FeaturedPsychologists() {
   const selected = roster.find((psychologist) => psychologist.slug === selectedSlug) ?? roster[0]
 
   return (
-    <section className="bg-white px-5 py-24 lg:px-8 lg:py-32" id="psychologists">
+    <section className="deferred-section bg-white px-5 py-24 lg:px-8 lg:py-32" id="psychologists">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-center gap-6 text-center">
           <div>
@@ -104,7 +104,7 @@ export function FeaturedPsychologists() {
                     return (
                       <CarouselItem className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6" key={psychologist.slug}>
                         <motion.button
-                          aria-label={t('homepage.featured.select', { name: psychologist.name })}
+                          title={t('homepage.featured.select', { name: psychologist.name })}
                           aria-pressed={isSelected}
                           className={isSelected
                             ? 'w-full rounded-xl bg-secondary p-2 text-left text-white outline-none ring-2 ring-primary ring-offset-2'
@@ -117,7 +117,8 @@ export function FeaturedPsychologists() {
                         >
                           <img alt="" className="aspect-[4/3] w-full rounded-lg object-cover object-top" height="150" loading="lazy" src={psychologist.imageUrl} width="200" />
                           <span className="mt-3 block truncate text-xs font-bold">{psychologist.nickname}</span>
-                          <span className={isSelected ? 'mt-1 block truncate text-[0.65rem] text-white/75' : 'mt-1 block truncate text-[0.65rem] text-secondary/65'}>
+                          {' '}
+                          <span className={isSelected ? 'mt-1 block truncate text-[0.65rem] text-white/85' : 'mt-1 block truncate text-[0.65rem] text-secondary/80'}>
                             {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
                           </span>
                         </motion.button>

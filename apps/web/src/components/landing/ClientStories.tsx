@@ -13,7 +13,7 @@ export function ClientStories() {
   const testimonials = t('testimonials', { returnObjects: true }) as TestimonialItem[]
 
   return (
-    <section className="bg-[#f3ede3] px-5 py-20 lg:px-8 lg:py-28">
+    <section className="deferred-section bg-[#f3ede3] px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch lg:gap-16">
           <div>
