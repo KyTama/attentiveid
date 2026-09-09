@@ -225,6 +225,8 @@ describe('content repositories', () => {
             ['unsafe-media', psychologistRow({
                 id: 'psychologist-4',
                 slug: 'unsafe-media',
+                featured: false,
+                featuredOrder: null,
                 media: {
                     reference: 'https://127.0.0.1/private.webp',
                     width: 600,
