@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "55432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  verifier:
+    image: oven/bun:1.4.0
+    working_dir: /workspace
+    command: ["bun", "run", "verify"]
+    environment:
+      DATABASE_ADMIN_URL: postgresql://postgres:postgres@postgres:5432/postgres
+    volumes:
+      - .:/workspace
+      - verifier_node_modules:/workspace/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  verifier_node_modules:

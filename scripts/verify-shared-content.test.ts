@@ -187,6 +187,9 @@ describe('verification command graph and environments', () => {
       expect(source).toContain('COPY packages/shared/package.json packages/shared/package.json')
       expect(source).toContain('COPY packages/shared packages/shared')
     }
+
+    const webDockerfile = await readFile(path.join(root, 'apps/web/Dockerfile'), 'utf8')
+    expect(webDockerfile).toContain('COPY package.json bun.lock tsconfig.json ./')
   })
 
   test('uses a dedicated re-entry marker name', () => {
