@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createAdminCapability } from '../services/authorization-capability';
+import { parseEnv } from '../config/env';
 import {
     createPreviewCapabilityService,
     requirePreviewHmacSecret,
@@ -126,5 +127,18 @@ describe('landing preview capability', () => {
         expect(rendered).not.toContain('password');
         expect(rendered).not.toContain(secret);
         expect(rendered).not.toContain(sensitiveToken);
+    });
+
+    test('environment validation names invalid keys without reflecting secret values', () => {
+        const sensitiveValue = 'postgresql://secret-user:secret-password@private-db/attentive';
+        let rendered = '';
+        try {
+            parseEnv({ DATABASE_URL: '', PREVIEW_HMAC_SECRET: sensitiveValue });
+        } catch (error) {
+            rendered = String(error);
+        }
+        expect(rendered).toContain('DATABASE_URL');
+        expect(rendered).not.toContain(sensitiveValue);
+        expect(rendered).not.toContain('secret-password');
     });
 });
