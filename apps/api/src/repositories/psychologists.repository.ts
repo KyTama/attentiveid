@@ -368,7 +368,19 @@ export const createDrizzlePsychologistQuerySource = (
         }
         if (query.search) {
             const pattern = `%${query.search}%`;
-            conditions.push(sql`(${schema.psychologists.name} ilike ${pattern} escape '\\' or ${schema.psychologists.nickname} ilike ${pattern} escape '\\')`);
+            conditions.push(sql`(
+                ${schema.psychologists.name} ilike ${pattern} escape '\\'
+                or ${schema.psychologists.nickname} ilike ${pattern} escape '\\'
+                or exists (
+                    select 1
+                    from ${schema.psychologistSpecializations}
+                    inner join ${schema.psychologistSpecializationTranslations}
+                        on ${schema.psychologistSpecializationTranslations.specializationId} = ${schema.psychologistSpecializations.id}
+                    where ${schema.psychologistSpecializations.psychologistId} = ${schema.psychologists.id}
+                    and ${schema.psychologistSpecializationTranslations.locale} = ${query.locale}
+                    and ${schema.psychologistSpecializationTranslations.label} ilike ${pattern} escape '\\'
+                )
+            )`);
         }
         if (query.supportArea) {
             conditions.push(sql`exists (
