@@ -109,6 +109,18 @@ describe('landing preview capability', () => {
         expect(comparisons).toBe(1);
     });
 
+    test('accepts every random byte prefix by encoding capability identifiers as hex', async () => {
+        const store = new MemoryPreviewCapabilityStore();
+        const service = createPreviewCapabilityService({
+            secret,
+            store,
+            now: () => new Date('2026-09-09T00:00:00.000Z'),
+            randomBytes: (length) => new Uint8Array(length).fill(255)
+        });
+        const issued = await service.issue(admin, 'landing-revision-2', 300);
+        expect((await service.verify(issued.token)).landingRevisionId).toBe('landing-revision-2');
+    });
+
     test('requires a strong environment secret with no default and redacts sensitive failures', async () => {
         expect(() => requirePreviewHmacSecret(undefined)).toThrow('PREVIEW_HMAC_SECRET is required.');
         expect(() => requirePreviewHmacSecret('development-secret')).toThrow('PREVIEW_HMAC_SECRET is invalid.');

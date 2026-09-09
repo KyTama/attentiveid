@@ -58,6 +58,7 @@ export const requirePreviewHmacSecret = (value: string | undefined) => {
 };
 
 const encode = (value: Uint8Array | string) => Buffer.from(value).toString('base64url');
+const encodeIdentifier = (value: Uint8Array) => Buffer.from(value).toString('hex');
 const decode = (value: string) => Buffer.from(value, 'base64url');
 const digestToken = (token: string) => createHash('sha256').update(token).digest('hex');
 const sign = (secret: string, input: string) => createHmac('sha256', secret).update(input).digest();
@@ -126,11 +127,11 @@ export const createPreviewCapabilityService = (options: PreviewCapabilityService
             const issuedAt = now();
             const expiresAt = new Date(issuedAt.getTime() + ttlSeconds * 1_000);
             const payload: PreviewCapabilityPayload = {
-                capabilityId: encode(randomBytes(16)),
+                capabilityId: encodeIdentifier(randomBytes(16)),
                 landingRevisionId,
                 issuedAt: issuedAt.toISOString(),
                 expiresAt: expiresAt.toISOString(),
-                nonce: encode(randomBytes(24))
+                nonce: encodeIdentifier(randomBytes(24))
             };
             const encodedPayload = encode(JSON.stringify(payload));
             const signedInput = `v1.${encodedPayload}`;
@@ -249,12 +250,12 @@ export const createPreviewSessionService = (options: PreviewCapabilityServiceOpt
             ));
             if (expiresAt.getTime() <= issuedAt.getTime()) throw genericSessionError();
             const payload: PreviewSessionPayload = {
-                sessionId: encode(randomBytes(16)),
+                sessionId: encodeIdentifier(randomBytes(16)),
                 landingRevisionId: capability.landingRevisionId,
                 capabilityDigest: capability.tokenDigest,
                 issuedAt: issuedAt.toISOString(),
                 expiresAt: expiresAt.toISOString(),
-                nonce: encode(randomBytes(24))
+                nonce: encodeIdentifier(randomBytes(24))
             };
             const encodedPayload = encode(JSON.stringify(payload));
             const signedInput = `s1.${encodedPayload}`;
