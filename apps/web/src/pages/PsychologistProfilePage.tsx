@@ -35,8 +35,12 @@ export function PsychologistProfilePage() {
     Promise.all([getPsychologistBySlug(slug), listRelatedPsychologists(slug)])
       .then(([lookup, related]) => {
         if (!isActive) return
-        if (lookup.status === 'not-found') {
+        if (lookup.status === 'not-found' || lookup.status === 'unavailable') {
           setRequest({ slug, state: { status: 'not-found' } })
+          return
+        }
+        if (lookup.status === 'error') {
+          setRequest({ slug, state: { status: 'error' } })
           return
         }
         setRequest({

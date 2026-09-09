@@ -1,126 +1,206 @@
-import { psychologists, type Psychologist } from '@/data/psychologists'
+import { psychologistApi } from '@/lib/api'
 import type {
   PsychologistExperienceLevel,
   PsychologistListQuery,
   PsychologistListResult,
+  PsychologistLocale,
   PsychologistLookupResult,
   PsychologistProfile,
   PsychologistSummary,
+  PsychologistSupportArea,
 } from './types'
 
-const normalizeSearchValue = (value: string) =>
-  value
-    .normalize('NFKD')
-    .replace(/\p{Diacritic}/gu, '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLocaleLowerCase('id-ID')
-
-const parseExperienceYears = (experience: string) => {
-  const years = Number.parseInt(experience.match(/\d+/)?.[0] ?? '0', 10)
-  return Number.isNaN(years) ? 0 : years
+export interface PsychologistApiRecord {
+  id: string
+  slug: string
+  name: string
+  nickname: string
+  credential: string
+  supportArea: PsychologistSupportArea
+  supportAreas: PsychologistSupportArea[]
+  specializations: string[]
+  experienceYears: number
+  licenseNumber: string
+  bookingUrl: string
+  premiumBookingUrl: string | null
+  featured: boolean
+  featuredOrder: number | null
+  biography: string
+  availabilityMessage: string
+  media?: {
+    url: string
+    width: number
+    height: number
+    alt: { id: string; en: string }
+  }
 }
 
-const getExperienceLevel = (years: number): PsychologistExperienceLevel => {
-  if (years >= 10) return 'principalLevel'
-  if (years >= 7) return 'seniorLevel'
-  if (years >= 3) return 'midLevel'
-  return 'earlyCareer'
+interface ApiResult<Data> {
+  data: Data | null
+  error: unknown
 }
 
-const mapPsychologistProfile = (fixture: Psychologist): PsychologistProfile => ({
-  slug: fixture.id,
-  name: fixture.name,
-  nickname: fixture.nickname,
-  credential: fixture.title,
-  supportArea: fixture.category,
-  imageUrl: fixture.image,
-  specializations: [...fixture.specializations],
-  experienceYears: parseExperienceYears(fixture.experience),
-  experienceLabel: fixture.experience,
-  bookingUrl: fixture.reservationLink,
-  licenseNumber: fixture.sipp,
-  premiumBookingUrl: fixture.premiumLink,
+interface PsychologistListEnvelope {
+  status: 'found'
+  psychologists: PsychologistApiRecord[]
+}
+
+type PsychologistLookupEnvelope =
+  | { status: 'found'; psychologist: PsychologistApiRecord }
+  | { status: 'unavailable'; psychologist: { slug: string; name: string; nickname: string } }
+  | { status: 'notFound' }
+
+export interface PsychologistApiBoundary {
+  list(query: {
+    locale: PsychologistLocale
+    search?: string
+    supportArea?: PsychologistSupportArea
+    minimumExperienceYears?: number
+    limit: number
+    offset: number
+  }): Promise<ApiResult<PsychologistListEnvelope>>
+  featured(locale: PsychologistLocale): Promise<ApiResult<PsychologistListEnvelope>>
+  getBySlug(slug: string, locale: PsychologistLocale): Promise<ApiResult<PsychologistLookupEnvelope>>
+}
+
+const defaultBoundary: PsychologistApiBoundary = {
+  async list(query) {
+    const result = await psychologistApi.list(query)
+    return { data: result.data as PsychologistListEnvelope | null, error: result.error }
+  },
+  async featured(locale) {
+    const result = await psychologistApi.featured(locale)
+    return { data: result.data as PsychologistListEnvelope | null, error: result.error }
+  },
+  async getBySlug(slug, locale) {
+    const result = await psychologistApi.getBySlug(slug, locale)
+    return { data: result.data as PsychologistLookupEnvelope | null, error: result.error }
+  },
+}
+
+const experienceRange = (level: PsychologistExperienceLevel | 'all' | undefined) => {
+  if (!level || level === 'all') return { minimum: undefined, maximum: undefined }
+  if (level === 'earlyCareer') return { minimum: 0, maximum: 2 }
+  if (level === 'midLevel') return { minimum: 3, maximum: 6 }
+  if (level === 'seniorLevel') return { minimum: 7, maximum: 9 }
+  return { minimum: 10, maximum: 80 }
+}
+
+const mapPsychologistSummary = (record: PsychologistApiRecord): PsychologistSummary => ({
+  id: record.id,
+  slug: record.slug,
+  name: record.name,
+  nickname: record.nickname,
+  credential: record.credential,
+  supportArea: record.supportArea,
+  supportAreas: [...record.supportAreas],
+  ...(record.media ? { imageUrl: record.media.url, media: { ...record.media, alt: { ...record.media.alt } } } : {}),
+  specializations: [...record.specializations],
+  experienceYears: record.experienceYears,
+  experienceLabel: `${record.experienceYears} Years`,
+  bookingUrl: record.bookingUrl,
+  ...(record.licenseNumber ? { licenseNumber: record.licenseNumber } : {}),
+  featured: record.featured,
+  featuredOrder: record.featuredOrder,
 })
 
-const mapPsychologistSummary = (fixture: Psychologist): PsychologistSummary => ({
-  slug: fixture.id,
-  name: fixture.name,
-  nickname: fixture.nickname,
-  credential: fixture.title,
-  supportArea: fixture.category,
-  imageUrl: fixture.image,
-  specializations: [...fixture.specializations],
-  experienceYears: parseExperienceYears(fixture.experience),
-  experienceLabel: fixture.experience,
-  bookingUrl: fixture.reservationLink,
-  licenseNumber: fixture.sipp === '-' ? undefined : fixture.sipp,
+const mapPsychologistProfile = (record: PsychologistApiRecord): PsychologistProfile => ({
+  ...mapPsychologistSummary(record),
+  biography: record.biography,
+  availabilityMessage: record.availabilityMessage,
+  ...(record.premiumBookingUrl ? { premiumBookingUrl: record.premiumBookingUrl } : {}),
 })
 
-const matchesQuery = (psychologist: PsychologistSummary, query: PsychologistListQuery) => {
-  const search = normalizeSearchValue(query.search ?? '')
-  const searchableText = normalizeSearchValue([
-    psychologist.name,
-    psychologist.nickname,
-    ...psychologist.specializations,
-  ].join(' '))
+const hasTransportFailure = (result: ApiResult<unknown>) => result.error !== null || result.data === null
 
-  const matchesSearch = search.length === 0 || searchableText.includes(search)
-  const matchesSupportArea = !query.supportArea
-    || query.supportArea === 'all'
-    || psychologist.supportArea === query.supportArea
-  const matchesExperience = !query.experienceLevel
-    || query.experienceLevel === 'all'
-    || getExperienceLevel(psychologist.experienceYears) === query.experienceLevel
-
-  return matchesSearch && matchesSupportArea && matchesExperience
-}
-
-export async function listPsychologists(
-  query: PsychologistListQuery = {},
-): Promise<PsychologistListResult> {
-  const matchedPsychologists = psychologists
-    .map(mapPsychologistSummary)
-    .filter((psychologist) => matchesQuery(psychologist, query))
-
-  if (matchedPsychologists.length === 0) {
-    return { status: 'empty', psychologists: [] }
+export const createPsychologistService = (boundary: PsychologistApiBoundary = defaultBoundary) => {
+  const listPsychologists = async (query: PsychologistListQuery = {}): Promise<PsychologistListResult> => {
+    const locale = query.locale ?? 'en'
+    const search = query.search?.trim()
+    const range = experienceRange(query.experienceLevel)
+    try {
+      const result = await boundary.list({
+        locale,
+        ...(search ? { search } : {}),
+        ...(query.supportArea && query.supportArea !== 'all' ? { supportArea: query.supportArea } : {}),
+        ...(range.minimum === undefined ? {} : { minimumExperienceYears: range.minimum }),
+        limit: 50,
+        offset: 0,
+      })
+      if (hasTransportFailure(result)) return { status: 'error' }
+      const psychologists = result.data!.psychologists
+        .filter(({ experienceYears }) => range.maximum === undefined || experienceYears <= range.maximum)
+        .map(mapPsychologistSummary)
+      return psychologists.length > 0
+        ? { status: 'success', psychologists }
+        : { status: 'empty', psychologists: [] }
+    } catch {
+      return { status: 'error' }
+    }
   }
 
-  return { status: 'success', psychologists: matchedPsychologists }
-}
-
-export async function getPsychologistBySlug(slug: string): Promise<PsychologistLookupResult> {
-  const normalizedSlug = normalizeSearchValue(slug)
-  const fixture = psychologists.find(
-    (psychologist) => normalizeSearchValue(psychologist.id) === normalizedSlug,
-  )
-
-  if (!fixture) {
-    return { status: 'not-found' }
+  const listFeaturedPsychologists = async (locale: PsychologistLocale = 'en'): Promise<PsychologistListResult> => {
+    try {
+      const result = await boundary.featured(locale)
+      if (hasTransportFailure(result)) return { status: 'error' }
+      const psychologists = result.data!.psychologists
+        .map(mapPsychologistSummary)
+        .sort((left, right) => (left.featuredOrder ?? Number.MAX_SAFE_INTEGER) - (right.featuredOrder ?? Number.MAX_SAFE_INTEGER))
+      return psychologists.length > 0
+        ? { status: 'success', psychologists }
+        : { status: 'empty', psychologists: [] }
+    } catch {
+      return { status: 'error' }
+    }
   }
 
-  return { status: 'found', psychologist: mapPsychologistProfile(fixture) }
-}
-
-export async function listRelatedPsychologists(
-  slug: string,
-  limit = 3,
-): Promise<PsychologistSummary[]> {
-  const lookup = await getPsychologistBySlug(slug)
-
-  if (lookup.status === 'not-found') {
-    return []
+  const getPsychologistBySlug = async (
+    slug: string,
+    locale: PsychologistLocale = 'en',
+  ): Promise<PsychologistLookupResult> => {
+    try {
+      const result = await boundary.getBySlug(slug.trim(), locale)
+      if (hasTransportFailure(result)) return { status: 'error' }
+      if (result.data!.status === 'notFound') return { status: 'not-found' }
+      if (result.data!.status === 'unavailable') {
+        return { status: 'unavailable', psychologist: result.data!.psychologist }
+      }
+      return { status: 'found', psychologist: mapPsychologistProfile(result.data!.psychologist) }
+    } catch {
+      return { status: 'error' }
+    }
   }
 
-  const candidates = psychologists
-    .map(mapPsychologistSummary)
-    .filter((psychologist) => psychologist.slug !== lookup.psychologist.slug)
-    .sort((first, second) => {
-      const firstMatches = first.supportArea === lookup.psychologist.supportArea ? 1 : 0
-      const secondMatches = second.supportArea === lookup.psychologist.supportArea ? 1 : 0
-      return secondMatches - firstMatches
-    })
+  const listRelatedPsychologists = async (
+    slug: string,
+    limit = 3,
+    locale: PsychologistLocale = 'en',
+  ): Promise<PsychologistSummary[]> => {
+    const lookup = await getPsychologistBySlug(slug, locale)
+    if (lookup.status !== 'found') return []
+    const result = await listPsychologists({ locale })
+    if (result.status !== 'success') return []
+    return result.psychologists
+      .filter((candidate) => candidate.id !== lookup.psychologist.id)
+      .sort((first, second) => {
+        const firstMatches = first.supportAreas.includes(lookup.psychologist.supportArea) ? 1 : 0
+        const secondMatches = second.supportAreas.includes(lookup.psychologist.supportArea) ? 1 : 0
+        return secondMatches - firstMatches
+      })
+      .slice(0, Math.max(0, limit))
+  }
 
-  return candidates.slice(0, Math.max(0, limit))
+  return {
+    listPsychologists,
+    listFeaturedPsychologists,
+    getPsychologistBySlug,
+    listRelatedPsychologists,
+  }
 }
+
+const service = createPsychologistService()
+
+export const listPsychologists = service.listPsychologists
+export const listFeaturedPsychologists = service.listFeaturedPsychologists
+export const getPsychologistBySlug = service.getPsychologistBySlug
+export const listRelatedPsychologists = service.listRelatedPsychologists

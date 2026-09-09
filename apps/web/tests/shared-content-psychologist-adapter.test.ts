@@ -32,7 +32,10 @@ describe('shared content psychologist adapter', () => {
     const boundary: PsychologistApiBoundary = {
       list: async () => ({ data: { status: 'found', psychologists: [canonical, other] }, error: null }),
       featured: async () => ({ data: { status: 'found', psychologists: [canonical] }, error: null }),
-      getBySlug: async () => ({ data: { status: 'found', psychologist: canonical }, error: null }),
+      getBySlug: async (slug) => ({
+        data: { status: 'found', psychologist: slug === other.slug ? other : canonical },
+        error: null,
+      }),
     }
     const service = createPsychologistService(boundary)
     const featured = await service.listFeaturedPsychologists('id')
