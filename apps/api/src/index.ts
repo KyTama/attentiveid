@@ -1,74 +1,25 @@
-import { Elysia } from 'elysia';
-import { swagger } from '@elysiajs/swagger';
-import { cors } from '@elysiajs/cors';
+import { createApp, type App } from './app';
 import { env } from './config/env';
+import { db } from './db';
+import { createDrizzleLandingContentSource, createLandingContentRepository } from './repositories/landing-content.repository';
+import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from './repositories/psychologists.repository';
+import {
+    createDrizzlePreviewCapabilityStore,
+    createPreviewCapabilityService,
+    createPreviewSessionService,
+    requirePreviewHmacSecret
+} from './security/preview-capability';
 
-const app = new Elysia()
-    // Swagger documentation
-    .use(
-        swagger({
-            documentation: {
-                info: {
-                    title: 'AttentiveId API',
-                    version: '0.1.0',
-                    description: 'Attentive Schedule Reservation System API',
-                },
-                tags: [
-                    { name: 'Health', description: 'Health check endpoints' },
-                    { name: 'Auth', description: 'Authentication endpoints' },
-                    { name: 'Reservations', description: 'Reservation management' },
-                    { name: 'Admin', description: 'Admin operations' },
-                    { name: 'Psychologist', description: 'Psychologist operations' },
-                ],
-            },
-        })
-    )
-    // Enable CORS for frontend
-    .use(
-        cors({
-            origin: env.FRONTEND_URL || 'http://localhost:5173',
-            credentials: true,
-        })
-    )
-    .get('/ready', () => ({
-        status: 'ready',
-        service: 'attentiveid-api',
-    }), {
-        detail: {
-            tags: ['Health'],
-            summary: 'Readiness check',
-            description: 'Confirms that the API process is ready to receive traffic',
-        },
-    })
-    // Health check endpoint
-    .get('/health', () => ({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        service: 'attentiveid-api',
-    }), {
-        detail: {
-            tags: ['Health'],
-            summary: 'Health check',
-            description: 'Returns the health status of the API',
-        },
-    })
-    .get('/api/health', () => "OK")
-    // API info endpoint
-    .get('/api/info', () => ({
-        name: 'AttentiveId API',
-        version: '0.1.0',
-        description: 'Attentive Schedule Reservation System',
-        endpoints: {
-            docs: '/swagger',
-            health: '/health',
-        },
-    }), {
-        detail: {
-            tags: ['Health'],
-            summary: 'API information',
-            description: 'Returns basic API information and available endpoints',
-        },
-    })
+const previewSecret = requirePreviewHmacSecret(env.PREVIEW_HMAC_SECRET);
+const previewStore = createDrizzlePreviewCapabilityStore(db);
+const app = createApp({
+    frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',
+    landingRepository: createLandingContentRepository(createDrizzleLandingContentSource(db)),
+    psychologistsRepository: createPsychologistsRepository(createDrizzlePsychologistQuerySource(db), { publicHosts: [] }),
+    previewCapabilities: createPreviewCapabilityService({ secret: previewSecret, store: previewStore }),
+    previewSessions: createPreviewSessionService({ secret: previewSecret, store: previewStore }),
+    accessLog: ({ method, path, body }) => console.info({ method, path, body })
+})
     // Listen
     .listen({
         hostname: '0.0.0.0',
@@ -80,4 +31,4 @@ console.log(
 );
 console.log(`📚 Swagger docs available at http://localhost:${app.server?.port}/swagger`);
 
-export type App = typeof app;
+export type { App };

@@ -33,6 +33,15 @@ interface PreviewCapabilityServiceOptions {
     constantTimeCompare?: (left: Uint8Array, right: Uint8Array) => boolean;
 }
 
+interface PreviewSessionPayload {
+    sessionId: string;
+    landingRevisionId: string;
+    capabilityDigest: string;
+    issuedAt: string;
+    expiresAt: string;
+    nonce: string;
+}
+
 const capabilityIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const genericCapabilityError = () => new Error('Invalid preview capability.');
 
@@ -152,7 +161,8 @@ export const createPreviewCapabilityService = (options: PreviewCapabilityService
                 return {
                     capabilityId: payload.capabilityId,
                     landingRevisionId: payload.landingRevisionId,
-                    expiresAt: payload.expiresAt
+                    expiresAt: payload.expiresAt,
+                    tokenDigest: digestToken(token)
                 };
             } catch {
                 throw genericCapabilityError();
@@ -167,6 +177,121 @@ export const createPreviewCapabilityService = (options: PreviewCapabilityService
                 await options.store.revokeByDigest(tokenDigest, now().toISOString());
             } catch {
                 throw genericCapabilityError();
+            }
+        }
+    };
+};
+
+const genericSessionError = () => new Error('Invalid preview session.');
+
+const isSessionPayload = (value: unknown): value is PreviewSessionPayload => {
+    if (!value || typeof value !== 'object') return false;
+    const payload = value as Partial<PreviewSessionPayload>;
+    return typeof payload.sessionId === 'string'
+        && capabilityIdentifierPattern.test(payload.sessionId)
+        && typeof payload.landingRevisionId === 'string'
+        && capabilityIdentifierPattern.test(payload.landingRevisionId)
+        && typeof payload.capabilityDigest === 'string'
+        && /^[a-f0-9]{64}$/.test(payload.capabilityDigest)
+        && typeof payload.issuedAt === 'string'
+        && Number.isFinite(Date.parse(payload.issuedAt))
+        && typeof payload.expiresAt === 'string'
+        && Number.isFinite(Date.parse(payload.expiresAt))
+        && typeof payload.nonce === 'string'
+        && capabilityIdentifierPattern.test(payload.nonce);
+};
+
+export const createPreviewSessionService = (options: PreviewCapabilityServiceOptions) => {
+    const secret = requirePreviewHmacSecret(options.secret);
+    const now = options.now ?? (() => new Date());
+    const randomBytes = options.randomBytes ?? ((length: number) => nodeRandomBytes(length));
+    const constantTimeCompare = options.constantTimeCompare ?? ((left: Uint8Array, right: Uint8Array) => (
+        left.byteLength === right.byteLength && timingSafeEqual(left, right)
+    ));
+
+    const decodeAuthenticatedSession = (token: string): PreviewSessionPayload => {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3 || parts[0] !== 's1' || !parts[1] || !parts[2]) {
+                throw genericSessionError();
+            }
+            const signedInput = `${parts[0]}.${parts[1]}`;
+            const suppliedSignature = decode(parts[2]);
+            const expectedSignature = sign(secret, signedInput);
+            if (suppliedSignature.byteLength !== expectedSignature.byteLength
+                || !constantTimeCompare(suppliedSignature, expectedSignature)) {
+                throw genericSessionError();
+            }
+            const parsed: unknown = JSON.parse(decode(parts[1]).toString('utf8'));
+            if (!isSessionPayload(parsed)) throw genericSessionError();
+            return parsed;
+        } catch {
+            throw genericSessionError();
+        }
+    };
+
+    return {
+        async issue(
+            capability: {
+                landingRevisionId: string;
+                expiresAt: string;
+                tokenDigest: string;
+            },
+            ttlSeconds = 300
+        ) {
+            if (!Number.isInteger(ttlSeconds) || ttlSeconds < 30 || ttlSeconds > 900) {
+                throw genericSessionError();
+            }
+            const issuedAt = now();
+            const expiresAt = new Date(Math.min(
+                Date.parse(capability.expiresAt),
+                issuedAt.getTime() + ttlSeconds * 1_000
+            ));
+            if (expiresAt.getTime() <= issuedAt.getTime()) throw genericSessionError();
+            const payload: PreviewSessionPayload = {
+                sessionId: encode(randomBytes(16)),
+                landingRevisionId: capability.landingRevisionId,
+                capabilityDigest: capability.tokenDigest,
+                issuedAt: issuedAt.toISOString(),
+                expiresAt: expiresAt.toISOString(),
+                nonce: encode(randomBytes(24))
+            };
+            const encodedPayload = encode(JSON.stringify(payload));
+            const signedInput = `s1.${encodedPayload}`;
+            const token = `${signedInput}.${encode(sign(secret, signedInput))}`;
+            await options.store.insert({
+                tokenDigest: digestToken(token),
+                landingRevisionId: payload.landingRevisionId,
+                expiresAt: payload.expiresAt,
+                revokedAt: null
+            });
+            return { token, expiresAt: payload.expiresAt };
+        },
+
+        async verify(token: string) {
+            try {
+                const payload = decodeAuthenticatedSession(token);
+                const currentTime = now().getTime();
+                const sessionRecord = await options.store.findByDigest(digestToken(token));
+                const capabilityRecord = await options.store.findByDigest(payload.capabilityDigest);
+                if (!sessionRecord
+                    || !capabilityRecord
+                    || sessionRecord.revokedAt !== null
+                    || capabilityRecord.revokedAt !== null
+                    || sessionRecord.landingRevisionId !== payload.landingRevisionId
+                    || capabilityRecord.landingRevisionId !== payload.landingRevisionId
+                    || sessionRecord.expiresAt !== payload.expiresAt
+                    || Date.parse(payload.issuedAt) > currentTime
+                    || Date.parse(payload.expiresAt) <= currentTime
+                    || Date.parse(capabilityRecord.expiresAt) <= currentTime) {
+                    throw genericSessionError();
+                }
+                return {
+                    landingRevisionId: payload.landingRevisionId,
+                    expiresAt: payload.expiresAt
+                };
+            } catch {
+                throw genericSessionError();
             }
         }
     };
