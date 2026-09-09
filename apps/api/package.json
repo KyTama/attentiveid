@@ -9,6 +9,7 @@
         "start": "bun run dist/index.js"
     },
     "dependencies": {
+        "@attentiveid/shared": "workspace:*",
         "@elysiajs/cors": "^1.2.0",
         "@elysiajs/swagger": "^1.2.0",
         "@sinclair/typebox": "^0.34.49",

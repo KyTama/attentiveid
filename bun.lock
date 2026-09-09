@@ -16,6 +16,7 @@
       "name": "@attentiveid/api",
       "version": "0.1.0",
       "dependencies": {
+        "@attentiveid/shared": "workspace:*",
         "@elysiajs/cors": "^1.2.0",
         "@elysiajs/swagger": "^1.2.0",
         "@sinclair/typebox": "^0.34.49",
