@@ -10,7 +10,7 @@ DOMAIN=attentive.example
 INGRESS_NETWORK=shared-ingress
 # Host inventory variable
 POSTGRES_NETWORK=shared-postgres
-# Host-local API secret path; file contains DATABASE_URL only
+# Host-local API secret path; file contains DATABASE_URL and PREVIEW_HMAC_SECRET
 HOST_SECRET_FILE=/etc/attentive/production.secret.env
 # GitHub Environment variable
 FRONTEND_URL=https://attentive.example

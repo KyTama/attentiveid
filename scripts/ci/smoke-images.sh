@@ -28,6 +28,7 @@ docker run -d \
     --network "$network" \
     -e DATABASE_URL='postgres://fixture:fixture@postgres:5432/fixture' \
     -e FRONTEND_URL='http://localhost:5173' \
+    -e PREVIEW_HMAC_SECRET='image-smoke-preview-secret-2026-ABCDEFG' \
     -p 127.0.0.1::3000 \
     "$api_image" >/dev/null
 

@@ -59,6 +59,9 @@ grep -Fq '/etc/attentive/$environment.deploy.env' "$root_dir/scripts/deploy/remo
 grep -Fq "stat -c '%a'" "$root_dir/scripts/deploy/preflight.sh"
 grep -Fq "stat -f '%Lp'" "$root_dir/scripts/deploy/preflight.sh"
 grep -Fq '"$env_file" -ef "$candidate_env"' "$root_dir/scripts/deploy/deploy.sh"
+grep -Fq 'PREVIEW_HMAC_SECRET' "$root_dir/scripts/deploy/preflight.sh"
+grep -Fq -- "-e PREVIEW_HMAC_SECRET=" "$root_dir/scripts/ci/smoke-images.sh"
+grep -Eq '^PREVIEW_HMAC_SECRET=.{32,}$' "$root_dir/tests/fixtures/deploy/host-secret.env"
 
 if grep -RinE 'tencent|cvm|cos\.tencent' "$compose_file" "$root_dir/deploy/Caddyfile" "$root_dir/deploy/ingress" "$root_dir/deploy/env"; then
     printf 'Runtime configuration must remain provider-neutral\n' >&2

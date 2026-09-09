@@ -44,6 +44,10 @@ if [[ "$fixture" == false ]]; then
     [[ -f "${HOST_SECRET_FILE:-}" ]] || { printf 'Host-local secret file is required\n' >&2; exit 1; }
     secret_mode="$(file_mode "$HOST_SECRET_FILE")"
     [[ "$secret_mode" == '600' || "$secret_mode" == '400' ]] || { printf 'Host-local secret file must use mode 0600 or 0400\n' >&2; exit 1; }
+    grep -Eq '^DATABASE_URL=.+$' "$HOST_SECRET_FILE" || { printf 'Host-local secret file requires DATABASE_URL\n' >&2; exit 1; }
+    preview_secret="$(sed -n 's/^PREVIEW_HMAC_SECRET=//p' "$HOST_SECRET_FILE" | tail -1)"
+    [[ "${#preview_secret}" -ge 32 ]] || { printf 'Host-local secret file requires a 32+ byte PREVIEW_HMAC_SECRET\n' >&2; exit 1; }
+    unset preview_secret
     docker network inspect "$INGRESS_NETWORK" >/dev/null
     docker network inspect "$POSTGRES_NETWORK" >/dev/null
 fi
