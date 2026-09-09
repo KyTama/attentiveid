@@ -14,13 +14,13 @@ const items = (prefix: string, count = 3) => Array.from({ length: count }, (_, p
 
 const draftContent: LandingContentMutation = {
   sections: [
-    { key: 'hero', visible: true, headline: localized('Draft hero'), description: localized('Draft hero description'), primaryCta: localized('Draft primary'), secondaryCta: localized('Draft secondary') },
+    { key: 'hero', visible: true, headline: localized('Draft hero'), description: localized('Draft hero description'), primaryCta: localized('Draft primary'), secondaryCta: localized('Draft secondary'), items: items('metric') },
     { key: 'supportExplorer', visible: true, headline: localized('Draft support'), description: localized('Draft support description'), items: items('support') },
     { key: 'carePromise', visible: true, headline: localized('Draft promise'), description: localized('Draft promise description'), items: items('promise') },
     { key: 'featuredPsychologists', visible: true, headline: localized('Draft featured'), description: localized('Draft featured description') },
     { key: 'careJourney', visible: true, headline: localized('Draft journey'), description: localized('Draft journey description'), items: items('journey') },
     { key: 'clientStories', visible: true, headline: localized('Draft stories'), description: localized('Draft stories description'), items: items('story') },
-    { key: 'consultationReassurance', visible: true, headline: localized('Draft reassurance'), description: localized('Draft reassurance description') },
+    { key: 'consultationReassurance', visible: true, headline: localized('Draft reassurance'), description: localized('Draft reassurance description'), sessionLabel: localized('Draft session label'), price: localized('Draft price'), priceUnit: localized('Draft price unit'), primaryCta: localized('Draft pricing action') },
     { key: 'frequentlyAskedQuestions', visible: true, headline: localized('Draft FAQ'), description: localized('Draft FAQ description'), items: items('faq') },
     { key: 'closingInvitation', visible: true, headline: localized('Draft closing'), description: localized('Draft closing description'), primaryCta: localized('Draft closing action'), contact: localized('Draft contact') },
   ],
@@ -140,6 +140,9 @@ describe('shared landing preview', () => {
     expect(screen.getByRole('heading', { name: 'Draft support EN' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Draft closing EN' })).toBeInTheDocument()
     expect(screen.getByText('support title 0 EN')).toBeInTheDocument()
+    expect(screen.getByText('metric description 0 EN')).toBeInTheDocument()
+    expect(screen.getByText('Draft price EN')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Draft pricing action EN/i })).toBeInTheDocument()
   })
 
   it('renders published content through the same provider and Homepage tree', async () => {

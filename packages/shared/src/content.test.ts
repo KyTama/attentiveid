@@ -33,6 +33,7 @@ const validLandingMutation = () => ({
       description: localized('Mulai dari sini.', 'Start here.'),
       primaryCta: localized('Cari psikolog', 'Find a psychologist'),
       secondaryCta: localized('Kenali layanan', 'Explore services'),
+      items: [stableItem('metric-1'), stableItem('metric-2'), stableItem('metric-3')],
     },
     {
       key: 'supportExplorer',
@@ -73,6 +74,10 @@ const validLandingMutation = () => ({
       visible: true,
       headline: localized('Konsultasi tanpa tekanan', 'Consultation without pressure'),
       description: localized('Kamu tetap memegang kendali.', 'You remain in control.'),
+      sessionLabel: localized('Konsultasi online mulai dari', 'Online consultation starts from'),
+      price: localized('Rp475.000', 'IDR 475,000'),
+      priceUnit: localized('per sesi konsultasi', 'per consultation session'),
+      primaryCta: localized('Tanya jadwal dan biaya', 'Ask about schedule and pricing'),
     },
     {
       key: 'frequentlyAskedQuestions',
@@ -106,6 +111,7 @@ describe('shared content contracts', () => {
       'closingInvitation',
     ])
     expect(LANDING_REPEATER_BOUNDS).toEqual({
+      hero: { min: 3, max: 4 },
       supportExplorer: { min: 3, max: 6 },
       carePromise: { min: 3, max: 4 },
       careJourney: { min: 3, max: 5 },
@@ -146,6 +152,17 @@ describe('shared content contracts', () => {
     expect(validateLandingContentMutation(overflow)).toBe(false)
     expect(validateLandingContentMutation(duplicateIdentity)).toBe(false)
     expect(validateLandingContentMutation(duplicatePosition)).toBe(false)
+  })
+
+  it('requires managed hero metrics and core consultation pricing copy', () => {
+    const missingMetrics = validLandingMutation()
+    Reflect.deleteProperty(missingMetrics.sections[0], 'items')
+
+    const incompletePricing = validLandingMutation()
+    Reflect.deleteProperty(incompletePricing.sections[6], 'price')
+
+    expect(validateLandingContentMutation(missingMetrics)).toBe(false)
+    expect(validateLandingContentMutation(incompletePricing)).toBe(false)
   })
 
   it('exposes complete lifecycle vocabulary and public lookup discriminants', () => {

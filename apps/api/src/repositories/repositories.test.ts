@@ -26,7 +26,13 @@ const landingContent: LandingContentMutation = {
             headline: localized('Hero'),
             description: localized('Hero description'),
             primaryCta: localized('Start'),
-            secondaryCta: localized('Explore')
+            secondaryCta: localized('Explore'),
+            items: Array.from({ length: 3 }, (_, position) => ({
+                id: `metric-${position}`,
+                position,
+                title: localized(`Metric ${position}`),
+                description: localized(`Metric value ${position}`)
+            }))
         },
         {
             key: 'supportExplorer',
@@ -86,7 +92,11 @@ const landingContent: LandingContentMutation = {
             key: 'consultationReassurance',
             visible: true,
             headline: localized('Reassurance'),
-            description: localized('Reassurance description')
+            description: localized('Reassurance description'),
+            sessionLabel: localized('Session label'),
+            price: localized('Price'),
+            priceUnit: localized('Price unit'),
+            primaryCta: localized('Ask about pricing')
         },
         {
             key: 'frequentlyAskedQuestions',
