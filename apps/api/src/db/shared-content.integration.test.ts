@@ -72,4 +72,15 @@ describe('shared content live PostgreSQL contract', () => {
     expect(psychologists.every(({ id, slug }) => Boolean(id && slug))).toBe(true)
     expect(psychologists.every(({ media }) => !media || (media.width > 0 && media.height > 0))).toBe(true)
   })
+
+  test('searches localized areas of experience through the canonical PostgreSQL source', async () => {
+    const repository = createPsychologistsRepository(
+      createDrizzlePsychologistQuerySource(database),
+      { publicHosts: [] },
+    )
+
+    const psychologists = await repository.list({ locale: 'en', search: 'Brainspotting', limit: 50 })
+
+    expect(psychologists.map(({ slug }) => slug)).toEqual(['gita'])
+  })
 })
