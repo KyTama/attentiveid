@@ -3,6 +3,7 @@ import { ArrowUpRight, Quote, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { contact } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 interface TestimonialItem {
   content: string
@@ -10,15 +11,22 @@ interface TestimonialItem {
 }
 export function ClientStories() {
   const { t } = useTranslation()
-  const testimonials = t('testimonials', { returnObjects: true }) as TestimonialItem[]
+  const managed = useLandingSection('clientStories')
+  const testimonials = managed
+    ? [...managed.section.items]
+      .sort((left, right) => left.position - right.position)
+      .map((item) => ({ id: item.id, name: item.title[managed.locale], content: item.description[managed.locale] }))
+    : (t('testimonials', { returnObjects: true }) as TestimonialItem[]).map((item, index) => ({ ...item, id: `story-${index}` }))
+  const title = managed?.section.headline[managed.locale] ?? t('homepage.stories.title')
+  const description = managed?.section.description[managed.locale] ?? t('homepage.stories.description')
 
   return (
     <section className="deferred-section bg-[#f3ede3] px-5 py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch lg:gap-16">
           <div>
-            <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{t('homepage.stories.title')}</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-secondary/80">{t('homepage.stories.description')}</p>
+            <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{title}</h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-secondary/80">{description}</p>
           </div>
           <div className="border-t border-primary/70 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
             <p className="max-w-2xl text-base leading-7 text-secondary/80">{t('homepage.stories.reviewPrompt')}</p>
@@ -54,7 +62,7 @@ export function ClientStories() {
           )}
           <div className="grid gap-5">
             {testimonials.slice(1, 3).map((testimonial) => (
-              <figure className="flex flex-col justify-between rounded-xl bg-white/75 p-7 sm:p-9" key={testimonial.name}>
+              <figure className="flex flex-col justify-between rounded-xl bg-white/75 p-7 sm:p-9" key={testimonial.id}>
                 <Quote aria-hidden="true" className="text-[#946a22]" size={26} />
                 <blockquote className="mt-7 text-base leading-8 text-secondary/80">“{testimonial.content}”</blockquote>
                 <figcaption className="mt-7 border-t border-secondary/10 pt-5 text-sm font-semibold text-secondary/70">{testimonial.name}</figcaption>

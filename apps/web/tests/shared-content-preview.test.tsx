@@ -48,8 +48,6 @@ describe('shared landing preview', () => {
     vi.restoreAllMocks()
     vi.resetModules()
     window.history.replaceState(null, '', '/')
-    localStorage.clear()
-    sessionStorage.clear()
     await i18n.changeLanguage('en')
   })
 
@@ -68,8 +66,8 @@ describe('shared landing preview', () => {
     expect(window.location.hash).toBe('')
     expect(bootstrap.consumePreviewCapability()).toBe(capability)
     expect(bootstrap.consumePreviewCapability()).toBeNull()
-    expect(JSON.stringify(localStorage)).not.toContain(capability)
-    expect(JSON.stringify(sessionStorage)).not.toContain(capability)
+    expect(window.localStorage?.getItem('capability')).toBeFalsy()
+    expect(window.sessionStorage?.getItem('capability')).toBeFalsy()
   })
 
   it('rejects non-exact preview locations without rewriting them', async () => {
@@ -80,6 +78,15 @@ describe('shared landing preview', () => {
     expect(bootstrap.consumePreviewCapability()).toBeNull()
     expect(window.location.search).toBe('?source=email')
     expect(window.location.hash).toBe('#capability=should-not-be-captured')
+  })
+
+  it('scrubs malformed exact capability fragments without retaining them', async () => {
+    window.history.replaceState(null, '', '/preview/landing#capability=%E0%A4%A')
+
+    const bootstrap = await import('../src/features/content/preview-bootstrap')
+
+    expect(window.location.href).not.toContain('capability')
+    expect(bootstrap.consumePreviewCapability()).toBeNull()
   })
 
   it('exchanges the capability only in a fixed-path JSON body, then reads by cookie', async () => {
@@ -133,6 +140,18 @@ describe('shared landing preview', () => {
     expect(screen.getByRole('heading', { name: 'Draft support EN' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Draft closing EN' })).toBeInTheDocument()
     expect(screen.getByText('support title 0 EN')).toBeInTheDocument()
+  })
+
+  it('renders published content through the same provider and Homepage tree', async () => {
+    const { AppRoutes } = await import('../src/App')
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AppRoutes landingContentLoader={async () => ({ status: 'success', content: draftContent })} />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Draft hero EN' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Draft FAQ EN' })).toBeInTheDocument()
   })
 
   it('renders one non-reflective unavailable state without public fallback', async () => {

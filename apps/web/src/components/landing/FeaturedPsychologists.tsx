@@ -15,15 +15,17 @@ import {
   type PsychologistListState,
 } from '@/features/psychologists'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 export function FeaturedPsychologists() {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
+  const managed = useLandingSection('featuredPsychologists')
   const [state, setState] = useState<PsychologistListState>({ status: 'loading' })
   const [selectedSlug, setSelectedSlug] = useState('')
 
   useEffect(() => {
     let active = true
-    listPsychologists()
+    listPsychologists({ locale: i18n.resolvedLanguage === 'id' ? 'id' : 'en' })
       .then((result) => {
         if (!active) return
         setState(result)
@@ -34,7 +36,7 @@ export function FeaturedPsychologists() {
     return () => {
       active = false
     }
-  }, [])
+  }, [i18n.resolvedLanguage])
 
   const roster = state.status === 'success' ? state.psychologists : []
   const selected = roster.find((psychologist) => psychologist.slug === selectedSlug) ?? roster[0]
@@ -44,8 +46,8 @@ export function FeaturedPsychologists() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-center gap-6 text-center">
           <div>
-            <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{t('homepage.featured.title')}</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{t('homepage.featured.description')}</p>
+            <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{managed?.section.headline[managed.locale] ?? t('homepage.featured.title')}</h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{managed?.section.description[managed.locale] ?? t('homepage.featured.description')}</p>
           </div>
           <Link className="inline-flex min-h-11 items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8" to="/psychologists">
             {t('homepage.featured.viewAll')} <ArrowRight aria-hidden="true" size={18} />

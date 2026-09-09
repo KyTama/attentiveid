@@ -625,6 +625,18 @@
     }
   },
   "routes": {
+    "content": {
+      "loadingTitle": "Preparing Attentive…",
+      "loadingDescription": "The latest published experience is being loaded.",
+      "unavailableTitle": "This page is temporarily unavailable.",
+      "unavailableDescription": "Please try again shortly or contact our team through WhatsApp."
+    },
+    "preview": {
+      "loadingTitle": "Preparing your preview…",
+      "loadingDescription": "The protected draft is being loaded.",
+      "unavailableTitle": "Preview is unavailable.",
+      "unavailableDescription": "This preview link is invalid, expired, revoked, or no longer available."
+    },
     "common": {
       "home": "Back to home",
       "loading": "Loading psychologist information…",

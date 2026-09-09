@@ -1,8 +1,10 @@
 import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 interface JourneyStep {
   description: string
+  id: string
   points: string[]
   title: string
 }
@@ -14,15 +16,28 @@ const journeyImages = [
 
 export function CareJourney() {
   const { t } = useTranslation()
-  const steps = t('homepage.journey.steps', { returnObjects: true }) as JourneyStep[]
+  const managed = useLandingSection('careJourney')
+  const sourceSteps = (t('homepage.journey.steps', { returnObjects: true }) as Omit<JourneyStep, 'id'>[])
+  const steps = managed
+    ? [...managed.section.items]
+      .sort((left, right) => left.position - right.position)
+      .map((item, index) => ({
+        id: item.id,
+        title: item.title[managed.locale],
+        description: item.description[managed.locale],
+        points: sourceSteps[index]?.points ?? [],
+      }))
+    : sourceSteps.map((step, index) => ({ ...step, id: `journey-${index}` }))
+  const title = managed?.section.headline[managed.locale] ?? t('homepage.journey.title')
+  const description = managed?.section.description[managed.locale] ?? t('homepage.journey.description')
 
   return (
     <section className="deferred-section px-5 py-20 lg:px-8 lg:py-28" id="process">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-16">
-          <h2 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{t('homepage.journey.title')}</h2>
+          <h2 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{title}</h2>
           <div className="border-t border-primary/70 pt-6">
-            <p className="max-w-2xl text-base leading-7 text-secondary/80">{t('homepage.journey.description')}</p>
+            <p className="max-w-2xl text-base leading-7 text-secondary/80">{description}</p>
             <div aria-hidden="true" className="mt-8 grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-3">
               <span className="size-3 rounded-full bg-primary" />
               <span className="h-px bg-primary/45" />
@@ -38,7 +53,7 @@ export function CareJourney() {
           {steps.map((step, stepIndex) => {
             const image = journeyImages[stepIndex]
             return (
-              <li className="flex min-h-[34rem] flex-col rounded-xl border border-secondary/10 bg-white/55 p-6 sm:p-8" key={step.title}>
+              <li className="flex min-h-[34rem] flex-col rounded-xl border border-secondary/10 bg-white/55 p-6 sm:p-8" key={step.id}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-[#946a22]">0{stepIndex + 1}</span>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary/80">{t('homepage.journey.step')}</span>

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 interface SupportTopic {
   description: string
@@ -11,14 +12,21 @@ interface SupportTopic {
 
 export function SupportExplorer() {
   const { t } = useTranslation()
-  const topics = t('homepage.support.topics', { returnObjects: true }) as SupportTopic[]
+  const managed = useLandingSection('supportExplorer')
+  const topics = managed
+    ? [...managed.section.items]
+      .sort((left, right) => left.position - right.position)
+      .map((item) => ({ id: item.id, title: item.title[managed.locale], description: item.description[managed.locale] }))
+    : t('homepage.support.topics', { returnObjects: true }) as SupportTopic[]
+  const title = managed?.section.headline[managed.locale] ?? t('homepage.support.title')
+  const description = managed?.section.description[managed.locale] ?? t('homepage.support.description')
 
   return (
     <section className="deferred-section px-5 py-20 lg:px-8 lg:py-28" id="support">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{t('homepage.support.title')}</h2>
-          <p className="mt-5 text-base leading-7 text-secondary/75">{t('homepage.support.description')}</p>
+          <h2 className="text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{title}</h2>
+          <p className="mt-5 text-base leading-7 text-secondary/75">{description}</p>
         </div>
         <ul className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {topics.map((topic, topicIndex) => (

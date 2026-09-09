@@ -625,6 +625,18 @@
     }
   },
   "routes": {
+    "content": {
+      "loadingTitle": "Menyiapkan Attentive…",
+      "loadingDescription": "Versi terbaru yang sudah dipublikasikan sedang dimuat.",
+      "unavailableTitle": "Halaman ini sedang tidak tersedia.",
+      "unavailableDescription": "Silakan coba lagi sebentar atau hubungi tim kami melalui WhatsApp."
+    },
+    "preview": {
+      "loadingTitle": "Menyiapkan pratinjau…",
+      "loadingDescription": "Draf terlindungi sedang dimuat.",
+      "unavailableTitle": "Pratinjau tidak tersedia.",
+      "unavailableDescription": "Tautan pratinjau ini tidak valid, kedaluwarsa, dicabut, atau sudah tidak tersedia."
+    },
     "common": {
       "home": "Kembali ke beranda",
       "loading": "Memuat informasi psikolog…",

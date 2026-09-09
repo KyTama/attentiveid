@@ -3,9 +3,11 @@ import { Building2, Check, MessageCircle, Video } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { createWhatsAppLink, defaultContactMessage } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 export function ConsultationReassurance() {
   const { t } = useTranslation()
+  const managed = useLandingSection('consultationReassurance')
   const included = t('homepage.pricing.included', { returnObjects: true }) as string[]
   const whatsappUrl = createWhatsAppLink(defaultContactMessage)
 
@@ -20,8 +22,8 @@ export function ConsultationReassurance() {
             <span className="size-2 rotate-45 bg-primary" />
             <span className="h-px w-12 bg-primary/70" />
           </div>
-          <h2 className="text-balance text-[2rem] font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{t('homepage.pricing.title')}</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{t('homepage.pricing.description')}</p>
+          <h2 className="text-balance text-[2rem] font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{managed?.section.headline[managed.locale] ?? t('homepage.pricing.title')}</h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{managed?.section.description[managed.locale] ?? t('homepage.pricing.description')}</p>
         </div>
         <div className="mt-12 grid overflow-hidden rounded-xl bg-white lg:grid-cols-[1.05fr_0.8fr_0.65fr]">
           <div className="p-7 sm:p-10 lg:p-12">

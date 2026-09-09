@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 interface TrustMetric {
   label: string
@@ -11,7 +12,14 @@ interface TrustMetric {
 
 export function HomepageHero() {
   const { t } = useTranslation()
+  const managed = useLandingSection('hero')
   const metrics = t('homepage.hero.metrics', { returnObjects: true }) as TrustMetric[]
+  const copy = {
+    description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
+    primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),
+    secondaryAction: managed?.section.secondaryCta[managed.locale] ?? t('homepage.hero.secondaryAction'),
+    title: managed?.section.headline[managed.locale] ?? t('homepage.hero.title'),
+  }
 
   return (
     <section className="relative border-b border-secondary/10" id="home">
@@ -22,10 +30,10 @@ export function HomepageHero() {
             data-route-heading
             tabIndex={-1}
           >
-            {t('homepage.hero.title')}
+            {copy.title}
           </h1>
           <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-secondary/80 sm:text-lg">
-            {t('homepage.hero.description')}
+            {copy.description}
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
@@ -33,7 +41,7 @@ export function HomepageHero() {
                 className="inline-flex w-full items-center justify-center gap-3 rounded-md bg-secondary px-6 py-4 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
                 to="/psychologists"
               >
-                {t('homepage.hero.primaryAction')}
+                {copy.primaryAction}
                 <ArrowRight aria-hidden="true" size={18} />
               </Link>
             </motion.div>
@@ -44,7 +52,7 @@ export function HomepageHero() {
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
-              {t('homepage.hero.secondaryAction')}
+              {copy.secondaryAction}
               <ArrowDownRight aria-hidden="true" size={18} />
             </motion.a>
           </div>

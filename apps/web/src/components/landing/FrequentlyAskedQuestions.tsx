@@ -3,6 +3,7 @@ import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 interface FaqItem {
   answer: string
@@ -10,16 +11,21 @@ interface FaqItem {
 }
 export function FrequentlyAskedQuestions() {
   const { t } = useTranslation()
+  const managed = useLandingSection('frequentlyAskedQuestions')
   const reduceMotion = useReducedMotion()
-  const items = t('homepage.faq.items', { returnObjects: true }) as FaqItem[]
+  const items = managed
+    ? [...managed.section.items]
+      .sort((left, right) => left.position - right.position)
+      .map((item) => ({ id: item.id, question: item.title[managed.locale], answer: item.description[managed.locale] }))
+    : (t('homepage.faq.items', { returnObjects: true }) as FaqItem[]).map((item, index) => ({ ...item, id: `faq-${index}` }))
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
     <section className="deferred-section bg-white px-5 py-24 lg:px-8 lg:py-32" id="faq">
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="min-w-0">
-          <h2 className="max-w-lg text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{t('homepage.faq.title')}</h2>
-          <p className="mt-5 max-w-md text-base leading-7 text-secondary/80">{t('homepage.faq.description')}</p>
+          <h2 className="max-w-lg text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{managed?.section.headline[managed.locale] ?? t('homepage.faq.title')}</h2>
+          <p className="mt-5 max-w-md text-base leading-7 text-secondary/80">{managed?.section.description[managed.locale] ?? t('homepage.faq.description')}</p>
           <img alt="" className="mt-10 aspect-[538/410] w-full rounded-xl object-cover" height="410" loading="lazy" src="/images/figma/faq-room.webp" width="538" />
         </div>
         <div className="rounded-xl bg-[#fcf8f1] px-5 sm:px-7">
@@ -27,7 +33,7 @@ export function FrequentlyAskedQuestions() {
             const isOpen = openIndex === itemIndex
             const panelId = `homepage-faq-panel-${itemIndex}`
             return (
-              <div className="border-b border-secondary/15" key={item.question}>
+              <div className="border-b border-secondary/15" key={item.id}>
                 <motion.button
                   aria-controls={panelId}
                   aria-expanded={isOpen}

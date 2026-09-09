@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { UserRound } from 'lucide-react'
+import { useLandingSection } from '@/features/content/landing-content-context'
 
 interface PromiseItem {
   description: string
@@ -7,18 +8,25 @@ interface PromiseItem {
 }
 export function CarePromise() {
   const { t } = useTranslation()
-  const items = t('homepage.promise.items', { returnObjects: true }) as PromiseItem[]
+  const managed = useLandingSection('carePromise')
+  const items = managed
+    ? [...managed.section.items]
+      .sort((left, right) => left.position - right.position)
+      .map((item) => ({ id: item.id, title: item.title[managed.locale], description: item.description[managed.locale] }))
+    : (t('homepage.promise.items', { returnObjects: true }) as PromiseItem[]).map((item, index) => ({ ...item, id: `promise-${index}` }))
+  const title = managed?.section.headline[managed.locale] ?? t('homepage.promise.title')
+  const description = managed?.section.description[managed.locale] ?? t('homepage.promise.description')
 
   return (
     <section className="deferred-section relative overflow-hidden bg-secondary px-5 py-24 text-white lg:px-8 lg:py-28">
       <div className="absolute -right-28 top-10 size-96 rounded-full border border-primary/25" />
       <div className="absolute -right-14 top-24 size-72 rounded-full border border-primary/20" />
       <div className="relative mx-auto max-w-7xl">
-        <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">{t('homepage.promise.title')}</h2>
-        <p className="mt-5 max-w-2xl text-base leading-7 text-white/65">{t('homepage.promise.description')}</p>
+        <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">{title}</h2>
+        <p className="mt-5 max-w-2xl text-base leading-7 text-white/65">{description}</p>
         <ol className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((item, itemIndex) => (
-            <li className="border-l border-primary/30 pl-6" key={item.title}>
+            <li className="border-l border-primary/30 pl-6" key={item.id}>
               {itemIndex === 1 ? (
                 <span aria-hidden="true" className="mb-5 grid size-16 place-items-center rounded-full border border-primary text-primary">
                   <UserRound size={34} strokeWidth={1.6} />
