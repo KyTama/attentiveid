@@ -6,7 +6,9 @@
     "scripts": {
         "dev": "bun --watch src/index.ts",
         "build": "bun build src/index.ts --outfile=dist/index.js --target=bun",
-        "start": "bun run dist/index.js"
+        "start": "bun run dist/index.js",
+        "db:generate": "drizzle-kit generate --name=shared_content_foundation",
+        "db:migrate": "bun src/db/migrate.ts"
     },
     "dependencies": {
         "@attentiveid/shared": "workspace:*",
