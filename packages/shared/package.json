@@ -1,0 +1,21 @@
+{
+  "name": "@attentiveid/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./content": "./src/content.ts"
+  },
+  "scripts": {
+    "test": "bun test src/content.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.49"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "typescript": "^5.0.0"
+  }
+}
