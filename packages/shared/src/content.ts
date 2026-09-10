@@ -29,6 +29,9 @@ export const ARTICLE_LIFECYCLE_STATES = ['draft', 'published', 'unpublished', 'a
 export const ARTICLE_REVISION_STATES = ['draft', 'inReview', 'approved', 'rejected'] as const
 export const MEDIA_LIFECYCLE_STATES = ['active', 'orphaned', 'deleted'] as const
 export const PSYCHOLOGIST_SUPPORT_AREAS = ['adultClinical', 'childAdolescent', 'educational'] as const
+export const USER_ROLES = ['admin', 'psychologist'] as const
+export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const
+
 
 const IdentifierSchema = Type.String({ minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$' })
 const SlugSchema = Type.String({ minLength: 1, maxLength: 160, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' })
@@ -478,3 +481,48 @@ export const validateMediaMutation = (
   Value.Check(MediaMutationSchema, value)
   && validateMediaReference(value.reference, policy)
 )
+
+export const UserRoleSchema = Type.Union([Type.Literal('admin'), Type.Literal('psychologist')])
+export const UserStatusSchema = Type.Union([Type.Literal('active'), Type.Literal('inactive'), Type.Literal('suspended')])
+
+export const EmailSchema = Type.String({ minLength: 3, maxLength: 254, pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$' })
+
+export const UserDtoSchema = Type.Object({
+  id: IdentifierSchema,
+  email: EmailSchema,
+  name: Type.String({ minLength: 1, maxLength: 120 }),
+  role: UserRoleSchema,
+  status: UserStatusSchema,
+  psychologistId: NullableIdentifierSchema,
+  lastLoginAt: NullableTimestampSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
+}, { additionalProperties: false })
+
+export const CreateUserMutationSchema = Type.Object({
+  email: EmailSchema,
+  name: Type.String({ minLength: 1, maxLength: 120 }),
+  password: Type.String({ minLength: 8, maxLength: 128 }),
+  role: UserRoleSchema,
+  psychologistId: Type.Optional(NullableIdentifierSchema),
+}, { additionalProperties: false })
+
+export const LoginCredentialsSchema = Type.Object({
+  email: EmailSchema,
+  password: Type.String({ minLength: 1, maxLength: 128 }),
+}, { additionalProperties: false })
+
+export type UserRole = typeof USER_ROLES[number]
+export type UserStatus = typeof USER_STATUSES[number]
+export type UserDto = Static<typeof UserDtoSchema>
+export type CreateUserMutation = Static<typeof CreateUserMutationSchema>
+export type LoginCredentials = Static<typeof LoginCredentialsSchema>
+
+export const validateCreateUserMutation = (value: unknown): value is CreateUserMutation => (
+  Value.Check(CreateUserMutationSchema, value)
+)
+
+export const validateLoginCredentials = (value: unknown): value is LoginCredentials => (
+  Value.Check(LoginCredentialsSchema, value)
+)
+

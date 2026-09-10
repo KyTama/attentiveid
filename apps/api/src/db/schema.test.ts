@@ -6,6 +6,8 @@ import {
   MEDIA_LIFECYCLE_STATES,
   PSYCHOLOGIST_LIFECYCLE_STATES,
   PSYCHOLOGIST_SUPPORT_AREAS,
+  USER_ROLES,
+  USER_STATUSES,
 } from '../../../../packages/shared/src'
 import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core'
 import {
@@ -34,6 +36,10 @@ import {
   psychologistSupportAreaEnum,
   psychologistSupportAreas,
   psychologists,
+  userRefreshTokens,
+  userRoleEnum,
+  userStatusEnum,
+  users,
 } from './schema'
 
 const configFor = (table: PgTable) => getTableConfig(table)
@@ -72,7 +78,40 @@ describe('content domain schema', () => {
     expect(mediaLifecycleStatusEnum.enumValues).toEqual([...MEDIA_LIFECYCLE_STATES])
     expect(landingSectionKeyEnum.enumValues).toEqual([...LANDING_SECTION_ORDER])
     expect(landingRevisionStatusEnum.enumValues).toEqual(['draft', 'published', 'superseded'])
+    expect(userRoleEnum.enumValues).toEqual([...USER_ROLES])
+    expect(userStatusEnum.enumValues).toEqual([...USER_STATUSES])
   })
+
+  it('stores production user accounts and token rotation metadata with UUID primary keys', () => {
+    const userColumns = columnNamesFor(users)
+    expect(userColumns).toEqual(expect.arrayContaining([
+      'id',
+      'email',
+      'name',
+      'password_hash',
+      'role',
+      'status',
+      'psychologist_id',
+      'last_login_at',
+      'created_at',
+      'updated_at',
+    ]))
+    expect(indexNamesFor(users)).toContain('users_email_unique')
+    expect(indexNamesFor(users)).toContain('users_role_idx')
+    expect(indexNamesFor(users)).toContain('users_status_idx')
+
+    const tokenColumns = columnNamesFor(userRefreshTokens)
+    expect(tokenColumns).toEqual(expect.arrayContaining([
+      'id',
+      'user_id',
+      'token_hash',
+      'expires_at',
+      'revoked_at',
+      'created_at',
+    ]))
+    expect(indexNamesFor(userRefreshTokens)).toContain('user_refresh_tokens_token_hash_unique')
+  })
+
 
   it('models one singleton landing aggregate with separate revision pointers and one active draft', () => {
     expect(columnNamesFor(landingAggregates)).toEqual(expect.arrayContaining([
@@ -248,7 +287,10 @@ describe('content domain schema', () => {
       [landingItemTranslations, 'id'],
       [landingPreviewCapabilities, 'id'],
       [psychologists, 'id'],
+      [users, 'id'],
+      [userRefreshTokens, 'id'],
       [psychologistProfiles, 'psychologist_id'],
+
       [psychologistProfileTranslations, 'id'],
       [psychologistSupportAreas, 'psychologist_id'],
       [psychologistSpecializations, 'id'],

@@ -1,4 +1,5 @@
-import { pgTable, serial, text } from 'drizzle-orm/pg-core';
+import { pgTable, text } from 'drizzle-orm/pg-core';
+
 import { relations, sql } from 'drizzle-orm';
 import {
     type AnyPgColumn,
@@ -20,13 +21,10 @@ import {
     LANDING_SECTION_ORDER,
     MEDIA_LIFECYCLE_STATES,
     PSYCHOLOGIST_LIFECYCLE_STATES,
-    PSYCHOLOGIST_SUPPORT_AREAS
+    PSYCHOLOGIST_SUPPORT_AREAS,
+    USER_ROLES,
+    USER_STATUSES
 } from '@attentiveid/shared';
-
-export const users = pgTable('users', {
-    id: serial('id').primaryKey(),
-    name: text('name')
-});
 
 export const contentLocaleEnum = pgEnum('content_locale', CONTENT_LOCALES);
 export const landingSectionKeyEnum = pgEnum('landing_section_key', LANDING_SECTION_ORDER);
@@ -37,6 +35,9 @@ export const articleStatusEnum = pgEnum('article_status', ARTICLE_LIFECYCLE_STAT
 export const articleRevisionStatusEnum = pgEnum('article_revision_status', ARTICLE_REVISION_STATES);
 export const articleReviewDecisionEnum = pgEnum('article_review_decision', ['approved', 'rejected']);
 export const mediaLifecycleStatusEnum = pgEnum('media_lifecycle_status', MEDIA_LIFECYCLE_STATES);
+export const userRoleEnum = pgEnum('user_role', USER_ROLES);
+export const userStatusEnum = pgEnum('user_status', USER_STATUSES);
+
 
 const auditTimestamps = {
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
@@ -169,7 +170,38 @@ export const psychologists = pgTable('psychologists', {
     )
 ]);
 
+
+export const users = pgTable('users', {
+
+    id: uuid('id').defaultRandom().primaryKey(),
+    email: text('email').notNull(),
+    name: text('name').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    role: userRoleEnum('role').default('psychologist').notNull(),
+    status: userStatusEnum('status').default('active').notNull(),
+    psychologistId: uuid('psychologist_id').references(() => psychologists.id, { onDelete: 'set null' }),
+    lastLoginAt: timestamp('last_login_at', { withTimezone: true, mode: 'string' }),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('users_email_unique').on(table.email),
+    index('users_role_idx').on(table.role),
+    index('users_status_idx').on(table.status)
+]);
+
+export const userRefreshTokens = pgTable('user_refresh_tokens', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'string' }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('user_refresh_tokens_token_hash_unique').on(table.tokenHash),
+    index('user_refresh_tokens_user_id_idx').on(table.userId)
+]);
+
 export const psychologistProfiles = pgTable('psychologist_profiles', {
+
     psychologistId: uuid('psychologist_id').primaryKey().references(() => psychologists.id, { onDelete: 'restrict' }),
     credential: text('credential').notNull(),
     experienceYears: integer('experience_years').notNull(),
