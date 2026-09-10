@@ -71,7 +71,7 @@ describe('Dashboard Protected Routes & Layout', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/404/i)).toBeDefined()
+      expect(screen.getByText(/Page not found/i)).toBeDefined()
     })
   })
 
@@ -99,7 +99,7 @@ describe('Dashboard Protected Routes & Layout', () => {
     await waitFor(() => {
       expect(screen.getByText('Selamat Datang, Admin User!')).toBeDefined()
       expect(screen.getByText('Landing Content CMS')).toBeDefined()
-      expect(screen.getByText('Direktori Psikolog')).toBeDefined()
+      expect(screen.getAllByText('Direktori Psikolog').length).toBeGreaterThanOrEqual(1)
     })
   })
 

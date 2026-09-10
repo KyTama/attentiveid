@@ -18,6 +18,8 @@ import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
 import { PsychologistsCmsPage } from './pages/dashboard/PsychologistsCmsPage'
 import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
+import { PsychologistProfileSelfPage } from './pages/dashboard/PsychologistProfileSelfPage'
+import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import type { LandingContentLoader } from './features/content/service'
 
 export function AppRoutes({
@@ -75,6 +77,22 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
                 <ArticlesCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                <PsychologistProfileSelfPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="users"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UsersManagementPage />
               </ProtectedRoute>
             }
           />

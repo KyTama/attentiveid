@@ -65,10 +65,10 @@ export const createOverviewRoutes = (dependencies: OverviewRoutesDependencies) =
                             total: sql<number>`count(*)::int`,
                             published: sql<number>`count(*) filter (where ${articles.status} = 'published')::int`,
                             draft: sql<number>`count(*) filter (where ${articles.status} = 'draft')::int`,
-                            review: sql<number>`count(*) filter (where ${articles.status} = 'review')::int`
+                            archived: sql<number>`count(*) filter (where ${articles.status} = 'archived')::int`
                         })
                         .from(articles);
-                    const articleStats = articleRows[0] || { total: 0, published: 0, draft: 0, review: 0 };
+                    const articleStats = articleRows[0] || { total: 0, published: 0, draft: 0, archived: 0 };
 
                     // Users stats
                     const userRows = await db
@@ -97,7 +97,7 @@ export const createOverviewRoutes = (dependencies: OverviewRoutesDependencies) =
                                 total: Number(articleStats.total || 0),
                                 published: Number(articleStats.published || 0),
                                 draft: Number(articleStats.draft || 0),
-                                review: Number(articleStats.review || 0)
+                                archived: Number(articleStats.archived || 0)
                             },
                             staff: {
                                 total: Number(userStats.total || 0),

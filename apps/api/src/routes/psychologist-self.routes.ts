@@ -151,6 +151,14 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
 
                     // Update translations
                     if (body.biography) {
+                        const existingTrans = await db
+                            .select()
+                            .from(psychologistProfileTranslations)
+                            .where(eq(psychologistProfileTranslations.psychologistId, psychId));
+
+                        const existingIdAvail = existingTrans.find(t => t.locale === 'id')?.availabilityMessage || '';
+                        const existingEnAvail = existingTrans.find(t => t.locale === 'en')?.availabilityMessage || '';
+
                         if (typeof body.biography.id === 'string') {
                             await db
                                 .insert(psychologistProfileTranslations)
@@ -158,7 +166,7 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                                     psychologistId: psychId,
                                     locale: 'id',
                                     biography: body.biography.id,
-                                    updatedAt: new Date().toISOString()
+                                    availabilityMessage: existingIdAvail
                                 })
                                 .onConflictDoUpdate({
                                     target: [
@@ -166,8 +174,7 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                                         psychologistProfileTranslations.locale
                                     ],
                                     set: {
-                                        biography: body.biography.id,
-                                        updatedAt: new Date().toISOString()
+                                        biography: body.biography.id
                                     }
                                 });
                         }
@@ -179,7 +186,7 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                                     psychologistId: psychId,
                                     locale: 'en',
                                     biography: body.biography.en,
-                                    updatedAt: new Date().toISOString()
+                                    availabilityMessage: existingEnAvail
                                 })
                                 .onConflictDoUpdate({
                                     target: [
@@ -187,8 +194,7 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                                         psychologistProfileTranslations.locale
                                     ],
                                     set: {
-                                        biography: body.biography.en,
-                                        updatedAt: new Date().toISOString()
+                                        biography: body.biography.en
                                     }
                                 });
                         }
