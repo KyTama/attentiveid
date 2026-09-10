@@ -161,14 +161,16 @@ describe('verification command graph and environments', () => {
     expect(packageJson.scripts['verify:shared-content:inner']).not.toContain('bun run verify')
   })
 
-  test('runs root verification directly against healthy PostgreSQL 16 in CI', async () => {
-    const workflow = await readFile(path.join(root, '.github/workflows/ci.yml'), 'utf8')
+  test('runs every root verification workflow against healthy PostgreSQL 16', async () => {
+    for (const workflowFile of ['ci.yml', 'build-images.yml']) {
+      const workflow = await readFile(path.join(root, '.github/workflows', workflowFile), 'utf8')
 
-    expect(workflow).toContain('postgres:16-alpine')
-    expect(workflow).toContain('pg_isready')
-    expect(workflow).toContain('DATABASE_ADMIN_URL')
-    expect((workflow.match(/run: bun run verify\s*$/gm) ?? [])).toHaveLength(1)
-    expect(workflow).not.toContain('run: bun run verify:shared-content')
+      expect(workflow).toContain('postgres:16-alpine')
+      expect(workflow).toContain('pg_isready')
+      expect(workflow).toContain('DATABASE_ADMIN_URL')
+      expect((workflow.match(/run: bun run verify\s*$/gm) ?? [])).toHaveLength(1)
+      expect(workflow).not.toContain('run: bun run verify:shared-content')
+    }
   })
 
   test('provides a healthy local Docker verifier that invokes root verification directly', async () => {
