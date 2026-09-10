@@ -61,6 +61,13 @@ describe('shared content psychologist adapter', () => {
     expect(source.default).toContain("from '@/lib/api'")
   })
 
+  it('uses the browser origin when no API URL is configured for the deployment', async () => {
+    const source = await import('../src/lib/api.ts?raw')
+
+    expect(source.default).toContain('window.location.origin')
+    expect(source.default).not.toContain("'http://localhost:3000'")
+  })
+
   it('passes adversarial slugs to the encoding boundary and exposes allowlisted fields only', async () => {
     const slugs: string[] = []
     const boundary: PsychologistApiBoundary = {

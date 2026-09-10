@@ -87,6 +87,7 @@ grep -Fq 'dist/migrate.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'dist/seed-landing.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'dist/seed-psychologists.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq "API landing content" "$root_dir/scripts/ci/smoke-images.sh"
+grep -Fq 'Web image contains a localhost API fallback' "$root_dir/scripts/ci/smoke-images.sh"
 
 if grep -RinE 'tencent|cvm|cos\.tencent' "$compose_file" "$root_dir/deploy/Caddyfile" "$root_dir/deploy/ingress" "$root_dir/deploy/env"; then
     printf 'Runtime configuration must remain provider-neutral\n' >&2

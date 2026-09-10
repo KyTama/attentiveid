@@ -2,7 +2,10 @@ import { treaty } from '@elysiajs/eden';
 import type { App } from '@api/app';
 
 // Create the Eden client
-export const api = treaty<App>(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const apiBaseUrl = import.meta.env.VITE_API_URL
+  || (typeof window === 'undefined' ? '' : window.location.origin)
+
+export const api = treaty<App>(apiBaseUrl);
 
 export const psychologistApi = {
   list: (query: {

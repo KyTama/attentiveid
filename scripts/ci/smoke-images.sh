@@ -82,6 +82,11 @@ docker run -d \
     -p 127.0.0.1::8080 \
     "$web_image" >/dev/null
 
+if docker exec "$web_container" grep -R -q 'http://localhost:3000' /srv; then
+    printf 'Web image contains a localhost API fallback\n' >&2
+    exit 1
+fi
+
 web_port="$(docker port "$web_container" 8080/tcp | awk -F: 'NR == 1 { print $NF }')"
 api_port="$(docker port "$api_container" 3000/tcp | awk -F: 'NR == 1 { print $NF }')"
 
