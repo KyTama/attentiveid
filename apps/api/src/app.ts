@@ -3,8 +3,12 @@ import { swagger } from '@elysiajs/swagger';
 import { cors } from '@elysiajs/cors';
 import { createPublicContentRoutes, type PublicContentDependencies } from './routes/public-content';
 import { createAuthRoutes, type AuthDependencies } from './routes/auth';
+import { createArticleRoutes } from './routes/articles';
 
-export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies>;
+export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
+    articlesRepository?: any;
+    contentTransitions?: any;
+};
 
 export const createApp = (dependencies: AppDependencies) => {
     const baseApp = new Elysia()
@@ -19,6 +23,8 @@ export const createApp = (dependencies: AppDependencies) => {
                 tags: [
                     { name: 'Health', description: 'Health check endpoints' },
                     { name: 'Auth', description: 'Authentication endpoints' },
+                    { name: 'Articles', description: 'Psychology articles and reading' },
+                    { name: 'Articles CMS', description: 'Article management and review workflows' },
                     { name: 'Reservations', description: 'Reservation management' },
                     { name: 'Admin', description: 'Admin operations' },
                     { name: 'Psychologist', description: 'Psychologist operations' },
@@ -61,7 +67,14 @@ export const createApp = (dependencies: AppDependencies) => {
         });
 
     if (dependencies.userRepository && dependencies.tokenService && dependencies.verifyPassword) {
-        return baseApp.use(createAuthRoutes(dependencies as AuthDependencies));
+        return baseApp
+            .use(createAuthRoutes(dependencies as AuthDependencies))
+            .use(createArticleRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                articlesRepository: dependencies.articlesRepository || { getPublishedBySlug: async () => ({ status: 'notFound' }) },
+                contentTransitions: dependencies.contentTransitions,
+            }));
     }
 
     return baseApp;

@@ -12,6 +12,8 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { PsychologistProfilePage } from './pages/PsychologistProfilePage'
 import { PsychologistsPage } from './pages/PsychologistsPage'
 import { PreviewLandingPage } from './pages/PreviewLandingPage'
+import { ArticlesPage } from './pages/ArticlesPage'
+import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
 import { PsychologistsCmsPage } from './pages/dashboard/PsychologistsCmsPage'
@@ -34,6 +36,8 @@ export function AppRoutes({
           <Route path="preview/landing" element={<PreviewLandingPage loader={previewLandingLoader} />} />
           <Route path="psychologists" element={<PsychologistsPage />} />
           <Route path="psychologists/:slug" element={<PsychologistProfilePage />} />
+          <Route path="articles" element={<ArticlesPage />} />
+          <Route path="articles/:slug" element={<ArticleDetailPage />} />
         </Route>
 
         {/* Authentication Login Route */}
