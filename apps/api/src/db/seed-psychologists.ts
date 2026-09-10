@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { count, sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import {
@@ -115,6 +115,10 @@ export interface PsychologistSeedTransaction {
 
 export interface PsychologistSeedDatabase {
     transaction<Result>(operation: (transaction: PsychologistSeedTransaction) => Promise<Result>): Promise<Result>;
+}
+
+export interface PsychologistBootstrapDatabase extends PsychologistSeedDatabase {
+    countPsychologists(): Promise<number>;
 }
 
 export interface PsychologistSeedResult {
@@ -680,6 +684,18 @@ export async function seedPsychologists(
     }
 }
 
+export async function bootstrapPsychologists(
+    database: PsychologistBootstrapDatabase,
+    fixtures: readonly PsychologistSeedFixture[] = psychologistSeedFixtures
+): Promise<{ status: 'seeded' | 'unchanged'; result?: PsychologistSeedResult }> {
+    if (await database.countPsychologists() > 0) return { status: 'unchanged' };
+
+    return {
+        status: 'seeded',
+        result: await seedPsychologists(database, fixtures)
+    };
+}
+
 export const createDrizzlePsychologistSeedDatabase = (
     database: PostgresJsDatabase<typeof schema>
 ): PsychologistSeedDatabase => ({
@@ -826,6 +842,16 @@ export const createDrizzlePsychologistSeedDatabase = (
     }))
 });
 
+export const createDrizzlePsychologistBootstrapDatabase = (
+    database: PostgresJsDatabase<typeof schema>
+): PsychologistBootstrapDatabase => ({
+    ...createDrizzlePsychologistSeedDatabase(database),
+    countPsychologists: async () => {
+        const [result] = await database.select({ total: count() }).from(schema.psychologists);
+        return result?.total ?? 0;
+    }
+});
+
 const runPsychologistSeed = async () => {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
@@ -853,8 +879,10 @@ const runPsychologistSeed = async () => {
     const database = drizzle(queryClient, { schema });
 
     try {
-        const result = await seedPsychologists(createDrizzlePsychologistSeedDatabase(database));
-        console.info(`Seeded ${result.psychologists} psychologist records.`);
+        const result = await bootstrapPsychologists(createDrizzlePsychologistBootstrapDatabase(database));
+        console.info(result.status === 'seeded'
+            ? `Seeded ${result.result?.psychologists ?? 0} psychologist records.`
+            : 'Psychologist content already initialized.');
     } catch {
         console.error('Psychologist seed failed.');
         process.exitCode = 1;

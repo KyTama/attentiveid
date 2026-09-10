@@ -47,7 +47,10 @@ else
 fi
 env_file="$candidate_env"
 
-docker compose --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" pull
+docker compose --profile maintenance --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" pull
+docker compose --profile maintenance --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" run --rm --no-deps migrate
+docker compose --profile maintenance --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" run --rm --no-deps seed-landing
+docker compose --profile maintenance --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" run --rm --no-deps seed-psychologists
 docker compose --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" up -d --remove-orphans --wait
 "$deploy_root/current/scripts/deploy/healthcheck.sh" --web-url "$PUBLIC_WEB_URL" --api-url "$PUBLIC_API_URL"
 mv "$candidate_env" "$manifest_dir/current.env"

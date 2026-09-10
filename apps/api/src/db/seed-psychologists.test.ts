@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import {
+    bootstrapPsychologists,
     psychologistSeedFixtures,
     seedPsychologists,
+    type PsychologistBootstrapDatabase,
     type PsychologistSeedDatabase,
     type PsychologistSeedFixture,
     type PsychologistSeedTransaction
@@ -48,7 +50,7 @@ const createMemoryState = (): MemoryState => ({
     }
 });
 
-class MemoryPsychologistSeedDatabase implements PsychologistSeedDatabase {
+class MemoryPsychologistSeedDatabase implements PsychologistBootstrapDatabase {
     private state = createMemoryState();
 
     constructor(private readonly failureMessage?: string) {}
@@ -104,6 +106,10 @@ class MemoryPsychologistSeedDatabase implements PsychologistSeedDatabase {
     snapshot() {
         return structuredClone(this.state);
     }
+
+    async countPsychologists() {
+        return this.state.psychologists.size;
+    }
 }
 
 const expectedCounts = {
@@ -118,6 +124,18 @@ const expectedCounts = {
 };
 
 describe('psychologist seed bootstrap', () => {
+    test('preserves existing managed psychologist content during deployment bootstrap', async () => {
+        const database = new MemoryPsychologistSeedDatabase();
+
+        const firstResult = await bootstrapPsychologists(database);
+        const firstSnapshot = database.snapshot();
+        const secondResult = await bootstrapPsychologists(database);
+
+        expect(firstResult).toEqual({ status: 'seeded', result: expectedCounts });
+        expect(secondResult).toEqual({ status: 'unchanged' });
+        expect(database.snapshot()).toEqual(firstSnapshot);
+    });
+
     test('seeds twice without duplicating canonical identities or ordered relations', async () => {
         const database = new MemoryPsychologistSeedDatabase();
 

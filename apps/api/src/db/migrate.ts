@@ -26,7 +26,8 @@ if (parsedDatabaseUrl.protocol !== 'postgres:' && parsedDatabaseUrl.protocol !==
 
 const migrationClient = postgres(databaseUrl, { max: 1 });
 const migrationDatabase = drizzle(migrationClient);
-const migrationsFolder = fileURLToPath(new URL('../../drizzle', import.meta.url));
+const migrationsFolder = process.env.MIGRATIONS_DIR
+    ?? fileURLToPath(new URL('../../drizzle', import.meta.url));
 
 try {
     await migrate(migrationDatabase, { migrationsFolder });

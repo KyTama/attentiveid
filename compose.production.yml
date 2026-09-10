@@ -71,6 +71,60 @@ services:
       traefik.http.routers.attentive-api.entrypoints: websecure
       traefik.http.services.attentive-api.loadbalancer.server.port: "3000"
 
+  migrate:
+    profiles:
+      - maintenance
+    image: ${API_IMAGE:?API_IMAGE digest is required}
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,uid=1000,gid=1000,mode=0700
+    env_file:
+      - ${HOST_SECRET_FILE:?HOST_SECRET_FILE is required}
+    command: ["bun", "run", "dist/migrate.js"]
+    networks:
+      postgres: {}
+
+  seed-landing:
+    profiles:
+      - maintenance
+    image: ${API_IMAGE:?API_IMAGE digest is required}
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,uid=1000,gid=1000,mode=0700
+    env_file:
+      - ${HOST_SECRET_FILE:?HOST_SECRET_FILE is required}
+    command: ["bun", "run", "dist/seed-landing.js"]
+    networks:
+      postgres: {}
+
+  seed-psychologists:
+    profiles:
+      - maintenance
+    image: ${API_IMAGE:?API_IMAGE digest is required}
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,uid=1000,gid=1000,mode=0700
+    env_file:
+      - ${HOST_SECRET_FILE:?HOST_SECRET_FILE is required}
+    command: ["bun", "run", "dist/seed-psychologists.js"]
+    networks:
+      postgres: {}
+
 networks:
   ingress:
     name: ${INGRESS_NETWORK:?INGRESS_NETWORK is required}
