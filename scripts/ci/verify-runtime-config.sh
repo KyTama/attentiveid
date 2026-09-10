@@ -83,7 +83,9 @@ grep -Fq -- '--profile maintenance' "$root_dir/scripts/deploy/deploy.sh"
 grep -Fq 'run --rm --no-deps migrate' "$root_dir/scripts/deploy/deploy.sh"
 grep -Fq 'run --rm --no-deps seed-landing' "$root_dir/scripts/deploy/deploy.sh"
 grep -Fq 'run --rm --no-deps seed-psychologists' "$root_dir/scripts/deploy/deploy.sh"
-grep -Fq 'dist/migrate.js dist/seed-landing.js dist/seed-psychologists.js' "$root_dir/scripts/ci/smoke-images.sh"
+grep -Fq 'dist/migrate.js' "$root_dir/scripts/ci/smoke-images.sh"
+grep -Fq 'dist/seed-landing.js' "$root_dir/scripts/ci/smoke-images.sh"
+grep -Fq 'dist/seed-psychologists.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq "API landing content" "$root_dir/scripts/ci/smoke-images.sh"
 
 if grep -RinE 'tencent|cvm|cos\.tencent' "$compose_file" "$root_dir/deploy/Caddyfile" "$root_dir/deploy/ingress" "$root_dir/deploy/env"; then
