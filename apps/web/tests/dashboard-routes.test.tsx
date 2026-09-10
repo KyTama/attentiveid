@@ -38,7 +38,7 @@ describe('Dashboard Protected Routes & Layout', () => {
     vi.restoreAllMocks()
   })
 
-  it('redirects unauthenticated user accessing /dashboard to /login', async () => {
+  it('redirects unauthenticated user accessing /dashboard to /portal-gate', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -58,6 +58,20 @@ describe('Dashboard Protected Routes & Layout', () => {
     await waitFor(() => {
       expect(screen.getByText('Attentive.id Portal')).toBeDefined()
       expect(screen.getByLabelText('Email Address')).toBeDefined()
+    })
+  })
+
+  it('renders 404 Not Found when accessing decommissioned /login route', async () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText(/404/i)).toBeDefined()
     })
   })
 

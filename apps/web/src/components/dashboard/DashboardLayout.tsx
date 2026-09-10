@@ -59,7 +59,7 @@ export function DashboardLayout() {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
+    navigate('/portal-gate')
   }
 
   return (

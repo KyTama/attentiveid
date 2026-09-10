@@ -40,8 +40,9 @@ export function AppRoutes({
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
         </Route>
 
-        {/* Authentication Login Route */}
-        <Route path="login" element={<LoginPage />} />
+        {/* Obscured Staff Authentication Gate (Decommissioned /login) */}
+        <Route path="portal-gate" element={<LoginPage />} />
+        <Route path="login" element={<NotFoundPage />} />
 
         {/* Protected Master Dashboard Portal Routes */}
         <Route
