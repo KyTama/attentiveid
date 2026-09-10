@@ -10,7 +10,8 @@
         "db:generate": "drizzle-kit generate --name=shared_content_foundation",
         "db:migrate": "bun src/db/migrate.ts",
         "db:seed:landing": "bun src/db/seed-landing.ts",
-        "db:seed:psychologists": "bun src/db/seed-psychologists.ts"
+        "db:seed:psychologists": "bun src/db/seed-psychologists.ts",
+        "db:seed:users": "bun src/db/seed-users.ts"
     },
     "dependencies": {
         "@attentiveid/shared": "workspace:*",
