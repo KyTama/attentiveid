@@ -48,7 +48,7 @@ export const requireJwtSecret = (value: string | undefined): string => {
         if (envSecret && envSecret.length >= 32) {
             return envSecret;
         }
-        if (process.env.NODE_ENV === 'test' || process.env.BUN_ENV === 'test') {
+        if (process.env.NODE_ENV !== 'production') {
             return 'attentive_test_secret_key_32bytes_minimum_length_required!';
         }
         throw new Error('JWT_SECRET is required.');

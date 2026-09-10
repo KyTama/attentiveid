@@ -5,6 +5,7 @@ import { createPublicContentRoutes, type PublicContentDependencies } from './rou
 import { createAuthRoutes, type AuthDependencies } from './routes/auth';
 import { createArticleRoutes } from './routes/articles';
 import { createLandingCmsRoutes } from './routes/landing-cms';
+import { createPsychologistsCmsRoutes } from './routes/psychologists-cms';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
     articlesRepository?: any;
@@ -83,6 +84,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 landingContentRepository: dependencies.landingContentRepository,
                 contentTransitions: dependencies.contentTransitions,
+            }))
+            .use(createPsychologistsCmsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                psychologistsRepository: dependencies.psychologistsRepository,
             }));
     }
 

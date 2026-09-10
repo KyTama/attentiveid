@@ -9,7 +9,6 @@ const EnvSchema = t.Object({
     JWT_SECRET: t.Optional(t.String())
 });
 
-
 export const parseEnv = (source: Record<string, string | undefined>) => {
     const errors = [...Value.Errors(EnvSchema, source)];
     if (errors.length > 0) {

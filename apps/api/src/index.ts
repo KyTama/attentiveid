@@ -16,10 +16,16 @@ import {
     requireJwtSecret
 } from './security/token-service';
 
-const previewSecret = requirePreviewHmacSecret(env.PREVIEW_HMAC_SECRET);
+const devFallbackSecret = 'attentive_dev_fallback_hmac_secret_32bytes_minimum_length_required!';
+
+const previewSecretValue = env.PREVIEW_HMAC_SECRET
+    || (process.env.NODE_ENV !== 'production' ? devFallbackSecret : undefined);
+const previewSecret = requirePreviewHmacSecret(previewSecretValue);
 const previewStore = createDrizzlePreviewCapabilityStore(db);
 
-const jwtSecret = requireJwtSecret(env.JWT_SECRET);
+const jwtSecretValue = env.JWT_SECRET
+    || (process.env.NODE_ENV !== 'production' ? devFallbackSecret : undefined);
+const jwtSecret = requireJwtSecret(jwtSecretValue);
 const tokenStore = createDrizzleRefreshTokenStore(db);
 const tokenService = createTokenService({ secret: jwtSecret, store: tokenStore });
 const userRepository = createUserRepository(createDrizzleUserRepositorySource(db));

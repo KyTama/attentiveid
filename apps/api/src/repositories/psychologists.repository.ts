@@ -1,9 +1,10 @@
-import { and, asc, eq, gte, sql } from 'drizzle-orm';
+import { and, asc, count, eq, gte, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
     CONTENT_LOCALES,
     validateMediaMutation,
     validatePsychologistPublicLookup,
+    type FullPsychologistMutation,
     type LocalizedText,
     type MediaReferencePolicy,
     type PsychologistMutation,
@@ -58,9 +59,21 @@ export interface NormalizedPsychologistQuery {
     offset: number;
 }
 
+export interface PsychologistAdminQuery {
+    status?: PsychologistStatus;
+    search?: string;
+    supportArea?: SupportArea;
+    limit?: number;
+    offset?: number;
+}
+
 export interface PsychologistQuerySource {
     listActive(query: NormalizedPsychologistQuery): Promise<readonly CanonicalPsychologistRow[]>;
+    listAllAdmin?(query: PsychologistAdminQuery): Promise<{ psychologists: readonly CanonicalPsychologistRow[]; total: number }>;
+    findById?(id: string): Promise<CanonicalPsychologistRow | null>;
     findBySlug(slug: string): Promise<CanonicalPsychologistRow | null>;
+    savePsychologist?(id: string | undefined, input: FullPsychologistMutation): Promise<CanonicalPsychologistRow>;
+    updateStatus?(id: string, status: PsychologistStatus): Promise<CanonicalPsychologistRow | null>;
 }
 
 export interface PsychologistListQuery {
@@ -245,6 +258,27 @@ export const createPsychologistsRepository = (
         }
         const psychologist = toPublicProjection(row, locale, mediaPolicy);
         return psychologist ? { status: 'found', psychologist } : { status: 'notFound' };
+    },
+
+    async listAdmin(query: PsychologistAdminQuery): Promise<{ psychologists: CanonicalPsychologistRow[]; total: number }> {
+        if (!source.listAllAdmin) return { psychologists: [], total: 0 };
+        const result = await source.listAllAdmin(query);
+        return { psychologists: [...result.psychologists], total: result.total };
+    },
+
+    async getAdminById(id: string): Promise<CanonicalPsychologistRow | null> {
+        if (!source.findById) return null;
+        return source.findById(id);
+    },
+
+    async saveAdmin(id: string | undefined, input: FullPsychologistMutation): Promise<CanonicalPsychologistRow> {
+        if (!source.savePsychologist) throw new Error('savePsychologist source method not implemented');
+        return source.savePsychologist(id, input);
+    },
+
+    async updateStatusAdmin(id: string, status: PsychologistStatus): Promise<CanonicalPsychologistRow | null> {
+        if (!source.updateStatus) return null;
+        return source.updateStatus(id, status);
     }
 });
 
@@ -408,5 +442,221 @@ export const createDrizzlePsychologistQuerySource = (
             .where(eq(schema.psychologists.slug, slug))
             .limit(1);
         return base ? loadPsychologistRelations(database, base) : null;
+    },
+
+    async listAllAdmin(query) {
+        const conditions: any[] = [];
+        if (query.status) {
+            conditions.push(eq(schema.psychologists.status, query.status));
+        }
+        if (query.search) {
+            const pattern = `%${escapeLikePattern(query.search.trim())}%`;
+            conditions.push(sql`(${schema.psychologists.name} ilike ${pattern} escape '\\' or ${schema.psychologists.nickname} ilike ${pattern} escape '\\')`);
+        }
+        if (query.supportArea) {
+            conditions.push(sql`exists (
+                select 1 from ${schema.psychologistSupportAreas}
+                where ${schema.psychologistSupportAreas.psychologistId} = ${schema.psychologists.id}
+                and ${schema.psychologistSupportAreas.supportArea} = ${query.supportArea}
+            )`);
+        }
+
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+        const limit = Math.max(1, Math.min(100, query.limit ?? 20));
+        const offset = Math.max(0, query.offset ?? 0);
+
+        const baseRows = await database.select(selectPsychologistBase)
+            .from(schema.psychologists)
+            .innerJoin(schema.psychologistProfiles, eq(schema.psychologistProfiles.psychologistId, schema.psychologists.id))
+            .where(whereClause)
+            .orderBy(asc(schema.psychologists.name))
+            .limit(limit)
+            .offset(offset);
+
+        const [{ totalCount }] = await database.select({ totalCount: count() })
+            .from(schema.psychologists)
+            .innerJoin(schema.psychologistProfiles, eq(schema.psychologistProfiles.psychologistId, schema.psychologists.id))
+            .where(whereClause);
+
+        const rows = await Promise.all(baseRows.map((row) => loadPsychologistRelations(database, row)));
+        return {
+            psychologists: rows.filter((row): row is CanonicalPsychologistRow => row !== null),
+            total: Number(totalCount || 0)
+        };
+    },
+
+    async findById(id) {
+        const [base] = await database.select(selectPsychologistBase)
+            .from(schema.psychologists)
+            .innerJoin(schema.psychologistProfiles, eq(schema.psychologistProfiles.psychologistId, schema.psychologists.id))
+            .where(eq(schema.psychologists.id, id))
+            .limit(1);
+        return base ? loadPsychologistRelations(database, base) : null;
+    },
+
+    async updateStatus(id, status) {
+        await database.update(schema.psychologists)
+            .set({ status, updatedAt: sql`now()` })
+            .where(eq(schema.psychologists.id, id));
+        return this.findById!(id);
+    },
+
+    async savePsychologist(id, input) {
+        return await database.transaction(async (tx) => {
+            let psychologistId = id;
+            if (psychologistId) {
+                await tx.update(schema.psychologists)
+                    .set({
+                        slug: input.slug,
+                        status: input.status,
+                        name: input.name,
+                        nickname: input.nickname,
+                        featured: input.featured,
+                        featuredOrder: input.featured ? (input.featuredOrder ?? null) : null,
+                        updatedAt: sql`now()`
+                    })
+                    .where(eq(schema.psychologists.id, psychologistId));
+
+                await tx.update(schema.psychologistProfiles)
+                    .set({
+                        credential: input.credential,
+                        experienceYears: input.experienceYears,
+                        licenseNumber: input.licenseNumber,
+                        bookingUrl: input.bookingUrl,
+                        premiumBookingUrl: input.premiumBookingUrl || null,
+                        updatedAt: sql`now()`
+                    })
+                    .where(eq(schema.psychologistProfiles.psychologistId, psychologistId));
+            } else {
+                const [inserted] = await tx.insert(schema.psychologists)
+                    .values({
+                        slug: input.slug,
+                        status: input.status,
+                        name: input.name,
+                        nickname: input.nickname,
+                        featured: input.featured,
+                        featuredOrder: input.featured ? (input.featuredOrder ?? null) : null
+                    })
+                    .returning({ id: schema.psychologists.id });
+                psychologistId = inserted.id;
+
+                await tx.insert(schema.psychologistProfiles)
+                    .values({
+                        psychologistId,
+                        credential: input.credential,
+                        experienceYears: input.experienceYears,
+                        licenseNumber: input.licenseNumber,
+                        bookingUrl: input.bookingUrl,
+                        premiumBookingUrl: input.premiumBookingUrl || null
+                    });
+            }
+
+            // Update Profile Translations
+            await tx.delete(schema.psychologistProfileTranslations)
+                .where(eq(schema.psychologistProfileTranslations.psychologistId, psychologistId));
+
+            await tx.insert(schema.psychologistProfileTranslations)
+                .values([
+                    {
+                        psychologistId,
+                        locale: 'id',
+                        biography: input.biography.id,
+                        availabilityMessage: input.availabilityMessage.id
+                    },
+                    {
+                        psychologistId,
+                        locale: 'en',
+                        biography: input.biography.en,
+                        availabilityMessage: input.availabilityMessage.en
+                    }
+                ]);
+
+            // Update Support Areas
+            await tx.delete(schema.psychologistSupportAreas)
+                .where(eq(schema.psychologistSupportAreas.psychologistId, psychologistId));
+
+            if (input.supportAreas && input.supportAreas.length > 0) {
+                await tx.insert(schema.psychologistSupportAreas)
+                    .values(input.supportAreas.map((sa: any, index: number) => ({
+                        psychologistId,
+                        supportArea: sa.supportArea,
+                        primary: sa.primary ?? (index === 0),
+                        position: index
+                    })));
+            }
+
+            // Update Specializations
+            const existingSpecializations = await tx.select({ id: schema.psychologistSpecializations.id })
+                .from(schema.psychologistSpecializations)
+                .where(eq(schema.psychologistSpecializations.psychologistId, psychologistId));
+            for (const spec of existingSpecializations) {
+                await tx.delete(schema.psychologistSpecializationTranslations)
+                    .where(eq(schema.psychologistSpecializationTranslations.specializationId, spec.id));
+            }
+            await tx.delete(schema.psychologistSpecializations)
+                .where(eq(schema.psychologistSpecializations.psychologistId, psychologistId));
+
+            if (input.specializations && input.specializations.length > 0) {
+                for (let pos = 0; pos < input.specializations.length; pos++) {
+                    const specInput = input.specializations[pos];
+                    const [spec] = await tx.insert(schema.psychologistSpecializations)
+                        .values({ psychologistId, position: pos })
+                        .returning({ id: schema.psychologistSpecializations.id });
+                    await tx.insert(schema.psychologistSpecializationTranslations)
+                        .values([
+                            { specializationId: spec.id, locale: 'id', label: specInput.label.id },
+                            { specializationId: spec.id, locale: 'en', label: specInput.label.en }
+                        ]);
+                }
+            }
+
+            // Media attachment handling
+            if (input.media) {
+                await tx.update(schema.mediaAttachments)
+                    .set({ detachedAt: sql`now()` })
+                    .where(and(
+                        eq(schema.mediaAttachments.psychologistId, psychologistId),
+                        eq(schema.mediaAttachments.role, 'profilePhoto')
+                    ));
+
+                const [existingMedia] = await tx.select({ id: schema.mediaObjects.id })
+                    .from(schema.mediaObjects)
+                    .where(eq(schema.mediaObjects.objectKey, input.media.reference))
+                    .limit(1);
+
+                let mediaObjectId = existingMedia?.id;
+                if (!mediaObjectId) {
+                    const [newMedia] = await tx.insert(schema.mediaObjects)
+                        .values({
+                            objectKey: input.media.reference,
+                            width: input.media.width,
+                            height: input.media.height,
+                            altId: input.media.alt.id,
+                            altEn: input.media.alt.en,
+                            mimeType: 'image/webp',
+                            lifecycle: 'active'
+                        })
+                        .returning({ id: schema.mediaObjects.id });
+                    mediaObjectId = newMedia.id;
+                }
+
+                await tx.insert(schema.mediaAttachments)
+                    .values({
+                        mediaObjectId,
+                        psychologistId,
+                        role: 'profilePhoto',
+                        position: 0
+                    });
+            }
+
+            const [base] = await tx.select(selectPsychologistBase)
+                .from(schema.psychologists)
+                .innerJoin(schema.psychologistProfiles, eq(schema.psychologistProfiles.psychologistId, schema.psychologists.id))
+                .where(eq(schema.psychologists.id, psychologistId))
+                .limit(1);
+            const canonical = await loadPsychologistRelations(tx as any, base);
+            if (!canonical) throw new Error('Failed to load canonical psychologist row after save.');
+            return canonical;
+        });
     }
 });

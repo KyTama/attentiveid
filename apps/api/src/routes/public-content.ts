@@ -20,6 +20,10 @@ interface PsychologistsRepository {
         | { status: 'unavailable'; psychologist: { slug: string; name: string; nickname: string } }
         | { status: 'notFound' }
     >;
+    listAdmin?: (query: any) => Promise<{ psychologists: any[]; total: number }>;
+    getAdminById?: (id: string) => Promise<any | null>;
+    saveAdmin?: (id: string | undefined, input: any) => Promise<any>;
+    updateStatusAdmin?: (id: string, status: any) => Promise<any | null>;
 }
 
 interface PreviewCapabilities {
