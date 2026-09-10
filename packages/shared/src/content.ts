@@ -366,6 +366,59 @@ export const validatePsychologistMutation = (value: unknown): value is Psycholog
   return value.featured ? value.featuredOrder !== null : value.featuredOrder === null
 }
 
+export const FullPsychologistMutationSchema = Type.Object({
+  slug: SlugSchema,
+  status: Type.Union([
+    Type.Literal('draft'),
+    Type.Literal('active'),
+    Type.Literal('inactive'),
+    Type.Literal('archived'),
+  ]),
+  name: Type.String({ minLength: 1, maxLength: 200 }),
+  nickname: Type.String({ minLength: 1, maxLength: 100 }),
+  credential: Type.String({ minLength: 1, maxLength: 200 }),
+  licenseNumber: Type.String({ minLength: 1, maxLength: 100 }),
+  experienceYears: Type.Number({ minimum: 0, maximum: 80 }),
+  bookingUrl: Type.String({ minLength: 1, maxLength: 2_048, pattern: '^https://' }),
+  premiumBookingUrl: Type.Optional(Type.Union([Type.String({ minLength: 1, maxLength: 2_048 }), Type.Null()])),
+  featured: Type.Boolean(),
+  featuredOrder: Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()])),
+  supportAreas: Type.Array(Type.Object({
+    supportArea: Type.Union([
+      Type.Literal('adultClinical'),
+      Type.Literal('childAdolescent'),
+      Type.Literal('educational'),
+    ]),
+    primary: Type.Boolean(),
+  })),
+  specializations: Type.Array(Type.Object({
+    label: LocalizedTextSchema,
+  })),
+  biography: LocalizedTextSchema,
+  availabilityMessage: LocalizedTextSchema,
+  media: Type.Optional(Type.Object({
+    reference: Type.String({ minLength: 1, maxLength: 2_048 }),
+    width: Type.Integer({ minimum: 1 }),
+    height: Type.Integer({ minimum: 1 }),
+    alt: LocalizedTextSchema,
+  })),
+}, { additionalProperties: false })
+
+export type FullPsychologistMutation = Static<typeof FullPsychologistMutationSchema>
+
+export const validateFullPsychologistMutation = (value: unknown): value is FullPsychologistMutation => {
+  if (!Value.Check(FullPsychologistMutationSchema, value)) {
+    return false
+  }
+  if (value.featured && (value.featuredOrder === undefined || value.featuredOrder === null)) {
+    return false
+  }
+  if (!value.featured && value.featuredOrder !== null && value.featuredOrder !== undefined) {
+    return false
+  }
+  return true
+}
+
 export const validateArticleDraftMutation = (value: unknown): value is ArticleDraftMutation => (
   Value.Check(ArticleDraftMutationSchema, value)
 )
