@@ -6,6 +6,7 @@ import {
   saveAdminPsychologist,
   updatePsychologistStatus
 } from '../../features/psychologists/psychologist-cms'
+import { useAuth } from '../../features/auth/auth-context'
 import type { FullPsychologistMutation } from '@attentiveid/shared'
 
 const springConfig = { type: 'spring', stiffness: 400, damping: 30 } as const
@@ -75,6 +76,7 @@ const defaultFormState: FormState = {
 }
 
 export function PsychologistsCmsPage() {
+  const { getAuthHeaders } = useAuth()
   const [psychologists, setPsychologists] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -101,6 +103,7 @@ export function PsychologistsCmsPage() {
         status: statusFilter,
         supportArea: supportAreaFilter,
         search: searchQuery,
+        headers: getAuthHeaders(),
       })
       setPsychologists(res.psychologists || [])
       setTotal(res.total || 0)
@@ -128,7 +131,7 @@ export function PsychologistsCmsPage() {
     setFormError(null)
     setFormSuccess(null)
     try {
-      const full = await getAdminPsychologistById(item.id)
+      const full = await getAdminPsychologistById(item.id, { headers: getAuthHeaders() })
       setFormState({
         id: full.id,
         slug: full.slug,
@@ -169,7 +172,7 @@ export function PsychologistsCmsPage() {
 
   const handleQuickStatusChange = async (id: string, newStatus: 'draft' | 'active' | 'inactive' | 'archived') => {
     try {
-      await updatePsychologistStatus(id, newStatus)
+      await updatePsychologistStatus(id, newStatus, { headers: getAuthHeaders() })
       loadData()
     } catch (err: any) {
       alert(`Gagal mengubah status: ${err?.message || 'Terjadi kesalahan'}`)
@@ -210,7 +213,7 @@ export function PsychologistsCmsPage() {
     }
 
     try {
-      await saveAdminPsychologist(formState.id, payload)
+      await saveAdminPsychologist(formState.id, payload, { headers: getAuthHeaders() })
       setFormSuccess('Profil psikolog berhasil disimpan!')
       setTimeout(() => {
         setIsModalOpen(false)

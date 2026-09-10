@@ -1,4 +1,5 @@
 import type { FullPsychologistMutation } from '@attentiveid/shared'
+import { getActiveAuthHeaders } from '../auth/auth-context'
 
 export interface PsychologistAdminFilter {
   status?: string
@@ -6,11 +7,14 @@ export interface PsychologistAdminFilter {
   supportArea?: string
   limit?: number
   offset?: number
+  headers?: Record<string, string>
 }
 
-const defaultHeaders = {
+const buildHeaders = (customHeaders?: Record<string, string>): Record<string, string> => ({
   'Content-Type': 'application/json',
-}
+  ...getActiveAuthHeaders(),
+  ...customHeaders,
+})
 
 export const listAdminPsychologists = async (filter: PsychologistAdminFilter = {}): Promise<{
   status: string
@@ -27,7 +31,7 @@ export const listAdminPsychologists = async (filter: PsychologistAdminFilter = {
   const queryString = params.toString() ? `?${params.toString()}` : ''
   const response = await fetch(`/api/admin/psychologists${queryString}`, {
     method: 'GET',
-    headers: defaultHeaders,
+    headers: buildHeaders(filter.headers),
     credentials: 'include',
   })
 
@@ -38,10 +42,13 @@ export const listAdminPsychologists = async (filter: PsychologistAdminFilter = {
   return response.json()
 }
 
-export const getAdminPsychologistById = async (id: string): Promise<any> => {
+export const getAdminPsychologistById = async (
+  id: string,
+  options?: { headers?: Record<string, string> }
+): Promise<any> => {
   const response = await fetch(`/api/admin/psychologists/${id}`, {
     method: 'GET',
-    headers: defaultHeaders,
+    headers: buildHeaders(options?.headers),
     credentials: 'include',
   })
 
@@ -55,14 +62,15 @@ export const getAdminPsychologistById = async (id: string): Promise<any> => {
 
 export const saveAdminPsychologist = async (
   id: string | undefined,
-  data: FullPsychologistMutation
+  data: FullPsychologistMutation,
+  options?: { headers?: Record<string, string> }
 ): Promise<any> => {
   const url = id ? `/api/admin/psychologists/${id}` : '/api/admin/psychologists'
   const method = id ? 'PUT' : 'POST'
 
   const response = await fetch(url, {
     method,
-    headers: defaultHeaders,
+    headers: buildHeaders(options?.headers),
     credentials: 'include',
     body: JSON.stringify(data),
   })
@@ -78,11 +86,12 @@ export const saveAdminPsychologist = async (
 
 export const updatePsychologistStatus = async (
   id: string,
-  status: 'draft' | 'active' | 'inactive' | 'archived'
+  status: 'draft' | 'active' | 'inactive' | 'archived',
+  options?: { headers?: Record<string, string> }
 ): Promise<any> => {
   const response = await fetch(`/api/admin/psychologists/${id}/status`, {
     method: 'PATCH',
-    headers: defaultHeaders,
+    headers: buildHeaders(options?.headers),
     credentials: 'include',
     body: JSON.stringify({ status }),
   })

@@ -17,6 +17,15 @@ export interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+let activeAccessToken: string | null = null
+
+export const getActiveAccessToken = () => activeAccessToken
+
+export const getActiveAuthHeaders = (): Record<string, string> => {
+  if (!activeAccessToken) return {}
+  return { Authorization: `Bearer ${activeAccessToken}` }
+}
+
 const getApiBaseUrl = () => {
   return import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
 }
@@ -26,6 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+
+  const updateAccessToken = useCallback((token: string | null) => {
+    activeAccessToken = token
+    setAccessToken(token)
+  }, [])
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
     try {
@@ -38,23 +52,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!res.ok) {
         setUser(null)
-        setAccessToken(null)
+        updateAccessToken(null)
         return false
       }
 
       const data = await res.json()
       if (data.status === 'success' && data.accessToken && data.user) {
-        setAccessToken(data.accessToken)
+        updateAccessToken(data.accessToken)
         setUser(data.user)
         return true
       }
       return false
     } catch {
       setUser(null)
-      setAccessToken(null)
+      updateAccessToken(null)
       return false
     }
-  }, [])
+  }, [updateAccessToken])
 
   useEffect(() => {
     let mounted = true
@@ -85,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json()
       if (res.ok && data.status === 'success') {
         setUser(data.user)
-        setAccessToken(data.accessToken)
+        updateAccessToken(data.accessToken)
         return { success: true }
       }
 
@@ -110,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ignore network errors during logout
     } finally {
       setUser(null)
-      setAccessToken(null)
+      updateAccessToken(null)
     }
   }
 

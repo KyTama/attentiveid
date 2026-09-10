@@ -78,7 +78,10 @@ export function UsersManagementPage() {
 
   const fetchPsychologistsList = async () => {
     try {
-      const data = await listAdminPsychologists({ limit: 100 })
+      const data = await listAdminPsychologists({
+        limit: 100,
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      })
       if (data && data.psychologists) {
         setPsychologists(data.psychologists)
       }
