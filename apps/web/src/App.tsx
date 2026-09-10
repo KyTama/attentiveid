@@ -2,12 +2,20 @@ import { useEffect } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './features/auth/auth-context'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { PublicLayout } from './components/common/PublicLayout'
+import { DashboardLayout } from './components/dashboard/DashboardLayout'
 import { LandingPage } from './pages/LandingPage'
+import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PsychologistProfilePage } from './pages/PsychologistProfilePage'
 import { PsychologistsPage } from './pages/PsychologistsPage'
 import { PreviewLandingPage } from './pages/PreviewLandingPage'
+import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
+import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
+import { PsychologistsCmsPage } from './pages/dashboard/PsychologistsCmsPage'
+import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
 import type { LandingContentLoader } from './features/content/service'
 
 export function AppRoutes({
@@ -20,11 +28,55 @@ export function AppRoutes({
   return (
     <MotionConfig reducedMotion="user">
       <Routes>
+        {/* Public Routes */}
         <Route element={<PublicLayout />}>
           <Route index element={<LandingPage loader={landingContentLoader} />} />
           <Route path="preview/landing" element={<PreviewLandingPage loader={previewLandingLoader} />} />
           <Route path="psychologists" element={<PsychologistsPage />} />
           <Route path="psychologists/:slug" element={<PsychologistProfilePage />} />
+        </Route>
+
+        {/* Authentication Login Route */}
+        <Route path="login" element={<LoginPage />} />
+
+        {/* Protected Master Dashboard Portal Routes */}
+        <Route
+          path="dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardOverviewPage />} />
+          <Route
+            path="landing"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <LandingCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="psychologists"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PsychologistsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="articles"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                <ArticlesCmsPage />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+
+        {/* Catch-all 404 Route */}
+        <Route path="*" element={<PublicLayout />}>
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
@@ -41,7 +93,9 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   )
 }
