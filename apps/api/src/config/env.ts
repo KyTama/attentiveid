@@ -5,8 +5,10 @@ const EnvSchema = t.Object({
     DATABASE_URL: t.String({ minLength: 1 }),
     PORT: t.Optional(t.String()),
     FRONTEND_URL: t.Optional(t.String()),
-    PREVIEW_HMAC_SECRET: t.Optional(t.String())
+    PREVIEW_HMAC_SECRET: t.Optional(t.String()),
+    JWT_SECRET: t.Optional(t.String())
 });
+
 
 export const parseEnv = (source: Record<string, string | undefined>) => {
     const errors = [...Value.Errors(EnvSchema, source)];
