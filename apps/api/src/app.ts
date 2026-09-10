@@ -6,11 +6,15 @@ import { createAuthRoutes, type AuthDependencies } from './routes/auth';
 import { createArticleRoutes } from './routes/articles';
 import { createLandingCmsRoutes } from './routes/landing-cms';
 import { createPsychologistsCmsRoutes } from './routes/psychologists-cms';
+import { createOverviewRoutes } from './routes/overview.routes';
+import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes';
+import { createUsersManagementRoutes } from './routes/users-management.routes';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
     articlesRepository?: any;
     landingContentRepository?: any;
     contentTransitions?: any;
+    db?: any;
 };
 
 export const createApp = (dependencies: AppDependencies) => {
@@ -89,6 +93,21 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 psychologistsRepository: dependencies.psychologistsRepository,
+            }))
+            .use(createOverviewRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                db: dependencies.db,
+            }))
+            .use(createPsychologistSelfRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                db: dependencies.db,
+            }))
+            .use(createUsersManagementRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                db: dependencies.db,
             }));
     }
 

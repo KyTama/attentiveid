@@ -38,7 +38,8 @@ const app = createApp({
     previewSessions: createPreviewSessionService({ secret: previewSecret, store: previewStore }),
     userRepository,
     tokenService,
-    verifyPassword
+    verifyPassword,
+    db
 })
     // Listen
     .listen({
