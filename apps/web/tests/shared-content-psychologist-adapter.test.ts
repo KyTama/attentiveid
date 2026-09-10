@@ -84,4 +84,16 @@ describe('shared content psychologist adapter', () => {
     expect(Object.keys(canonical).sort()).not.toContain('password')
     expect(Object.keys(canonical).sort()).not.toContain('status')
   })
+
+  it('has static media assets for all canonical psychologist seed fixtures in public/media/psychologists', async () => {
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const { psychologistSeedFixtures } = await import('../../api/src/db/seed-psychologists')
+
+    for (const fixture of psychologistSeedFixtures) {
+      const publicPath = path.join(process.cwd(), 'public', fixture.media.reference)
+      expect(fs.existsSync(publicPath), `Missing static asset: ${publicPath}`).toBe(true)
+    }
+  })
 })
+
