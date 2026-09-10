@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { validateLandingContentMutation } from '@attentiveid/shared';
+import { validateLandingContentMutation, type LandingContentMutation } from '@attentiveid/shared';
 import {
     landingSeedContent,
     seedLanding,
@@ -8,7 +8,7 @@ import {
 
 class MemoryLandingSeedDatabase implements LandingSeedDatabase {
     calls = 0;
-    publishedContent = null;
+    publishedContent: LandingContentMutation | null = null;
 
     constructor(
         private readonly result: 'seeded' | 'unchanged' = 'seeded',

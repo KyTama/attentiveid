@@ -13,7 +13,11 @@ interface TrustMetric {
 export function HomepageHero() {
   const { t } = useTranslation()
   const managed = useLandingSection('hero')
-  const metrics = t('homepage.hero.metrics', { returnObjects: true }) as TrustMetric[]
+  const metrics = managed
+    ? [...managed.section.items]
+      .sort((left, right) => left.position - right.position)
+      .map((item) => ({ label: item.title[managed.locale], value: item.description[managed.locale] }))
+    : t('homepage.hero.metrics', { returnObjects: true }) as TrustMetric[]
   const copy = {
     description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
     primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),

@@ -16,6 +16,7 @@ export const LANDING_SECTION_ORDER = [
 ] as const
 
 export const LANDING_REPEATER_BOUNDS = {
+  hero: { min: 3, max: 4 },
   supportExplorer: { min: 3, max: 6 },
   carePromise: { min: 3, max: 4 },
   careJourney: { min: 3, max: 5 },
@@ -59,6 +60,10 @@ const HeroSectionSchema = Type.Object({
   ...sectionCopyProperties,
   primaryCta: LocalizedTextSchema,
   secondaryCta: LocalizedTextSchema,
+  items: Type.Array(LandingItemSchema, {
+    minItems: LANDING_REPEATER_BOUNDS.hero.min,
+    maxItems: LANDING_REPEATER_BOUNDS.hero.max,
+  }),
 }, { additionalProperties: false })
 
 const SupportExplorerSectionSchema = Type.Object({
@@ -105,6 +110,10 @@ const ClientStoriesSectionSchema = Type.Object({
 const ConsultationReassuranceSectionSchema = Type.Object({
   key: Type.Literal('consultationReassurance'),
   ...sectionCopyProperties,
+  sessionLabel: LocalizedTextSchema,
+  price: LocalizedTextSchema,
+  priceUnit: LocalizedTextSchema,
+  primaryCta: LocalizedTextSchema,
 }, { additionalProperties: false })
 
 const FrequentlyAskedQuestionsSectionSchema = Type.Object({

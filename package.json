@@ -16,7 +16,7 @@
         "test:web": "cd apps/web && bun run test",
         "verify": "./scripts/ci/verify.sh && bun run verify:shared-content",
         "verify:shared-content": "bun scripts/verify-shared-content.ts verify:shared-content:inner",
-        "verify:shared-content:inner": "(cd apps/api && bun run db:migrate && bun run db:seed:psychologists && bun run db:seed:psychologists && bun test src/db/shared-content.integration.test.ts src/repositories/repositories.test.ts src/routes/public-content.test.ts src/security/preview-capability.test.ts src/services/content-transitions.test.ts) && (cd apps/web && bun run test -- psychologist-service.test.ts shared-content-psychologist-adapter.test.ts shared-content-preview.test.tsx)",
+        "verify:shared-content:inner": "(cd apps/api && bun run db:migrate && bun run db:seed:landing && bun run db:seed:landing && bun run db:seed:psychologists && bun run db:seed:psychologists && bun test src/db/shared-content.integration.test.ts src/db/seed-landing.test.ts src/repositories/repositories.test.ts src/routes/public-content.test.ts src/security/preview-capability.test.ts src/services/content-transitions.test.ts) && (cd apps/web && bun run test -- psychologist-service.test.ts shared-content-psychologist-adapter.test.ts shared-content-preview.test.tsx)",
         "build": "bun run build:api && bun run build:web",
         "build:api": "cd apps/api && bun build src/index.ts --outfile=dist/index.js --target=bun",
         "build:web": "cd apps/web && bun run build",

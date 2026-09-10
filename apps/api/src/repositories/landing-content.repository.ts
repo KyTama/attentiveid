@@ -46,7 +46,10 @@ export const mapLandingSectionMutation = (section: LandingSectionInput, position
         description: section.description[locale],
         primaryCta: 'primaryCta' in section ? section.primaryCta[locale] : null,
         secondaryCta: 'secondaryCta' in section ? section.secondaryCta[locale] : null,
-        contact: 'contact' in section ? section.contact[locale] : null
+        contact: 'contact' in section ? section.contact[locale] : null,
+        sessionLabel: 'sessionLabel' in section ? section.sessionLabel[locale] : null,
+        price: 'price' in section ? section.price[locale] : null,
+        priceUnit: 'priceUnit' in section ? section.priceUnit[locale] : null
     })),
     items: 'items' in section
         ? section.items.map((item) => ({
@@ -96,6 +99,9 @@ interface DrizzleLandingTranslationRow {
     primaryCta: string | null;
     secondaryCta: string | null;
     contact: string | null;
+    sessionLabel: string | null;
+    price: string | null;
+    priceUnit: string | null;
 }
 
 interface DrizzleLandingItemRow {
@@ -160,7 +166,18 @@ const mapSectionRow = (section: DrizzleLandingSectionRow) => {
     if (section.key === 'hero') {
         const primaryCta = localizedFromRows(section.translations, (row) => row.primaryCta);
         const secondaryCta = localizedFromRows(section.translations, (row) => row.secondaryCta);
-        return primaryCta && secondaryCta ? { ...base, key: section.key, primaryCta, secondaryCta } : null;
+        return primaryCta && secondaryCta
+            ? { ...base, key: section.key, primaryCta, secondaryCta, items: items.filter((item) => item !== null) }
+            : null;
+    }
+    if (section.key === 'consultationReassurance') {
+        const sessionLabel = localizedFromRows(section.translations, (row) => row.sessionLabel);
+        const price = localizedFromRows(section.translations, (row) => row.price);
+        const priceUnit = localizedFromRows(section.translations, (row) => row.priceUnit);
+        const primaryCta = localizedFromRows(section.translations, (row) => row.primaryCta);
+        return sessionLabel && price && priceUnit && primaryCta
+            ? { ...base, key: section.key, sessionLabel, price, priceUnit, primaryCta }
+            : null;
     }
     if (section.key === 'closingInvitation') {
         const primaryCta = localizedFromRows(section.translations, (row) => row.primaryCta);

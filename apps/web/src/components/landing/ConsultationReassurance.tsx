@@ -10,6 +10,12 @@ export function ConsultationReassurance() {
   const managed = useLandingSection('consultationReassurance')
   const included = t('homepage.pricing.included', { returnObjects: true }) as string[]
   const whatsappUrl = createWhatsAppLink(defaultContactMessage)
+  const copy = {
+    action: managed?.section.primaryCta[managed.locale] ?? t('homepage.pricing.action'),
+    price: managed?.section.price[managed.locale] ?? t('homepage.pricing.price'),
+    priceUnit: managed?.section.priceUnit[managed.locale] ?? t('homepage.pricing.perSession'),
+    sessionLabel: managed?.section.sessionLabel[managed.locale] ?? t('homepage.pricing.sessionLabel'),
+  }
 
   return (
     <section className="deferred-section relative overflow-hidden bg-[#fcf8f1] px-5 py-20 lg:px-8 lg:py-28">
@@ -27,9 +33,9 @@ export function ConsultationReassurance() {
         </div>
         <div className="mt-12 grid overflow-hidden rounded-xl bg-white lg:grid-cols-[1.05fr_0.8fr_0.65fr]">
           <div className="p-7 sm:p-10 lg:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary/80">{t('homepage.pricing.sessionLabel')}</p>
-            <p className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-secondary">{t('homepage.pricing.price')}</p>
-            <p className="mt-1 text-sm text-secondary/80">{t('homepage.pricing.perSession')}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary/80">{copy.sessionLabel}</p>
+            <p className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-secondary">{copy.price}</p>
+            <p className="mt-1 text-sm text-secondary/80">{copy.priceUnit}</p>
             <ul className="mt-7 grid gap-3">
               {included.map((item) => (
                 <li className="flex gap-3 text-sm text-secondary/70" key={item}>
@@ -48,7 +54,7 @@ export function ConsultationReassurance() {
               whileTap={{ scale: 0.98 }}
             >
               <MessageCircle aria-hidden="true" size={18} />
-              {t('homepage.pricing.action')}
+              {copy.action}
             </motion.a>
           </div>
           <div className="grid content-center gap-8 border-t border-white/15 bg-secondary p-7 text-white sm:p-10 lg:border-l lg:border-t-0 lg:p-12">

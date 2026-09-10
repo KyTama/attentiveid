@@ -108,7 +108,10 @@ export const landingSectionTranslations = pgTable('landing_section_translations'
     description: text('description').notNull(),
     primaryCta: text('primary_cta'),
     secondaryCta: text('secondary_cta'),
-    contact: text('contact')
+    contact: text('contact'),
+    sessionLabel: text('session_label'),
+    price: text('price'),
+    priceUnit: text('price_unit')
 }, (table) => [
     unique('landing_section_translations_section_locale_unique').on(table.sectionId, table.locale)
 ]);
@@ -365,12 +368,26 @@ export const landingSectionsRelations = relations(landingSections, ({ many, one 
     items: many(landingItems)
 }));
 
+export const landingSectionTranslationsRelations = relations(landingSectionTranslations, ({ one }) => ({
+    section: one(landingSections, {
+        fields: [landingSectionTranslations.sectionId],
+        references: [landingSections.id]
+    })
+}));
+
 export const landingItemsRelations = relations(landingItems, ({ many, one }) => ({
     section: one(landingSections, {
         fields: [landingItems.sectionId],
         references: [landingSections.id]
     }),
     translations: many(landingItemTranslations)
+}));
+
+export const landingItemTranslationsRelations = relations(landingItemTranslations, ({ one }) => ({
+    item: one(landingItems, {
+        fields: [landingItemTranslations.itemId],
+        references: [landingItems.id]
+    })
 }));
 
 export const psychologistsRelations = relations(psychologists, ({ many, one }) => ({

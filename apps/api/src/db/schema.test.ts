@@ -116,6 +116,9 @@ describe('content domain schema', () => {
       'primary_cta',
       'secondary_cta',
       'contact',
+      'session_label',
+      'price',
+      'price_unit',
     ]))
     expect(columnNamesFor(landingItemTranslations)).toEqual(expect.arrayContaining([
       'item_id',

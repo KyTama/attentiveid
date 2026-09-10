@@ -2,6 +2,7 @@ import { afterAll, describe, expect, test } from 'bun:test'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
+import { createDrizzleLandingContentSource, createLandingContentRepository } from '../repositories/landing-content.repository'
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from '../repositories/psychologists.repository'
 
 const databaseUrl = process.env.DATABASE_URL
@@ -71,6 +72,18 @@ describe('shared content live PostgreSQL contract', () => {
     expect(psychologists.length).toBe(counts[0]?.total)
     expect(psychologists.every(({ id, slug }) => Boolean(id && slug))).toBe(true)
     expect(psychologists.every(({ media }) => !media || (media.width > 0 && media.height > 0))).toBe(true)
+  })
+
+  test('publishes one complete canonical landing revision on a clean database', async () => {
+    const repository = createLandingContentRepository(createDrizzleLandingContentSource(database))
+    const landing = await repository.getPublished()
+
+    expect(landing?.revision.status).toBe('published')
+    expect(landing?.revision.revisionNumber).toBe(1)
+    expect(landing?.content.sections[0].key).toBe('hero')
+    expect(landing?.content.sections[0].items).toHaveLength(4)
+    expect(landing?.content.sections[6].key).toBe('consultationReassurance')
+    expect(landing?.content.sections[6].price.en).toBe('IDR 475,000')
   })
 
   test('searches localized areas of experience through the canonical PostgreSQL source', async () => {
