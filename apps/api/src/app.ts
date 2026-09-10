@@ -4,9 +4,11 @@ import { cors } from '@elysiajs/cors';
 import { createPublicContentRoutes, type PublicContentDependencies } from './routes/public-content';
 import { createAuthRoutes, type AuthDependencies } from './routes/auth';
 import { createArticleRoutes } from './routes/articles';
+import { createLandingCmsRoutes } from './routes/landing-cms';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
     articlesRepository?: any;
+    landingContentRepository?: any;
     contentTransitions?: any;
 };
 
@@ -23,6 +25,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 tags: [
                     { name: 'Health', description: 'Health check endpoints' },
                     { name: 'Auth', description: 'Authentication endpoints' },
+                    { name: 'Landing CMS', description: 'Landing page section content editor' },
                     { name: 'Articles', description: 'Psychology articles and reading' },
                     { name: 'Articles CMS', description: 'Article management and review workflows' },
                     { name: 'Reservations', description: 'Reservation management' },
@@ -73,6 +76,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 articlesRepository: dependencies.articlesRepository || { getPublishedBySlug: async () => ({ status: 'notFound' }) },
+                contentTransitions: dependencies.contentTransitions,
+            }))
+            .use(createLandingCmsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                landingContentRepository: dependencies.landingContentRepository,
                 contentTransitions: dependencies.contentTransitions,
             }));
     }
