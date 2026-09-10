@@ -152,6 +152,13 @@
     @apply border-border;
   }
 
+  /* Accessible form control contrast defaults */
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    @apply text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
