@@ -8,8 +8,8 @@ CREATE TABLE "user_refresh_tokens" (
 	"revoked_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
---> statement-breakpoint
-ALTER TABLE "users" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "id" SET DATA TYPE uuid USING gen_random_uuid();--> statement-breakpoint
 ALTER TABLE "users" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();--> statement-breakpoint
 ALTER TABLE "users" ALTER COLUMN "name" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "email" text NOT NULL;--> statement-breakpoint
