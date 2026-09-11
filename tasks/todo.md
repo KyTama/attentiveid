@@ -1,21 +1,21 @@
-# Active Task Checklist: Phase 1.10.1 — Footer Refinement & Visual Slim-Down
+# Active Task Checklist: Phase 1.10.2 — Footer Linked Titles & Ultra-Slim Footprint
 
 > **Status:** IN PROGRESS  
 > **Milestone:** Milestone 1 (Web & Domain Go-Live)  
-> **Active Focus:** Refactor `SiteFooter.tsx` to remove heavy boxed cards and bloated containers. Streamline into a sleek, minimal, and elegant 3-column layout where TBI (Jakarta), BSD, and Malang (Opening Soon) are presented as clean typography links.
+> **Active Focus:** Streamline `SiteFooter.tsx` locations into lightweight "Linked Titles" only (no multi-line addresses), reducing vertical footprint to an ultra-clean, modern 4-column balanced layout.
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Simplify `SiteFooter.tsx` Structure**:
-  - Remove bulky `bg-white/60` nested cards and thick borders
-  - Integrate TBI (Jakarta), BSD, and Malang (Opening Soon) as clean, compact list items with Google Maps links
-  - Place WhatsApp hotline and Instagram as clean inline contact links
+- [x] **Step 1: Refactor `SiteFooter.tsx` to Linked Titles Only**:
+  - Convert locations to compact clickable titles (linking to Google Maps or `/#locations`) without raw street address paragraphs
+  - Balance the footer into a clean, compact 4-column grid (Brand, Jelajahi, Lokasi Praktik, Kontak)
+  - Tighten vertical spacing (`py-8 lg:py-10`, `mt-8` for copyright)
 - [x] **Step 2: Verification & Automated Tests**:
   - Run web test suite (`bun --cwd apps/web test`)
   - Run monorepo build (`bun run build`)
 - [x] **Step 3: Atomic Git Commit & Weekly Reporting**:
-  - Commit changes atomically (`refactor(web): slim down footer to minimal typography layout without bulky cards`)
+  - Commit changes atomically (`refactor(web): reduce footer height with linked title locations and balanced 4-column layout`)
   - Update weekly activities in `.docs/recent-updates/weekly-activities-2026-w37.md`
 
 ---
