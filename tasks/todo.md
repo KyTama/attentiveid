@@ -1,28 +1,22 @@
-# Active Task Checklist: Phase 1.10.0 — Clinic Locations Section & Footer Architecture
+# Active Task Checklist: Phase 1.10.1 — Footer Refinement & Visual Slim-Down
 
-> **Status:** COMPLETED  
+> **Status:** IN PROGRESS  
 > **Milestone:** Milestone 1 (Web & Domain Go-Live)  
-> **Active Focus:** Created high-polish `OurLocations` landing page section (`#locations`) with 3 branches (Jakarta TBI, BSD, Malang Opening Soon), updated contact data structures, enhanced `SiteFooter` with 3-branch addresses and maps links, added bilingual i18n keys, and verified monorepo test suites.
+> **Active Focus:** Refactor `SiteFooter.tsx` to remove heavy boxed cards and bloated containers. Streamline into a sleek, minimal, and elegant 3-column layout where TBI (Jakarta), BSD, and Malang (Opening Soon) are presented as clean typography links.
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Contact Data Architecture & Bilingual Translations**:
-  - Update `apps/web/src/data/contact.ts` with structured `locations` (TBI Jakarta, BSD, Malang Opening Soon)
-  - Add bilingual i18n keys to `apps/web/src/i18n/locales/id.json` and `en.json`
-- [x] **Step 2: Build `OurLocations.tsx` Landing Section**:
-  - Design premium 3-card location grid matching 2025 Impeccable & Emil Kowalski standards
-  - Include verified Google Maps links, branch badges, amenities, and Opening Soon badge for Malang
-  - Integrate into `Homepage.tsx` and add `#locations` anchor
-- [x] **Step 3: Update `SiteFooter.tsx` & Navigation**:
-  - Redesign footer location block to present all 3 branches clearly with maps links
-  - Add "Lokasi" navigation link in `SiteHeader.tsx`
-- [x] **Step 4: Verification & Automated Tests**:
+- [x] **Step 1: Simplify `SiteFooter.tsx` Structure**:
+  - Remove bulky `bg-white/60` nested cards and thick borders
+  - Integrate TBI (Jakarta), BSD, and Malang (Opening Soon) as clean, compact list items with Google Maps links
+  - Place WhatsApp hotline and Instagram as clean inline contact links
+- [x] **Step 2: Verification & Automated Tests**:
   - Run web test suite (`bun --cwd apps/web test`)
   - Run monorepo build (`bun run build`)
-- [x] **Step 5: Atomic Git Commit & Weekly Reporting**:
-  - Atomically commit changes (`feat(web): add clinic locations section and update footer for TBI, BSD, and Malang`)
-  - Update weekly activity logs in `.docs/recent-updates/weekly-activities-2026-w37.md`
+- [x] **Step 3: Atomic Git Commit & Weekly Reporting**:
+  - Commit changes atomically (`refactor(web): slim down footer to minimal typography layout without bulky cards`)
+  - Update weekly activities in `.docs/recent-updates/weekly-activities-2026-w37.md`
 
 ---
 
