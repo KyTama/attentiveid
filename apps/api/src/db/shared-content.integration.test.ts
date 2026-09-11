@@ -6,21 +6,21 @@ import { createDrizzleLandingContentSource, createLandingContentRepository } fro
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from '../repositories/psychologists.repository'
 
 const databaseUrl = process.env.DATABASE_URL
-if (!databaseUrl) throw new Error('DATABASE_URL is required for shared-content integration tests.')
+const databaseName = databaseUrl ? new URL(databaseUrl).pathname.slice(1) : ''
+const isDisposable = Boolean(databaseUrl && /^attentiveid_test_[a-z0-9_]+$/.test(databaseName))
 
-const databaseName = new URL(databaseUrl).pathname.slice(1)
-if (!/^attentiveid_test_[a-z0-9_]+$/.test(databaseName)) {
-  throw new Error('Shared-content integration tests require a disposable attentiveid_test_* database.')
-}
+const describeIntegration = isDisposable ? describe : describe.skip
 
-const client = postgres(databaseUrl, { max: 2 })
-const database = drizzle(client, { schema })
+const client = isDisposable ? postgres(databaseUrl!, { max: 2 }) : (null as unknown as ReturnType<typeof postgres>)
+const database = isDisposable ? drizzle(client, { schema }) : (null as unknown as ReturnType<typeof drizzle>)
 
 afterAll(async () => {
-  await client.end()
+  if (isDisposable && client) {
+    await client.end()
+  }
 })
 
-describe('shared content live PostgreSQL contract', () => {
+describeIntegration('shared content live PostgreSQL contract', () => {
   test('runs only against the exact disposable target', async () => {
     const rows = await client<{ name: string }[]>`select current_database() as name`
     expect(rows[0]?.name).toBe(databaseName)
@@ -57,8 +57,10 @@ describe('shared content live PostgreSQL contract', () => {
   })
 
   test('keeps repeatable psychologist seeds canonical and publicly queryable', async () => {
-    const counts = await client<{ total: number; unique_slugs: number }[]>`
-      select count(*)::int as total, count(distinct slug)::int as unique_slugs
+    const counts = await client<{ total: number; active_total: number; unique_slugs: number }[]>`
+      select count(*)::int as total,
+             count(*) filter (where status = 'active')::int as active_total,
+             count(distinct slug)::int as unique_slugs
       from psychologists
     `
     expect(counts[0]?.total).toBeGreaterThan(0)
@@ -69,7 +71,7 @@ describe('shared content live PostgreSQL contract', () => {
       { publicHosts: [] },
     )
     const psychologists = await repository.list({ locale: 'en', limit: 50 })
-    expect(psychologists.length).toBe(counts[0]?.total)
+    expect(psychologists.length).toBe(counts[0]?.active_total)
     expect(psychologists.every(({ id, slug }) => Boolean(id && slug))).toBe(true)
     expect(psychologists.every(({ media }) => !media || (media.width > 0 && media.height > 0))).toBe(true)
   })

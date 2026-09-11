@@ -3,6 +3,8 @@ import { env } from './config/env';
 import { db } from './db';
 import { createDrizzleLandingContentSource, createLandingContentRepository } from './repositories/landing-content.repository';
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from './repositories/psychologists.repository';
+import { createArticlesRepository, createDrizzleArticleQuerySource } from './repositories/articles.repository';
+import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
 import {
     createDrizzlePreviewCapabilityStore,
@@ -29,11 +31,15 @@ const jwtSecret = requireJwtSecret(jwtSecretValue);
 const tokenStore = createDrizzleRefreshTokenStore(db);
 const tokenService = createTokenService({ secret: jwtSecret, store: tokenStore });
 const userRepository = createUserRepository(createDrizzleUserRepositorySource(db));
+const articlesRepository = createArticlesRepository(createDrizzleArticleQuerySource(db));
+const contentTransitions = createContentTransitions(createDrizzleContentTransitionDatabase(db));
 
 const app = createApp({
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',
     landingRepository: createLandingContentRepository(createDrizzleLandingContentSource(db)),
     psychologistsRepository: createPsychologistsRepository(createDrizzlePsychologistQuerySource(db), { publicHosts: [] }),
+    articlesRepository,
+    contentTransitions,
     previewCapabilities: createPreviewCapabilityService({ secret: previewSecret, store: previewStore }),
     previewSessions: createPreviewSessionService({ secret: previewSecret, store: previewStore }),
     userRepository,

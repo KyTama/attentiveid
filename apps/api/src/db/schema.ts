@@ -20,8 +20,10 @@ import {
     CONTENT_LOCALES,
     LANDING_SECTION_ORDER,
     MEDIA_LIFECYCLE_STATES,
+    PRACTICE_BRANCHES,
     PSYCHOLOGIST_LIFECYCLE_STATES,
     PSYCHOLOGIST_SUPPORT_AREAS,
+    PSYCHOLOGIST_TIERS,
     USER_ROLES,
     USER_STATUSES
 } from '@attentiveid/shared';
@@ -31,6 +33,8 @@ export const landingSectionKeyEnum = pgEnum('landing_section_key', LANDING_SECTI
 export const landingRevisionStatusEnum = pgEnum('landing_revision_status', ['draft', 'published', 'superseded']);
 export const psychologistLifecycleStatusEnum = pgEnum('psychologist_lifecycle_status', PSYCHOLOGIST_LIFECYCLE_STATES);
 export const psychologistSupportAreaEnum = pgEnum('psychologist_support_area', PSYCHOLOGIST_SUPPORT_AREAS);
+export const psychologistTierEnum = pgEnum('psychologist_tier', PSYCHOLOGIST_TIERS);
+export const practiceBranchEnum = pgEnum('practice_branch', PRACTICE_BRANCHES);
 export const articleStatusEnum = pgEnum('article_status', ARTICLE_LIFECYCLE_STATES);
 export const articleRevisionStatusEnum = pgEnum('article_revision_status', ARTICLE_REVISION_STATES);
 export const articleReviewDecisionEnum = pgEnum('article_review_decision', ['approved', 'rejected']);
@@ -155,6 +159,9 @@ export const psychologists = pgTable('psychologists', {
     status: psychologistLifecycleStatusEnum('status').default('draft').notNull(),
     name: text('name').notNull(),
     nickname: text('nickname').notNull(),
+    tier: psychologistTierEnum('tier').default('mid').notNull(),
+    primaryBranch: practiceBranchEnum('primary_branch').default('tbi').notNull(),
+    acceptingNewClients: boolean('accepting_new_clients').default(true).notNull(),
     featured: boolean('featured').default(false).notNull(),
     featuredOrder: integer('featured_order'),
     ...auditTimestamps

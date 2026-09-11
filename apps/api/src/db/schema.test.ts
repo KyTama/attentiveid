@@ -4,8 +4,10 @@ import {
   ARTICLE_REVISION_STATES,
   LANDING_SECTION_ORDER,
   MEDIA_LIFECYCLE_STATES,
+  PRACTICE_BRANCHES,
   PSYCHOLOGIST_LIFECYCLE_STATES,
   PSYCHOLOGIST_SUPPORT_AREAS,
+  PSYCHOLOGIST_TIERS,
   USER_ROLES,
   USER_STATUSES,
 } from '../../../../packages/shared/src'
@@ -28,6 +30,7 @@ import {
   mediaAttachments,
   mediaLifecycleStatusEnum,
   mediaObjects,
+  practiceBranchEnum,
   psychologistLifecycleStatusEnum,
   psychologistProfileTranslations,
   psychologistProfiles,
@@ -35,6 +38,7 @@ import {
   psychologistSpecializations,
   psychologistSupportAreaEnum,
   psychologistSupportAreas,
+  psychologistTierEnum,
   psychologists,
   userRefreshTokens,
   userRoleEnum,
@@ -73,6 +77,8 @@ describe('content domain schema', () => {
   it('mirrors shared lifecycle and locale-neutral section vocabulary', () => {
     expect(psychologistLifecycleStatusEnum.enumValues).toEqual([...PSYCHOLOGIST_LIFECYCLE_STATES])
     expect(psychologistSupportAreaEnum.enumValues).toEqual([...PSYCHOLOGIST_SUPPORT_AREAS])
+    expect(psychologistTierEnum.enumValues).toEqual([...PSYCHOLOGIST_TIERS])
+    expect(practiceBranchEnum.enumValues).toEqual([...PRACTICE_BRANCHES])
     expect(articleStatusEnum.enumValues).toEqual([...ARTICLE_LIFECYCLE_STATES])
     expect(articleRevisionStatusEnum.enumValues).toEqual([...ARTICLE_REVISION_STATES])
     expect(mediaLifecycleStatusEnum.enumValues).toEqual([...MEDIA_LIFECYCLE_STATES])
@@ -190,6 +196,9 @@ describe('content domain schema', () => {
       'status',
       'name',
       'nickname',
+      'tier',
+      'primary_branch',
+      'accepting_new_clients',
       'featured',
       'featured_order',
     ]))

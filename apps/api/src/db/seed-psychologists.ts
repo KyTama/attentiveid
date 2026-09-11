@@ -11,10 +11,16 @@ import * as schema from './schema';
 
 type ContentLocale = typeof CONTENT_LOCALES[number];
 type SupportArea = typeof schema.psychologistSupportAreaEnum.enumValues[number];
+type PsychologistTier = typeof schema.psychologistTierEnum.enumValues[number];
+type PracticeBranch = typeof schema.practiceBranchEnum.enumValues[number];
+type PsychologistStatus = typeof schema.psychologistStatusEnum.enumValues[number];
 
 export interface PsychologistSeedFixture {
     slug: string;
-    status: 'active';
+    status: PsychologistStatus;
+    tier: PsychologistTier;
+    primaryBranch: PracticeBranch;
+    acceptingNewClients: boolean;
     name: string;
     nickname: string;
     credential: string;
@@ -46,7 +52,10 @@ export interface PsychologistSeedFixture {
 
 interface PsychologistInput {
     slug: string;
-    status: 'active';
+    status: PsychologistStatus;
+    tier: PsychologistTier;
+    primaryBranch: PracticeBranch;
+    acceptingNewClients: boolean;
     name: string;
     nickname: string;
     featured: boolean;
@@ -160,11 +169,18 @@ const profileCopy = (name: string, credential: string, supportArea: SupportArea)
     }
 });
 
-const fixture = (input: Omit<PsychologistSeedFixture, 'profile' | 'status' | 'supportAreas'> & {
+const fixture = (input: Omit<PsychologistSeedFixture, 'profile' | 'supportAreas' | 'status' | 'tier' | 'primaryBranch' | 'acceptingNewClients'> & {
     supportArea: SupportArea;
+    status?: PsychologistStatus;
+    tier?: PsychologistTier;
+    primaryBranch?: PracticeBranch;
+    acceptingNewClients?: boolean;
 }): PsychologistSeedFixture => ({
     ...input,
-    status: 'active',
+    status: input.status ?? 'active',
+    tier: input.tier ?? 'mid',
+    primaryBranch: input.primaryBranch ?? 'tbi',
+    acceptingNewClients: input.acceptingNewClients ?? true,
     supportAreas: [{ supportArea: input.supportArea, primary: true }],
     profile: profileCopy(input.name, input.credential, input.supportArea)
 });
@@ -175,6 +191,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Syazka Kirani Narindra',
         nickname: 'Syazka',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'tbi',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Gangguan kepribadian', 'Personality disorders'),
@@ -205,6 +223,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Anggita Panjaitan',
         nickname: 'Gita',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'tbi',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Trauma & isu terkait emosi', 'Trauma and emotional concerns'),
@@ -235,6 +255,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Ni Putu Mayda A. A',
         nickname: 'Mayda',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'tbi',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Hubungan romantis', 'Romantic relationships'),
@@ -265,6 +287,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Anggriana Angguningtyas',
         nickname: 'Anggun',
         credential: 'M.Psi., Psikolog',
+        tier: 'principal',
+        primaryBranch: 'tbi',
         supportArea: 'childAdolescent',
         specializations: [
             localizedLabel('Gangguan perkembangan', 'Developmental disorders'),
@@ -295,6 +319,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Risky Adinda',
         nickname: 'Dinda',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'tbi',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Depresi', 'Depression'),
@@ -325,6 +351,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Ilham Anggi P',
         nickname: 'Ilham',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'multiple',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Anxiety', 'Anxiety'),
@@ -355,6 +383,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Dwi Ningsih A',
         nickname: 'Dwi',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'multiple',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Depresi', 'Depression'),
@@ -385,6 +415,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Putri Dewinta',
         nickname: 'Putri',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'tbi',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Kecemasan', 'Anxiety'),
@@ -397,7 +429,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             localizedLabel('ADHD', 'ADHD')
         ],
         experienceYears: 6,
-        licenseNumber: '20180806-2021-02-1238',
+        licenseNumber: 'STR 132482119-3084079 (SIPP Proses Perpanjangan)',
         bookingUrl: bookingUrl('Putri', 'regular'),
         premiumBookingUrl: bookingUrl('Putri', 'premium'),
         featured: true,
@@ -415,6 +447,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Sekarini Andika Permatasari',
         nickname: 'Sekar',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior_mid',
+        primaryBranch: 'tbi',
         supportArea: 'educational',
         specializations: [
             localizedLabel('Permasalahan belajar', 'Learning concerns'),
@@ -445,6 +479,10 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Riskia Ramadhina',
         nickname: 'Riskia',
         credential: 'M.Psi., Psikolog',
+        status: 'inactive',
+        tier: 'senior_mid',
+        primaryBranch: 'tbi',
+        acceptingNewClients: false,
         supportArea: 'educational',
         specializations: [
             localizedLabel('Kesiapan Sekolah Anak', 'School readiness'),
@@ -475,6 +513,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Disa Nisrina Listiani',
         nickname: 'Disa',
         credential: 'M.Psi., Psikolog',
+        tier: 'senior_mid',
+        primaryBranch: 'tbi',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Kecemasan', 'Anxiety'),
@@ -505,6 +545,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         name: 'Jeanete Ophilia Papilaya',
         nickname: 'Jeanette',
         credential: 'M.Psi., Psikolog',
+        tier: 'principal',
+        primaryBranch: 'online_only',
         supportArea: 'adultClinical',
         specializations: [
             localizedLabel('Penanganan Emosi', 'Emotional support'),
@@ -516,7 +558,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             localizedLabel('Penanganan Masalah Relationship', 'Relationship concerns')
         ],
         experienceYears: 16,
-        licenseNumber: '440/3378/Dinkes/2020',
+        licenseNumber: 'SIPPK 503/446/826/SIPPK/DPMPTSP/X/2025 (s.d. 2030)',
         bookingUrl: bookingUrl('Jeanete', 'regular'),
         premiumBookingUrl: bookingUrl('Jeanete', 'premium'),
         featured: true,
@@ -529,6 +571,382 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             mimeType: 'image/webp'
         }
     })
+,
+    fixture({
+        slug: 'andri',
+        name: 'Mohammad Andri Khaeranu',
+        nickname: 'Andri',
+        credential: 'M.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'tbi',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Gangguan emosi', 'Emotional concerns'),
+            localizedLabel('Kecemasan', 'Anxiety'),
+            localizedLabel('Masalah relasi', 'Relationship concerns'),
+            localizedLabel('Kecemasan akademik', 'Academic anxiety'),
+            localizedLabel('Pengembangan diri', 'Personal development'),
+            localizedLabel('Kecemasan dalam karir', 'Career anxiety')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'SIPP 20250389-2025-0371',
+        bookingUrl: bookingUrl('Andri', 'regular'),
+        premiumBookingUrl: bookingUrl('Andri', 'premium'),
+        featured: true,
+        featuredOrder: 12,
+        media: {
+            reference: 'media/psychologists/andri.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Mohammad Andri Khaeranu', en: 'Profile photo of Mohammad Andri Khaeranu' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'jessica',
+        name: 'Jessica Raphaela',
+        nickname: 'Jessica',
+        credential: 'M.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'bsd',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Kecemasan', 'Anxiety'),
+            localizedLabel('Masalah akademik dan pekerjaan', 'Academic and work concerns'),
+            localizedLabel('Non-suicidal self-injury / self-harm', 'Self-harm and non-suicidal self-injury'),
+            localizedLabel('Pengelolaan emosi', 'Emotional regulation'),
+            localizedLabel('Pengembangan dan penyesuaian diri', 'Personal development and life adjustment'),
+            localizedLabel('Relasi interpersonal', 'Interpersonal relationships'),
+            localizedLabel('Stres dan burnout', 'Stress and burnout')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'SIPP 20241501-2024-2097',
+        bookingUrl: bookingUrl('Jessica', 'regular'),
+        premiumBookingUrl: bookingUrl('Jessica', 'premium'),
+        featured: true,
+        featuredOrder: 13,
+        media: {
+            reference: 'media/psychologists/jessica.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Jessica Raphaela', en: 'Profile photo of Jessica Raphaela' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'valencia',
+        name: 'Valencia Yang',
+        nickname: 'Valencia',
+        credential: 'M.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'bsd',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Kecemasan', 'Anxiety'),
+            localizedLabel('Stres dan gejala somatik', 'Stress and somatic symptoms'),
+            localizedLabel('Depresi', 'Depression'),
+            localizedLabel('OCD', 'OCD'),
+            localizedLabel('Konflik hubungan personal / romantis', 'Personal and romantic relationship conflicts'),
+            localizedLabel('ADHD', 'ADHD'),
+            localizedLabel('Self-harm / Suicidal thoughts', 'Self-harm and suicidal ideation'),
+            localizedLabel('Adiksi pornografi', 'Pornography addiction')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'SIPP 20241724-2025-0075',
+        bookingUrl: bookingUrl('Valencia', 'regular'),
+        premiumBookingUrl: bookingUrl('Valencia', 'premium'),
+        featured: true,
+        featuredOrder: 14,
+        media: {
+            reference: 'media/psychologists/valencia.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Valencia Yang', en: 'Profile photo of Valencia Yang' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'audria',
+        name: 'Audria Putri Salsabila Syarif',
+        nickname: 'Audri',
+        credential: 'S.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'bsd',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Stres kerja dan karir', 'Work and career stress'),
+            localizedLabel('Masalah hubungan romantis', 'Romantic relationship concerns'),
+            localizedLabel('Masalah gender / identitas diri', 'Gender and identity concerns'),
+            localizedLabel('Masalah mood', 'Mood concerns'),
+            localizedLabel('Masalah relasi sosial', 'Social relationship concerns'),
+            localizedLabel('Manajemen stres', 'Stress management'),
+            localizedLabel('Trauma', 'Trauma'),
+            localizedLabel('Depresi', 'Depression')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'Lulusan Baru Profesi UI (Proses SIPP/STR)',
+        bookingUrl: bookingUrl('Audri', 'regular'),
+        premiumBookingUrl: bookingUrl('Audri', 'premium'),
+        featured: true,
+        featuredOrder: 15,
+        media: {
+            reference: 'media/psychologists/audria.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Audria Putri Salsabila Syarif', en: 'Profile photo of Audria Putri Salsabila Syarif' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'farahdilla',
+        name: 'Farahdilla',
+        nickname: 'Farah',
+        credential: 'S.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'bsd',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Kecemasan', 'Anxiety'),
+            localizedLabel('Self-worth', 'Self-worth'),
+            localizedLabel('Relasi (pasangan, keluarga, pertemanan)', 'Relationships (couples, family, peers)'),
+            localizedLabel('Regulasi emosi', 'Emotional regulation'),
+            localizedLabel('Grief', 'Grief and loss'),
+            localizedLabel('Karier & akademik', 'Career and academics')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'STR HIMPSI STR20252151-2026-0368',
+        bookingUrl: bookingUrl('Farah', 'regular'),
+        premiumBookingUrl: bookingUrl('Farah', 'premium'),
+        featured: true,
+        featuredOrder: 16,
+        media: {
+            reference: 'media/psychologists/farahdilla.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Farahdilla', en: 'Profile photo of Farahdilla' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'angelina',
+        name: 'Angelina Gabriella Suliyanto',
+        nickname: 'Angel',
+        credential: 'S.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'bsd',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Kepercayaan diri', 'Self-confidence'),
+            localizedLabel('Regulasi emosi', 'Emotional regulation'),
+            localizedLabel('Hubungan interpersonal (teman, keluarga, pasangan)', 'Interpersonal relationships'),
+            localizedLabel('Pengembangan diri', 'Personal development'),
+            localizedLabel('Kecemasan', 'Anxiety'),
+            localizedLabel('Grieving', 'Grief and mourning'),
+            localizedLabel('Masalah karir & akademik', 'Career and academic concerns')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'STR HIMPSI STR20252165-2026-0352',
+        bookingUrl: bookingUrl('Angel', 'regular'),
+        premiumBookingUrl: bookingUrl('Angel', 'premium'),
+        featured: true,
+        featuredOrder: 17,
+        media: {
+            reference: 'media/psychologists/angelina.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Angelina Gabriella Suliyanto', en: 'Profile photo of Angelina Gabriella Suliyanto' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'gisella',
+        name: 'Gisella Tani Pratiwi',
+        nickname: 'Gisella',
+        credential: 'M.Psi., Psikolog',
+        status: 'draft',
+        acceptingNewClients: false,
+        tier: 'principal',
+        primaryBranch: 'tbi',
+        supportArea: 'childAdolescent',
+        specializations: [
+            localizedLabel('Trauma masa kanak-kanak dan kompleks', 'Complex and childhood trauma'),
+            localizedLabel('Depresi dan isu suicidality pada remaja', 'Adolescent depression and suicidality'),
+            localizedLabel('Pola asuh dan parenting remaja', 'Adolescent parenting'),
+            localizedLabel('Masalah emosi, sosial, dan perilaku anak/remaja', 'Child and adolescent emotional-social-behavioral issues'),
+            localizedLabel('Kekerasan berbasis gender dan seksual', 'Gender-based and sexual violence'),
+            localizedLabel('Praktisi Brainspotting dan Mindfulness', 'Brainspotting and mindfulness practitioner'),
+            localizedLabel('Art therapy untuk anak dan remaja', 'Art therapy for children and adolescents'),
+            localizedLabel('Pendekatan CBT', 'CBT approach')
+        ],
+        experienceYears: 15,
+        licenseNumber: 'STR Kemenkes HM00001710655511 (SIPPK Proses)',
+        bookingUrl: bookingUrl('Gisella', 'regular'),
+        premiumBookingUrl: bookingUrl('Gisella', 'premium'),
+        featured: true,
+        featuredOrder: 18,
+        media: {
+            reference: 'media/psychologists/gisella.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Gisella Tani Pratiwi', en: 'Profile photo of Gisella Tani Pratiwi' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'farhan',
+        name: 'Farhan ‘Afif Arrahul',
+        nickname: 'Farhan',
+        credential: 'S.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'bsd',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Permasalahan akademik dan sekolah', 'Academic and school concerns'),
+            localizedLabel('Karier dan pekerjaan', 'Career and work concerns'),
+            localizedLabel('Relasi sosial dan pertemanan', 'Social and peer relationships'),
+            localizedLabel('Hubungan romantis', 'Romantic relationships'),
+            localizedLabel('Manajemen stres', 'Stress management'),
+            localizedLabel('Pengembangan diri dan potensi', 'Self-development and personal growth'),
+            localizedLabel('Eksplorasi minat, bakat, dan jurusan', 'Interest, aptitude, and major exploration')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'STR & SILP UGM (Tersedia by Request)',
+        bookingUrl: bookingUrl('Farhan', 'regular'),
+        premiumBookingUrl: bookingUrl('Farhan', 'premium'),
+        featured: true,
+        featuredOrder: 19,
+        media: {
+            reference: 'media/psychologists/farhan.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Farhan ‘Afif Arrahul', en: 'Profile photo of Farhan ‘Afif Arrahul' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'grace',
+        name: 'Grace Eka',
+        nickname: 'Grace',
+        credential: 'S.Psi., M.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'online_only',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Stres dan regulasi emosi', 'Stress and emotional regulation'),
+            localizedLabel('Overthinking dan kecemasan', 'Overthinking and anxiety'),
+            localizedLabel('Gangguan depresi', 'Depressive disorders'),
+            localizedLabel('Masalah interpersonal (pasangan, keluarga, pertemanan)', 'Interpersonal concerns'),
+            localizedLabel('Penyesuaian hidup (life adjustment)', 'Life adjustment'),
+            localizedLabel('Pengembangan diri (insecurity, self-esteem)', 'Personal development and self-esteem'),
+            localizedLabel('Pendampingan psikologis prenatal & postpartum', 'Prenatal and postpartum psychological support')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'SIPP 20251626-2025-01-1501',
+        bookingUrl: bookingUrl('Grace', 'regular'),
+        premiumBookingUrl: bookingUrl('Grace', 'premium'),
+        featured: true,
+        featuredOrder: 20,
+        media: {
+            reference: 'media/psychologists/grace.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Grace Eka', en: 'Profile photo of Grace Eka' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'dominika',
+        name: 'Dominika Arthalia Ayunda Putri',
+        nickname: 'Dominika',
+        credential: 'M.Psi., Psikolog',
+        tier: 'senior',
+        primaryBranch: 'tbi',
+        supportArea: 'educational',
+        specializations: [
+            localizedLabel('Anak berkebutuhan khusus dan kesulitan belajar', 'Additional needs and learning difficulties'),
+            localizedLabel('Kesiapan sekolah', 'School readiness'),
+            localizedLabel('Pemeriksaan bakat minat dan konseling karir', 'Aptitude assessment and career counseling'),
+            localizedLabel('Pola asuh orang tua', 'Parenting'),
+            localizedLabel('Masalah perilaku dan motivasi belajar', 'Behavioral issues and learning motivation'),
+            localizedLabel('Pemeriksaan tumbuh kembang anak', 'Child developmental screening')
+        ],
+        experienceYears: 4,
+        licenseNumber: 'SIPP 20210020-2022-01-2265',
+        bookingUrl: bookingUrl('Dominika', 'regular'),
+        premiumBookingUrl: bookingUrl('Dominika', 'premium'),
+        featured: true,
+        featuredOrder: 21,
+        media: {
+            reference: 'media/psychologists/dominika.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Dominika Arthalia Ayunda Putri', en: 'Profile photo of Dominika Arthalia Ayunda Putri' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'nuzul',
+        name: 'Annisah Nurul Azizah',
+        nickname: 'Nuzul',
+        credential: 'M.Psi., Psikolog',
+        tier: 'mid',
+        primaryBranch: 'malang',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Relasi romantis & interpersonal', 'Romantic and interpersonal relationships'),
+            localizedLabel('Gangguan kepribadian & pola kepribadian', 'Personality disorders and patterns'),
+            localizedLabel('Trauma & kekerasan pada perempuan', 'Trauma and violence recovery'),
+            localizedLabel('Isu gender & identitas', 'Gender and identity issues'),
+            localizedLabel('Remaja & pencarian identitas diri', 'Adolescent identity development'),
+            localizedLabel('Kecemasan & depresi', 'Anxiety and depression')
+        ],
+        experienceYears: 1,
+        licenseNumber: 'SIPP 20251606-2025-01-1503 (STR-PK TO00001944176240)',
+        bookingUrl: bookingUrl('Nuzul', 'regular'),
+        premiumBookingUrl: bookingUrl('Nuzul', 'premium'),
+        featured: true,
+        featuredOrder: 22,
+        media: {
+            reference: 'media/psychologists/nuzul.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Annisah Nurul Azizah', en: 'Profile photo of Annisah Nurul Azizah' },
+            mimeType: 'image/webp'
+        }
+    }),
+    fixture({
+        slug: 'haykal',
+        name: 'Dr. Haykal Hafizul Arifin',
+        nickname: 'Haykal',
+        credential: 'S.Psi., M.Si.',
+        tier: 'consultant',
+        primaryBranch: 'tbi',
+        supportArea: 'adultClinical',
+        specializations: [
+            localizedLabel('Makna dan tujuan hidup (Meaning in Life)', 'Meaning and purpose in life'),
+            localizedLabel('Berpikir kritis (Critical Thinking)', 'Critical thinking'),
+            localizedLabel('Struktur dan dinamika kepribadian', 'Personality structure'),
+            localizedLabel('Efikasi diri dan prokrastinasi', 'Self-efficacy and procrastination'),
+            localizedLabel('Metode riset dan psikologi eksperimen', 'Research methods and experimental psychology'),
+            localizedLabel('Pengendalian diri (Self Control)', 'Self-control'),
+            localizedLabel('Studi ekstremisme kekerasan', 'Violent extremism research'),
+            localizedLabel('Kebebasan dan otonomi diri', 'Freedom and personal autonomy')
+        ],
+        experienceYears: 12,
+        licenseNumber: 'Peneliti & Konsultan Psikologi Sosial (Non-Klinis)',
+        bookingUrl: bookingUrl('Haykal', 'regular'),
+        premiumBookingUrl: bookingUrl('Haykal', 'premium'),
+        featured: true,
+        featuredOrder: 23,
+        media: {
+            reference: 'media/psychologists/haykal.webp',
+            width: 600,
+            height: 750,
+            alt: { id: 'Foto profil Dr. Haykal Hafizul Arifin', en: 'Profile photo of Dr. Haykal Hafizul Arifin' },
+            mimeType: 'image/webp'
+        }
+    })
+
 ];
 
 const isSafeBookingUrl = (value: string) => {
@@ -553,6 +971,9 @@ const isValidFixture = (candidate: PsychologistSeedFixture) => {
         name: candidate.name,
         nickname: candidate.nickname,
         credential: candidate.credential,
+        tier: candidate.tier,
+        primaryBranch: candidate.primaryBranch,
+        acceptingNewClients: candidate.acceptingNewClients,
         supportArea: candidate.supportAreas[0]?.supportArea,
         specializations: candidate.specializations.map(({ label }) => label.id),
         experienceYears: candidate.experienceYears,
@@ -569,7 +990,7 @@ const isValidFixture = (candidate: PsychologistSeedFixture) => {
     };
 
     return validatePsychologistMutation(mutation)
-        && candidate.status === 'active'
+        && ['draft', 'active', 'inactive', 'archived'].includes(candidate.status)
         && candidate.supportAreas.length > 0
         && supportAreaIds.size === candidate.supportAreas.length
         && primarySupportAreas.length === 1
@@ -624,6 +1045,9 @@ export async function seedPsychologists(
                 const psychologistId = await transaction.upsertPsychologist({
                     slug: candidate.slug,
                     status: candidate.status,
+                    tier: candidate.tier,
+                    primaryBranch: candidate.primaryBranch,
+                    acceptingNewClients: candidate.acceptingNewClients,
                     name: candidate.name,
                     nickname: candidate.nickname,
                     featured: candidate.featured,
@@ -708,6 +1132,9 @@ export const createDrizzlePsychologistSeedDatabase = (
                     target: schema.psychologists.slug,
                     set: {
                         status: input.status,
+                        tier: input.tier,
+                        primaryBranch: input.primaryBranch,
+                        acceptingNewClients: input.acceptingNewClients,
                         name: input.name,
                         nickname: input.nickname,
                         featured: input.featured,
@@ -879,7 +1306,11 @@ const runPsychologistSeed = async () => {
     const database = drizzle(queryClient, { schema });
 
     try {
-        const result = await bootstrapPsychologists(createDrizzlePsychologistBootstrapDatabase(database));
+        const force = process.argv.includes('--force') || process.argv.includes('--upsert');
+        const bootstrapDb = createDrizzlePsychologistBootstrapDatabase(database);
+        const result = force
+            ? { status: 'seeded' as const, result: await seedPsychologists(bootstrapDb) }
+            : await bootstrapPsychologists(bootstrapDb);
         console.info(result.status === 'seeded'
             ? `Seeded ${result.result?.psychologists ?? 0} psychologist records.`
             : 'Psychologist content already initialized.');

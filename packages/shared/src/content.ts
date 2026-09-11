@@ -29,6 +29,10 @@ export const ARTICLE_LIFECYCLE_STATES = ['draft', 'published', 'unpublished', 'a
 export const ARTICLE_REVISION_STATES = ['draft', 'inReview', 'approved', 'rejected'] as const
 export const MEDIA_LIFECYCLE_STATES = ['active', 'orphaned', 'deleted'] as const
 export const PSYCHOLOGIST_SUPPORT_AREAS = ['adultClinical', 'childAdolescent', 'educational'] as const
+export const PSYCHOLOGIST_TIERS = ['principal', 'senior', 'senior_mid', 'mid', 'consultant'] as const
+export type PsychologistTier = typeof PSYCHOLOGIST_TIERS[number]
+export const PRACTICE_BRANCHES = ['tbi', 'bsd', 'malang', 'online_only', 'multiple'] as const
+export type PracticeBranch = typeof PRACTICE_BRANCHES[number]
 export const USER_ROLES = ['admin', 'psychologist'] as const
 export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const
 
@@ -176,6 +180,21 @@ export const PsychologistMutationSchema = Type.Object({
   name: Type.String({ minLength: 1, maxLength: 200 }),
   nickname: Type.String({ minLength: 1, maxLength: 100 }),
   credential: Type.String({ minLength: 1, maxLength: 200 }),
+  tier: Type.Optional(Type.Union([
+    Type.Literal('principal'),
+    Type.Literal('senior'),
+    Type.Literal('senior_mid'),
+    Type.Literal('mid'),
+    Type.Literal('consultant'),
+  ])),
+  primaryBranch: Type.Optional(Type.Union([
+    Type.Literal('tbi'),
+    Type.Literal('bsd'),
+    Type.Literal('malang'),
+    Type.Literal('online_only'),
+    Type.Literal('multiple'),
+  ])),
+  acceptingNewClients: Type.Optional(Type.Boolean()),
   supportArea: Type.Union([
     Type.Literal('adultClinical'),
     Type.Literal('childAdolescent'),
@@ -212,6 +231,21 @@ export const PsychologistPublicSummarySchema = Type.Object({
   name: Type.String({ minLength: 1 }),
   nickname: Type.String({ minLength: 1 }),
   credential: Type.String({ minLength: 1 }),
+  tier: Type.Optional(Type.Union([
+    Type.Literal('principal'),
+    Type.Literal('senior'),
+    Type.Literal('senior_mid'),
+    Type.Literal('mid'),
+    Type.Literal('consultant'),
+  ])),
+  primaryBranch: Type.Optional(Type.Union([
+    Type.Literal('tbi'),
+    Type.Literal('bsd'),
+    Type.Literal('malang'),
+    Type.Literal('online_only'),
+    Type.Literal('multiple'),
+  ])),
+  acceptingNewClients: Type.Optional(Type.Boolean()),
   supportArea: PsychologistMutationSchema.properties.supportArea,
   specializations: PsychologistMutationSchema.properties.specializations,
   experienceYears: PsychologistMutationSchema.properties.experienceYears,
@@ -291,6 +325,11 @@ export const ArticlePublicLookupSchema = Type.Union([
       summary: LocalizedTextSchema,
       body: LocalizedTextSchema,
       publishedAt: TimestampSchema,
+      author: Type.Optional(Type.Object({
+        id: IdentifierSchema,
+        name: Type.String({ minLength: 1 }),
+        slug: SlugSchema,
+      }, { additionalProperties: false })),
     }, { additionalProperties: false }),
   }, { additionalProperties: false }),
   Type.Object({ status: Type.Literal('notFound') }, { additionalProperties: false }),
@@ -374,6 +413,21 @@ export const FullPsychologistMutationSchema = Type.Object({
     Type.Literal('inactive'),
     Type.Literal('archived'),
   ]),
+  tier: Type.Optional(Type.Union([
+    Type.Literal('principal'),
+    Type.Literal('senior'),
+    Type.Literal('senior_mid'),
+    Type.Literal('mid'),
+    Type.Literal('consultant'),
+  ])),
+  primaryBranch: Type.Optional(Type.Union([
+    Type.Literal('tbi'),
+    Type.Literal('bsd'),
+    Type.Literal('malang'),
+    Type.Literal('online_only'),
+    Type.Literal('multiple'),
+  ])),
+  acceptingNewClients: Type.Optional(Type.Boolean()),
   name: Type.String({ minLength: 1, maxLength: 200 }),
   nickname: Type.String({ minLength: 1, maxLength: 100 }),
   credential: Type.String({ minLength: 1, maxLength: 200 }),

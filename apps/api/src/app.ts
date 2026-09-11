@@ -82,6 +82,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 articlesRepository: dependencies.articlesRepository || { getPublishedBySlug: async () => ({ status: 'notFound' }) },
                 contentTransitions: dependencies.contentTransitions,
+                db: dependencies.db,
             }))
             .use(createLandingCmsRoutes({
                 tokenService: dependencies.tokenService,
