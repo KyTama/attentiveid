@@ -9,6 +9,7 @@ import { useIntakeModal } from '@/components/intake'
 const navItems = [
   { key: 'support', href: '/#support' },
   { key: 'psychologists', href: '/#psychologists' },
+  { key: 'locations', href: '/#locations' },
   { key: 'articles', href: '/articles' },
   { key: 'process', href: '/#process' },
   { key: 'faq', href: '/#faq' },

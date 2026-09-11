@@ -511,6 +511,7 @@
       "articles": "Articles",
       "process": "How it works",
       "faq": "FAQ",
+      "locations": "Locations",
       "find": "Find your psychologist",
       "openMenu": "Open navigation menu",
       "closeMenu": "Close navigation menu",
@@ -613,6 +614,49 @@
         { "question": "What happens during the first session?", "answer": "The first session usually focuses on understanding your concerns, goals, relevant background, and what kind of support may be useful. You can also decide whether the connection feels right." }
       ]
     },
+    "locations": {
+      "eyebrow": "Clinic & Practice Locations",
+      "title": "Comfortable & Private Counseling Spaces",
+      "description": "Find a safe, welcoming space for in-person sessions in Jakarta and BSD, or join online sessions from anywhere. Malang branch opening soon.",
+      "openMaps": "Open in Google Maps",
+      "openingSoon": "Opening Soon",
+      "onlineAvailable": "Online Counseling Available",
+      "offlineAvailable": "In-Person & Online Counseling",
+      "viewAllBranches": "View All Locations",
+      "consultOnlineNow": "Start with Online Session",
+      "tbi": {
+        "title": "Attentive Jakarta (TBI)",
+        "badge": "Primary Practice Center",
+        "city": "South Jakarta",
+        "address": "Jl. Teratai IV No.4, RT.3/RW.2, Tj. Barat, Jagakarsa, South Jakarta, DKI Jakarta 12530",
+        "description": "Our primary center located in the serene Tanjung Barat Indah area. Features soundproof private counseling rooms for adults, children, and developmental assessments.",
+        "highlights": ["In-Person & Online Counseling", "Soundproof Private Rooms", "5 Mins from Tanjung Barat Station"]
+      },
+      "bsd": {
+        "title": "Attentive BSD",
+        "badge": "BSD Branch",
+        "city": "South Tangerang",
+        "address": "Delrey BizTown BSD Unit B8-9 2nd Floor, Jl. Lkr. Botanika Utara, Pagedangan, Tangerang, Banten 15531",
+        "description": "Located in the modern Delrey BizTown business district in BSD. Easily accessible from Gading Serpong, ICE BSD, and the Serpong-Balaraja Toll with ample parking.",
+        "highlights": ["In-Person & Online Counseling", "Modern & Peaceful Space", "Easy Highway Access & Parking"]
+      },
+      "malang": {
+        "title": "Attentive Malang",
+        "badge": "Opening Soon",
+        "city": "Greater Malang, East Java",
+        "address": "Singosari, Greater Malang Area, East Java",
+        "description": "Preparing a dedicated sanctuary for the mental well-being of Malang and East Java. While the physical space is being finalized, all our psychologists are accessible via Online Counseling.",
+        "highlights": ["Online Counseling Active Now", "Physical Clinic Opening Soon", "Serving Greater Malang & Beyond"]
+      },
+      "reassurance": {
+        "privacyTitle": "100% Confidentiality & Privacy",
+        "privacyDesc": "Acoustically insulated counseling suites ensuring absolute discretion and safety.",
+        "accessTitle": "Easy Access & Ample Parking",
+        "accessDesc": "Strategically positioned in quiet environments with convenient, secure parking.",
+        "flexTitle": "In-Person & Online Flexibility",
+        "flexDesc": "Switch seamlessly between offline clinic visits and virtual sessions with your therapist."
+      }
+    },
     "closing": {
       "title": "Start wherever you are.",
       "description": "You do not need the right words, a diagnosis, or everything figured out. You just need somewhere to begin.",
@@ -622,7 +666,11 @@
     "footer": {
       "statement": "Professional psychological support built around listening, clarity, and a connection that feels right for you.",
       "explore": "Explore",
-      "contact": "Contact",
+      "locations": "Practice Locations",
+      "contact": "Contact & Info",
+      "openInMaps": "Open Google Maps",
+      "openingSoonBadge": "Opening Soon",
+      "hours": "Mon – Sat: 09:00 AM – 09:00 PM WIB",
       "rights": "All rights reserved."
     }
   },

@@ -511,6 +511,7 @@
       "articles": "Artikel",
       "process": "Cara kerja",
       "faq": "Tanya jawab",
+      "locations": "Lokasi",
       "find": "Temukan psikologmu",
       "openMenu": "Buka menu navigasi",
       "closeMenu": "Tutup menu navigasi",
@@ -613,6 +614,49 @@
         { "question": "Apa yang terjadi pada sesi pertama?", "answer": "Sesi pertama biasanya berfokus untuk memahami keluhan, tujuan, latar belakang yang relevan, dan bentuk dukungan yang mungkin berguna. Kamu juga dapat menilai apakah hubungannya terasa cocok." }
       ]
     },
+    "locations": {
+      "eyebrow": "Ruang Konseling & Lokasi Praktik",
+      "title": "Ruang Konseling Nyaman & Privat untukmu",
+      "description": "Temukan ruang aman untuk sesi tatap muka langsung di Jakarta dan BSD, atau jadwalkan sesi daring dari mana saja. Cabang Malang segera hadir.",
+      "openMaps": "Buka di Google Maps",
+      "openingSoon": "Segera Hadir",
+      "onlineAvailable": "Konseling Online Tersedia",
+      "offlineAvailable": "Konseling Tatap Muka & Daring",
+      "viewAllBranches": "Lihat Semua Lokasi",
+      "consultOnlineNow": "Konsultasi Online Sekarang",
+      "tbi": {
+        "title": "Attentive Jakarta (TBI)",
+        "badge": "Pusat Layanan Utama",
+        "city": "Jakarta Selatan",
+        "address": "Jl. Teratai IV No.4, RT.3/RW.2, Tj. Barat, Kec. Jagakarsa, Kota Jakarta Selatan, DKI Jakarta 12530",
+        "description": "Klinik utama berlokasi di kawasan asri Tanjung Barat Indah. Dilengkapi ruang konseling privat kedap suara untuk dewasa, anak, dan ruang asesmen psikologi lengkap.",
+        "highlights": ["Konseling Tatap Muka & Online", "Ruang Privat Kedap Suara", "5 Menit dari Stasiun KRL Tanjung Barat"]
+      },
+      "bsd": {
+        "title": "Attentive BSD",
+        "badge": "Cabang BSD",
+        "city": "Tangerang Selatan",
+        "address": "Delrey BizTown BSD Unit B8-9 Lt 2, Jl. Lkr. Botanika Utara, Lengkong Kulon, Kec. Pagedangan, Kabupaten Tangerang, Banten 15531",
+        "description": "Terletak di kawasan bisnis modern Delrey BizTown BSD. Akses mudah dari Gading Serpong, ICE BSD, dan Tol Serpong-Balaraja dengan fasilitas parkir luas dan aman.",
+        "highlights": ["Konseling Tatap Muka & Online", "Kawasan Modern & Tenang", "Akses Tol & Parkir Luas"]
+      },
+      "malang": {
+        "title": "Attentive Malang",
+        "badge": "Opening Soon",
+        "city": "Malang Raya, Jawa Timur",
+        "address": "Singosari, Kawasan Malang Raya, Jawa Timur",
+        "description": "Mempersiapkan kehadiran ruang aman baru bagi masyarakat Malang & Jawa Timur. Sementara persiapan ruang klinik difinalisasi, layanan dapat diakses via Konseling Online.",
+        "highlights": ["Konseling Online Siap Diakses", "Klinik Offline Segera Hadir", "Jangkauan Malang Raya & Jatim"]
+      },
+      "reassurance": {
+        "privacyTitle": "100% Kerahasiaan & Privasi",
+        "privacyDesc": "Ruang konseling berstandar kedap suara demi kenyamanan dan rasa aman penuh selama sesi.",
+        "accessTitle": "Akses Mudah & Parkir Aman",
+        "accessDesc": "Lokasi strategis di area yang tenang dengan fasilitas parkir kendaraan yang memadai.",
+        "flexTitle": "Fleksibilitas Tatap Muka & Daring",
+        "flexDesc": "Bebas memilih atau beralih antara sesi langsung di klinik dan sesi online tanpa ganti psikolog."
+      }
+    },
     "closing": {
       "title": "Mulai dari tempatmu sekarang.",
       "description": "Kamu tidak membutuhkan kata-kata yang sempurna, diagnosis, atau jawaban untuk semuanya. Kamu hanya membutuhkan tempat untuk memulai.",
@@ -622,7 +666,11 @@
     "footer": {
       "statement": "Dukungan psikologis profesional yang dibangun dari proses mendengarkan, kejelasan, dan koneksi yang terasa tepat untukmu.",
       "explore": "Jelajahi",
-      "contact": "Kontak",
+      "locations": "Lokasi Praktik",
+      "contact": "Kontak & Informasi",
+      "openInMaps": "Buka Google Maps",
+      "openingSoonBadge": "Segera Hadir",
+      "hours": "Senin – Sabtu: 09.00 – 21.00 WIB",
       "rights": "Seluruh hak dilindungi."
     }
   },

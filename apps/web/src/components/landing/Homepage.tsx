@@ -6,6 +6,7 @@ import { ConsultationReassurance } from './ConsultationReassurance'
 import { FeaturedPsychologists } from './FeaturedPsychologists'
 import { FrequentlyAskedQuestions } from './FrequentlyAskedQuestions'
 import { HomepageHero } from './HomepageHero'
+import { OurLocations } from './OurLocations'
 import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 import { SupportExplorer } from './SupportExplorer'
@@ -28,6 +29,7 @@ export function Homepage() {
         {visible('careJourney') && <CareJourney />}
         {visible('clientStories') && <ClientStories />}
         {visible('consultationReassurance') && <ConsultationReassurance />}
+        <OurLocations />
         {visible('frequentlyAskedQuestions') && <FrequentlyAskedQuestions />}
         {visible('closingInvitation') && <ClosingInvitation />}
       </main>
