@@ -117,7 +117,7 @@ export function FeaturedPsychologists() {
                           whileHover={{ y: -3 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <img alt="" className="aspect-[4/3] w-full rounded-lg object-cover object-top" height="150" loading="lazy" src={psychologist.imageUrl} width="200" />
+                          <img alt="" className="aspect-[4/5] w-full rounded-lg object-cover object-top" height="250" loading="lazy" src={psychologist.imageUrl} width="200" />
                           <span className="mt-3 block truncate text-xs font-bold">{psychologist.nickname}</span>
                           {' '}
                           <span className={isSelected ? 'mt-1 block truncate text-[0.65rem] text-white/85' : 'mt-1 block truncate text-[0.65rem] text-secondary/80'}>

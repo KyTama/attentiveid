@@ -1,51 +1,33 @@
-# Attentive.id Refactor Todo List
+# Active Task Checklist: Phase 1.9.7 — Psychologist Portrait Orientation, Uniform Sizing & Brand Placeholder
 
-This is the active workspace checklist to track features and deliverables for the refactoring.
+> **Status:** COMPLETED  
+> **Milestone:** Milestone 1 (Web & Domain Go-Live)  
+> **Active Focus:** All reported visual bugs resolved: rotated sideways portraits 90° CCW, standardized all practitioner photos to exact 600x750 (4:5) without distortion, unified carousel thumbnails to aspect-[4/5], replaced Nuzul's screenshot and fallbacks with custom brand illustration profpic.
 
-## Milestone 1: Web Facelift, Dynamic Screening & Server Repointing (Target: July 19, 2026)
-- [ ] **Task 1.1: Project Setup**
-  - [ ] Configure Bun monorepo workspaces (`apps/web`, `apps/api`, `packages/db`)
-  - [ ] Scaffold local PostgreSQL development database compose
-  - [ ] Initialize Prisma/Drizzle connection in `@attentiveid/db`
-- [ ] **Task 1.2: Web UI Facelift**
-  - [ ] Port Hugo-Vex layout assets (colors, fonts) into Tailwind CSS v4 design system
-  - [ ] Rebuild landing page sections as modular React components in `apps/web`
-  - [ ] Integrate `i18next` for English and Indonesian languages switcher
-- [ ] **Task 1.3: Dynamic Screening Survey Service**
-  - [ ] Define PostgreSQL schema for dynamic kuesioner responses
-  - [ ] Build multi-step dynamic survey UI on `apps/web`
-  - [ ] Implement Elysia API route to receive, validate, and store survey answers
-- [ ] **Task 1.4: Server Pointing & Deployment**
-  - [ ] Configure `docker-compose` and Caddy reverse proxy for Tencent VPS
-  - [ ] Verify SSL certs auto-generation for `attentiveid.com`
-  - [ ] Repoint registrar DNS records to new Tencent Cloud VPS IP
-  - [ ] Setup Caddy 301 redirects for any old sub-paths
+---
 
-## Milestone 2: Authentication & Consultation Booking Engine (Target: August 16, 2026)
-- [ ] **Task 2.1: Authentication Systems**
-  - [ ] Implement secure email/password signup and signin APIs in Elysia
-  - [ ] Configure JWT-based state validation and role routing guards
-  - [ ] Create Patient and Psychologist account registration and login UI views
-- [ ] **Task 2.2: Admin & Psychologist Slot Configuration**
-  - [ ] Build admin UI to configure slot templates and assign to psychologists
-  - [ ] Create read-only calendar view for psychologists to review schedules
-- [ ] **Task 2.3: Patient Reservation & Review UI**
-  - [ ] Create calendar interface for patients to search and select slots
-  - [ ] Build reservation flow setting status to "Pending/Menunggu Verifikasi"
-- [ ] **Task 2.4: Concurrency Lock & Approval Engine**
-  - [ ] Write Elysia booking reservation API with PostgreSQL row locks to prevent collision booking
-  - [ ] Build API endpoints for Admin to approve/reject bookings
-  - [ ] Integrate transactional emails dispatch on booking status changes (Pending/Approved)
-  - [ ] Run automated concurrent tests checking collision safety
+## Task Checklist
+- [x] **Step 1: Inspect & Fix Photo Orientations (90° CCW)**:
+  - Rotate sideways portraits (Andri, Jessica, Valencia) 90° CCW
+  - Re-crop to true 4:5 ratio without stretching or distortion
+  - Standardize all 24 psychologist images in `apps/web/public/media/psychologists/` to 600x750 WebP
+- [x] **Step 2: Brand-Aligned Avatar Placeholder Illustration**:
+  - Generate serene, minimalist editorial vector profpic matching Attentive colorway (sage green, warm cream, soft terracotta)
+  - Replace `default.webp`, Nuzul's screenshot (`nuzul.webp`), and all pending studio photos with this custom placeholder
+- [x] **Step 3: Standardize Photo Dimensions in Highlight Section**:
+  - Refine `FeaturedPsychologists.tsx` carousel thumbnails from landscape `aspect-[4/3]` to uniform portrait `aspect-[4/5]`
+  - Lock container dimensions so all cards and images have consistent height and visual weight
+- [x] **Step 4: Update Seeds & Master Data Center**:
+  - Update `scripts/build_psychologists_data_center.py` and `apps/api/src/db/seed-psychologists.ts` to reflect Nuzul's `NEED_PHOTO` status
+  - Re-run database seed and verify persistence
+- [x] **Step 5: Verification & Delivery**:
+  - Verify build (`bun run build`) and test suites (`bun test`)
+  - Harvest lessons to `tasks/lessons.md` and present results to user
 
-## Milestone 3: Back-office Dashboard & System Handover (Target: August 31, 2026)
-- [ ] **Task 3.1: Admin Console Panel**
-  - [ ] Create operations dashboard UI to approve/reject slot bookings
-  - [ ] Build survey history table logs interface
-  - [ ] Implement consolidated internal calendar showing schedules for all psychologists
-- [ ] **Task 3.2: DevOps Hardening**
-  - [ ] Write automated daily backup script for PostgreSQL uploading to cloud bucket
-  - [ ] Perform VPS resources health logging
-- [ ] **Task 3.3: Handover**
-  - [ ] Finalize code cleanup, documentation guides, and developer handover
-  - [ ] Hand over administrative accounts
+---
+
+## Previous Milestones
+- [x] Phase 1.9.6: Psychologist Schema Evolution & Data Center Alignment
+- [x] Phase 1.9.5: Central Psychologist Data Center & Raw Asset Ingestion
+- [x] Phase 1.9: Dynamic Intake Survey & Screening UI/API
+- [ ] Phase 1.10: Deployment Hardening & Tencent VPS Go-Live
