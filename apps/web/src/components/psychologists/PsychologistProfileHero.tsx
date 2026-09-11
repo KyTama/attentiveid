@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PsychologistProfile } from '@/features/psychologists'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useIntakeModal } from '@/components/intake'
 
 interface PsychologistProfileHeroProps {
   psychologist: PsychologistProfile
@@ -11,6 +12,7 @@ interface PsychologistProfileHeroProps {
 
 export function PsychologistProfileHero({ psychologist }: PsychologistProfileHeroProps) {
   const { t } = useTranslation()
+  const { openIntake } = useIntakeModal()
 
   return (
     <section className="bg-white px-5 pb-12 pt-6 lg:px-8 lg:pb-16">
@@ -31,6 +33,13 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
               <motion.a className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
                 {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
               </motion.a>
+              <button
+                type="button"
+                onClick={() => openIntake({ psychologistId: psychologist.id })}
+                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-sm"
+              >
+                {t('intakeDialog.title')}
+              </button>
               <a className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 px-4 py-3 text-sm text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary" href="#profile-booking">
                 {t('routes.profile.helpAction')}<ArrowRight aria-hidden="true" size={16} />
               </a>

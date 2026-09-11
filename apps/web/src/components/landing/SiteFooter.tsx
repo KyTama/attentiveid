@@ -19,6 +19,7 @@ export function SiteFooter() {
           <div className="mt-3 grid text-sm text-secondary/70">
             <a className="inline-flex min-h-11 items-center" href="/#support">{t('homepage.nav.support')}</a>
             <Link className="inline-flex min-h-11 items-center" to="/psychologists">{t('homepage.nav.psychologists')}</Link>
+            <Link className="inline-flex min-h-11 items-center" to="/articles">{t('homepage.nav.articles', 'Artikel')}</Link>
             <a className="inline-flex min-h-11 items-center" href="/#faq">{t('homepage.nav.faq')}</a>
           </div>
         </div>

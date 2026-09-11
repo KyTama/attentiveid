@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useIntakeModal } from '@/components/intake'
 
 const navItems = [
   { key: 'support', href: '/#support' },
   { key: 'psychologists', href: '/#psychologists' },
+  { key: 'articles', href: '/articles' },
   { key: 'process', href: '/#process' },
   { key: 'faq', href: '/#faq' },
 ] as const
@@ -35,6 +37,7 @@ function LanguageToggle() {
 
 export function SiteHeader() {
   const { t } = useTranslation()
+  const { openIntake } = useIntakeModal()
   const [menuOpen, setMenuOpen] = useState(false)
   const reduceMotion = useReducedMotion()
 
@@ -51,21 +54,45 @@ export function SiteHeader() {
         </Link>
 
         <div className="hidden items-center gap-5 lg:flex">
-          {navItems.map((item) => (
-            <motion.a
-              className="inline-flex min-h-11 items-center text-sm font-medium text-secondary/75 outline-none focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
-              href={item.href}
-              key={item.key}
-              transition={INTERACTIVE_SPRING}
-              whileHover={{ color: '#946a22', y: -2 }}
-            >
-              {t(`homepage.nav.${item.key}`)}
-            </motion.a>
-          ))}
+          {navItems.map((item) => {
+            const isInternal = !item.href.includes('#')
+            if (isInternal) {
+              return (
+                <motion.div key={item.key} transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }}>
+                  <Link
+                    className="inline-flex min-h-11 items-center text-sm font-medium text-secondary/75 outline-none hover:text-[#946a22] focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
+                    to={item.href}
+                  >
+                    {t(`homepage.nav.${item.key}`)}
+                  </Link>
+                </motion.div>
+              )
+            }
+            return (
+              <motion.a
+                className="inline-flex min-h-11 items-center text-sm font-medium text-secondary/75 outline-none focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
+                href={item.href}
+                key={item.key}
+                transition={INTERACTIVE_SPRING}
+                whileHover={{ color: '#946a22', y: -2 }}
+              >
+                {t(`homepage.nav.${item.key}`)}
+              </motion.a>
+            )
+          })}
           <LanguageToggle />
           <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
+            <button
+              type="button"
+              onClick={() => openIntake()}
+              className="inline-flex rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer shadow-sm"
+            >
+              {t('intakeDialog.title')}
+            </button>
+          </motion.div>
+          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
             <Link
-              className="inline-flex rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="inline-flex rounded-md bg-secondary px-4 py-2.5 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               to="/psychologists"
             >
               {t('homepage.nav.find')}
@@ -110,16 +137,41 @@ export function SiteHeader() {
             transition={INTERACTIVE_SPRING}
           >
             <div className="mx-auto grid max-w-7xl gap-2 px-5 py-5">
-              {navItems.map((item) => (
-                <a
-                  className="rounded-xl px-4 py-3 text-base font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  href={item.href}
-                  key={item.key}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {t(`homepage.nav.${item.key}`)}
-                </a>
-              ))}
+              {navItems.map((item) => {
+                const isInternal = !item.href.includes('#')
+                if (isInternal) {
+                  return (
+                    <Link
+                      className="rounded-xl px-4 py-3 text-base font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      key={item.key}
+                      onClick={() => setMenuOpen(false)}
+                      to={item.href}
+                    >
+                      {t(`homepage.nav.${item.key}`)}
+                    </Link>
+                  )
+                }
+                return (
+                  <a
+                    className="rounded-xl px-4 py-3 text-base font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    href={item.href}
+                    key={item.key}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {t(`homepage.nav.${item.key}`)}
+                  </a>
+                )
+              })}
+              <button
+                type="button"
+                className="mt-2 rounded-md bg-primary px-5 py-4 text-center font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-sm"
+                onClick={() => {
+                  setMenuOpen(false)
+                  openIntake()
+                }}
+              >
+                {t('intakeDialog.title')}
+              </button>
               <Link
                 className="mt-2 rounded-md bg-secondary px-5 py-4 text-center font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 onClick={() => setMenuOpen(false)}

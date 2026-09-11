@@ -52,6 +52,11 @@ export function Footer() {
                 </a>
               </li>
               <li>
+                <a href="/articles" className="text-muted-foreground hover:text-primary transition-colors">
+                  {t("nav.articles", "Articles")}
+                </a>
+              </li>
+              <li>
                 <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors">
                   {t("nav.contact", "Contact")}
                 </a>

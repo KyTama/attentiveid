@@ -3,6 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
+import { useIntakeModal } from '@/components/intake'
+import type { IntakeConcernId } from '@attentiveid/shared'
+
+const topicToIntakeConcern: Record<string, IntakeConcernId> = {
+  adult: 'anxiety_mood',
+  relationships: 'relationship_family',
+  child: 'child_adolescent',
+  family: 'relationship_family',
+  assessment: 'general_assessment',
+  career: 'career_burnout',
+}
 
 interface SupportTopic {
   description: string
@@ -12,6 +23,7 @@ interface SupportTopic {
 
 export function SupportExplorer() {
   const { t } = useTranslation()
+  const { openIntake } = useIntakeModal()
   const managed = useLandingSection('supportExplorer')
   const topics = managed
     ? [...managed.section.items]
@@ -35,10 +47,19 @@ export function SupportExplorer() {
                 <img alt="" className="size-10 object-contain" height="40" loading="lazy" src={`/images/figma/support-icon-${topicIndex + 1}.webp`} width="40" />
                 <h3 className="mt-5 text-lg font-bold leading-6 text-secondary">{topic.title}</h3>
                 <p className="mt-4 text-sm leading-6 text-secondary/80">{topic.description}</p>
-                <Link className="mt-auto inline-flex min-h-11 items-center pt-5 text-xs font-semibold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/psychologists">
-                  {t('homepage.support.action')}
-                  <span className="sr-only">: {topic.title}</span>
-                </Link>
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5">
+                  <button
+                    type="button"
+                    onClick={() => openIntake({ concernId: topicToIntakeConcern[topic.id] || 'anxiety_mood' })}
+                    className="inline-flex min-h-11 items-center text-xs font-bold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                  >
+                    {t('intakeDialog.title')}
+                  </button>
+                  <Link className="inline-flex min-h-11 items-center text-xs font-semibold text-secondary/70 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/psychologists">
+                    {t('homepage.support.action')}
+                    <span className="sr-only">: {topic.title}</span>
+                  </Link>
+                </div>
               </div>
               <img alt="" className="absolute right-0 top-0 h-full w-[38%] object-cover" height="388" loading="lazy" src={`/images/figma/support-${topicIndex + 1}.webp`} width="169" />
             </motion.li>

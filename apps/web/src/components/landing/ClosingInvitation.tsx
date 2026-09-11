@@ -4,9 +4,11 @@ import { Link } from 'react-router-dom'
 import { createWhatsAppLink, defaultContactMessage } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
+import { useIntakeModal } from '@/components/intake'
 
 export function ClosingInvitation() {
   const { t } = useTranslation()
+  const { openIntake } = useIntakeModal()
   const managed = useLandingSection('closingInvitation')
   const whatsappUrl = createWhatsAppLink(defaultContactMessage)
 
@@ -18,7 +20,16 @@ export function ClosingInvitation() {
         <p className="mt-6 max-w-xl text-base leading-7 text-white/65">{managed?.section.description[managed.locale] ?? t('homepage.closing.description')}</p>
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
           <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
-            <Link className="inline-flex w-full justify-center rounded-md bg-primary px-6 py-4 font-semibold text-secondary sm:w-auto" to="/psychologists">
+            <button
+              type="button"
+              onClick={() => openIntake()}
+              className="inline-flex w-full justify-center rounded-md bg-primary px-6 py-4 font-semibold text-secondary sm:w-auto cursor-pointer"
+            >
+              {t('intakeDialog.title')}
+            </button>
+          </motion.div>
+          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
+            <Link className="inline-flex w-full justify-center rounded-md border border-white/25 px-6 py-4 font-semibold text-white sm:w-auto" to="/psychologists">
               {managed?.section.primaryCta[managed.locale] ?? t('homepage.closing.primaryAction')}
             </Link>
           </motion.div>

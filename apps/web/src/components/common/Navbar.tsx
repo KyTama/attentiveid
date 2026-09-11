@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Menu } from 'lucide-react'
 import { BRAND } from '@/assets/images'
@@ -6,17 +7,21 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { useIntakeModal } from '@/components/intake'
 
 const NAV_ITEMS = [
     { key: 'about', href: '#about' },
     { key: 'why_attentive', href: '#why-us' },
     { key: 'psychologists', href: '#psychologists' },
+    { key: 'articles', href: '/articles' },
     { key: 'services', href: '#services' },
     { key: 'contact', href: '#contact' },
 ] as const
 
 export function Navbar() {
     const { t } = useTranslation()
+    const navigate = useNavigate()
+    const { openIntake } = useIntakeModal()
     const [isVisible, setIsVisible] = useState(true)
     const [isAtTop, setIsAtTop] = useState(true)
     const [lastScrollY, setLastScrollY] = useState(0)
@@ -49,6 +54,10 @@ export function Navbar() {
 
     const handleNavClick = (href: string) => {
         setMobileOpen(false)
+        if (href.startsWith('/')) {
+            navigate(href)
+            return
+        }
         const element = document.querySelector(href)
         if (element) {
             element.scrollIntoView({ behavior: 'smooth' })
@@ -90,6 +99,13 @@ export function Navbar() {
                         </button>
                     ))}
                     <LanguageSwitcher />
+                    <Button
+                        size="sm"
+                        onClick={() => openIntake()}
+                        className="btn-primary shrink-0"
+                    >
+                        {t('intakeDialog.title')}
+                    </Button>
                 </div>
 
                 {/* Mobile Menu */}
@@ -113,6 +129,15 @@ export function Navbar() {
                                         {t(`nav.${item.key}`)}
                                     </button>
                                 ))}
+                                <Button
+                                    onClick={() => {
+                                        setMobileOpen(false)
+                                        openIntake()
+                                    }}
+                                    className="btn-primary w-full mt-2"
+                                >
+                                    {t('intakeDialog.title')}
+                                </Button>
                             </div>
                         </SheetContent>
                     </Sheet>

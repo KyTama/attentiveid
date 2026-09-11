@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PsychologistProfile } from '@/features/psychologists'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { useIntakeModal } from '@/components/intake'
 
 interface FirstStepItem {
   description: string
@@ -16,6 +17,7 @@ interface PsychologistProfileDetailsProps {
 
 export function PsychologistProfileDetails({ psychologist }: PsychologistProfileDetailsProps) {
   const { t } = useTranslation()
+  const { openIntake } = useIntakeModal()
   const firstSteps = t('routes.profile.firstSteps', { returnObjects: true }) as FirstStepItem[]
 
   return (
@@ -71,9 +73,18 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
           <div>
             <h2 className="max-w-xl text-balance text-3xl font-bold tracking-[-0.03em] sm:text-4xl">{t('routes.profile.bookingTitle')}</h2>
             <p className="mt-5 max-w-xl text-base leading-7 text-white/80">{t('routes.profile.bookingDescription', { name: psychologist.nickname })}</p>
-            <motion.a className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-md bg-primary px-7 py-4 font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary sm:w-auto" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
-              <MessageCircle aria-hidden="true" size={19} />{t('routes.profile.bookingAction')}
-            </motion.a>
+            <div className="mt-7 flex flex-wrap gap-4">
+              <motion.a className="inline-flex min-h-12 items-center justify-center gap-3 rounded-md bg-primary px-7 py-4 font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
+                <MessageCircle aria-hidden="true" size={19} />{t('routes.profile.bookingAction')}
+              </motion.a>
+              <button
+                type="button"
+                onClick={() => openIntake({ psychologistId: psychologist.id })}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-white/40 px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer hover:bg-white/10"
+              >
+                {t('intakeDialog.title')}
+              </button>
+            </div>
           </div>
           <aside className="border-t border-white/20 pt-8 md:border-l md:border-t-0 md:pl-10">
             <MessageCircle aria-hidden="true" className="text-primary" size={28} />
