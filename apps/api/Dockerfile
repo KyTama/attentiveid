@@ -14,7 +14,8 @@ RUN bun run build:api && \
     cd apps/api && \
     bun build src/db/migrate.ts --outfile=dist/migrate.js --target=bun && \
     bun build src/db/seed-landing.ts --outfile=dist/seed-landing.js --target=bun && \
-    bun build src/db/seed-psychologists.ts --outfile=dist/seed-psychologists.js --target=bun
+    bun build src/db/seed-psychologists.ts --outfile=dist/seed-psychologists.js --target=bun && \
+    bun build src/db/seed-users.ts --outfile=dist/seed-users.js --target=bun
 
 FROM oven/bun:1.4.0-alpine AS runtime
 
