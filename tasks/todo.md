@@ -1,33 +1,33 @@
-# Active Task Checklist: Phase 1.9.7 — Psychologist Portrait Orientation, Uniform Sizing & Brand Placeholder
+# Active Task Checklist: Phase 1.9.8 — Prioritize Dr. Haykal & Seed Order Idempotency
 
 > **Status:** COMPLETED  
 > **Milestone:** Milestone 1 (Web & Domain Go-Live)  
-> **Active Focus:** All reported visual bugs resolved: rotated sideways portraits 90° CCW, standardized all practitioner photos to exact 600x750 (4:5) without distortion, unified carousel thumbnails to aspect-[4/5], replaced Nuzul's screenshot and fallbacks with custom brand illustration profpic.
+> **Active Focus:** Dr. Haykal Hafizul Arifin promoted to primary featured order (`featuredOrder: 0`, position #1 across master data registry, spreadsheets, homepage showcase, and database fixtures). Implemented `resetFeaturedOrders()` transaction step to prevent unique constraint collisions during sequence re-ordering in PostgreSQL.
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Inspect & Fix Photo Orientations (90° CCW)**:
-  - Rotate sideways portraits (Andri, Jessica, Valencia) 90° CCW
-  - Re-crop to true 4:5 ratio without stretching or distortion
-  - Standardize all 24 psychologist images in `apps/web/public/media/psychologists/` to 600x750 WebP
-- [x] **Step 2: Brand-Aligned Avatar Placeholder Illustration**:
-  - Generate serene, minimalist editorial vector profpic matching Attentive colorway (sage green, warm cream, soft terracotta)
-  - Replace `default.webp`, Nuzul's screenshot (`nuzul.webp`), and all pending studio photos with this custom placeholder
-- [x] **Step 3: Standardize Photo Dimensions in Highlight Section**:
-  - Refine `FeaturedPsychologists.tsx` carousel thumbnails from landscape `aspect-[4/3]` to uniform portrait `aspect-[4/5]`
-  - Lock container dimensions so all cards and images have consistent height and visual weight
-- [x] **Step 4: Update Seeds & Master Data Center**:
-  - Update `scripts/build_psychologists_data_center.py` and `apps/api/src/db/seed-psychologists.ts` to reflect Nuzul's `NEED_PHOTO` status
-  - Re-run database seed and verify persistence
-- [x] **Step 5: Verification & Delivery**:
-  - Verify build (`bun run build`) and test suites (`bun test`)
-  - Harvest lessons to `tasks/lessons.md` and present results to user
+- [x] **Step 1: Reorder Dr. Haykal in Registry & Master Data Center**:
+  - Update `scripts/build_psychologists_data_center.py` to position Dr. Haykal as item #1 (`no: 1`)
+  - Regenerate `.docs/domain/psychologists-registry.json`, `psychologists-data-center.md`, `Attentive_Psychologist_Master_Database_Audit_2026.xlsx`, and `Attentive_Psychologist_Master_Database_Audit_2026.csv`
+- [x] **Step 2: Reorder Database Fixtures & Handle Unique Constraint**:
+  - Position Dr. Haykal at index 0 with `featuredOrder: 0` in `apps/api/src/db/seed-psychologists.ts`
+  - Implement `resetFeaturedOrders()` inside Drizzle seed transaction to avoid PostgreSQL unique index collision on `featured_order`
+  - Update unit test assertions in `apps/api/src/db/seed-psychologists.test.ts`
+- [x] **Step 3: Verification & Database Re-seed**:
+  - Run database re-seed against PostgreSQL (`seeded 24 psychologist records`)
+  - Run full monorepo test suite (shared: 17 pass, API: 93 pass, Web: 56 pass)
+  - Run monorepo build (`bun run build` successful)
+- [x] **Step 4: Atomic Git Commit & Weekly Reporting**:
+  - Atomically commit code and test changes
+  - Update weekly activity logs in `.docs/recent-updates/weekly-activities-2026-w37.md`
 
 ---
 
 ## Previous Milestones
+- [x] Phase 1.9.7: Psychologist Portrait Orientation, Uniform Sizing & Brand Placeholder
 - [x] Phase 1.9.6: Psychologist Schema Evolution & Data Center Alignment
 - [x] Phase 1.9.5: Central Psychologist Data Center & Raw Asset Ingestion
 - [x] Phase 1.9: Dynamic Intake Survey & Screening UI/API
+- [x] Phase 1.8: Bilingual Articles System & CMS Editorial Review
 - [ ] Phase 1.10: Deployment Hardening & Tencent VPS Go-Live

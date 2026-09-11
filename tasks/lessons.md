@@ -40,3 +40,7 @@
   2. Standardize all practitioner visual assets in `apps/web/public/media/psychologists/` to 600x750 (4:5).
   3. Keep carousel thumbnails in `FeaturedPsychologists.tsx` in matching portrait `aspect-[4/5]` rather than landscape `aspect-[4/3]`.
   4. Generate a brand-aligned, gender-neutral editorial illustration profpic (sage green, cream, terracotta) for missing or invalid portrait assets (`default.webp`, `nuzul.webp`), and accurately track `readinessStatus: 'NEED_PHOTO'` in operational databases.
+
+## 9. Unique Constraint Idempotency During Sequence Reordering in PostgreSQL
+- **Problem**: When changing sequential display ranks (`featured_order`) in a table with a unique constraint (e.g., promoting Dr. Haykal to `featured_order: 0`), row-by-row `ON CONFLICT DO UPDATE` queries fail with `duplicate key value violates unique constraint "psychologists_featured_order_unique"` because earlier rows still hold the target rank until the loop reaches them.
+- **Solution**: Within the transactional seed operation, execute `resetFeaturedOrders()` (temporarily clearing `featured = false, featuredOrder = null` in compliance with check constraint `psychologists_featured_order_consistent`) before applying the new sequence from fixtures. This guarantees ACID rollback safety while allowing arbitrary practitioner reordering without constraint collisions.

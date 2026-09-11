@@ -189,30 +189,30 @@ describe('psychologist seed bootstrap', () => {
         const before = database.snapshot();
         const fixtures = structuredClone(psychologistSeedFixtures) as PsychologistSeedFixture[];
 
-        fixtures[0].nickname = 'Kirana';
+        fixtures[0].nickname = 'Haykal Arifin';
         fixtures[0].specializations[0].label = {
-            id: 'Gangguan kepribadian dan pola relasi',
-            en: 'Personality and relationship patterns'
+            id: 'Makna hidup dan eksistensialisme',
+            en: 'Meaning in life and existentialism'
         };
         fixtures[0].media.alt = {
-            id: 'Foto profil terbaru Syazka Kirani Narindra',
-            en: 'Updated profile photo of Syazka Kirani Narindra'
+            id: 'Foto profil terbaru Dr. Haykal',
+            en: 'Updated profile photo of Dr. Haykal'
         };
 
         const result = await seedPsychologists(database, fixtures);
         const after = database.snapshot();
 
         expect(result).toEqual(expectedCounts);
-        expect(after.psychologists.get('syazka')?.id).toBe(before.psychologists.get('syazka')?.id);
-        expect(after.psychologists.get('syazka')?.nickname).toBe('Kirana');
-        expect(after.mediaObjects.get('media/psychologists/syazka.webp')?.id).toBe(
-            before.mediaObjects.get('media/psychologists/syazka.webp')?.id
+        expect(after.psychologists.get('haykal')?.id).toBe(before.psychologists.get('haykal')?.id);
+        expect(after.psychologists.get('haykal')?.nickname).toBe('Haykal Arifin');
+        expect(after.mediaObjects.get('media/psychologists/haykal.webp')?.id).toBe(
+            before.mediaObjects.get('media/psychologists/haykal.webp')?.id
         );
-        expect(after.mediaObjects.get('media/psychologists/syazka.webp')?.alt.en).toBe(
-            'Updated profile photo of Syazka Kirani Narindra'
+        expect(after.mediaObjects.get('media/psychologists/haykal.webp')?.alt.en).toBe(
+            'Updated profile photo of Dr. Haykal'
         );
         expect(after.specializationTranslations.get('specialization-1:en')?.label).toBe(
-            'Personality and relationship patterns'
+            'Meaning in life and existentialism'
         );
     });
 

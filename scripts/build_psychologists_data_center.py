@@ -553,7 +553,10 @@ if scientist_row:
         },
         "readinessStatus": "READY_TO_SEED"
     }
-    registry.append(scientist_entry)
+    registry.insert(0, scientist_entry)
+
+for idx, p in enumerate(registry, 1):
+    p["no"] = idx
 
 # Save JSON registry
 os.makedirs('.docs/domain', exist_ok=True)
