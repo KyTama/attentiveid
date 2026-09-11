@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
+  type CarouselApi,
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -22,6 +23,7 @@ export function FeaturedPsychologists() {
   const managed = useLandingSection('featuredPsychologists')
   const [state, setState] = useState<PsychologistListState>({ status: 'loading' })
   const [selectedSlug, setSelectedSlug] = useState('')
+  const [api, setApi] = useState<CarouselApi>()
 
   useEffect(() => {
     let active = true
@@ -99,9 +101,13 @@ export function FeaturedPsychologists() {
                 </div>
               </div>
 
-              <Carousel className="mt-8 px-10 sm:px-12" opts={{ align: 'start', containScroll: 'trimSnaps' }}>
+              <Carousel
+                className="mt-8 px-10 sm:px-12"
+                opts={{ align: 'start', loop: true }}
+                setApi={setApi}
+              >
                 <CarouselContent>
-                  {roster.map((psychologist) => {
+                  {roster.map((psychologist, index) => {
                     const isSelected = psychologist.slug === selected.slug
                     return (
                       <CarouselItem className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6" key={psychologist.slug}>
@@ -111,7 +117,10 @@ export function FeaturedPsychologists() {
                           className={isSelected
                             ? 'w-full rounded-xl bg-secondary p-2 text-left text-white outline-none ring-2 ring-primary ring-offset-2'
                             : 'w-full rounded-xl bg-[#f8f3eb] p-2 text-left text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'}
-                          onClick={() => setSelectedSlug(psychologist.slug)}
+                          onClick={() => {
+                            setSelectedSlug(psychologist.slug)
+                            api?.scrollTo(index)
+                          }}
                           transition={INTERACTIVE_SPRING}
                           type="button"
                           whileHover={{ y: -3 }}

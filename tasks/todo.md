@@ -1,30 +1,29 @@
-# Active Task Checklist: Phase 1.9.8 — Prioritize Dr. Haykal & Seed Order Idempotency
+# Active Task Checklist: Phase 1.9.9 — Infinite Loop Carousel on Highlight Section
 
 > **Status:** COMPLETED  
 > **Milestone:** Milestone 1 (Web & Domain Go-Live)  
-> **Active Focus:** Dr. Haykal Hafizul Arifin promoted to primary featured order (`featuredOrder: 0`, position #1 across master data registry, spreadsheets, homepage showcase, and database fixtures). Implemented `resetFeaturedOrders()` transaction step to prevent unique constraint collisions during sequence re-ordering in PostgreSQL.
+> **Active Focus:** Enabled seamless infinite loop cycling on `FeaturedPsychologists` carousel (`opts={{ align: 'start', loop: true }}`), eliminated left/right boundaries ("biar gk mentok kiri atau kanan"), connected `setApi` with smooth scrollTo navigation on card selection, and verified monorepo builds and test suites.
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Reorder Dr. Haykal in Registry & Master Data Center**:
-  - Update `scripts/build_psychologists_data_center.py` to position Dr. Haykal as item #1 (`no: 1`)
-  - Regenerate `.docs/domain/psychologists-registry.json`, `psychologists-data-center.md`, `Attentive_Psychologist_Master_Database_Audit_2026.xlsx`, and `Attentive_Psychologist_Master_Database_Audit_2026.csv`
-- [x] **Step 2: Reorder Database Fixtures & Handle Unique Constraint**:
-  - Position Dr. Haykal at index 0 with `featuredOrder: 0` in `apps/api/src/db/seed-psychologists.ts`
-  - Implement `resetFeaturedOrders()` inside Drizzle seed transaction to avoid PostgreSQL unique index collision on `featured_order`
-  - Update unit test assertions in `apps/api/src/db/seed-psychologists.test.ts`
-- [x] **Step 3: Verification & Database Re-seed**:
-  - Run database re-seed against PostgreSQL (`seeded 24 psychologist records`)
-  - Run full monorepo test suite (shared: 17 pass, API: 93 pass, Web: 56 pass)
-  - Run monorepo build (`bun run build` successful)
+- [x] **Step 1: Configure Infinite Loop in Carousel Options**:
+  - Update `FeaturedPsychologists.tsx` to set `opts={{ align: 'start', loop: true }}`
+  - Remove `containScroll: 'trimSnaps'` to allow unobstructed boundary-free cycling in both directions
+- [x] **Step 2: Connect Carousel API & Interaction Polish**:
+  - Connect `setApi` to carousel instance for active index tracking and smooth scrolling on card selection
+  - Ensure previous/next buttons remain interactive and boundary-free across all viewport widths
+- [x] **Step 3: Verification & Automated Tests**:
+  - Verify web test suite (`bun --cwd apps/web test`)
+  - Verify monorepo build (`bun run build`)
 - [x] **Step 4: Atomic Git Commit & Weekly Reporting**:
-  - Atomically commit code and test changes
-  - Update weekly activity logs in `.docs/recent-updates/weekly-activities-2026-w37.md`
+  - Commit changes atomically (`feat(web): enable infinite loop cycling on psychologist highlight carousel`)
+  - Update weekly activities in `.docs/recent-updates/weekly-activities-2026-w37.md`
 
 ---
 
 ## Previous Milestones
+- [x] Phase 1.9.8: Prioritize Dr. Haykal & Seed Order Idempotency
 - [x] Phase 1.9.7: Psychologist Portrait Orientation, Uniform Sizing & Brand Placeholder
 - [x] Phase 1.9.6: Psychologist Schema Evolution & Data Center Alignment
 - [x] Phase 1.9.5: Central Psychologist Data Center & Raw Asset Ingestion
