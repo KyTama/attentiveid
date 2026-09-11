@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia'
+import { eq } from 'drizzle-orm'
 import {
   type ArticleDraftMutation,
   type ArticlePublicLookup,
@@ -7,16 +8,18 @@ import {
 import { createRoleGuardPlugin } from '../security/role-guard'
 import { createPsychologistAuthorCapability, createAdminCapability } from '../services/authorization-capability'
 import type { AuthTokenService, AuthUserRepository } from './auth'
+import * as schema from '../db/schema'
 
 export interface ArticleRoutesDependencies {
   tokenService: Pick<AuthTokenService, 'verifyAccessToken'>
   userRepository: Pick<AuthUserRepository, 'findById'>
   articlesRepository: {
     getPublishedBySlug(slug: string): Promise<ArticlePublicLookup>
-    listPublishedArticles?: (options: { limit?: number; offset?: number }) => Promise<any>
+    listPublishedArticles?: (options: { limit?: number; offset?: number; locale?: string }) => Promise<any>
     listManageableArticles?: (options: { psychologistId?: string; role?: string }) => Promise<any>
   }
   contentTransitions?: any
+  db?: any
 }
 
 export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => {
@@ -51,7 +54,7 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         const limit = query.limit ? Math.min(50, Math.max(1, Number(query.limit))) : 10
         const offset = query.offset ? Math.max(0, Number(query.offset)) : 0
         if (dependencies.articlesRepository.listPublishedArticles) {
-          const list = await dependencies.articlesRepository.listPublishedArticles({ limit, offset })
+          const list = await dependencies.articlesRepository.listPublishedArticles({ limit, offset, locale: query.locale })
           return { status: 'success', articles: list.articles || [], total: list.total || 0 }
         }
         return { status: 'success', articles: [], total: 0 }
@@ -93,7 +96,12 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
     .post(
       '/api/admin/articles',
       async ({ body, currentUser, set }: any) => {
-        const input: ArticleDraftMutation = body
+        const input: ArticleDraftMutation = {
+          slug: body.slug,
+          title: body.title,
+          summary: body.summary,
+          body: body.body,
+        }
         if (!validateArticleDraftMutation(input)) {
           set.status = 400
           return { status: 'badRequest', message: 'Invalid article draft payload.' }
@@ -105,7 +113,21 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         }
 
         try {
-          const authorCap = createPsychologistAuthorCapability(currentUser.psychologistId || currentUser.id)
+          let authorPsychologistId = body.ownerPsychologistId || currentUser.psychologistId
+          if (!authorPsychologistId && currentUser.role === 'admin' && dependencies.db) {
+            const [firstPsychologist] = await dependencies.db.select({ id: schema.psychologists.id })
+              .from(schema.psychologists)
+              .where(eq(schema.psychologists.status, 'active'))
+              .limit(1)
+            authorPsychologistId = firstPsychologist?.id
+          }
+
+          if (!authorPsychologistId) {
+            set.status = 400
+            return { status: 'error', message: 'Author psychologist is required.' }
+          }
+
+          const authorCap = createPsychologistAuthorCapability(authorPsychologistId)
           const result = await dependencies.contentTransitions.createArticleDraft(authorCap, input)
           set.status = 201
           return { status: 'success', article: result.article, revision: result.revision }
@@ -121,6 +143,7 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
           title: t.Object({ id: t.String(), en: t.String() }),
           summary: t.Object({ id: t.String(), en: t.String() }),
           body: t.Object({ id: t.String(), en: t.String() }),
+          ownerPsychologistId: t.Optional(t.String()),
         }),
         detail: {
           tags: ['Articles CMS'],
@@ -136,8 +159,19 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
           return { status: 'success' }
         }
         try {
-          const authorCap = createPsychologistAuthorCapability(currentUser.psychologistId || currentUser.id)
-          await dependencies.contentTransitions.submitArticleRevision(authorCap, id, new Date().toISOString())
+          let revisionId = id
+          let authorId = currentUser.psychologistId || currentUser.id
+
+          if (dependencies.db) {
+            const [article] = await dependencies.db.select().from(schema.articles).where(eq(schema.articles.id, id)).limit(1)
+            if (article) {
+              revisionId = article.draftRevisionId || id
+              authorId = article.ownerPsychologistId
+            }
+          }
+
+          const authorCap = createPsychologistAuthorCapability(authorId)
+          await dependencies.contentTransitions.submitArticleRevision(authorCap, revisionId, new Date().toISOString())
           return { status: 'success' }
         } catch (err: any) {
           set.status = 400
@@ -161,7 +195,20 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         }
         try {
           const adminCap = createAdminCapability(currentUser.id)
-          await dependencies.contentTransitions.approveArticleRevision(adminCap, id, new Date().toISOString())
+          let articleId = id
+          let revisionId = id
+
+          if (dependencies.db) {
+            const [article] = await dependencies.db.select().from(schema.articles).where(eq(schema.articles.id, id)).limit(1)
+            if (article) {
+              articleId = article.id
+              revisionId = article.draftRevisionId || id
+            }
+          }
+
+          const now = new Date().toISOString()
+          await dependencies.contentTransitions.approveArticleRevision(adminCap, revisionId, 'Approved by admin', now)
+          await dependencies.contentTransitions.publishArticleRevision(adminCap, articleId, revisionId)
           return { status: 'success' }
         } catch (err: any) {
           set.status = 400
@@ -185,7 +232,16 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         }
         try {
           const adminCap = createAdminCapability(currentUser.id)
-          await dependencies.contentTransitions.rejectArticleRevision(adminCap, id)
+          let revisionId = id
+
+          if (dependencies.db) {
+            const [article] = await dependencies.db.select().from(schema.articles).where(eq(schema.articles.id, id)).limit(1)
+            if (article) {
+              revisionId = article.draftRevisionId || id
+            }
+          }
+
+          await dependencies.contentTransitions.rejectArticleRevision(adminCap, revisionId, 'Revision requested by admin')
           return { status: 'success' }
         } catch (err: any) {
           set.status = 400

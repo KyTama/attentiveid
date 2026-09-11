@@ -25,6 +25,11 @@ const mockArticle = {
   summary: { id: 'Ringkasan artikel kecemasan', en: 'Anxiety summary' },
   body: { id: 'Isi artikel kecemasan...', en: 'Anxiety body text...' },
   publishedAt: '2026-09-01T12:00:00Z',
+  author: {
+    id: 'psy-001',
+    name: 'Dr. Syazka, M.Psi.',
+    slug: 'dr-syazka',
+  },
 }
 
 describe('Public Articles & Article CMS Pages', () => {
@@ -86,6 +91,11 @@ describe('Public Articles & Article CMS Pages', () => {
     await waitFor(() => {
       expect(screen.getByText(/Understanding Anxiety|Memahami Kecemasan/i)).toBeDefined()
       expect(screen.getByText(/Anxiety summary|Ringkasan artikel kecemasan/i)).toBeDefined()
+      expect(screen.getAllByText(/Dr\. Syazka/i).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText(/menit baca|min read/i)).toBeDefined()
+      expect(screen.getByText('WhatsApp')).toBeDefined()
+      expect(screen.getByText('X (Twitter)')).toBeDefined()
+      expect(screen.getByText(/Salin Link|Copy Link/i)).toBeDefined()
     })
   })
 
@@ -124,6 +134,34 @@ describe('Public Articles & Article CMS Pages', () => {
     await waitFor(() => {
       expect(screen.getByText('Manajemen Artikel Psikologi')).toBeDefined()
       expect(screen.getByText('+ Tulis Artikel Baru')).toBeDefined()
+    })
+  })
+
+  it('renders navigation link to /articles in SiteHeader', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'success',
+          articles: [],
+          total: 0,
+        }),
+      })
+    )
+
+    render(
+      <MemoryRouter initialEntries={['/articles']}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      const articleNavLinks = screen.getAllByRole('link', { name: /artikel|articles/i })
+      expect(articleNavLinks.length).toBeGreaterThanOrEqual(1)
+      expect(articleNavLinks.some((l) => l.getAttribute('href') === '/articles')).toBe(true)
     })
   })
 })

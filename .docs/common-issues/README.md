@@ -15,4 +15,5 @@ Run the engine: [`how-to-learn.md`](../principles/how-to-learn.md) (7 steps).
 | 4 | Match DB seed media references with public static media paths and case-sensitive Linux filesystems | [lowercase-static-media-paths.md](./lowercase-static-media-paths.md) |
 | 5 | Return lifecycle hook objects from Elysia macros to ensure route interceptors attach | [elysia-macro-return-hooks.md](./elysia-macro-return-hooks.md) |
 | 6 | Propagate auth bearer tokens to standalone service clients outside React component hooks | [standalone-service-auth-propagation.md](./standalone-service-auth-propagation.md) |
+| 7 | Entity ID separation in author capabilities & atomic revision publish transitions | [article-author-foreign-key-and-publish-transitions.md](./article-author-foreign-key-and-publish-transitions.md) |
 

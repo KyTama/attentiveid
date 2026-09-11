@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../features/auth/auth-context'
 
@@ -7,9 +7,16 @@ export interface ArticleCmsItem {
   slug: string
   status: 'draft' | 'published' | 'unpublished' | 'archived'
   revisionStatus?: 'draft' | 'inReview' | 'approved' | 'rejected'
+  revisionNumber?: number
   title: { id: string; en: string }
   summary: { id: string; en: string }
   body: { id: string; en: string }
+  author?: {
+    id: string
+    name: string
+    slug: string
+  }
+  publishedAt?: string | null
   updatedAt?: string
 }
 
@@ -18,6 +25,8 @@ export function ArticlesCmsPage() {
   const isAdmin = user?.role === 'admin'
 
   const [articles, setArticles] = useState<ArticleCmsItem[]>([])
+  const [psychologists, setPsychologists] = useState<Array<{ id: string; name: string }>>([])
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'all' | 'draft' | 'inReview' | 'published'>('all')
 
@@ -33,7 +42,7 @@ export function ArticlesCmsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
 
-  const loadArticles = async () => {
+  const loadArticles = useCallback(async () => {
     setIsLoading(true)
     try {
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
@@ -72,11 +81,29 @@ export function ArticlesCmsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [getAuthHeaders])
 
   useEffect(() => {
     loadArticles()
-  }, [])
+    async function loadPsychologists() {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+        const res = await fetch(`${baseUrl}/api/admin/psychologists`, {
+          headers: getAuthHeaders(),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.status === 'success' && data.psychologists?.length > 0) {
+            setPsychologists(data.psychologists)
+            setSelectedAuthorId(data.psychologists[0].id)
+          }
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
+    loadPsychologists()
+  }, [loadArticles, getAuthHeaders])
 
   const openCreateModal = () => {
     setSlug('')
@@ -86,6 +113,9 @@ export function ArticlesCmsPage() {
     setSummaryEn('')
     setBodyId('')
     setBodyEn('')
+    if (psychologists.length > 0) {
+      setSelectedAuthorId(psychologists[0].id)
+    }
     setModalError(null)
     setIsModalOpen(true)
   }
@@ -104,6 +134,7 @@ export function ArticlesCmsPage() {
       title: { id: titleId.trim(), en: titleEn.trim() },
       summary: { id: summaryId.trim() || titleId.trim(), en: summaryEn.trim() || titleEn.trim() },
       body: { id: bodyId.trim() || titleId.trim(), en: bodyEn.trim() || titleEn.trim() },
+      ownerPsychologistId: isAdmin && selectedAuthorId ? selectedAuthorId : undefined,
     }
 
     try {
@@ -205,6 +236,7 @@ export function ArticlesCmsPage() {
                 <tr>
                   <th className="px-6 py-3 font-semibold">Judul Artikel</th>
                   <th className="px-6 py-3 font-semibold">Slug</th>
+                  <th className="px-6 py-3 font-semibold">Penulis</th>
                   <th className="px-6 py-3 font-semibold">Status</th>
                   <th className="px-6 py-3 font-semibold text-right">Aksi</th>
                 </tr>
@@ -213,10 +245,14 @@ export function ArticlesCmsPage() {
                 {filteredArticles.map((art) => (
                   <tr key={art.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100 max-w-xs truncate">
-                      {art.title.id}
+                      <div>{art.title.id}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">{art.title.en}</div>
                     </td>
                     <td className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-slate-400">
                       {art.slug}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                      {art.author?.name || 'Psikolog Attentive'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
@@ -230,10 +266,21 @@ export function ArticlesCmsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      {art.status === 'published' && (
+                        <a
+                          href={`/articles/${art.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 rounded-md transition-colors inline-flex items-center gap-1"
+                        >
+                          <span>Lihat</span>
+                          <span>↗</span>
+                        </a>
+                      )}
                       {art.status !== 'published' && art.revisionStatus !== 'inReview' && (
                         <button
                           onClick={() => handleAction(art.id, 'submit')}
-                          className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                          className="px-2.5 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 rounded-md transition-colors"
                         >
                           Ajukan Review
                         </button>
@@ -248,7 +295,7 @@ export function ArticlesCmsPage() {
                           </button>
                           <button
                             onClick={() => handleAction(art.id, 'reject')}
-                            className="px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md transition-colors"
+                            className="px-2.5 py-1 text-xs font-medium text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-md transition-colors"
                           >
                             Tolak
                           </button>
@@ -293,8 +340,27 @@ export function ArticlesCmsPage() {
               )}
 
               <form onSubmit={handleSaveDraft} className="space-y-4">
+                {isAdmin && psychologists.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
+                      Penulis Psikolog
+                    </label>
+                    <select
+                      value={selectedAuthorId}
+                      onChange={(e) => setSelectedAuthorId(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    >
+                      {psychologists.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+                  <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Slug URL
                   </label>
                   <input

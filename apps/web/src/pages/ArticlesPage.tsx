@@ -2,13 +2,21 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { SiteHeader } from '@/components/landing/SiteHeader'
+import { SiteFooter } from '@/components/landing/SiteFooter'
 
 export interface ArticleItem {
-  id: string
+  id?: string
+  articleId?: string
   slug: string
   title: { id: string; en: string }
   summary: { id: string; en: string }
   publishedAt: string
+  author?: {
+    id: string
+    name: string
+    slug: string
+  }
   authorName?: string
 }
 
@@ -72,8 +80,10 @@ export function ArticlesPage() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+      <SiteHeader />
+      <main className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-8">
         {/* Header Banner */}
         <div className="text-center max-w-2xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -130,45 +140,61 @@ export function ArticlesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredArticles.map((article) => (
-              <motion.article
-                key={article.id}
-                whileHover={{ y: -4 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-teal-500 dark:hover:border-teal-500 transition-all flex flex-col justify-between overflow-hidden group"
-              >
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>{new Date(article.publishedAt).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                    <span className="bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded font-medium">Edukasi</span>
+            {filteredArticles.map((article) => {
+              const authorName = article.author?.name || article.authorName || 'Attentive Editorial Team'
+              return (
+                <motion.article
+                  key={article.id || article.articleId || article.slug}
+                  whileHover={{ y: -4 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-teal-500 dark:hover:border-teal-500 transition-all flex flex-col justify-between overflow-hidden group"
+                >
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                      <span>{new Date(article.publishedAt).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      <span className="bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded font-medium">Edukasi</span>
+                    </div>
+
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-2">
+                      <Link to={`/articles/${article.slug}`}>
+                        {article.title[currentLang] || article.title.id}
+                      </Link>
+                    </h2>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                      {article.summary[currentLang] || article.summary.id}
+                    </p>
                   </div>
 
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-2">
-                    {article.title[currentLang] || article.title.id}
-                  </h2>
+                  <div className="p-6 pt-0 border-t border-slate-100 dark:border-slate-700/50 mt-4 flex items-center justify-between">
+                    {article.author?.slug ? (
+                      <Link
+                        to={`/psychologists/${article.author.slug}`}
+                        className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 truncate max-w-[180px] hover:underline"
+                      >
+                        {authorName}
+                      </Link>
+                    ) : (
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400 truncate max-w-[180px]">
+                        {authorName}
+                      </span>
+                    )}
 
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                    {article.summary[currentLang] || article.summary.id}
-                  </p>
-                </div>
-
-                <div className="p-6 pt-0 border-t border-slate-100 dark:border-slate-700/50 mt-4 flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400 truncate max-w-[180px]">
-                    {article.authorName || 'Attentive Editorial Team'}
-                  </span>
-
-                  <Link
-                    to={`/articles/${article.slug}`}
-                    className="inline-flex items-center text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
-                  >
-                    {t('articles.readMore', 'Baca Selengkapnya')} →
-                  </Link>
-                </div>
-              </motion.article>
-            ))}
+                    <Link
+                      to={`/articles/${article.slug}`}
+                      className="inline-flex items-center text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
+                    >
+                      {t('articles.readMore', 'Baca Selengkapnya')} →
+                    </Link>
+                  </div>
+                </motion.article>
+              )
+            })}
           </div>
         )}
       </div>
-    </div>
-  )
+    </main>
+    <SiteFooter />
+  </div>
+)
 }
