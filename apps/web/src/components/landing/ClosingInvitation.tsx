@@ -13,11 +13,11 @@ export function ClosingInvitation() {
   const whatsappUrl = createWhatsAppLink(defaultContactMessage)
 
   return (
-    <section className="deferred-section relative overflow-hidden bg-secondary px-5 py-24 text-white lg:px-8 lg:py-32">
+    <section className="deferred-section relative overflow-hidden bg-secondary px-5 py-20 text-white lg:px-8 lg:py-28">
       <img alt="" className="pointer-events-none absolute bottom-0 right-0 h-full w-1/2 object-contain object-right opacity-30 lg:opacity-100" height="614" loading="lazy" src="/images/figma/closing-landscape.webp" width="680" />
       <div className="relative mx-auto max-w-7xl">
-        <h2 className="max-w-2xl text-balance text-4xl font-semibold leading-[0.98] tracking-[-0.04em] sm:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.closing.title')}</h2>
-        <p className="mt-6 max-w-xl text-base leading-7 text-white/65">{managed?.section.description[managed.locale] ?? t('homepage.closing.description')}</p>
+        <h2 className="max-w-2xl text-balance text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.closing.title')}</h2>
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.closing.description')}</p>
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
           <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
             <button

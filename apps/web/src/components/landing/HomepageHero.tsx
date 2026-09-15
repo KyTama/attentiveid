@@ -30,13 +30,13 @@ export function HomepageHero() {
       <div className="mx-auto grid min-h-[38rem] max-w-7xl items-stretch lg:grid-cols-[0.95fr_1.05fr]">
         <div className="min-w-0 flex flex-col justify-center px-5 py-16 sm:px-8 lg:px-8 lg:py-20">
           <h1
-            className="max-w-3xl text-balance font-sans text-[clamp(2.5rem,4.3vw,3.75rem)] font-bold leading-[1.12] tracking-[-0.04em] text-secondary outline-none"
+            className="max-w-3xl text-balance font-sans text-[clamp(2.5rem,4.3vw,3.75rem)] font-bold leading-[1.18] tracking-tight text-secondary outline-none"
             data-route-heading
             tabIndex={-1}
           >
             {copy.title}
           </h1>
-          <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-secondary/80 sm:text-lg">
+          <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-secondary/85 sm:text-lg">
             {copy.description}
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">

@@ -25,11 +25,11 @@ export function ClientStories() {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch lg:gap-16">
           <div>
-            <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{title}</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-secondary/80">{description}</p>
+            <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{title}</h2>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{description}</p>
           </div>
           <div className="border-t border-primary/70 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
-            <p className="max-w-2xl text-base leading-7 text-secondary/80">{t('homepage.stories.reviewPrompt')}</p>
+            <p className="max-w-2xl text-base leading-relaxed text-secondary/85">{t('homepage.stories.reviewPrompt')}</p>
             <div className="mt-7 flex flex-wrap items-center gap-5 lg:justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold text-secondary" aria-label={t('homepage.stories.googleRating')}>
                 <span className="flex gap-1 text-[#946a22]" aria-hidden="true">

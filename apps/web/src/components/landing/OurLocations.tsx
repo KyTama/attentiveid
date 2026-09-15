@@ -10,7 +10,7 @@ export function OurLocations() {
   const { openIntake } = useIntakeModal()
 
   return (
-    <section className="deferred-section relative overflow-hidden bg-white px-5 py-24 lg:px-8 lg:py-32" id="locations">
+    <section className="deferred-section relative overflow-hidden bg-white px-5 py-20 lg:px-8 lg:py-28" id="locations">
       {/* Decorative subtle background accents */}
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-[#fcf8f1] blur-3xl" />
       <div aria-hidden="true" className="pointer-events-none absolute -left-24 -bottom-24 size-96 rounded-full bg-[#fcf8f1] blur-3xl" />
@@ -26,10 +26,10 @@ export function OurLocations() {
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#946a22]">
             {t('homepage.locations.eyebrow', 'Ruang Konseling & Lokasi Praktik')}
           </p>
-          <h2 className="mt-3 text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl lg:text-5xl">
+          <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">
             {t('homepage.locations.title', 'Ruang Konseling Nyaman & Privat untukmu')}
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">
             {t('homepage.locations.description', 'Temukan ruang aman untuk sesi tatap muka langsung di Jakarta dan BSD, atau jadwalkan sesi daring dari mana saja. Cabang Malang segera hadir.')}
           </p>
         </div>

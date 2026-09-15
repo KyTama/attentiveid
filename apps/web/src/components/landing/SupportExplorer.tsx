@@ -37,8 +37,8 @@ export function SupportExplorer() {
     <section className="deferred-section px-5 py-20 lg:px-8 lg:py-28" id="support">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{title}</h2>
-          <p className="mt-5 text-base leading-7 text-secondary/75">{description}</p>
+          <h2 className="text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{title}</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{description}</p>
         </div>
         <ul className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {topics.map((topic, topicIndex) => (
@@ -46,7 +46,7 @@ export function SupportExplorer() {
               <div className="relative z-10 flex w-[64%] flex-col p-5 sm:p-6">
                 <img alt="" className="size-10 object-contain" height="40" loading="lazy" src={`/images/figma/support-icon-${topicIndex + 1}.webp`} width="40" />
                 <h3 className="mt-5 text-lg font-bold leading-6 text-secondary">{topic.title}</h3>
-                <p className="mt-4 text-sm leading-6 text-secondary/80">{topic.description}</p>
+                <p className="mt-3 text-sm leading-relaxed text-secondary/85">{topic.description}</p>
                 <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5">
                   <button
                     type="button"

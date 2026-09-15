@@ -21,11 +21,11 @@ export function FrequentlyAskedQuestions() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section className="deferred-section bg-white px-5 py-24 lg:px-8 lg:py-32" id="faq">
+    <section className="deferred-section bg-white px-5 py-20 lg:px-8 lg:py-28" id="faq">
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="min-w-0">
-          <h2 className="max-w-lg text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{managed?.section.headline[managed.locale] ?? t('homepage.faq.title')}</h2>
-          <p className="mt-5 max-w-md text-base leading-7 text-secondary/80">{managed?.section.description[managed.locale] ?? t('homepage.faq.description')}</p>
+          <h2 className="max-w-lg text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.faq.title')}</h2>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-secondary/85 sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.faq.description')}</p>
           <img alt="" className="mt-10 aspect-[538/410] w-full rounded-xl object-cover" height="410" loading="lazy" src="/images/figma/faq-room.webp" width="538" />
         </div>
         <div className="rounded-xl bg-[#fcf8f1] px-5 sm:px-7">

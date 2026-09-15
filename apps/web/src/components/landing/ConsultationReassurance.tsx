@@ -28,13 +28,13 @@ export function ConsultationReassurance() {
             <span className="size-2 rotate-45 bg-primary" />
             <span className="h-px w-12 bg-primary/70" />
           </div>
-          <h2 className="text-balance text-[2rem] font-semibold tracking-[-0.03em] text-secondary sm:text-4xl">{managed?.section.headline[managed.locale] ?? t('homepage.pricing.title')}</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{managed?.section.description[managed.locale] ?? t('homepage.pricing.description')}</p>
+          <h2 className="text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.pricing.title')}</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.pricing.description')}</p>
         </div>
         <div className="mt-12 grid overflow-hidden rounded-xl bg-white lg:grid-cols-[1.05fr_0.8fr_0.65fr]">
           <div className="p-7 sm:p-10 lg:p-12">
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary/80">{copy.sessionLabel}</p>
-            <p className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-secondary">{copy.price}</p>
+            <p className="mt-3 text-4xl font-bold tracking-tight text-secondary">{copy.price}</p>
             <p className="mt-1 text-sm text-secondary/80">{copy.priceUnit}</p>
             <ul className="mt-7 grid gap-3">
               {included.map((item) => (

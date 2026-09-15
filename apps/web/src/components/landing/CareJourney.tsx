@@ -35,9 +35,9 @@ export function CareJourney() {
     <section className="deferred-section px-5 py-20 lg:px-8 lg:py-28" id="process">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-16">
-          <h2 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.03em] text-secondary sm:text-5xl">{title}</h2>
+          <h2 className="max-w-2xl text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{title}</h2>
           <div className="border-t border-primary/70 pt-6">
-            <p className="max-w-2xl text-base leading-7 text-secondary/80">{description}</p>
+            <p className="max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{description}</p>
             <div aria-hidden="true" className="mt-8 grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-3">
               <span className="size-3 rounded-full bg-primary" />
               <span className="h-px bg-primary/45" />
@@ -69,11 +69,11 @@ export function CareJourney() {
                     width={image?.width}
                   />
                 </div>
-                <h3 className="mt-8 text-2xl font-semibold tracking-[-0.02em] text-secondary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-secondary/80">{step.description}</p>
+                <h3 className="mt-8 text-xl sm:text-2xl font-bold tracking-tight text-secondary">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-secondary/85">{step.description}</p>
                 <ul className="mt-6 grid gap-3">
                   {step.points.map((point) => (
-                    <li className="flex gap-3 text-sm text-secondary/70" key={point}>
+                    <li className="flex gap-3 text-sm font-medium text-secondary/80" key={point}>
                       <Check aria-hidden="true" className="mt-0.5 shrink-0 text-primary" size={16} />
                       {point}
                     </li>
