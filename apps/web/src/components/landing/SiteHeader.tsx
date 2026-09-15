@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { ChevronRight, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -24,14 +24,27 @@ function LanguageToggle() {
   return (
     <motion.button
       aria-label={`${languageCode} — ${t('homepage.nav.languageSwitch', { language: targetLanguage })}`}
-      className="min-h-11 min-w-11 rounded-md border border-secondary/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      className="relative inline-flex items-center gap-0.5 rounded-full border border-secondary/15 bg-white/80 p-1 text-[11px] font-bold tracking-wider text-secondary shadow-2xs outline-none backdrop-blur-xs transition-colors hover:border-secondary/30 hover:bg-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
       onClick={() => i18n.changeLanguage(isEnglish ? 'id' : 'en')}
       transition={INTERACTIVE_SPRING}
       type="button"
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -1 }}
       whileTap={{ scale: 0.96 }}
     >
-      {languageCode}
+      <span
+        className={`rounded-full px-2 py-0.5 transition-colors ${
+          isEnglish ? 'bg-secondary text-white shadow-2xs' : 'text-secondary/50 hover:text-secondary'
+        }`}
+      >
+        EN
+      </span>
+      <span
+        className={`rounded-full px-2 py-0.5 transition-colors ${
+          !isEnglish ? 'bg-secondary text-white shadow-2xs' : 'text-secondary/50 hover:text-secondary'
+        }`}
+      >
+        ID
+      </span>
     </motion.button>
   )
 }
@@ -44,7 +57,7 @@ export function SiteHeader() {
 
   return (
     <motion.header
-      className="sticky top-0 z-50 border-b border-secondary/10 bg-[#fbf8f2]/95 backdrop-blur-xl"
+      className="sticky top-0 z-50 border-b border-secondary/10 bg-[#fbf8f2]/95 backdrop-blur-xl transition-shadow duration-200 shadow-2xs"
       initial={false}
       layout
       transition={INTERACTIVE_SPRING}
@@ -54,60 +67,65 @@ export function SiteHeader() {
           <img alt="Attentive.id" className="h-auto w-36 sm:w-44" height="144" src="/images/figma/attentive-logo.webp" width="528" />
         </Link>
 
-        <div className="hidden items-center gap-5 lg:flex">
+        {/* Desktop Navigation Links */}
+        <div className="hidden items-center gap-1 xl:gap-2 lg:flex">
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
             if (isInternal) {
               return (
-                <motion.div key={item.key} transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }}>
-                  <Link
-                    className="inline-flex min-h-11 items-center text-sm font-medium text-secondary/75 outline-none hover:text-[#946a22] focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
-                    to={item.href}
-                  >
-                    {t(`homepage.nav.${item.key}`)}
-                  </Link>
-                </motion.div>
+                <Link
+                  className="rounded-full px-3 py-1.5 text-[13px] xl:text-sm font-medium text-secondary/70 transition-colors hover:bg-black/[0.04] hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  key={item.key}
+                  to={item.href}
+                >
+                  {t(`homepage.nav.${item.key}`)}
+                </Link>
               )
             }
             return (
-              <motion.a
-                className="inline-flex min-h-11 items-center text-sm font-medium text-secondary/75 outline-none focus-visible:text-secondary focus-visible:ring-2 focus-visible:ring-primary"
+              <a
+                className="rounded-full px-3 py-1.5 text-[13px] xl:text-sm font-medium text-secondary/70 transition-colors hover:bg-black/[0.04] hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 href={item.href}
                 key={item.key}
-                transition={INTERACTIVE_SPRING}
-                whileHover={{ color: '#946a22', y: -2 }}
               >
                 {t(`homepage.nav.${item.key}`)}
-              </motion.a>
+              </a>
             )
           })}
+        </div>
+
+        {/* Desktop Actions & CTAs */}
+        <div className="hidden items-center gap-3 lg:flex">
           <LanguageToggle />
-          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
-            <button
-              type="button"
-              onClick={() => openIntake()}
-              className="inline-flex rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer shadow-sm"
-            >
-              {t('intakeDialog.title')}
-            </button>
-          </motion.div>
-          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
+
+          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
             <Link
-              className="inline-flex rounded-md bg-secondary px-4 py-2.5 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="inline-flex items-center rounded-full border border-secondary/20 bg-transparent px-3.5 xl:px-4 py-2 text-xs xl:text-sm font-semibold text-secondary transition-colors hover:border-secondary/40 hover:bg-secondary/5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               to="/psychologists"
             >
               {t('homepage.nav.find')}
             </Link>
           </motion.div>
+
+          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+            <button
+              type="button"
+              onClick={() => openIntake()}
+              className="inline-flex items-center justify-center rounded-full bg-primary px-4 xl:px-5 py-2 text-xs xl:text-sm font-bold text-secondary shadow-xs hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer transition-colors"
+            >
+              {t('intakeDialog.title')}
+            </button>
+          </motion.div>
         </div>
 
+        {/* Mobile Header Controls */}
         <div className="flex items-center gap-2 lg:hidden">
           <LanguageToggle />
           <motion.button
             aria-controls="homepage-mobile-menu"
             aria-expanded={menuOpen}
             aria-label={menuOpen ? t('homepage.nav.closeMenu') : t('homepage.nav.openMenu')}
-            className="grid size-11 place-items-center rounded-md bg-secondary text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="grid size-11 place-items-center rounded-full border border-secondary/15 bg-white/80 text-secondary shadow-2xs outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             onClick={() => setMenuOpen((current) => !current)}
             onKeyDown={(event) => {
               if (event.key === 'Escape') setMenuOpen(false)
@@ -121,11 +139,12 @@ export function SiteHeader() {
         </div>
       </nav>
 
+      {/* Mobile Drawer */}
       <AnimatePresence initial={false}>
         {menuOpen && (
           <motion.div
             animate={{ height: 'auto', opacity: 1 }}
-            className="overflow-hidden border-t border-secondary/10 bg-[#fbf8f2] lg:hidden"
+            className="overflow-hidden border-t border-secondary/10 bg-[#fbf8f2] lg:hidden shadow-lg"
             exit={{ height: 0, opacity: reduceMotion ? 1 : 0 }}
             id="homepage-mobile-menu"
             onKeyDown={(event) => {
@@ -137,49 +156,56 @@ export function SiteHeader() {
             initial={{ height: 0, opacity: reduceMotion ? 1 : 0 }}
             transition={INTERACTIVE_SPRING}
           >
-            <div className="mx-auto grid max-w-7xl gap-2 px-5 py-5">
-              {navItems.map((item) => {
-                const isInternal = !item.href.includes('#')
-                if (isInternal) {
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6">
+              <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/70 p-1.5 shadow-2xs">
+                {navItems.map((item) => {
+                  const isInternal = !item.href.includes('#')
+                  if (isInternal) {
+                    return (
+                      <Link
+                        className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        key={item.key}
+                        onClick={() => setMenuOpen(false)}
+                        to={item.href}
+                      >
+                        <span>{t(`homepage.nav.${item.key}`)}</span>
+                        <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
+                      </Link>
+                    )
+                  }
                   return (
-                    <Link
-                      className="rounded-xl px-4 py-3 text-base font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    <a
+                      className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      href={item.href}
                       key={item.key}
                       onClick={() => setMenuOpen(false)}
-                      to={item.href}
                     >
-                      {t(`homepage.nav.${item.key}`)}
-                    </Link>
+                      <span>{t(`homepage.nav.${item.key}`)}</span>
+                      <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
+                    </a>
                   )
-                }
-                return (
-                  <a
-                    className="rounded-xl px-4 py-3 text-base font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    href={item.href}
-                    key={item.key}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {t(`homepage.nav.${item.key}`)}
-                  </a>
-                )
-              })}
-              <button
-                type="button"
-                className="mt-2 rounded-md bg-primary px-5 py-4 text-center font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-sm"
-                onClick={() => {
-                  setMenuOpen(false)
-                  openIntake()
-                }}
-              >
-                {t('intakeDialog.title')}
-              </button>
-              <Link
-                className="mt-2 rounded-md bg-secondary px-5 py-4 text-center font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                onClick={() => setMenuOpen(false)}
-                to="/psychologists"
-              >
-                {t('homepage.nav.find')}
-              </Link>
+                })}
+              </nav>
+
+              <div className="mt-3 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  className="w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    openIntake()
+                  }}
+                >
+                  {t('intakeDialog.title')}
+                </button>
+                <Link
+                  className="w-full rounded-full border border-secondary/20 bg-white/80 px-5 py-3.5 text-center font-semibold text-secondary transition-colors hover:bg-white outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  onClick={() => setMenuOpen(false)}
+                  to="/psychologists"
+                >
+                  {t('homepage.nav.find')}
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
