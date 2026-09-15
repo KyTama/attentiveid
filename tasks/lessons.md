@@ -70,3 +70,8 @@
 ## 13. Seed Fixture Evolution & Exact Assertion Coupling in Integration Tests
 - **Problem**: When updating or enriching canonical practitioner fixtures (e.g., adding Brainspotting credentials to Gisella Tani Pratiwi), existing integration test assertions that check search queries with exact arrays (e.g., `expect(psychologists.map(({ slug }) => slug)).toEqual(['gita'])`) fail in CI because the query legitimately returns all active matching practitioners (`['gita', 'gisella']`).
 - **Solution**: Always audit integration tests when enriching canonical seed fixtures. Update exact match assertions to reflect the complete set of matching fixtures in alphabetical order, or use subset assertions (`toContain`) when testing modality matching in isolation.
+
+## 14. JSX Inline Sibling Whitespace Collapsing & Accessible Name Testing
+- **Problem**: When rendering adjacent inline JSX elements (e.g. `<span className="font-bold">{psychologist.nickname}</span>` and `<span ...>{t(supportArea)}</span>`) without an explicit whitespace literal `{' '}`, JSX collapses them into a single string in the DOM (`"JeanetteAdult clinical"`). Accessible name queries like `getByRole('button', { name: /jeanette adult clinical/i })` fail because the expected word boundary space is absent.
+- **Solution**: Always insert an explicit `{' '}` between adjacent inline text elements when they represent distinct words, or assign an explicit `title` or `aria-label` attribute on the interactive parent element.
+
