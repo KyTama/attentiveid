@@ -66,17 +66,16 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <motion.a
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                href={psychologist.bookingUrl}
-                rel="noopener noreferrer"
-                target="_blank"
+              <motion.button
+                type="button"
+                onClick={() => openIntake({ psychologistId: psychologist.id })}
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer shadow-xs"
                 transition={INTERACTIVE_SPRING}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
-              </motion.a>
+                {t('intakeDialog.title')}
+              </motion.button>
 
               <motion.a
                 className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-xs transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
@@ -89,14 +88,6 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
                 {t('routes.profile.getStory', { name: psychologist.nickname })}
                 <ArrowDown aria-hidden="true" size={14} className="opacity-70" />
               </motion.a>
-
-              <button
-                type="button"
-                onClick={() => openIntake({ psychologistId: psychologist.id })}
-                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-secondary/20 bg-white px-4 py-3 text-sm font-medium text-secondary/80 outline-none hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-2xs"
-              >
-                {t('intakeDialog.title')}
-              </button>
             </div>
             <p className="mt-4 text-sm leading-6 text-secondary/75">{t('routes.profile.bookingHandoff')}</p>
           </div>

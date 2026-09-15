@@ -34,11 +34,13 @@ describe('public routes', () => {
     const heading = await screen.findByRole('heading', { name: 'Syazka Kirani Narindra' })
     expect(heading).toBeInTheDocument()
     await waitFor(() => expect(heading).toHaveFocus())
-    expect(screen.getByRole('link', { name: /ask about syazka on whatsapp/i })).toHaveAttribute(
+    expect(screen.getAllByRole('button', { name: /plan a consultation session/i }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByRole('link', { name: /get to know syazka/i })).toHaveAttribute('href', '#profile-story')
+    expect(screen.getByRole('link', { name: /continue on whatsapp/i })).toHaveAttribute(
       'href',
       expect.stringContaining('https://wa.me/'),
     )
-    expect(screen.getByRole('link', { name: /ask about syazka on whatsapp/i })).toHaveAttribute('target', '_blank')
+    expect(screen.getByRole('link', { name: /continue on whatsapp/i })).toHaveAttribute('target', '_blank')
     expect(screen.getByText(/20190974-2021-02-1552/i)).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /view gita's profile/i })).toHaveAttribute(
       'href',
