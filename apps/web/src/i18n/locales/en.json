@@ -558,6 +558,7 @@
       ]
     },
     "featured": {
+      "eyebrow": "Professional Clinical Team",
       "title": "Find someone you can actually talk to.",
       "description": "Every psychologist brings different experience and areas of focus. Review the complete team, their practice license, and the concerns they commonly support.",
       "viewAll": "Meet all psychologists",
@@ -766,6 +767,9 @@
     },
     "profile": {
       "noteTitle": "A space to begin with {{name}}.",
+      "personalLetterLabel": "Personal Note from {{name}}",
+      "getStory": "Get to know {{name}}",
+      "verifiedLicense": "Verified License",
       "back": "Back to psychologists",
       "bookWhatsApp": "Ask about {{name}} on WhatsApp",
       "bookingHandoff": "WhatsApp opens a conversation with Attentive's admin. Your session is arranged only after the schedule and format are confirmed with you.",

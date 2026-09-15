@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, BadgeCheck, Clock3 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, ArrowRight, BadgeCheck, Clock3 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
@@ -8,15 +8,15 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from '@/components/ui/carousel'
+import { Button } from '@/components/ui/button'
 import {
   listPsychologists,
   type PsychologistListState,
 } from '@/features/psychologists'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
+import { cn } from '@/lib/utils'
 
 export function FeaturedPsychologists() {
   const { i18n, t } = useTranslation()
@@ -40,111 +40,253 @@ export function FeaturedPsychologists() {
     }
   }, [i18n.resolvedLanguage])
 
-  const roster = state.status === 'success' ? state.psychologists : []
-  const selected = roster.find((psychologist) => psychologist.slug === selectedSlug) ?? roster[0]
+  const roster = useMemo(() => (state.status === 'success' ? state.psychologists : []), [state])
+  const selectedIndex = roster.findIndex((p) => p.slug === selectedSlug)
+  const activeIndex = selectedIndex >= 0 ? selectedIndex : 0
+  const selected = roster[activeIndex] ?? roster[0]
+
+  useEffect(() => {
+    if (!api || roster.length === 0) return
+
+    const onSelect = () => {
+      const snap = api.selectedScrollSnap()
+      const candidate = roster[snap]
+      if (candidate && candidate.slug !== selectedSlug) {
+        setSelectedSlug(candidate.slug)
+      }
+    }
+
+    api.on('select', onSelect)
+    api.on('reInit', onSelect)
+    return () => {
+      api.off('select', onSelect)
+    }
+  }, [api, roster, selectedSlug])
+
+  const handleSelect = (slug: string, index: number) => {
+    setSelectedSlug(slug)
+    api?.scrollTo(index)
+  }
 
   return (
-    <section className="deferred-section bg-white px-5 py-24 lg:px-8 lg:py-32" id="psychologists">
+    <section className="deferred-section bg-white px-5 py-20 lg:px-8 lg:py-28" id="psychologists">
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col items-center gap-6 text-center">
+        {/* Section Header */}
+        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{managed?.section.headline[managed.locale] ?? t('homepage.featured.title')}</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{managed?.section.description[managed.locale] ?? t('homepage.featured.description')}</p>
+            <div aria-hidden="true" className="mb-3 flex items-center gap-3">
+              <span className="h-px w-10 bg-primary/70" />
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#946a22]">
+                {t('homepage.featured.eyebrow')}
+              </span>
+            </div>
+            <h2 className="max-w-2xl text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">
+              {managed?.section.headline[managed.locale] ?? t('homepage.featured.title')}
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-secondary/85 sm:text-lg">
+              {managed?.section.description[managed.locale] ?? t('homepage.featured.description')}
+            </p>
           </div>
-          <Link className="inline-flex min-h-11 items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8" to="/psychologists">
-            {t('homepage.featured.viewAll')} <ArrowRight aria-hidden="true" size={18} />
-          </Link>
+
+          <div className="flex shrink-0 items-center gap-4">
+            <Link
+              className="inline-flex min-h-11 items-center gap-2 font-semibold text-secondary underline decoration-primary underline-offset-8 transition-colors hover:text-primary"
+              to="/psychologists"
+            >
+              {t('homepage.featured.viewAll')} <ArrowRight aria-hidden="true" size={18} />
+            </Link>
+
+            {/* Desktop Navigation Buttons */}
+            {roster.length > 1 && (
+              <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-secondary/15">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-10 rounded-full border-secondary/20 bg-white text-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer"
+                  onClick={() => api?.scrollPrev()}
+                  aria-label={t('homepage.featured.previous')}
+                >
+                  <ArrowLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-10 rounded-full border-secondary/20 bg-white text-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer"
+                  onClick={() => api?.scrollNext()}
+                  aria-label={t('homepage.featured.next')}
+                >
+                  <ArrowRight className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Highlight Carousel */}
         <div className="mt-12">
           {state.status === 'loading' && (
-            <div aria-label={t('routes.common.loading')} className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-              <div className="aspect-[4/5] max-w-sm animate-pulse rounded-t-[5rem] bg-[#eee8df]" />
-              <div className="min-h-[30rem] animate-pulse rounded-xl bg-[#eee8df]" />
+            <div aria-label={t('routes.common.loading')} className="grid gap-8 rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.8fr_1.2fr] lg:p-12">
+              <div className="aspect-[4/5] max-w-sm animate-pulse rounded-t-[4rem] rounded-b-2xl bg-[#eee8df]" />
+              <div className="min-h-[28rem] animate-pulse rounded-xl bg-[#eee8df]" />
             </div>
           )}
           {state.status === 'error' && <p className="rounded-2xl bg-[#eee8df] p-8">{t('routes.common.error')}</p>}
           {state.status === 'empty' && <p className="rounded-2xl bg-[#eee8df] p-8">{t('routes.psychologists.empty')}</p>}
-          {selected && (
-            <div>
-              <div aria-live="polite" className="grid items-stretch gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-                <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-t-[5rem] bg-[#eee8df] lg:mx-0">
-                  <img alt={selected.name} className="absolute inset-0 h-full w-full object-cover object-top" decoding="async" height="750" loading="lazy" src={selected.imageUrl} width="600" />
-                </div>
-                <div className="flex flex-col justify-center border-y border-secondary/10 py-8 sm:p-10 lg:px-12">
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#946a22]">{t(`routes.psychologists.cards.supportArea.${selected.supportArea}`)}</p>
-                  <h3 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{selected.name}</h3>
-                  <p className="mt-3 text-base text-secondary/75">{selected.credential}</p>
-                  {selected.shortBio && (
-                    <p className="mt-4 text-sm leading-7 text-secondary/80 line-clamp-3">
-                      {selected.shortBio}
-                    </p>
-                  )}
-                  <div className="mt-7 grid gap-3 text-sm text-secondary/75 sm:grid-cols-2">
-                    <div className="flex items-start gap-2">
-                      <Clock3 aria-hidden="true" className="mt-0.5 shrink-0 text-[#946a22]" size={18} />
-                      {t('routes.psychologists.cards.experience', { count: selected.experienceYears })}
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <BadgeCheck aria-hidden="true" className="mt-0.5 shrink-0 text-[#946a22]" size={18} />
-                      <span><span className="font-semibold text-secondary">{t('routes.profile.licenseLabel')}:</span> {selected.licenseNumber ?? t('homepage.featured.licenseUnavailable')}</span>
-                    </div>
-                  </div>
-                  <div className="mt-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary/70">{t('homepage.featured.specializationsLabel')}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selected.specializations.slice(0, 6).map((specialization) => (
-                        <span className="rounded-md border border-primary/30 bg-[#fcf8f1] px-3 py-2 text-xs leading-5 text-secondary/80" key={specialization}>{specialization}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <motion.div className="mt-9" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
-                    <Link className="inline-flex min-h-12 items-center gap-2 rounded-md bg-secondary px-6 py-4 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" to={`/psychologists/${selected.slug}`}>
-                      {t('homepage.featured.viewProfile', { name: selected.nickname })}<ArrowRight aria-hidden="true" size={17} />
-                    </Link>
-                  </motion.div>
-                </div>
-              </div>
 
+          {roster.length > 0 && selected && (
+            <div>
               <Carousel
-                className="mt-8 px-10 sm:px-12"
+                className="w-full"
                 opts={{ align: 'start', loop: true }}
                 setApi={setApi}
               >
                 <CarouselContent>
-                  {roster.map((psychologist, index) => {
-                    const isSelected = psychologist.slug === selected.slug
-                    return (
-                      <CarouselItem className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6" key={psychologist.slug}>
-                        <motion.button
-                          title={t('homepage.featured.select', { name: psychologist.name })}
-                          aria-pressed={isSelected}
-                          className={isSelected
-                            ? 'w-full rounded-xl bg-secondary p-2 text-left text-white outline-none ring-2 ring-primary ring-offset-2'
-                            : 'w-full rounded-xl bg-[#f8f3eb] p-2 text-left text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'}
-                          onClick={() => {
-                            setSelectedSlug(psychologist.slug)
-                            api?.scrollTo(index)
-                          }}
-                          transition={INTERACTIVE_SPRING}
-                          type="button"
-                          whileHover={{ y: -3 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <img alt="" className="aspect-[4/5] w-full rounded-lg object-cover object-top" height="250" loading="lazy" src={psychologist.imageUrl} width="200" />
-                          <span className="mt-3 block truncate text-xs font-bold">{psychologist.nickname}</span>
-                          {' '}
-                          <span className={isSelected ? 'mt-1 block truncate text-[0.65rem] text-white/85' : 'mt-1 block truncate text-[0.65rem] text-secondary/80'}>
+                  {roster.map((psychologist) => (
+                    <CarouselItem className="basis-full" key={psychologist.slug}>
+                      <div className="grid items-stretch gap-8 rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
+                        {/* Photo Column */}
+                        <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-t-[3.5rem] rounded-b-2xl bg-[#eee8df] shadow-sm lg:mx-0">
+                          <img
+                            alt={psychologist.name}
+                            className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                            decoding="async"
+                            height="750"
+                            loading="lazy"
+                            src={psychologist.imageUrl}
+                            width="600"
+                          />
+                          <div className="absolute top-4 left-4 rounded-full bg-white/95 px-3.5 py-1 text-xs font-bold text-secondary backdrop-blur-xs shadow-xs">
                             {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
-                          </span>
-                        </motion.button>
-                      </CarouselItem>
-                    )
-                  })}
+                          </div>
+                        </div>
+
+                        {/* Details Column */}
+                        <div className="flex flex-col justify-center">
+                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#946a22]">
+                            {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
+                          </p>
+                          <h3 className="mt-3 text-3xl font-bold tracking-tight text-secondary sm:text-4xl">
+                            {psychologist.name}
+                          </h3>
+                          <p className="mt-2 text-base font-medium text-secondary/70">{psychologist.credential}</p>
+                          {psychologist.shortBio && (
+                            <p className="mt-4 text-sm sm:text-base leading-relaxed text-secondary/85 line-clamp-3">
+                              {psychologist.shortBio}
+                            </p>
+                          )}
+
+                          {/* Trust Badges */}
+                          <div className="mt-6 grid gap-3 text-sm text-secondary/80 sm:grid-cols-2">
+                            <div className="flex items-center gap-2">
+                              <Clock3 aria-hidden="true" className="shrink-0 text-[#946a22]" size={18} />
+                              <span className="font-medium">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <BadgeCheck aria-hidden="true" className="shrink-0 text-[#946a22]" size={18} />
+                              <span className="truncate">
+                                <span className="font-semibold text-secondary">{t('routes.profile.licenseLabel')}:</span>{' '}
+                                {psychologist.licenseNumber ?? t('homepage.featured.licenseUnavailable')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Specializations */}
+                          <div className="mt-6">
+                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-secondary/70">
+                              {t('homepage.featured.specializationsLabel')}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {psychologist.specializations.slice(0, 5).map((specialization) => (
+                                <span
+                                  className="rounded-full border border-primary/30 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-secondary/90 shadow-2xs"
+                                  key={specialization}
+                                >
+                                  {specialization}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Action CTA */}
+                          <div className="mt-8 flex flex-wrap items-center gap-4">
+                            <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
+                              <Link
+                                className="inline-flex min-h-12 items-center gap-2 rounded-md bg-secondary px-7 py-4 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                to={`/psychologists/${psychologist.slug}`}
+                              >
+                                {t('homepage.featured.viewProfile', { name: psychologist.nickname })}
+                                <ArrowRight aria-hidden="true" size={17} />
+                              </Link>
+                            </motion.div>
+                          </div>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
                 </CarouselContent>
-                <CarouselPrevious aria-label={t('homepage.featured.previous')} className="left-0 size-9 border-secondary/15 bg-white text-secondary" />
-                <CarouselNext aria-label={t('homepage.featured.next')} className="right-0 size-9 border-secondary/15 bg-white text-secondary" />
               </Carousel>
+
+              {/* Navigation Header / Counter */}
+              <div className="mt-8 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
+                  <span className="tabular-nums text-base text-secondary font-bold">
+                    {String(activeIndex + 1).padStart(2, '0')}
+                  </span>
+                  <span className="text-secondary/35">/</span>
+                  <span className="tabular-nums text-secondary/60">
+                    {String(roster.length).padStart(2, '0')}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 sm:hidden">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-9 rounded-full border-secondary/20 bg-white text-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer"
+                    onClick={() => api?.scrollPrev()}
+                    aria-label={t('homepage.featured.previous')}
+                  >
+                    <ArrowLeft className="size-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-9 rounded-full border-secondary/20 bg-white text-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer"
+                    onClick={() => api?.scrollNext()}
+                    aria-label={t('homepage.featured.next')}
+                  >
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Readjusted Psychologist Selector Pills */}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {roster.map((psychologist, index) => {
+                  const isSelected = psychologist.slug === selected.slug
+                  return (
+                    <button
+                      key={psychologist.slug}
+                      type="button"
+                      onClick={() => handleSelect(psychologist.slug, index)}
+                      aria-pressed={isSelected}
+                      title={t('homepage.featured.select', { name: psychologist.name })}
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                        isSelected
+                          ? "bg-secondary text-white shadow-xs"
+                          : "bg-[#f8f3eb] text-secondary/80 hover:bg-[#eee5d8] hover:text-secondary"
+                      )}
+                    >
+                      <span className="font-bold">{psychologist.nickname}</span>
+                      {' '}
+                      <span className={isSelected ? "text-white/80 text-[0.7rem]" : "text-secondary/60 text-[0.7rem]"}>
+                        {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>

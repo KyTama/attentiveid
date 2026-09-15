@@ -558,6 +558,7 @@
       ]
     },
     "featured": {
+      "eyebrow": "Tim Psikolog Profesional",
       "title": "Temukan seseorang yang benar-benar bisa diajak bicara.",
       "description": "Setiap psikolog membawa pengalaman dan area fokus yang berbeda. Kenali seluruh tim, nomor izin praktik, dan kebutuhan yang biasa mereka dampingi.",
       "viewAll": "Kenali semua psikolog",
@@ -764,6 +765,9 @@
     },
     "profile": {
       "noteTitle": "Ruang untuk memulai bersama {{name}}.",
+      "personalLetterLabel": "Catatan Personal dari {{name}}",
+      "getStory": "Kenali {{name}} lebih dekat",
+      "verifiedLicense": "STR Terverifikasi",
       "back": "Kembali ke daftar psikolog",
       "bookWhatsApp": "Tanya jadwal {{name}} via WhatsApp",
       "bookingHandoff": "WhatsApp akan membuka percakapan dengan admin Attentive. Sesi baru diatur setelah jadwal dan format konsultasi dikonfirmasi bersamamu.",
