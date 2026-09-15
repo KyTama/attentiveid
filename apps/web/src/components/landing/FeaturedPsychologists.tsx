@@ -137,25 +137,33 @@ export function FeaturedPsychologists() {
             <div>
               <Carousel
                 className="w-full"
-                opts={{ align: 'start', loop: true }}
+                opts={{ align: 'center', loop: true }}
                 setApi={setApi}
               >
-                <CarouselContent className="-ml-3 sm:-ml-4">
-                  {roster.map((psychologist) => (
-                    <CarouselItem className="basis-full pl-3 sm:pl-4" key={psychologist.slug}>
-                      <div className="grid items-stretch gap-8 overflow-hidden rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
-                        {/* Photo Column */}
-                        <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] sm:max-w-sm overflow-hidden rounded-t-[2.5rem] rounded-b-2xl bg-[#eee8df] shadow-sm lg:mx-0">
-                          <img
-                            alt={psychologist.name}
-                            className="absolute inset-0 h-full w-full object-cover object-[center_12%] transition-transform duration-500 hover:scale-105"
-                            decoding="async"
-                            height="750"
-                            loading="lazy"
-                            src={psychologist.imageUrl}
-                            width="600"
-                          />
-                        </div>
+                <CarouselContent className="ml-0">
+                  {roster.map((psychologist) => {
+                    const focalPosition =
+                      psychologist.slug === 'haykal'
+                        ? 'object-[60%_10%]'
+                        : psychologist.slug === 'nuzul'
+                        ? 'object-[42%_10%]'
+                        : 'object-[center_12%]'
+
+                    return (
+                      <CarouselItem className="basis-full pl-0" key={psychologist.slug}>
+                        <div className="grid items-stretch gap-8 overflow-hidden rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
+                          {/* Photo Column */}
+                          <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] sm:max-w-sm overflow-hidden rounded-t-[2.5rem] rounded-b-2xl bg-[#eee8df] shadow-sm lg:mx-0">
+                            <img
+                              alt={psychologist.name}
+                              className={cn('absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105', focalPosition)}
+                              decoding="async"
+                              height="750"
+                              loading="lazy"
+                              src={psychologist.imageUrl}
+                              width="600"
+                            />
+                          </div>
 
                         {/* Details Column */}
                         <div className="flex flex-col justify-center">
@@ -219,7 +227,8 @@ export function FeaturedPsychologists() {
                         </div>
                       </div>
                     </CarouselItem>
-                  ))}
+                    )
+                  })}
                 </CarouselContent>
               </Carousel>
 

@@ -25,3 +25,4 @@ verbatim — distil it to a transferable principle first.
 | 7 | Reference before reinvention — adapt proven frontend patterns | [frontend-reference-before-reinvention.md](./frontend-reference-before-reinvention.md) |
 | 8 | Visual contrast verification over headless DOM tests | [visual-contrast-over-headless-tests.md](./visual-contrast-over-headless-tests.md) |
 | 9 | PostgreSQL Enum Filter Strictness in Aggregations | [postgres-enum-filter-strictness.md](./postgres-enum-filter-strictness.md) |
+| 10 | Knowledge graph continuous sync — read first, rebuild on done | [knowledge-graph-continuous-sync.md](./knowledge-graph-continuous-sync.md) |
