@@ -67,4 +67,6 @@
   3. **Ownership Normalization**: Check and normalize app directories using `find <app-dir> -user root` and `chown -R <deployer>:<deployer>`.
   4. **Production Hardening**: Replace unrestricted rules with explicit command whitelists or Unix group memberships (`usermod -aG docker <user>`). Never deploy unrestricted sudo to production environments. Reference runbook: `.docs/guides/ci-cd-sudo-and-prod-hardening.md`.
 
-
+## 13. Seed Fixture Evolution & Exact Assertion Coupling in Integration Tests
+- **Problem**: When updating or enriching canonical practitioner fixtures (e.g., adding Brainspotting credentials to Gisella Tani Pratiwi), existing integration test assertions that check search queries with exact arrays (e.g., `expect(psychologists.map(({ slug }) => slug)).toEqual(['gita'])`) fail in CI because the query legitimately returns all active matching practitioners (`['gita', 'gisella']`).
+- **Solution**: Always audit integration tests when enriching canonical seed fixtures. Update exact match assertions to reflect the complete set of matching fixtures in alphabetical order, or use subset assertions (`toContain`) when testing modality matching in isolation.

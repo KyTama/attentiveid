@@ -96,6 +96,6 @@ describeIntegration('shared content live PostgreSQL contract', () => {
 
     const psychologists = await repository.list({ locale: 'en', search: 'Brainspotting', limit: 50 })
 
-    expect(psychologists.map(({ slug }) => slug)).toEqual(['gita'])
+    expect(psychologists.map(({ slug }) => slug)).toEqual(['gita', 'gisella'])
   })
 })
