@@ -134,6 +134,14 @@ describe('Public Articles & Article CMS Pages', () => {
     await waitFor(() => {
       expect(screen.getByText('Manajemen Artikel Psikologi')).toBeDefined()
       expect(screen.getByText('+ Tulis Artikel Baru')).toBeDefined()
+      expect(screen.getByText('Edit Draft')).toBeDefined()
+    })
+
+    // Click Edit Draft
+    screen.getByText('Edit Draft').click()
+    await waitFor(() => {
+      expect(screen.getByText('Edit Draft Artikel')).toBeDefined()
+      expect(screen.getByText('Perbarui Draft')).toBeDefined()
     })
   })
 

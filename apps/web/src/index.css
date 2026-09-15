@@ -17,6 +17,8 @@
 
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================
    AttentiveId Design System
    Configured for Tailwind CSS v4 based on Figma

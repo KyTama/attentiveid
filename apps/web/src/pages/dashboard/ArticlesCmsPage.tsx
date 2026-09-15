@@ -32,6 +32,7 @@ export function ArticlesCmsPage() {
 
   // Modal State for creating/editing article
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingArticleId, setEditingArticleId] = useState<string | null>(null)
   const [slug, setSlug] = useState('')
   const [titleId, setTitleId] = useState('')
   const [titleEn, setTitleEn] = useState('')
@@ -41,6 +42,7 @@ export function ArticlesCmsPage() {
   const [bodyEn, setBodyEn] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const loadArticles = useCallback(async () => {
     setIsLoading(true)
@@ -54,30 +56,12 @@ export function ArticlesCmsPage() {
         if (data.status === 'success') {
           setArticles(data.articles || [])
         }
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setFeedback({ type: 'error', text: data.message || 'Gagal memuat artikel dari server.' })
       }
     } catch {
-      // Sample fallback for preview
-      setArticles([
-        {
-          id: 'art-001',
-          slug: 'memahami-kecemasan-dan-cara-mengatasinya',
-          status: 'published',
-          revisionStatus: 'approved',
-          title: {
-            id: 'Memahami Kecemasan dan Strategi Mengatasinya dalam Kehidupan Sehari-hari',
-            en: 'Understanding Anxiety and Everyday Coping Strategies',
-          },
-          summary: {
-            id: 'Kecemasan adalah respons alami tubuh terhadap stres.',
-            en: 'Anxiety is a natural body response to stress.',
-          },
-          body: {
-            id: 'Kecemasan dapat dialami oleh siapa saja...',
-            en: 'Anxiety can affect anyone...',
-          },
-          updatedAt: new Date().toISOString(),
-        },
-      ])
+      setFeedback({ type: 'error', text: 'Koneksi ke server gagal saat memuat daftar artikel.' })
     } finally {
       setIsLoading(false)
     }
@@ -106,6 +90,7 @@ export function ArticlesCmsPage() {
   }, [loadArticles, getAuthHeaders])
 
   const openCreateModal = () => {
+    setEditingArticleId(null)
     setSlug('')
     setTitleId('')
     setTitleEn('')
@@ -115,6 +100,22 @@ export function ArticlesCmsPage() {
     setBodyEn('')
     if (psychologists.length > 0) {
       setSelectedAuthorId(psychologists[0].id)
+    }
+    setModalError(null)
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (art: ArticleCmsItem) => {
+    setEditingArticleId(art.id)
+    setSlug(art.slug)
+    setTitleId(art.title.id)
+    setTitleEn(art.title.en)
+    setSummaryId(art.summary.id)
+    setSummaryEn(art.summary.en)
+    setBodyId(art.body.id)
+    setBodyEn(art.body.en)
+    if (art.author?.id) {
+      setSelectedAuthorId(art.author.id)
     }
     setModalError(null)
     setIsModalOpen(true)
@@ -134,13 +135,18 @@ export function ArticlesCmsPage() {
       title: { id: titleId.trim(), en: titleEn.trim() },
       summary: { id: summaryId.trim() || titleId.trim(), en: summaryEn.trim() || titleEn.trim() },
       body: { id: bodyId.trim() || titleId.trim(), en: bodyEn.trim() || titleEn.trim() },
-      ownerPsychologistId: isAdmin && selectedAuthorId ? selectedAuthorId : undefined,
+      ownerPsychologistId: !editingArticleId && isAdmin && selectedAuthorId ? selectedAuthorId : undefined,
     }
 
     try {
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-      const res = await fetch(`${baseUrl}/api/admin/articles`, {
-        method: 'POST',
+      const url = editingArticleId
+        ? `${baseUrl}/api/admin/articles/${editingArticleId}`
+        : `${baseUrl}/api/admin/articles`
+      const method = editingArticleId ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
         headers: {
           ...getAuthHeaders(),
           'Content-Type': 'application/json',
@@ -150,13 +156,17 @@ export function ArticlesCmsPage() {
 
       if (res.ok) {
         setIsModalOpen(false)
+        setFeedback({
+          type: 'success',
+          text: editingArticleId ? 'Draft artikel berhasil diperbarui!' : 'Draft artikel baru berhasil disimpan!',
+        })
         await loadArticles()
       } else {
-        const data = await res.json()
+        const data = await res.json().catch(() => ({}))
         setModalError(data.message || 'Gagal menyimpan draft artikel.')
       }
     } catch {
-      setModalError('Network error.')
+      setModalError('Terjadi kesalahan jaringan saat menyimpan.')
     } finally {
       setIsSubmitting(false)
     }
@@ -170,10 +180,19 @@ export function ArticlesCmsPage() {
         headers: getAuthHeaders(),
       })
       if (res.ok) {
+        const actionLabels: Record<string, string> = {
+          submit: 'Artikel berhasil diajukan untuk review editorial!',
+          approve: 'Artikel berhasil disetujui & dipublikasikan secara live!',
+          reject: 'Artikel berhasil ditolak & dikembalikan ke status revisi.',
+        }
+        setFeedback({ type: 'success', text: actionLabels[action] || 'Aksi artikel berhasil diproses.' })
         await loadArticles()
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setFeedback({ type: 'error', text: data.message || `Gagal memproses aksi ${action}.` })
       }
     } catch {
-      // Ignore network errors in test/demo
+      setFeedback({ type: 'error', text: 'Koneksi jaringan gagal saat mengeksekusi aksi artikel.' })
     }
   }
 
@@ -189,8 +208,8 @@ export function ArticlesCmsPage() {
       {/* Top Title & Primary Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Manajemen Artikel Psikologi</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">Tulis artikel edukasi, ajukan review, dan kelola alur publikasi.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Manajemen Artikel Psikologi</h1>
+          <p className="text-sm text-slate-600">Tulis artikel edukasi, ajukan review, dan kelola alur publikasi.</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -202,16 +221,40 @@ export function ArticlesCmsPage() {
         </motion.button>
       </div>
 
+      {/* Feedback Toast Banner */}
+      {feedback && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-4 rounded-xl text-sm border flex items-center justify-between shadow-xs ${
+            feedback.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span>{feedback.type === 'success' ? '✓' : '⚠️'}</span>
+            <span>{feedback.text}</span>
+          </div>
+          <button
+            onClick={() => setFeedback(null)}
+            className="text-xs font-semibold px-2 py-0.5 rounded hover:bg-black/5 transition-colors"
+          >
+            ✕
+          </button>
+        </motion.div>
+      )}
+
       {/* Tabs Filter */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-1">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-1">
         {(['all', 'draft', 'inReview', 'published'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-colors ${
               activeTab === tab
-                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-teal-50 text-teal-700'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             {tab === 'all' ? 'Semua' : tab === 'draft' ? 'Draft' : tab === 'inReview' ? 'In Review' : 'Dipublikasikan'}
@@ -221,18 +264,18 @@ export function ArticlesCmsPage() {
 
       {/* Articles Table */}
       {isLoading ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500 animate-pulse">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center text-slate-500 animate-pulse shadow-xs">
           Memuat daftar artikel...
         </div>
       ) : filteredArticles.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 text-center text-slate-500">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center text-slate-500 shadow-xs">
           Belum ada artikel dalam kategori ini.
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-500 dark:text-slate-400 uppercase border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 text-xs text-slate-600 uppercase border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Judul Artikel</th>
                   <th className="px-6 py-3 font-semibold">Slug</th>
@@ -241,26 +284,26 @@ export function ArticlesCmsPage() {
                   <th className="px-6 py-3 font-semibold text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+              <tbody className="divide-y divide-slate-100">
                 {filteredArticles.map((art) => (
-                  <tr key={art.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100 max-w-xs truncate">
+                  <tr key={art.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-900 max-w-xs truncate">
                       <div>{art.title.id}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">{art.title.en}</div>
+                      <div className="text-xs text-slate-500 font-normal">{art.title.en}</div>
                     </td>
-                    <td className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-slate-400">
+                    <td className="px-6 py-4 text-xs font-mono text-slate-500">
                       {art.slug}
                     </td>
-                    <td className="px-6 py-4 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                    <td className="px-6 py-4 text-xs text-slate-700 font-medium">
                       {art.author?.name || 'Psikolog Attentive'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                         art.status === 'published'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                          ? 'bg-emerald-100 text-emerald-800'
                           : art.revisionStatus === 'inReview'
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                          : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-slate-100 text-slate-700'
                       }`}>
                         {art.status === 'published' ? 'Published' : art.revisionStatus || art.status}
                       </span>
@@ -271,16 +314,24 @@ export function ArticlesCmsPage() {
                           href={`/articles/${art.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 rounded-md transition-colors inline-flex items-center gap-1"
+                          className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors inline-flex items-center gap-1"
                         >
                           <span>Lihat</span>
                           <span>↗</span>
                         </a>
                       )}
+                      {art.revisionStatus !== 'inReview' && (
+                        <button
+                          onClick={() => openEditModal(art)}
+                          className="px-2.5 py-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors inline-flex items-center gap-1"
+                        >
+                          <span>Edit Draft</span>
+                        </button>
+                      )}
                       {art.status !== 'published' && art.revisionStatus !== 'inReview' && (
                         <button
                           onClick={() => handleAction(art.id, 'submit')}
-                          className="px-2.5 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 rounded-md transition-colors"
+                          className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
                         >
                           Ajukan Review
                         </button>
@@ -295,7 +346,7 @@ export function ArticlesCmsPage() {
                           </button>
                           <button
                             onClick={() => handleAction(art.id, 'reject')}
-                            className="px-2.5 py-1 text-xs font-medium text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-md transition-colors"
+                            className="px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md transition-colors"
                           >
                             Tolak
                           </button>
@@ -317,7 +368,7 @@ export function ArticlesCmsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
             onClick={() => setIsModalOpen(false)}
           >
             <motion.div
@@ -325,11 +376,13 @@ export function ArticlesCmsPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700 mb-4">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Draft Artikel Baru</h3>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+                <h3 className="text-lg font-bold text-slate-900">
+                  {editingArticleId ? 'Edit Draft Artikel' : 'Draft Artikel Baru'}
+                </h3>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
               </div>
 
@@ -340,15 +393,15 @@ export function ArticlesCmsPage() {
               )}
 
               <form onSubmit={handleSaveDraft} className="space-y-4">
-                {isAdmin && psychologists.length > 0 && (
+                {!editingArticleId && isAdmin && psychologists.length > 0 && (
                   <div>
-                    <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">
                       Penulis Psikolog
                     </label>
                     <select
                       value={selectedAuthorId}
                       onChange={(e) => setSelectedAuthorId(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                     >
                       {psychologists.map((p) => (
                         <option key={p.id} value={p.id}>
@@ -360,22 +413,30 @@ export function ArticlesCmsPage() {
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-700 dark:text-slate-300 mb-1">
-                    Slug URL
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold uppercase text-slate-700">
+                      Slug URL
+                    </label>
+                    {editingArticleId && (
+                      <span className="text-[11px] text-slate-400">
+                        (Slug terkunci pada mode edit)
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="memahami-kecemasan-dan-cara-mengatasinya"
                     required
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    disabled={Boolean(editingArticleId)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
                       Judul (Indonesian)
                     </label>
                     <input
@@ -384,11 +445,11 @@ export function ArticlesCmsPage() {
                       onChange={(e) => setTitleId(e.target.value)}
                       placeholder="Memahami Kecemasan..."
                       required
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
                       Judul (English)
                     </label>
                     <input
@@ -397,14 +458,14 @@ export function ArticlesCmsPage() {
                       onChange={(e) => setTitleEn(e.target.value)}
                       placeholder="Understanding Anxiety..."
                       required
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
                       Ringkasan / Summary (ID)
                     </label>
                     <textarea
@@ -412,11 +473,11 @@ export function ArticlesCmsPage() {
                       value={summaryId}
                       onChange={(e) => setSummaryId(e.target.value)}
                       placeholder="Ringkasan singkat..."
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
                       Summary (EN)
                     </label>
                     <textarea
@@ -424,13 +485,13 @@ export function ArticlesCmsPage() {
                       value={summaryEn}
                       onChange={(e) => setSummaryEn(e.target.value)}
                       placeholder="Short summary..."
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+                  <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
                     Isi Artikel / Content Body (ID)
                   </label>
                   <textarea
@@ -438,11 +499,24 @@ export function ArticlesCmsPage() {
                     value={bodyId}
                     onChange={(e) => setBodyId(e.target.value)}
                     placeholder="Tuliskan isi artikel psikologi..."
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
+                    Content Body (EN)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={bodyEn}
+                    onChange={(e) => setBodyEn(e.target.value)}
+                    placeholder="Write article content in English..."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -453,9 +527,9 @@ export function ArticlesCmsPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-sm"
+                    className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs disabled:opacity-50"
                   >
-                    {isSubmitting ? 'Menyimpan...' : 'Simpan Draft'}
+                    {isSubmitting ? 'Menyimpan...' : editingArticleId ? 'Perbarui Draft' : 'Simpan Draft'}
                   </button>
                 </div>
               </form>

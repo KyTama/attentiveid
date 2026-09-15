@@ -21,6 +21,8 @@ export interface Psychologist {
     sipp: string
     reservationLink: string
     premiumLink: string
+    shortBio?: string
+    biography?: string
 }
 
 const WA_BASE = 'https://wa.me/6285156410912?text='
@@ -186,6 +188,8 @@ export const psychologists: Psychologist[] = [
         sipp: '20181094-2020-01-0404',
         reservationLink: createWaLink('Dwi', 'regular'),
         premiumLink: createWaLink('Dwi', 'premium'),
+        shortBio: 'I believe counseling is not about finding someone to fix your life, but having a safe space to pause, reflect, and understand yourself better. As a psychologist, I have been accompanying young people throughout different stages of their lives, with experience supporting a wide range of concerns; from everyday struggles, relationships, and academic challenges to anxiety, depression, and more complex psychological difficulties. I see each person as unique, so I believe counseling should be flexible and tailored to your needs. My approach is warm, empathetic, practical, and grounded in psychological principles. I hope our sessions can help you feel heard, understand yourself, and discover your own resources to move forward.',
+        biography: 'Hello, I am Nichi.\n\nI believe that you do not always need someone to tell you what to do or how to fix your life. Sometimes, you simply need a safe space to pause, put your thoughts into words, and see yourself a little more clearly. As a psychologist, I see counseling as a collaborative process where I accompany you in understanding what you are going through, making sense of your thoughts and emotions, and finding resources that can help you move forward.\n\nI have been working with young people since the beginning of my professional journey, conducting hundreds of counseling sessions and supporting people through a wide range of concerns—from everyday struggles, relationship and academic concerns, anxiety and emotional difficulties, to more complex clinical challenges (depression, anxiety, bipolar, personality disorder, psychotic disorder). These experiences have taught me that no two people experience life in exactly the same way, and therefore, counseling should not be a one-size-fits-all process.\n\nMy approach is warm, empathetic, practical, and flexible, while remaining grounded in psychological principles. I hope our sessions can become a space where you feel safe enough to be vulnerable, understood without judgment, and supported as you discover your own answers. I may walk beside you, but ultimately, you are the one who knows your life best—and you are the one who makes the change.',
     },
     {
         id: 'dewinta',
@@ -295,6 +299,52 @@ export const psychologists: Psychologist[] = [
         sipp: '440/3378/Dinkes/2020',
         reservationLink: createWaLink('Jeanete', 'regular'),
         premiumLink: createWaLink('Jeanete', 'premium'),
+    },
+    {
+        id: 'gisella',
+        name: 'Gisella Tani Pratiwi',
+        nickname: 'Ella',
+        title: 'M.Psi., Psikolog',
+        category: 'childAdolescent',
+        image: '/media/psychologists/gisella.webp',
+        specializations: [
+            'Trauma masa kanak-kanak dan kompleks',
+            'Depresi dan isu suicidality pada remaja',
+            'Pola asuh dan parenting remaja',
+            'Masalah emosi, sosial, dan perilaku anak/remaja',
+            'Kekerasan berbasis gender dan seksual',
+            'Praktisi Brainspotting dan Mindfulness',
+            'Art therapy untuk anak dan remaja',
+            'Pendekatan CBT',
+        ],
+        experience: '15 Tahun',
+        sipp: 'STR Kemenkes HM00001710655511 (SIPPK Proses)',
+        reservationLink: createWaLink('Gisella', 'regular'),
+        premiumLink: createWaLink('Gisella', 'premium'),
+        shortBio: "Gisella Tani Pratiwi, M.Psi., Psikolog (Ella) is a clinical psychologist who has been practicing since 2010, supporting adolescents and young adults with concerns such as depression, emotional regulation, suicidal thoughts and behaviors, trauma, complex and childhood trauma, experiences of violence, burnout, and self-care. She also works with parents navigating concerns related to their teenage or young adult children. Ella takes a warm and trauma-informed approach, creating a safe and non-judgmental space where clients can process difficult experiences, build resilience, and reconnect with a more empowered sense of self. Drawing on her training in Brainspotting, mindfulness, and art therapy when appropriate, she tailors the therapeutic process to each client's unique needs and goals.",
+        biography: "I am a clinical psychologist who has been practicing since 2010, with a particular interest in supporting adolescents and young adults through difficult emotional and life experiences. I work with concerns including depression, emotional regulation difficulties, suicidal thoughts and behaviors, trauma, including complex and childhood trauma, experiences of violence involving women and children, burnout, and self-care. I also support parents navigating concerns related to their teenage or young adult children and their changing emotional needs.\n\nI believe that every person has the capacity for agency, recovery, and growth, even after painful or traumatic experiences. At the same time, some experiences can feel deeply overwhelming, and seeking professional support can be an important part of healing. I see therapy as a space to better understand ourselves, process difficult experiences, and reconnect with a more genuine and empowered sense of self. My approach is warm and trauma-informed, drawing from Brainspotting, mindfulness, and art therapy, alongside my training in DBT, Psychological First Aid, and suicide intervention and assessment, including CAMS and ASIST.\n\nMy professional experience spans clinical, educational, and psychosocial settings, including providing psychological and psychosocial support for the United Nations and International Organization for Migration (IOM) across the Asia-Pacific region, as well as working in trauma recovery and child protection. I hold a Bachelor's degree in Psychology from Atma Jaya Catholic University and a Master's and Professional degree in Clinical Psychology from Universitas Indonesia. I hope to create a safe and compassionate space where clients can feel understood, process what they have been through, and move forward with greater agency and self-understanding.",
+    },
+    {
+        id: 'dominika',
+        name: 'Dominika Arthalia Ayunda Putri',
+        nickname: 'Domi',
+        title: 'M.Psi., Psikolog',
+        category: 'educational',
+        image: '/media/psychologists/dominika.webp',
+        specializations: [
+            'Anak berkebutuhan khusus dan kesulitan belajar',
+            'Kesiapan sekolah',
+            'Pemeriksaan bakat minat dan konseling karir',
+            'Pola asuh orang tua',
+            'Masalah perilaku dan motivasi belajar',
+            'Pemeriksaan tumbuh kembang anak',
+        ],
+        experience: '4 Tahun',
+        sipp: 'SIPP 20210020-2022-01-2265',
+        reservationLink: createWaLink('Dominika', 'regular'),
+        premiumLink: createWaLink('Dominika', 'premium'),
+        shortBio: "I believe every child and young individual has their own unique way of learning, growing, and navigating the world. As an educational psychologist, I work with children, adolescents, and young adults—from overcoming learning difficulties, motivation, and school readiness to exploring their natural aptitudes and passions. I also work closely with parents, because a child’s development is deeply nurtured by the warmth and dynamics of their home. My approach is holistic, child-centered, and collaborative. I hope our sessions become a safe and supportive space where families feel guided, and every learner feels understood, confident, and empowered to reach their true potential.",
+        biography: "Dominika Arthalia A. P., M.Psi., Psikolog (Domi)\nEducational Psychologist\n\nDomi is an educational psychologist who works with children from preschool age through adolescence, as well as young adults. She has experience supporting children with special needs, learning difficulties, motivation challenges, and concerns related to school readiness and learning. She also provides psychological assessments such as aptitude and interest assessments, school readiness assessments, and other assessments to help children and families better understand their strengths, needs, and potential.\n\nDomi believes that a child’s learning and development are shaped not only by their learning methods or abilities, but also by their home environment, relationships, and family dynamics. A warm and supportive environment gives children the space to explore themselves, understand how they learn best, and develop their potential, while stressful or conflict-filled environments can make it harder for them to do so.\n\nWith experience across schools, child development centers, psychological services, and educational programs, Domi takes a holistic approach to understanding children's challenges. She also works with parents, particularly when parent-child dynamics may be affecting a child's learning, motivation, or academic performance. Her goal is not only to understand what a child is struggling with, but also to look at the broader context around them and identify ways to support their development.\n\nDomi completed her Bachelor's degree in Psychology at Universitas Indonesia in 2015 and her Master's & Professional degree in Educational Psychology in 2022. She aims to create a supportive space where children and parents can better understand their needs and work together toward the child's optimal development.",
     },
 ]
 

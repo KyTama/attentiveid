@@ -155,4 +155,47 @@ describe('article API routes (/api/content/articles & /api/admin/articles)', () 
     )
     expect(adminRes.status).toBe(200)
   })
+
+  it('PUT /api/admin/articles/:id updates draft for authenticated psychologist or admin', async () => {
+    const { accessToken } = tokenService.issueAccessToken(psychologistUser)
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/articles/article-001', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slug: 'artikel-update-psikologi',
+          title: { id: 'Judul Update', en: 'Updated Title' },
+          summary: { id: 'Ringkasan Update', en: 'Updated Summary' },
+          body: { id: 'Isi update...', en: 'Updated body...' },
+        }),
+      })
+    )
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.status).toBe('success')
+  })
+
+  it('PUT /api/admin/articles/:id returns 400 for invalid draft payload', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/articles/article-001', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slug: '',
+          title: { id: '', en: '' },
+          summary: { id: '', en: '' },
+          body: { id: '', en: '' },
+        }),
+      })
+    )
+    expect(res.status).toBe(422)
+  })
 })
+

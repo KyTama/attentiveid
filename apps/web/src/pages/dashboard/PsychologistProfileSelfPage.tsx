@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../features/auth/auth-context'
@@ -43,11 +43,7 @@ export function PsychologistProfileSelfPage() {
   const [bioId, setBioId] = useState('')
   const [bioEn, setBioEn] = useState('')
 
-  useEffect(() => {
-    fetchProfile()
-  }, [accessToken])
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setIsLoading(true)
     setNotFoundMessage(null)
     try {
@@ -75,12 +71,16 @@ export function PsychologistProfileSelfPage() {
         setBioId(d.biography?.id || '')
         setBioEn(d.biography?.en || '')
       }
-    } catch (err: any) {
+    } catch {
       setNotFoundMessage('Gagal memuat profil psikolog. Silakan coba beberapa saat lagi.')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [accessToken])
+
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -135,10 +135,11 @@ export function PsychologistProfileSelfPage() {
           message: json.message || 'Gagal menyimpan profil.',
         })
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Terjadi kesalahan jaringan saat menyimpan.'
       setFeedback({
         type: 'error',
-        message: err.message || 'Terjadi kesalahan jaringan saat menyimpan.',
+        message: errMsg,
       })
     } finally {
       setIsSaving(false)
@@ -159,17 +160,17 @@ export function PsychologistProfileSelfPage() {
   if (notFoundMessage) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-6 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 mx-auto flex items-center justify-center">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-lg font-bold text-slate-900">
               Profil Psikolog Belum Terhubung
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto">
+            <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
               {notFoundMessage}
             </p>
           </div>
@@ -177,13 +178,13 @@ export function PsychologistProfileSelfPage() {
             <div className="pt-2 flex flex-wrap gap-3 justify-center">
               <Link
                 to="/dashboard/users"
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm"
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
               >
                 Atur Relasi di Manajemen Staff
               </Link>
               <Link
                 to="/dashboard/psychologists"
-                className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors"
               >
                 Kelola Direktori Master
               </Link>
@@ -203,31 +204,31 @@ export function PsychologistProfileSelfPage() {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
+            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-teal-100 text-teal-800">
               {data.status.toUpperCase()}
             </span>
             {data.featured && (
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-300">
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">
                 Hero Featured
               </span>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold text-slate-900">
             {data.name}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Panggilan: <strong className="text-slate-700 dark:text-slate-300">{data.nickname}</strong> • Slug:{' '}
-            <code className="text-teal-600 dark:text-teal-400">/{data.slug}</code>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Panggilan: <strong className="text-slate-700">{data.nickname}</strong> • Slug:{' '}
+            <code className="text-teal-600">/{data.slug}</code>
           </p>
         </div>
 
         <Link
           to={`/psychologists/${data.slug}`}
           target="_blank"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 text-xs font-semibold rounded-xl transition-colors shrink-0"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl transition-colors shrink-0"
         >
           <span>Lihat Halaman Publik</span>
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -246,8 +247,8 @@ export function PsychologistProfileSelfPage() {
             transition={springConfig}
             className={`p-4 rounded-xl text-sm font-medium flex items-center justify-between ${
               feedback.type === 'success'
-                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800'
-                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800'
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border border-rose-200'
             }`}
           >
             <span>{feedback.message}</span>
@@ -264,14 +265,14 @@ export function PsychologistProfileSelfPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Editable Form */}
         <div className="lg:col-span-2 space-y-6">
-          <form onSubmit={handleSave} className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-700 pb-3">
+          <form onSubmit={handleSave} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
               Informasi Kredensial & Praktik
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Gelar / Kredensial Profesi *
                 </label>
                 <input
@@ -280,12 +281,12 @@ export function PsychologistProfileSelfPage() {
                   value={credential}
                   onChange={(e) => setCredential(e.target.value)}
                   placeholder="e.g. M.Psi., Psikolog Klinis"
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Pengalaman Praktik (Tahun) *
                 </label>
                 <input
@@ -295,13 +296,13 @@ export function PsychologistProfileSelfPage() {
                   required
                   value={experienceYears}
                   onChange={(e) => setExperienceYears(Number(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Nomor Registrasi / Izin Praktik (STR / SIP PKP) *
               </label>
               <input
@@ -310,20 +311,20 @@ export function PsychologistProfileSelfPage() {
                 value={licenseNumber}
                 onChange={(e) => setLicenseNumber(e.target.value)}
                 placeholder="e.g. 1234567890-SIP-PKP"
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               />
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+              <span className="text-[11px] text-slate-500 mt-1 block">
                 Nomor resmi untuk menjamin kepatuhan regulasi HIMPSI & Kemenkes.
               </span>
             </div>
 
-            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-700">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <div className="space-y-4 pt-2 border-t border-slate-100">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Tautan Jadwal & Reservasi Konsultasi
               </h3>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Tautan Booking Reguler *
                 </label>
                 <input
@@ -332,12 +333,12 @@ export function PsychologistProfileSelfPage() {
                   value={bookingUrl}
                   onChange={(e) => setBookingUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Tautan Booking VIP / Premium (Opsional)
                 </label>
                 <input
@@ -345,25 +346,25 @@ export function PsychologistProfileSelfPage() {
                   value={premiumBookingUrl}
                   onChange={(e) => setPremiumBookingUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                 />
               </div>
             </div>
 
             {/* Bilingual Biography */}
-            <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+            <div className="space-y-3 pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-semibold text-slate-700">
                   Biografi & Pendekatan Konseling
                 </label>
-                <div className="flex bg-slate-100 dark:bg-slate-700 p-0.5 rounded-lg text-xs">
+                <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs">
                   <button
                     type="button"
                     onClick={() => setBioTab('id')}
                     className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
                       bioTab === 'id'
-                        ? 'bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400'
+                        ? 'bg-white text-teal-700 shadow-xs font-bold'
+                        : 'text-slate-600'
                     }`}
                   >
                     Bahasa Indonesia
@@ -373,8 +374,8 @@ export function PsychologistProfileSelfPage() {
                     onClick={() => setBioTab('en')}
                     className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
                       bioTab === 'en'
-                        ? 'bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400'
+                        ? 'bg-white text-teal-700 shadow-xs font-bold'
+                        : 'text-slate-600'
                     }`}
                   >
                     English
@@ -389,7 +390,7 @@ export function PsychologistProfileSelfPage() {
                     value={bioId}
                     onChange={(e) => setBioId(e.target.value)}
                     placeholder="Tuliskan latar belakang pendidikan, spesialisasi kasus, dan pendekatan konseling Anda dalam Bahasa Indonesia..."
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y"
                   />
                   <span className="text-[11px] text-slate-400 block mt-0.5">
                     Ditampilkan kepada pengguna saat memilih Bahasa Indonesia.
@@ -402,7 +403,7 @@ export function PsychologistProfileSelfPage() {
                     value={bioEn}
                     onChange={(e) => setBioEn(e.target.value)}
                     placeholder="Write your educational background, specialization, and therapy approach in English..."
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y"
                   />
                   <span className="text-[11px] text-slate-400 block mt-0.5">
                     Displayed to users when English locale is selected.
@@ -417,7 +418,7 @@ export function PsychologistProfileSelfPage() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-xs disabled:opacity-50 flex items-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -434,29 +435,29 @@ export function PsychologistProfileSelfPage() {
 
         {/* Live Public Profile Card Preview */}
         <div className="space-y-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-600">
             Live Preview Kartu Publik
           </h2>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 font-bold text-lg flex items-center justify-center shrink-0 border border-teal-200 dark:border-teal-800">
+              <div className="w-14 h-14 rounded-2xl bg-teal-100 text-teal-800 font-bold text-lg flex items-center justify-center shrink-0 border border-teal-200">
                 {data.nickname.slice(0, 2).toUpperCase() || 'PS'}
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate text-sm">
+                <h3 className="font-bold text-slate-900 truncate text-sm">
                   {data.name}
                 </h3>
-                <p className="text-xs text-teal-700 dark:text-teal-300 font-medium">
+                <p className="text-xs text-teal-700 font-medium">
                   {credential || 'Gelar / Kredensial'}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-500 mt-0.5">
                   SIP: {licenseNumber || 'Belum diisi'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <svg className="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -473,7 +474,7 @@ export function PsychologistProfileSelfPage() {
                   {data.specializations.map((spec) => (
                     <span
                       key={spec.id}
-                      className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 rounded-md text-[11px]"
+                      className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px]"
                     >
                       {spec.labelId || spec.labelEn}
                     </span>
@@ -487,7 +488,7 @@ export function PsychologistProfileSelfPage() {
               <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Pratinjau Bio ({bioTab === 'id' ? 'ID' : 'EN'})
               </span>
-              <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 italic leading-relaxed">
+              <p className="text-xs text-slate-600 line-clamp-3 italic leading-relaxed">
                 {(bioTab === 'id' ? bioId : bioEn) || 'Belum ada deskripsi biografi yang ditulis.'}
               </p>
             </div>
@@ -499,8 +500,8 @@ export function PsychologistProfileSelfPage() {
                 rel="noreferrer"
                 className={`w-full py-2 px-3 text-center text-xs font-semibold rounded-xl block transition-colors ${
                   bookingUrl
-                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-sm'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-xs'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 }`}
               >
                 Jadwalkan Sesi Konsultasi

@@ -28,8 +28,13 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#946a22]">{t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}</p>
             <h1 className="mt-5 text-balance text-3xl font-bold leading-tight tracking-[-0.03em] text-secondary outline-none sm:text-4xl" data-route-heading tabIndex={-1}>{psychologist.name}</h1>
             <p className="mt-3 text-base text-secondary">{psychologist.credential}</p>
-            <p className="mt-7 text-sm italic text-secondary/80">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</p>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <p className="mt-4 text-sm italic text-secondary/80">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</p>
+            {psychologist.shortBio && (
+              <p className="mt-5 text-sm leading-7 text-secondary/80">
+                {psychologist.shortBio}
+              </p>
+            )}
+            <div className="mt-8 flex flex-wrap gap-3">
               <motion.a className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
                 {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
               </motion.a>

@@ -20,19 +20,42 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
   const { openIntake } = useIntakeModal()
   const firstSteps = t('routes.profile.firstSteps', { returnObjects: true }) as FirstStepItem[]
 
+  const biographyParagraphs = psychologist.biography
+    ? psychologist.biography
+        .split(/\n\n+/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+    : []
+
   return (
     <>
       <section className="bg-white px-5 py-16 lg:px-8 lg:py-24">
-        <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 lg:gap-24">
-          <div>
-            <h2 className="text-balance text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{t('routes.profile.noteTitle', { name: psychologist.nickname })}</h2>
-            <p className="mt-6 text-base leading-8 text-secondary/80">{t('routes.profile.conversationDescription')}</p>
-            <p className="mt-5 text-base leading-8 text-secondary/80">{t('routes.profile.supportAreasDescription', { name: psychologist.nickname })}</p>
-          </div>
-          <figure className="self-center">
-            <Quote aria-hidden="true" className="text-primary" size={40} />
-            <blockquote className="mt-4 font-serif text-3xl font-semibold leading-relaxed text-secondary sm:text-4xl">{t('routes.profile.conversationQuote')}</blockquote>
+        <div className="mx-auto max-w-3xl">
+          <figure className="mb-14 text-center">
+            <Quote aria-hidden="true" className="mx-auto text-primary" size={36} />
+            <blockquote className="mt-4 font-serif text-2xl font-semibold italic leading-relaxed text-secondary sm:text-3xl sm:leading-relaxed">
+              “{t('routes.profile.conversationQuote')}”
+            </blockquote>
+            <div className="mx-auto mt-6 h-0.5 w-16 rounded-full bg-primary/30" />
           </figure>
+
+          <div>
+            <h2 className="text-balance text-2xl font-bold tracking-[-0.03em] text-secondary sm:text-3xl">{t('routes.profile.noteTitle', { name: psychologist.nickname })}</h2>
+            {biographyParagraphs.length > 0 ? (
+              <div className="mt-6 space-y-5">
+                {biographyParagraphs.map((paragraph, idx) => (
+                  <p key={idx} className="text-base leading-8 text-secondary/80">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 space-y-5">
+                <p className="text-base leading-8 text-secondary/80">{t('routes.profile.conversationDescription')}</p>
+                <p className="text-base leading-8 text-secondary/80">{t('routes.profile.supportAreasDescription', { name: psychologist.nickname })}</p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
       <section className="relative overflow-hidden bg-[#faf3e7] px-5 py-16 lg:px-8 lg:py-24">

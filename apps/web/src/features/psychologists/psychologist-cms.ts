@@ -16,9 +16,16 @@ const buildHeaders = (customHeaders?: Record<string, string>): Record<string, st
   ...customHeaders,
 })
 
+export interface AdminPsychologistItem extends FullPsychologistMutation {
+  id: string
+  publishedAt?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
 export const listAdminPsychologists = async (filter: PsychologistAdminFilter = {}): Promise<{
   status: string
-  psychologists: any[]
+  psychologists: AdminPsychologistItem[]
   total: number
 }> => {
   const params = new URLSearchParams()
@@ -45,7 +52,7 @@ export const listAdminPsychologists = async (filter: PsychologistAdminFilter = {
 export const getAdminPsychologistById = async (
   id: string,
   options?: { headers?: Record<string, string> }
-): Promise<any> => {
+): Promise<AdminPsychologistItem> => {
   const response = await fetch(`/api/admin/psychologists/${id}`, {
     method: 'GET',
     headers: buildHeaders(options?.headers),
@@ -64,7 +71,7 @@ export const saveAdminPsychologist = async (
   id: string | undefined,
   data: FullPsychologistMutation,
   options?: { headers?: Record<string, string> }
-): Promise<any> => {
+): Promise<AdminPsychologistItem> => {
   const url = id ? `/api/admin/psychologists/${id}` : '/api/admin/psychologists'
   const method = id ? 'PUT' : 'POST'
 
@@ -88,7 +95,7 @@ export const updatePsychologistStatus = async (
   id: string,
   status: 'draft' | 'active' | 'inactive' | 'archived',
   options?: { headers?: Record<string, string> }
-): Promise<any> => {
+): Promise<AdminPsychologistItem> => {
   const response = await fetch(`/api/admin/psychologists/${id}/status`, {
     method: 'PATCH',
     headers: buildHeaders(options?.headers),

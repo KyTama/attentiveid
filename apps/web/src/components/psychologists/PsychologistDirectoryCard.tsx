@@ -41,6 +41,12 @@ export function PsychologistDirectoryCard({ psychologist }: PsychologistDirector
           {t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}
         </p>
 
+        {psychologist.shortBio && (
+          <p className="mt-3 text-xs leading-relaxed text-secondary/70 line-clamp-2">
+            {psychologist.shortBio}
+          </p>
+        )}
+
         <div className="mt-4 flex flex-wrap gap-2" aria-label={t('routes.psychologists.cards.supportAreasLabel')}>
           {psychologist.specializations.slice(0, 4).map((specialization) => (
             <span className="rounded-full border border-secondary/10 bg-[#f7f3ec] px-2 py-1 text-xs leading-5 text-secondary/80" key={specialization}>

@@ -152,6 +152,81 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         },
       }
     )
+    .put(
+      '/api/admin/articles/:id',
+      async ({ params: { id }, body, currentUser, set }: any) => {
+        const input: ArticleDraftMutation = {
+          slug: body.slug,
+          title: body.title,
+          summary: body.summary,
+          body: body.body,
+        }
+        if (!validateArticleDraftMutation(input)) {
+          set.status = 400
+          return { status: 'badRequest', message: 'Invalid article draft payload.' }
+        }
+
+        if (!dependencies.contentTransitions) {
+          return { status: 'success' }
+        }
+
+        try {
+          let articleId = id
+          let revisionId: string | null = id
+          let authorId = currentUser.psychologistId || currentUser.id
+
+          if (dependencies.db) {
+            const [article] = await dependencies.db.select().from(schema.articles).where(eq(schema.articles.id, id)).limit(1)
+            if (article) {
+              articleId = article.id
+              authorId = article.ownerPsychologistId
+              revisionId = article.draftRevisionId
+            } else {
+              const [rev] = await dependencies.db.select().from(schema.articleRevisions).where(eq(schema.articleRevisions.id, id)).limit(1)
+              if (rev) {
+                revisionId = rev.id
+                articleId = rev.articleId
+                const [parentArt] = await dependencies.db.select().from(schema.articles).where(eq(schema.articles.id, rev.articleId)).limit(1)
+                if (parentArt) {
+                  authorId = parentArt.ownerPsychologistId
+                }
+              }
+            }
+          }
+
+          if (currentUser.role === 'psychologist' && currentUser.psychologistId && authorId && currentUser.psychologistId !== authorId) {
+            set.status = 403
+            return { status: 'error', message: 'You are not authorized to edit this article draft.' }
+          }
+
+          const authorCap = createPsychologistAuthorCapability(authorId)
+          if (revisionId) {
+            await dependencies.contentTransitions.editArticleDraft(authorCap, revisionId, input)
+          } else {
+            await dependencies.contentTransitions.createArticleDraft(authorCap, input, articleId)
+          }
+
+          return { status: 'success' }
+        } catch (err: any) {
+          set.status = 400
+          return { status: 'error', message: err.message || 'Failed to update article draft.' }
+        }
+      },
+      {
+        requireRole: ['admin', 'psychologist'],
+        body: t.Object({
+          slug: t.String({ minLength: 1, maxLength: 160 }),
+          title: t.Object({ id: t.String(), en: t.String() }),
+          summary: t.Object({ id: t.String(), en: t.String() }),
+          body: t.Object({ id: t.String(), en: t.String() }),
+        }),
+        detail: {
+          tags: ['Articles CMS'],
+          summary: 'Edit article draft',
+          description: 'Updates content of an existing article draft revision or starts a new revision.',
+        },
+      }
+    )
     .post(
       '/api/admin/articles/:id/submit',
       async ({ params: { id }, currentUser, set }: any) => {

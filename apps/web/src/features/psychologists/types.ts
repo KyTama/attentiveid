@@ -42,6 +42,7 @@ export interface PsychologistSummary {
   licenseNumber?: string
   featured: boolean
   featuredOrder: number | null
+  shortBio?: string
 }
 
 export interface PsychologistProfile extends PsychologistSummary {

@@ -606,6 +606,11 @@ export function ConsultationIntakeModal({
                               <p className="text-[11px] text-secondary/70 mt-0.5">
                                 SIPP: {psychologist.sipp} · {psychologist.experience}
                               </p>
+                              {psychologist.shortBio && (
+                                <p className="text-xs text-secondary/75 mt-1.5 line-clamp-2 leading-relaxed">
+                                  {psychologist.shortBio}
+                                </p>
+                              )}
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {matchReasons.map((reason, rIdx) => (
                                   <span
@@ -658,6 +663,51 @@ export function ConsultationIntakeModal({
                         </div>
                       </div>
                     </button>
+
+                    {/* Direct Psychologist Selector Dropdown */}
+                    <div className="pt-2 border-t border-secondary/10">
+                      <label htmlFor="direct-psychologist-select" className="block text-xs font-semibold text-secondary mb-1.5">
+                        {currentLang === 'en'
+                          ? 'Or choose directly from all psychologists (Dropdown Selector):'
+                          : 'Atau pilih psikolog lain secara langsung (Dropdown Selector):'}
+                      </label>
+                      <select
+                        id="direct-psychologist-select"
+                        value={effectivePsychologistId === 'admin_choice' ? '' : (effectivePsychologistId || '')}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setSelectedPsychologistId(e.target.value)
+                          }
+                        }}
+                        className="w-full bg-slate-50 border border-secondary/20 rounded-xl px-3 py-2 text-xs text-secondary font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer"
+                      >
+                        <option value="">
+                          {currentLang === 'en' ? '-- Choose from all psychologists --' : '-- Pilih dari daftar semua psikolog --'}
+                        </option>
+                        {psychologists.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.nickname}) — {p.title} · {p.experience}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Selected Psychologist Short Bio Preview Callout */}
+                      {selectedPsychologistId && selectedPsychologistId !== 'admin_choice' && (() => {
+                        const activeChosen = psychologists.find((p) => p.id === selectedPsychologistId)
+                        if (!activeChosen?.shortBio) return null
+                        return (
+                          <div className="mt-2.5 p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-secondary">
+                            <div className="flex items-center justify-between font-bold text-secondary mb-1">
+                              <span>Pendekatan {activeChosen.nickname}:</span>
+                              <span className="text-[10px] text-secondary/60 font-normal">Short Bio</span>
+                            </div>
+                            <p className="leading-relaxed text-secondary/85">
+                              {activeChosen.shortBio}
+                            </p>
+                          </div>
+                        )
+                      })()}
+                    </div>
                   </div>
                 </div>
 

@@ -24,12 +24,16 @@ export interface CanonicalPsychologistRow {
     nickname: string;
     featured: boolean;
     featuredOrder: number | null;
+    tier?: typeof schema.psychologistTierEnum.enumValues[number];
+    primaryBranch?: typeof schema.practiceBranchEnum.enumValues[number];
+    acceptingNewClients?: boolean;
     credential: string;
     experienceYears: number;
     licenseNumber: string;
     bookingUrl: string;
     premiumBookingUrl: string | null;
     biography: LocalizedText;
+    shortBio?: LocalizedText;
     availabilityMessage: LocalizedText;
     supportAreas: readonly {
         supportArea: SupportArea;
@@ -101,6 +105,7 @@ export interface PsychologistPublicProjection {
     featured: boolean;
     featuredOrder: number | null;
     biography: string;
+    shortBio?: string;
     availabilityMessage: string;
     media?: {
         url: string;
@@ -187,6 +192,7 @@ const toPublicProjection = (
             bookingUrl: row.bookingUrl,
             featured: row.featured,
             featuredOrder: row.featuredOrder,
+            ...(row.shortBio ? { shortBio: row.shortBio[locale] } : {}),
             ...(media ? { media } : {})
         }
     };
@@ -212,6 +218,7 @@ const toPublicProjection = (
         featured: lookup.psychologist.featured,
         featuredOrder: lookup.psychologist.featuredOrder,
         biography: row.biography[locale],
+        ...(row.shortBio ? { shortBio: row.shortBio[locale] } : {}),
         availabilityMessage: row.availabilityMessage[locale],
         ...(lookup.psychologist.media ? { media: lookup.psychologist.media } : {})
     };
@@ -291,6 +298,7 @@ const loadPsychologistRelations = async (
     const profileTranslations = await database.select({
         locale: schema.psychologistProfileTranslations.locale,
         biography: schema.psychologistProfileTranslations.biography,
+        shortBio: schema.psychologistProfileTranslations.shortBio,
         availabilityMessage: schema.psychologistProfileTranslations.availabilityMessage
     }).from(schema.psychologistProfileTranslations)
         .where(eq(schema.psychologistProfileTranslations.psychologistId, base.id));
@@ -299,6 +307,9 @@ const loadPsychologistRelations = async (
     if (!idProfile || !enProfile) {
         return null;
     }
+    const shortBio = idProfile.shortBio && enProfile.shortBio
+        ? { id: idProfile.shortBio, en: enProfile.shortBio }
+        : undefined;
 
     const supportAreas = await database.select({
         supportArea: schema.psychologistSupportAreas.supportArea,
@@ -355,6 +366,7 @@ const loadPsychologistRelations = async (
     return {
         ...base,
         biography: { id: idProfile.biography, en: enProfile.biography },
+        ...(shortBio ? { shortBio } : {}),
         availabilityMessage: {
             id: idProfile.availabilityMessage,
             en: enProfile.availabilityMessage
@@ -380,6 +392,9 @@ const selectPsychologistBase = {
     status: schema.psychologists.status,
     name: schema.psychologists.name,
     nickname: schema.psychologists.nickname,
+    tier: schema.psychologists.tier,
+    primaryBranch: schema.psychologists.primaryBranch,
+    acceptingNewClients: schema.psychologists.acceptingNewClients,
     featured: schema.psychologists.featured,
     featuredOrder: schema.psychologists.featuredOrder,
     credential: schema.psychologistProfiles.credential,
@@ -511,6 +526,9 @@ export const createDrizzlePsychologistQuerySource = (
                         status: input.status,
                         name: input.name,
                         nickname: input.nickname,
+                        tier: input.tier ?? 'mid',
+                        primaryBranch: input.primaryBranch ?? 'tbi',
+                        acceptingNewClients: input.acceptingNewClients ?? true,
                         featured: input.featured,
                         featuredOrder: input.featured ? (input.featuredOrder ?? null) : null,
                         updatedAt: sql`now()`
@@ -534,6 +552,9 @@ export const createDrizzlePsychologistQuerySource = (
                         status: input.status,
                         name: input.name,
                         nickname: input.nickname,
+                        tier: input.tier ?? 'mid',
+                        primaryBranch: input.primaryBranch ?? 'tbi',
+                        acceptingNewClients: input.acceptingNewClients ?? true,
                         featured: input.featured,
                         featuredOrder: input.featured ? (input.featuredOrder ?? null) : null
                     })
@@ -561,12 +582,14 @@ export const createDrizzlePsychologistQuerySource = (
                         psychologistId,
                         locale: 'id',
                         biography: input.biography.id,
+                        shortBio: input.shortBio?.id,
                         availabilityMessage: input.availabilityMessage.id
                     },
                     {
                         psychologistId,
                         locale: 'en',
                         biography: input.biography.en,
+                        shortBio: input.shortBio?.en,
                         availabilityMessage: input.availabilityMessage.en
                     }
                 ]);

@@ -19,8 +19,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 let activeAccessToken: string | null = null
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getActiveAccessToken = () => activeAccessToken
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getActiveAuthHeaders = (): Record<string, string> => {
   if (!activeAccessToken) return {}
   return { Authorization: `Bearer ${activeAccessToken}` }
@@ -151,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext)
   if (!context) {

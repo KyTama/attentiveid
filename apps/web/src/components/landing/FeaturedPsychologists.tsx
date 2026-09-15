@@ -75,6 +75,11 @@ export function FeaturedPsychologists() {
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#946a22]">{t(`routes.psychologists.cards.supportArea.${selected.supportArea}`)}</p>
                   <h3 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-secondary sm:text-4xl">{selected.name}</h3>
                   <p className="mt-3 text-base text-secondary/75">{selected.credential}</p>
+                  {selected.shortBio && (
+                    <p className="mt-4 text-sm leading-7 text-secondary/80 line-clamp-3">
+                      {selected.shortBio}
+                    </p>
+                  )}
                   <div className="mt-7 grid gap-3 text-sm text-secondary/75 sm:grid-cols-2">
                     <div className="flex items-start gap-2">
                       <Clock3 aria-hidden="true" className="mt-0.5 shrink-0 text-[#946a22]" size={18} />

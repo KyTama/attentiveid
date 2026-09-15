@@ -44,3 +44,27 @@
 ## 9. Unique Constraint Idempotency During Sequence Reordering in PostgreSQL
 - **Problem**: When changing sequential display ranks (`featured_order`) in a table with a unique constraint (e.g., promoting Dr. Haykal to `featured_order: 0`), row-by-row `ON CONFLICT DO UPDATE` queries fail with `duplicate key value violates unique constraint "psychologists_featured_order_unique"` because earlier rows still hold the target rank until the loop reaches them.
 - **Solution**: Within the transactional seed operation, execute `resetFeaturedOrders()` (temporarily clearing `featured = false, featuredOrder = null` in compliance with check constraint `psychologists_featured_order_consistent`) before applying the new sequence from fixtures. This guarantees ACID rollback safety while allowing arbitrary practitioner reordering without constraint collisions.
+
+## 10. Tailwind v4 Dark Mode Isolation & Pure Light Theme Guard
+- **Problem**: In Tailwind CSS v4, default setup listens to OS-level `@media (prefers-color-scheme: dark)`. When a user operates macOS in Dark Mode, dashboard elements containing `dark:` variants inadvertently trigger high-contrast dark styles, clashing with the brand's warm clinical aesthetic. Furthermore, mixing loosely-typed form handlers with `any` creates silent runtime bugs on state transitions.
+- **Solution**:
+  1. Scope dark variants explicitly in CSS: `@custom-variant dark (&:where(.dark, .dark *));`. This ensures dark classes only apply when an ancestor explicitly possesses the `.dark` class, eliminating OS-driven style leaks.
+  2. In internal portals (Dashboard/Admin/Psychologist CMS), systematically replace disparate `dark:` utility classes with warm light clinical tokens (`#FEFAF6` canvas, pure white card containers, slate typography, teal accents).
+  3. Strongly type all CMS API responses and mutation payloads (`AdminPsychologistItem`, `LandingCmsData`, `LandingSection`) to eliminate `@typescript-eslint/no-explicit-any` and ensure clean Vite production builds (`tsc -b`).
+
+## 11. Drizzle ORM Migration Journaling & Seed Upsert Synchronization
+- **Problem**: When adding new schema columns (such as `short_bio` in `psychologist_profile_translations`), manually creating a `.sql` file without registering it via `drizzle-kit generate` leaves `drizzle/meta/_journal.json` out of sync. As a result, `drizzle-orm/migrator` silently skips the unindexed SQL file during `migrate()`, causing Postgres runtime errors: `column "short_bio" does not exist`. Furthermore, seed scripts that check `count(*)` will skip updating existing rows if records already exist.
+- **Solution**:
+  1. Always run `drizzle-kit generate` to let Drizzle maintain `meta/_journal.json` and snapshot integrity (`0005_snapshot.json`).
+  2. Execute `migrate.ts` against the live target database (`attentiveid`).
+  3. Run seed scripts with `--force` or `--upsert` (e.g. `bun src/db/seed-psychologists.ts --force`) so existing relational rows receive the newly migrated column values.
+
+## 12. CI/CD Sudo Privilege Boundary & Production Hardening Protocol
+- **Problem**: Granting unrestricted `sudo ALL` to automated CI/CD deployment accounts creates severe security vulnerabilities (remote arbitrary code execution via compromised runner tokens / supply-chain scripts) and causes silent operational breakage (*file ownership pollution* where files generated as root cause runtime `EACCES: permission denied` for non-root application daemons).
+- **Solution**:
+  1. **Staging Velocity Phase**: If temporary sudo is granted to unblock initial CI/CD plumbing, isolate it strictly in `/etc/sudoers.d/99-temp-<user>` with `0440` permissions, validate via `visudo -cf`, and never touch `/etc/sudoers` directly.
+  2. **Audit Extraction**: Post-deployment, inspect `/var/log/auth.log` or `/var/log/secure` for `COMMAND=` entries to isolate the exact binaries invoked by the runner.
+  3. **Ownership Normalization**: Check and normalize app directories using `find <app-dir> -user root` and `chown -R <deployer>:<deployer>`.
+  4. **Production Hardening**: Replace unrestricted rules with explicit command whitelists or Unix group memberships (`usermod -aG docker <user>`). Never deploy unrestricted sudo to production environments. Reference runbook: `.docs/guides/ci-cd-sudo-and-prod-hardening.md`.
+
+

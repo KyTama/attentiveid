@@ -1,0 +1,1 @@
+ALTER TABLE "psychologist_profile_translations" ADD COLUMN "short_bio" text;

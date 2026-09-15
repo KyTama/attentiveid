@@ -138,6 +138,7 @@ export interface PsychologistCandidate {
   experience?: string | number
   image?: string
   sipp?: string
+  shortBio?: string
 }
 
 export interface PsychologistMatchResult {

@@ -225,6 +225,7 @@ export const psychologistProfileTranslations = pgTable('psychologist_profile_tra
     psychologistId: uuid('psychologist_id').notNull().references(() => psychologistProfiles.psychologistId, { onDelete: 'restrict' }),
     locale: contentLocaleEnum('locale').notNull(),
     biography: text('biography').notNull(),
+    shortBio: text('short_bio'),
     availabilityMessage: text('availability_message').notNull()
 }, (table) => [
     unique('psychologist_profile_translations_profile_locale_unique').on(table.psychologistId, table.locale)

@@ -3,7 +3,38 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../features/auth/auth-context'
 
-const defaultLandingData: any = {
+interface LocalizedText {
+  id: string
+  en: string
+}
+
+interface LandingItem {
+  id: string
+  position: number
+  title: LocalizedText
+  description: LocalizedText
+}
+
+interface LandingSection {
+  key: string
+  visible: boolean
+  headline?: LocalizedText
+  description?: LocalizedText
+  primaryCta?: LocalizedText
+  secondaryCta?: LocalizedText
+  sessionLabel?: LocalizedText
+  price?: LocalizedText
+  priceUnit?: LocalizedText
+  contact?: LocalizedText
+  items?: LandingItem[]
+  [key: string]: unknown
+}
+
+interface LandingCmsData {
+  sections: LandingSection[]
+}
+
+const defaultLandingData: LandingCmsData = {
   sections: [
     {
       key: 'hero',
@@ -95,14 +126,14 @@ const defaultLandingData: any = {
       headline: { id: 'Siap Memulai Langkah Pertama Anda?', en: 'Ready to Take Your First Step?' },
       description: { id: 'Jangan ragu menghubungi tim kami untuk pertanyaan lebih lanjut.', en: 'Do not hesitate to reach out to our team for further inquiries.' },
       primaryCta: { id: 'Konsultasi Sekarang', en: 'Consult Now' },
-      contact: { id: 'WhatsApp: +62 812-3456-7890 | Email: halo@attentive.id', en: 'WhatsApp: +62 812-3456-7890 | Email: halo@attentive.id' },
+      contact: { id: 'WhatsApp: +62 851-5641-0912 | Email: halo@attentive.id', en: 'WhatsApp: +62 851-5641-0912 | Email: halo@attentive.id' },
     },
   ],
 }
 
 export function LandingCmsPage() {
   const { getAuthHeaders } = useAuth()
-  const [content, setContent] = useState<any>(defaultLandingData)
+  const [content, setContent] = useState<LandingCmsData>(defaultLandingData)
   const [activeSectionIndex, setActiveSectionIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
@@ -126,7 +157,7 @@ export function LandingCmsPage() {
       }
     }
     loadLandingDraft()
-  }, [])
+  }, [getAuthHeaders])
 
   const handleSaveDraft = async () => {
     setMessage(null)
@@ -193,8 +224,21 @@ export function LandingCmsPage() {
     setContent({ ...content, sections: newSections })
   }
 
+  const updateSectionCustomField = (field: string, lang: 'id' | 'en', value: string) => {
+    const newSections = [...content.sections]
+    const currentFieldVal = (activeSection[field] as LocalizedText | undefined) || { id: '', en: '' }
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      [field]: {
+        ...currentFieldVal,
+        [lang]: value,
+      },
+    }
+    setContent({ ...content, sections: newSections })
+  }
+
   const updateRepeaterItem = (itemIndex: number, field: 'title' | 'description', lang: 'id' | 'en', value: string) => {
-    const newItems = [...activeSection.items]
+    const newItems = [...(activeSection.items || [])]
     newItems[itemIndex] = {
       ...newItems[itemIndex],
       [field]: {
@@ -210,24 +254,24 @@ export function LandingCmsPage() {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Sticky Header & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm sticky top-16 z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-200 shadow-xs sticky top-16 z-10">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Landing Content Editor</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400">Edit teks bilingual 9 section landing page dan atur urutan repeater.</p>
+          <h1 className="text-xl font-bold text-slate-900">Landing Content Editor</h1>
+          <p className="text-xs text-slate-600">Edit teks bilingual 9 section landing page dan atur urutan repeater.</p>
         </div>
 
         <div className="flex items-center gap-2">
           <Link
             to="/preview/landing"
             target="_blank"
-            className="px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 transition-colors"
+            className="px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors"
           >
             Preview Draft ↗
           </Link>
           <button
             onClick={handleSaveDraft}
             disabled={isSaving}
-            className="px-3 py-2 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:text-teal-300 rounded-lg border border-teal-200 dark:border-teal-800 transition-colors"
+            className="px-3 py-2 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors"
           >
             {isSaving ? 'Menyimpan...' : 'Simpan Draft'}
           </button>
@@ -236,7 +280,7 @@ export function LandingCmsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={handlePublish}
             disabled={isPublishing}
-            className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-sm transition-colors"
+            className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs transition-colors"
           >
             {isPublishing ? 'Menerbitkan...' : 'Terbitkan ke Publik'}
           </motion.button>
@@ -254,32 +298,43 @@ export function LandingCmsPage() {
       {/* Main Grid: Section Nav + Section Editor */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Section List Navigation */}
-        <div className="space-y-1 bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+        <div className="space-y-1 bg-white p-3 rounded-2xl border border-slate-200 shrink-0">
           <h2 className="text-xs font-bold uppercase text-slate-400 px-3 py-1 tracking-wider">Sections</h2>
-          {content.sections.map((sec: any, idx: number) => (
+          {content.sections.map((sec: LandingSection, idx: number) => (
             <button
               key={sec.key}
               onClick={() => setActiveSectionIndex(idx)}
               className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium capitalize transition-colors flex items-center justify-between ${
                 activeSectionIndex === idx
-                  ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                  ? 'bg-teal-50 text-teal-700 font-bold'
+                  : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
               <span>{idx + 1}. {sec.key}</span>
               <span className={`w-2 h-2 rounded-full ${sec.visible ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             </button>
           ))}
+
+          {/* Clinic Locations Info Badge */}
+          <div className="mt-4 p-3 bg-teal-50/70 rounded-xl border border-teal-100 text-xs">
+            <div className="font-semibold text-teal-900 mb-1 flex items-center gap-1.5">
+              <span>📍</span>
+              <span>Lokasi Klinik (#locations)</span>
+            </div>
+            <p className="text-slate-600 text-[11px] leading-relaxed">
+              Section lokasi fisik (TBI Jakarta, BSD Tangerang, Malang) disinkronkan dari data cabang resmi dan tampil terintegrasi pada homepage.
+            </p>
+          </div>
         </div>
 
         {/* Active Section Form */}
-        <div className="md:col-span-3 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="md:col-span-3 bg-white p-6 rounded-2xl border border-slate-200 space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div>
               <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">Editing Section</span>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 capitalize">{activeSection?.key}</h2>
+              <h2 className="text-lg font-bold text-slate-900 capitalize">{activeSection?.key}</h2>
             </div>
-            <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeSection?.visible}
@@ -300,55 +355,154 @@ export function LandingCmsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Headline (Indonesian)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Headline (Indonesian)</label>
                 <input
                   type="text"
                   value={activeSection?.headline?.id || ''}
                   onChange={(e) => updateSectionCopy('headline', 'id', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Headline (English)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Headline (English)</label>
                 <input
                   type="text"
                   value={activeSection?.headline?.en || ''}
                   onChange={(e) => updateSectionCopy('headline', 'en', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Description (Indonesian)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description (Indonesian)</label>
                 <textarea
                   rows={3}
                   value={activeSection?.description?.id || ''}
                   onChange={(e) => updateSectionCopy('description', 'id', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Description (English)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description (English)</label>
                 <textarea
                   rows={3}
                   value={activeSection?.description?.en || ''}
                   onChange={(e) => updateSectionCopy('description', 'en', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
           </div>
 
+          {/* Section Specific Action & CTA Fields */}
+          {(activeSection?.primaryCta || activeSection?.secondaryCta || activeSection?.contact || activeSection?.price) && (
+            <div className="space-y-4 pt-4 border-t border-slate-200">
+              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Tombol & Informasi Khusus</h3>
+
+              {activeSection?.primaryCta && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Primary CTA Button (ID)</label>
+                    <input
+                      type="text"
+                      value={activeSection.primaryCta.id || ''}
+                      onChange={(e) => updateSectionCustomField('primaryCta', 'id', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Primary CTA Button (EN)</label>
+                    <input
+                      type="text"
+                      value={activeSection.primaryCta.en || ''}
+                      onChange={(e) => updateSectionCustomField('primaryCta', 'en', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeSection?.secondaryCta && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Secondary CTA Button (ID)</label>
+                    <input
+                      type="text"
+                      value={activeSection.secondaryCta.id || ''}
+                      onChange={(e) => updateSectionCustomField('secondaryCta', 'id', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Secondary CTA Button (EN)</label>
+                    <input
+                      type="text"
+                      value={activeSection.secondaryCta.en || ''}
+                      onChange={(e) => updateSectionCustomField('secondaryCta', 'en', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeSection?.price && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Label Biaya (ID)</label>
+                    <input
+                      type="text"
+                      value={activeSection.price.id || ''}
+                      onChange={(e) => updateSectionCustomField('price', 'id', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Label Biaya (EN)</label>
+                    <input
+                      type="text"
+                      value={activeSection.price.en || ''}
+                      onChange={(e) => updateSectionCustomField('price', 'en', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeSection?.contact && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Informasi Kontak & Hotline (ID)</label>
+                    <input
+                      type="text"
+                      value={activeSection.contact.id || ''}
+                      onChange={(e) => updateSectionCustomField('contact', 'id', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Contact & Hotline Info (EN)</label>
+                    <input
+                      type="text"
+                      value={activeSection.contact.en || ''}
+                      onChange={(e) => updateSectionCustomField('contact', 'en', e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Repeater Items Section if section contains items */}
           {Array.isArray(activeSection?.items) && (
-            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="space-y-4 pt-4 border-t border-slate-200">
               <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Item Repeater List ({activeSection.items.length} item)</h3>
 
               <div className="space-y-4">
-                {activeSection.items.map((item: any, itemIdx: number) => (
-                  <div key={item.id || itemIdx} className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+                {activeSection.items.map((item: LandingItem, itemIdx: number) => (
+                  <div key={item.id || itemIdx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-500">
                       <span>Item #{itemIdx + 1}</span>
                     </div>
@@ -359,14 +513,14 @@ export function LandingCmsPage() {
                         placeholder="Title (ID)"
                         value={item.title?.id || ''}
                         onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'id', e.target.value)}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                       />
                       <input
                         type="text"
                         placeholder="Title (EN)"
                         value={item.title?.en || ''}
                         onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'en', e.target.value)}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                       />
                     </div>
 
@@ -376,14 +530,14 @@ export function LandingCmsPage() {
                         placeholder="Description (ID)"
                         value={item.description?.id || ''}
                         onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'id', e.target.value)}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                       />
                       <textarea
                         rows={2}
                         placeholder="Description (EN)"
                         value={item.description?.en || ''}
                         onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'en', e.target.value)}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                       />
                     </div>
                   </div>

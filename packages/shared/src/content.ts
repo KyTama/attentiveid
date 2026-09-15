@@ -253,6 +253,7 @@ export const PsychologistPublicSummarySchema = Type.Object({
   bookingUrl: PsychologistMutationSchema.properties.bookingUrl,
   featured: Type.Boolean(),
   featuredOrder: PsychologistMutationSchema.properties.featuredOrder,
+  shortBio: Type.Optional(Type.String({ minLength: 1 })),
   media: Type.Optional(Type.Object({
     url: Type.String({ minLength: 1 }),
     width: Type.Integer({ minimum: 1 }),
@@ -449,6 +450,7 @@ export const FullPsychologistMutationSchema = Type.Object({
     label: LocalizedTextSchema,
   })),
   biography: LocalizedTextSchema,
+  shortBio: Type.Optional(LocalizedTextSchema),
   availabilityMessage: LocalizedTextSchema,
   media: Type.Optional(Type.Object({
     reference: Type.String({ minLength: 1, maxLength: 2_048 }),

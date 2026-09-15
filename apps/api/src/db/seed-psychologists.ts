@@ -39,6 +39,7 @@ export interface PsychologistSeedFixture {
     featuredOrder: number;
     profile: {
         biography: LocalizedText;
+        shortBio?: LocalizedText;
         availabilityMessage: LocalizedText;
     };
     media: {
@@ -75,6 +76,7 @@ interface ProfileTranslationInput {
     psychologistId: string;
     locale: ContentLocale;
     biography: string;
+    shortBio?: string | null;
     availabilityMessage: string;
 }
 
@@ -170,12 +172,58 @@ const profileCopy = (name: string, credential: string, supportArea: SupportArea)
     }
 });
 
-const fixture = (input: Omit<PsychologistSeedFixture, 'profile' | 'supportAreas' | 'status' | 'tier' | 'primaryBranch' | 'acceptingNewClients'> & {
+const gisellaBio = {
+    shortBio: {
+        en: 'Gisella Tani Pratiwi, M.Psi., Psikolog (Ella) is a clinical psychologist who has been practicing since 2010, supporting adolescents and young adults with concerns such as depression, emotional regulation, suicidal thoughts and behaviors, trauma, complex and childhood trauma, experiences of violence, burnout, and self-care. She also works with parents navigating concerns related to their teenage or young adult children. Ella takes a warm and trauma-informed approach, creating a safe and non-judgmental space where clients can process difficult experiences, build resilience, and reconnect with a more empowered sense of self. Drawing on her training in Brainspotting, mindfulness, and art therapy when appropriate, she tailors the therapeutic process to each client\'s unique needs and goals.',
+        id: 'Gisella Tani Pratiwi, M.Psi., Psikolog (Ella) adalah psikolog klinis yang telah berpraktik sejak tahun 2010, mendampingi remaja dan dewasa muda dengan fokus pada depresi, regulasi emosi, pikiran dan perilaku bunuh diri, trauma, trauma masa kanak-kanak dan kompleks, pengalaman kekerasan, burnout, serta self-care. Ia juga mendampingi orang tua dalam memahami dinamika emosional anak remaja atau dewasa muda mereka. Ella menerapkan pendekatan yang hangat dan trauma-informed, menciptakan ruang aman tanpa penghakiman agar klien dapat memproses pengalaman sulit, membangun resiliensi, dan terhubung kembali dengan keberdayaan diri. Berbekal pelatihan dalam Brainspotting, mindfulness, dan art therapy, ia menyesuaikan proses terapi dengan kebutuhan dan tujuan unik setiap individu.'
+    },
+    biography: {
+        en: `I am a clinical psychologist who has been practicing since 2010, with a particular interest in supporting adolescents and young adults through difficult emotional and life experiences. I work with concerns including depression, emotional regulation difficulties, suicidal thoughts and behaviors, trauma, including complex and childhood trauma, experiences of violence involving women and children, burnout, and self-care. I also support parents navigating concerns related to their teenage or young adult children and their changing emotional needs.\n\nI believe that every person has the capacity for agency, recovery, and growth, even after painful or traumatic experiences. At the same time, some experiences can feel deeply overwhelming, and seeking professional support can be an important part of healing. I see therapy as a space to better understand ourselves, process difficult experiences, and reconnect with a more genuine and empowered sense of self. My approach is warm and trauma-informed, drawing from Brainspotting, mindfulness, and art therapy, alongside my training in DBT, Psychological First Aid, and suicide intervention and assessment, including CAMS and ASIST.\n\nMy professional experience spans clinical, educational, and psychosocial settings, including providing psychological and psychosocial support for the United Nations and International Organization for Migration (IOM) across the Asia-Pacific region, as well as working in trauma recovery and child protection. I hold a Bachelor's degree in Psychology from Atma Jaya Catholic University and a Master's and Professional degree in Clinical Psychology from Universitas Indonesia. I hope to create a safe and compassionate space where clients can feel understood, process what they have been through, and move forward with greater agency and self-understanding.`,
+        id: `Saya adalah seorang psikolog klinis yang berpraktik sejak tahun 2010, dengan minat mendalam dalam mendampingi remaja dan dewasa muda melewati pengalaman emosional dan hidup yang menantang. Saya bekerja mendampingi berbagai isu seperti depresi, kesulitan regulasi emosi, pikiran dan perilaku bunuh diri, trauma termasuk trauma masa kanak-kanak dan kompleks, pengalaman kekerasan terhadap perempuan dan anak, burnout, hingga self-care. Saya juga mendampingi para orang tua dalam memahami kebutuhan emosional anak remaja dan dewasa muda mereka yang terus berkembang.\n\nSaya meyakini bahwa setiap orang memiliki kapasitas untuk berdaya, pulih, dan bertumbuh, bahkan setelah melewati pengalaman yang sangat menyakitkan atau traumatis. Di saat yang sama, sebagian pengalaman dapat terasa sangat membingungkan dan melumpuhkan, sehingga mencari dukungan profesional menjadi langkah penting dalam proses pemulihan. Saya memandang terapi sebagai ruang aman untuk memahami diri secara lebih utuh, memproses luka, dan terhubung kembali dengan diri yang autentik dan berdaya. Pendekatan saya hangat dan berbasis pemahaman trauma (trauma-informed), mengintegrasikan metode Brainspotting, mindfulness, dan art therapy, dilengkapi pelatihan dalam DBT, Psychological First Aid, serta asesmen dan intervensi bunuh diri (CAMS dan ASIST).\n\nPengalaman profesional saya mencakup ranah klinis, edukasi, dan psikososial, termasuk memberikan dukungan psikologis bagi Perserikatan Bangsa-Bangsa (PBB) dan International Organization for Migration (IOM) di kawasan Asia-Pasifik, serta pemulihan trauma dan perlindungan anak. Saya meraih gelar Sarjana Psikologi dari Universitas Katolik Indonesia Atma Jaya serta gelar Magister Profesi Psikologi Klinis dari Universitas Indonesia. Saya berharap dapat menghadirkan ruang yang aman dan berbelas kasih di mana Anda merasa didengar, dipahami, dan mampu melangkah maju dengan pemahaman diri yang lebih kokoh.`
+    },
+    availabilityMessage: {
+        id: 'Hubungi admin Attentive.id untuk informasi ketersediaan jadwal bersama Ella.',
+        en: 'Contact the Attentive.id admin for current schedule availability with Ella.'
+    }
+};
+
+const nichiBio = {
+    shortBio: {
+        en: 'I believe counseling is not about finding someone to fix your life, but having a safe space to pause, reflect, and understand yourself better. As a psychologist, I have been accompanying young people throughout different stages of their lives, with experience supporting a wide range of concerns; from everyday struggles, relationships, and academic challenges to anxiety, depression, and more complex psychological difficulties. I see each person as unique, so I believe counseling should be flexible and tailored to your needs. My approach is warm, empathetic, practical, and grounded in psychological principles. I hope our sessions can help you feel heard, understand yourself, and discover your own resources to move forward.',
+        id: 'Saya percaya bahwa konseling bukanlah tentang mencari seseorang untuk \'memperbaiki\' hidup Anda, melainkan memiliki ruang aman untuk berhenti sejenak, merefleksikan diri, dan memahami diri Anda dengan lebih jernih. Sebagai seorang psikolog, saya telah mendampingi orang-orang muda dalam berbagai fase kehidupan mereka, dengan pengalaman mendukung beragam dinamika: mulai dari tantangan keseharian, relasi antarpribadi, dan isu akademik, hingga kecemasan, depresi, serta kondisi klinis yang lebih kompleks. Saya memandang setiap individu unik, sehingga proses konseling selayaknya fleksibel dan selaras dengan kebutuhan Anda. Pendekatan saya hangat, empatik, praktis, dan berlandaskan prinsip-prinsip psikologi. Saya berharap sesi kita dapat membantu Anda merasa didengar, memahami diri, dan menemukan kembali kekuatan dalam diri Anda untuk terus melangkah.'
+    },
+    biography: {
+        en: `Hello, I am Nichi.\n\nI believe that you do not always need someone to tell you what to do or how to fix your life. Sometimes, you simply need a safe space to pause, put your thoughts into words, and see yourself a little more clearly. As a psychologist, I see counseling as a collaborative process where I accompany you in understanding what you are going through, making sense of your thoughts and emotions, and finding resources that can help you move forward.\n\nI have been working with young people since the beginning of my professional journey, conducting hundreds of counseling sessions and supporting people through a wide range of concerns—from everyday struggles, relationship and academic concerns, anxiety and emotional difficulties, to more complex clinical challenges (depression, anxiety, bipolar, personality disorder, psychotic disorder). These experiences have taught me that no two people experience life in exactly the same way, and therefore, counseling should not be a one-size-fits-all process.\n\nMy approach is warm, empathetic, practical, and flexible, while remaining grounded in psychological principles. I hope our sessions can become a space where you feel safe enough to be vulnerable, understood without judgment, and supported as you discover your own answers. I may walk beside you, but ultimately, you are the one who knows your life best—and you are the one who makes the change.`,
+        id: `Halo, saya Nichi.\n\nSaya percaya Anda tidak selalu membutuhkan seseorang yang mendikte apa yang harus Anda lakukan atau bagaimana memperbaiki hidup Anda. Terkadang, Anda hanya membutuhkan ruang yang aman untuk berhenti sejenak, mengurai isi pikiran ke dalam kata-kata, dan melihat diri Anda dengan lebih jernih. Sebagai psikolog, saya memandang konseling sebagai proses kolaboratif di mana saya mendampingi Anda memahami apa yang tengah dialami, memaknai pikiran dan emosi, serta menemukan sumber daya dalam diri yang dapat membantu Anda melangkah maju.\n\nSejak awal perjalanan profesional, saya telah banyak bekerja bersama orang-orang muda, memfasilitasi ratusan sesi konseling dan mendampingi individu dengan beragam pergulatan—mulai dari dinamika keseharian, relasi dan tantangan akademik, kecemasan dan kesulitan emosional, hingga tantangan klinis yang lebih kompleks (depresi, kecemasan, bipolar, gangguan kepribadian, hingga gangguan psikotik). Pengalaman ini mengajarkan saya bahwa tidak ada dua orang yang mengalami hidup dengan cara yang sama persis, karena itu proses konseling tidak pernah bersifat kaku atau seragam.\n\nPendekatan saya hangat, penuh empati, praktis, dan fleksibel, dengan tetap berakar kuat pada prinsip psikologi. Saya berharap sesi-sesi kita dapat menjadi ruang di mana Anda merasa cukup aman untuk terbuka, dipahami tanpa penghakiman, dan didukung saat menemukan jawaban Anda sendiri. Saya mendampingi di samping Anda, namun pada akhirnya, Andalah yang paling mengenal hidup Anda—dan Andalah yang menciptakan perubahan bermakna tersebut.`
+    },
+    availabilityMessage: {
+        id: 'Hubungi admin Attentive.id untuk informasi ketersediaan jadwal bersama Nichi.',
+        en: 'Contact the Attentive.id admin for current schedule availability with Nichi.'
+    }
+};
+
+const dominikaBio = {
+    shortBio: {
+        en: 'I believe every child and young individual has their own unique way of learning, growing, and navigating the world. As an educational psychologist, I work with children, adolescents, and young adults—from overcoming learning difficulties, motivation, and school readiness to exploring their natural aptitudes and passions. I also work closely with parents, because a child’s development is deeply nurtured by the warmth and dynamics of their home. My approach is holistic, child-centered, and collaborative. I hope our sessions become a safe and supportive space where families feel guided, and every learner feels understood, confident, and empowered to reach their true potential.',
+        id: 'Saya percaya setiap anak dan individu muda memiliki ritme serta caranya sendiri yang unik dalam belajar, bertumbuh, dan memahami dunia. Sebagai psikolog pendidikan, saya mendampingi anak-anak, remaja, hingga dewasa muda—mulai dari menghadapi tantangan belajar, motivasi, kesiapan sekolah, hingga mengeksplorasi minat dan bakat alami mereka. Saya juga bekerja sama erat dengan orang tua, karena tumbuh kembang anak berakar kuat dari kehangatan dan dinamika keluarga. Pendekatan saya bersifat holistik, berpusat pada anak (child-centered), dan kolaboratif. Saya berharap ruang konseling kita menjadi tempat yang aman bagi keluarga untuk memahami kebutuhan anak dan menumbuhkan potensinya secara optimal.'
+    },
+    biography: {
+        en: `Dominika Arthalia A. P., M.Psi., Psikolog (Domi)\nEducational Psychologist\n\nDomi is an educational psychologist who works with children from preschool age through adolescence, as well as young adults. She has experience supporting children with special needs, learning difficulties, motivation challenges, and concerns related to school readiness and learning. She also provides psychological assessments such as aptitude and interest assessments, school readiness assessments, and other assessments to help children and families better understand their strengths, needs, and potential.\n\nDomi believes that a child’s learning and development are shaped not only by their learning methods or abilities, but also by their home environment, relationships, and family dynamics. A warm and supportive environment gives children the space to explore themselves, understand how they learn best, and develop their potential, while stressful or conflict-filled environments can make it harder for them to do so.\n\nWith experience across schools, child development centers, psychological services, and educational programs, Domi takes a holistic approach to understanding children\'s challenges. She also works with parents, particularly when parent-child dynamics may be affecting a child\'s learning, motivation, or academic performance. Her goal is not only to understand what a child is struggling with, but also to look at the broader context around them and identify ways to support their development.\n\nDomi completed her Bachelor\'s degree in Psychology at Universitas Indonesia in 2015 and her Master\'s & Professional degree in Educational Psychology in 2022. She aims to create a supportive space where children and parents can better understand their needs and work together toward the child\'s optimal development.`,
+        id: `Dominika Arthalia A. P., M.Psi., Psikolog (Domi)\nPsikolog Pendidikan\n\nDomi adalah psikolog pendidikan yang mendampingi anak usia prasekolah hingga remaja, serta dewasa muda. Ia memiliki pengalaman mendampingi anak dengan kebutuhan khusus, kesulitan belajar, tantangan motivasi, serta kesiapan sekolah. Ia juga memfasilitasi asesmen psikologis seperti tes bakat-minat, kesiapan sekolah, dan asesmen tumbuh kembang untuk membantu anak dan keluarga mengenali kekuatan, kebutuhan, serta potensi terbaik mereka.\n\nDomi meyakini bahwa proses belajar dan perkembangan anak tidak hanya dibentuk oleh metode belajar atau kemampuan kognitif semata, melainkan juga oleh dinamika lingkungan rumah, kehangatan relasi, dan keluarga. Lingkungan yang hangat dan suportif memberikan ruang bagi anak untuk mengeksplorasi diri, menemukan cara belajar terbaik mereka, dan mengembangkan potensi seutuhnya, sementara lingkungan yang penuh tekanan dan konflik dapat menghambat perkembangan tersebut.\n\nBerpengalaman di sekolah, pusat tumbuh kembang anak, layanan psikologi, dan program edukasi, Domi mengedepankan pendekatan holistik dalam memahami tantangan anak. Ia juga bekerja erat bersama para orang tua, terutama ketika dinamika relasi orang tua dan anak turut memengaruhi motivasi atau performa belajar anak. Tujuannya bukan sekadar melihat kesulitan yang tampak, melainkan merangkul konteks utuh di sekitar anak untuk merumuskan pendampingan yang tepat.\n\nDomi menyelesaikan studi Sarjana Psikologi di Universitas Indonesia pada tahun 2015 dan meraih gelar Magister Profesi Psikologi Pendidikan pada tahun 2022. Ia berkomitmen menghadirkan ruang yang suportif bagi anak dan orang tua untuk saling memahami dan bersinergi demi perkembangan optimal sang anak.`
+    },
+    availabilityMessage: {
+        id: 'Hubungi admin Attentive.id untuk informasi ketersediaan jadwal bersama Domi.',
+        en: 'Contact the Attentive.id admin for current schedule availability with Domi.'
+    }
+};
+
+const fixture = (input: Omit<PsychologistSeedFixture, 'supportAreas' | 'status' | 'tier' | 'primaryBranch' | 'acceptingNewClients'> & {
     supportArea: SupportArea;
     status?: PsychologistStatus;
     tier?: PsychologistTier;
     primaryBranch?: PracticeBranch;
     acceptingNewClients?: boolean;
+    profile?: PsychologistSeedFixture['profile'];
 }): PsychologistSeedFixture => ({
     ...input,
     status: input.status ?? 'active',
@@ -183,7 +231,7 @@ const fixture = (input: Omit<PsychologistSeedFixture, 'profile' | 'supportAreas'
     primaryBranch: input.primaryBranch ?? 'tbi',
     acceptingNewClients: input.acceptingNewClients ?? true,
     supportAreas: [{ supportArea: input.supportArea, primary: true }],
-    profile: profileCopy(input.name, input.credential, input.supportArea)
+    profile: input.profile ?? profileCopy(input.name, input.credential, input.supportArea)
 });
 
 export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
@@ -435,6 +483,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             premiumBookingUrl: bookingUrl('Dwi', 'premium'),
             featured: true,
             featuredOrder: 7,
+            profile: nichiBio,
             media: {
                 reference: 'media/psychologists/nichi.webp',
                 width: 3023,
@@ -796,8 +845,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             name: 'Gisella Tani Pratiwi',
             nickname: 'Gisella',
             credential: 'M.Psi., Psikolog',
-            status: 'draft',
-            acceptingNewClients: false,
+            status: 'active',
+            acceptingNewClients: true,
             tier: 'principal',
             primaryBranch: 'tbi',
             supportArea: 'childAdolescent',
@@ -817,6 +866,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             premiumBookingUrl: bookingUrl('Gisella', 'premium'),
             featured: true,
             featuredOrder: 19,
+            profile: gisellaBio,
             media: {
                 reference: 'media/psychologists/gisella.webp',
                 width: 600,
@@ -909,6 +959,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             premiumBookingUrl: bookingUrl('Dominika', 'premium'),
             featured: true,
             featuredOrder: 22,
+            profile: dominikaBio,
             media: {
                 reference: 'media/psychologists/dominika.webp',
                 width: 600,
@@ -997,6 +1048,7 @@ const isValidFixture = (candidate: PsychologistSeedFixture) => {
         && primarySupportAreas.length === 1
         && candidate.specializations.every(({ label }) => isLocalizedTextComplete(label))
         && isLocalizedTextComplete(candidate.profile.biography)
+        && (!candidate.profile.shortBio || isLocalizedTextComplete(candidate.profile.shortBio))
         && isLocalizedTextComplete(candidate.profile.availabilityMessage)
         && isSafeBookingUrl(candidate.bookingUrl)
         && isSafeBookingUrl(candidate.premiumBookingUrl)
@@ -1072,6 +1124,7 @@ export async function seedPsychologists(
                         psychologistId,
                         locale,
                         biography: candidate.profile.biography[locale],
+                        shortBio: candidate.profile.shortBio?.[locale],
                         availabilityMessage: candidate.profile.availabilityMessage[locale]
                     });
                 }
@@ -1183,6 +1236,7 @@ export const createDrizzlePsychologistSeedDatabase = (
                     ],
                     set: {
                         biography: input.biography,
+                        shortBio: input.shortBio,
                         availabilityMessage: input.availabilityMessage
                     }
                 });

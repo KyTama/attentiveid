@@ -216,6 +216,7 @@ describe('content domain schema', () => {
       'booking_url',
     ]))
     expect(uniqueNamesFor(psychologistProfileTranslations)).toContain('psychologist_profile_translations_profile_locale_unique')
+    expect(columnNamesFor(psychologistProfileTranslations)).toContain('short_bio')
     expect(uniqueNamesFor(psychologistSupportAreas)).toContain('psychologist_support_areas_psychologist_area_unique')
     expect(uniqueNamesFor(psychologistSpecializations)).toContain('psychologist_specializations_psychologist_position_unique')
     expect(uniqueNamesFor(psychologistSpecializationTranslations)).toContain('psychologist_specialization_translations_specialization_locale_unique')
