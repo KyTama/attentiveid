@@ -25,7 +25,7 @@ export function FrequentlyAskedQuestions() {
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="min-w-0">
           <h2 className="max-w-lg text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.faq.title')}</h2>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-secondary/85 sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.faq.description')}</p>
+          <p className="mt-4 max-w-md text-base leading-relaxed font-[450] text-secondary sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.faq.description')}</p>
           <img alt="" className="mt-10 aspect-[538/410] w-full rounded-xl object-cover" height="410" loading="lazy" src="/images/figma/faq-room.webp" width="538" />
         </div>
         <div className="rounded-xl bg-[#fcf8f1] px-5 sm:px-7">
@@ -61,7 +61,7 @@ export function FrequentlyAskedQuestions() {
                       role="region"
                       transition={INTERACTIVE_SPRING}
                     >
-                      <p className="max-w-3xl pb-7 pr-12 text-sm leading-7 text-secondary/80 sm:text-base">{item.answer}</p>
+                      <p className="max-w-3xl pb-7 pr-12 text-sm sm:text-base leading-relaxed sm:leading-8 font-[450] text-secondary">{item.answer}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

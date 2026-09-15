@@ -122,7 +122,7 @@ export function PsychologistDirectory() {
             >
               {t('routes.psychologists.title')}
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-secondary/80 sm:text-lg">{t('routes.psychologists.description')}</p>
+            <p className="mx-auto mt-6 max-w-2xl text-base font-[450] leading-relaxed text-secondary sm:text-lg sm:leading-8">{t('routes.psychologists.description')}</p>
             <motion.a
               className="mt-8 inline-flex min-h-11 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
               href={whatsappUrl}
@@ -134,7 +134,7 @@ export function PsychologistDirectory() {
             >
               {t('routes.psychologists.introAction')}
             </motion.a>
-            <div className="mx-auto mt-10 flex max-w-2xl flex-col items-center justify-center gap-3 border-t border-secondary/10 pt-6 text-sm text-secondary/75 sm:flex-row sm:gap-8">
+            <div className="mx-auto mt-10 flex max-w-2xl flex-col items-center justify-center gap-3 border-t border-secondary/10 pt-6 text-sm font-medium text-secondary sm:flex-row sm:gap-8">
               <p className="flex items-center gap-2"><CheckCircle2 aria-hidden="true" className="text-primary" size={17} />{t('routes.psychologists.introFacts.formats')}</p>
               <p className="flex items-center gap-2"><CheckCircle2 aria-hidden="true" className="text-primary" size={17} />{t('routes.psychologists.introFacts.lifeStages')}</p>
             </div>
@@ -168,7 +168,7 @@ export function PsychologistDirectory() {
             {state.status === 'empty' && (
               <div className="mx-auto max-w-2xl rounded-xl border border-secondary/10 bg-white p-8 text-center sm:p-12">
                 <h2 className="text-3xl font-semibold tracking-[-0.03em] text-secondary">{t('routes.psychologists.states.emptyTitle')}</h2>
-                <p className="mt-4 text-base leading-7 text-secondary/80">{t('routes.psychologists.states.emptyDescription')}</p>
+                <p className="mt-4 text-base font-[450] leading-7 text-secondary">{t('routes.psychologists.states.emptyDescription')}</p>
                 <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                   <motion.button
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
@@ -200,7 +200,7 @@ export function PsychologistDirectory() {
             {state.status === 'error' && (
               <div className="mx-auto max-w-2xl rounded-xl border border-secondary/10 bg-white p-8 text-center sm:p-12">
                 <h2 className="text-3xl font-semibold tracking-[-0.03em] text-secondary">{t('routes.psychologists.states.errorTitle')}</h2>
-                <p className="mt-4 text-base leading-7 text-secondary/80">{t('routes.psychologists.states.errorDescription')}</p>
+                <p className="mt-4 text-base font-[450] leading-7 text-secondary">{t('routes.psychologists.states.errorDescription')}</p>
                 <motion.button
                   className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-secondary px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   onClick={() => setRequestVersion((current) => current + 1)}

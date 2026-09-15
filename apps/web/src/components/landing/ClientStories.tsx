@@ -26,10 +26,10 @@ export function ClientStories() {
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch lg:gap-16">
           <div>
             <h2 className="max-w-3xl text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{title}</h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{description}</p>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">{description}</p>
           </div>
           <div className="border-t border-primary/70 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
-            <p className="max-w-2xl text-base leading-relaxed text-secondary/85">{t('homepage.stories.reviewPrompt')}</p>
+            <p className="max-w-2xl text-base leading-relaxed font-[450] text-secondary">{t('homepage.stories.reviewPrompt')}</p>
             <div className="mt-7 flex flex-wrap items-center gap-5 lg:justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold text-secondary" aria-label={t('homepage.stories.googleRating')}>
                 <span className="flex gap-1 text-[#946a22]" aria-hidden="true">
@@ -56,16 +56,16 @@ export function ClientStories() {
           {testimonials[0] && (
             <figure className="flex min-h-[30rem] flex-col justify-between rounded-xl bg-secondary p-8 text-white sm:p-12">
               <Quote aria-hidden="true" className="text-primary" size={38} />
-              <blockquote className="mt-12 max-w-2xl text-xl leading-9 text-white/90 sm:text-2xl sm:leading-10">“{testimonials[0].content}”</blockquote>
-              <figcaption className="mt-10 border-t border-white/15 pt-6 text-sm font-semibold text-white/75">{testimonials[0].name}</figcaption>
+              <blockquote className="mt-12 max-w-2xl text-xl leading-9 font-[450] text-white sm:text-2xl sm:leading-10">“{testimonials[0].content}”</blockquote>
+              <figcaption className="mt-10 border-t border-white/15 pt-6 text-sm font-medium text-white/90">{testimonials[0].name}</figcaption>
             </figure>
           )}
           <div className="grid gap-5">
             {testimonials.slice(1, 3).map((testimonial) => (
               <figure className="flex flex-col justify-between rounded-xl bg-white/75 p-7 sm:p-9" key={testimonial.id}>
                 <Quote aria-hidden="true" className="text-[#946a22]" size={26} />
-                <blockquote className="mt-7 text-base leading-8 text-secondary/80">“{testimonial.content}”</blockquote>
-                <figcaption className="mt-7 border-t border-secondary/10 pt-5 text-sm font-semibold text-secondary/70">{testimonial.name}</figcaption>
+                <blockquote className="mt-7 text-base leading-8 font-[450] text-secondary">“{testimonial.content}”</blockquote>
+                <figcaption className="mt-7 border-t border-secondary/10 pt-5 text-sm font-semibold text-secondary">{testimonial.name}</figcaption>
               </figure>
             ))}
           </div>

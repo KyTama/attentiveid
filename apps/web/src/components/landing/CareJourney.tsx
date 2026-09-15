@@ -37,7 +37,7 @@ export function CareJourney() {
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-16">
           <h2 className="max-w-2xl text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{title}</h2>
           <div className="border-t border-primary/70 pt-6">
-            <p className="max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{description}</p>
+            <p className="max-w-2xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">{description}</p>
             <div aria-hidden="true" className="mt-8 grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-3">
               <span className="size-3 rounded-full bg-primary" />
               <span className="h-px bg-primary/45" />
@@ -56,7 +56,7 @@ export function CareJourney() {
               <li className="flex min-h-[34rem] flex-col rounded-xl border border-secondary/10 bg-white/55 p-6 sm:p-8" key={step.id}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-[#946a22]">0{stepIndex + 1}</span>
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary/80">{t('homepage.journey.step')}</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#845c1b]">{t('homepage.journey.step')}</span>
                 </div>
                 <div className="mt-7 grid h-48 place-items-center overflow-hidden rounded-2xl bg-[#eee5d8]">
                   <img
@@ -70,10 +70,10 @@ export function CareJourney() {
                   />
                 </div>
                 <h3 className="mt-8 text-xl sm:text-2xl font-bold tracking-tight text-secondary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-secondary/85">{step.description}</p>
+                <p className="mt-3 text-sm leading-relaxed font-[450] text-secondary">{step.description}</p>
                 <ul className="mt-6 grid gap-3">
                   {step.points.map((point) => (
-                    <li className="flex gap-3 text-sm font-medium text-secondary/80" key={point}>
+                    <li className="flex gap-3 text-sm font-medium text-secondary" key={point}>
                       <Check aria-hidden="true" className="mt-0.5 shrink-0 text-primary" size={16} />
                       {point}
                     </li>

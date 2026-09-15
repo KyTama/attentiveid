@@ -83,7 +83,7 @@ export function FeaturedPsychologists() {
             <h2 className="max-w-2xl text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">
               {managed?.section.headline[managed.locale] ?? t('homepage.featured.title')}
             </h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-secondary/85 sm:text-lg">
+            <p className="mt-4 max-w-xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">
               {managed?.section.description[managed.locale] ?? t('homepage.featured.description')}
             </p>
           </div>
@@ -168,23 +168,23 @@ export function FeaturedPsychologists() {
                           <h3 className="mt-3 text-3xl font-bold tracking-tight text-secondary sm:text-4xl">
                             {psychologist.name}
                           </h3>
-                          <p className="mt-2 text-base font-medium text-secondary/70">{psychologist.credential}</p>
+                          <p className="mt-2 text-base font-semibold text-secondary">{psychologist.credential}</p>
                           {psychologist.shortBio && (
-                            <p className="mt-4 text-sm sm:text-base leading-relaxed text-secondary/85 line-clamp-3">
+                            <p className="mt-4 text-sm sm:text-base leading-relaxed font-[450] text-secondary line-clamp-3">
                               {psychologist.shortBio}
                             </p>
                           )}
 
                           {/* Trust Badges */}
-                          <div className="mt-6 grid gap-3 text-sm text-secondary/80 sm:grid-cols-2">
+                          <div className="mt-6 grid gap-3 text-sm font-medium text-secondary sm:grid-cols-2">
                             <div className="flex items-center gap-2">
                               <Clock3 aria-hidden="true" className="shrink-0 text-[#946a22]" size={18} />
-                              <span className="font-medium">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</span>
+                              <span className="font-semibold">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <BadgeCheck aria-hidden="true" className="shrink-0 text-[#946a22]" size={18} />
                               <span className="truncate">
-                                <span className="font-semibold text-secondary">{t('routes.profile.licenseLabel')}:</span>{' '}
+                                <span className="font-bold text-secondary">{t('routes.profile.licenseLabel')}:</span>{' '}
                                 {psychologist.licenseNumber ?? t('homepage.featured.licenseUnavailable')}
                               </span>
                             </div>
@@ -192,13 +192,13 @@ export function FeaturedPsychologists() {
 
                           {/* Specializations */}
                           <div className="mt-6">
-                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-secondary/70">
+                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-secondary">
                               {t('homepage.featured.specializationsLabel')}
                             </p>
                             <div className="mt-3 flex flex-wrap gap-2">
                               {psychologist.specializations.slice(0, 5).map((specialization) => (
                                 <span
-                                  className="rounded-full border border-primary/30 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-secondary/90 shadow-2xs"
+                                  className="rounded-full border border-primary/30 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-secondary shadow-2xs"
                                   key={specialization}
                                 >
                                   {specialization}

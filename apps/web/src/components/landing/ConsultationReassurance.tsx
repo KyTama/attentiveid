@@ -29,16 +29,16 @@ export function ConsultationReassurance() {
             <span className="h-px w-12 bg-primary/70" />
           </div>
           <h2 className="text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.pricing.title')}</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.pricing.description')}</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base font-[450] leading-relaxed text-secondary sm:text-lg sm:leading-8">{managed?.section.description[managed.locale] ?? t('homepage.pricing.description')}</p>
         </div>
         <div className="mt-12 grid overflow-hidden rounded-xl bg-white lg:grid-cols-[1.05fr_0.8fr_0.65fr]">
           <div className="p-7 sm:p-10 lg:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary/80">{copy.sessionLabel}</p>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-secondary">{copy.sessionLabel}</p>
             <p className="mt-3 text-4xl font-bold tracking-tight text-secondary">{copy.price}</p>
-            <p className="mt-1 text-sm text-secondary/80">{copy.priceUnit}</p>
+            <p className="mt-1 text-sm font-medium text-secondary">{copy.priceUnit}</p>
             <ul className="mt-7 grid gap-3">
               {included.map((item) => (
-                <li className="flex gap-3 text-sm text-secondary/70" key={item}>
+                <li className="flex gap-3 text-sm font-medium text-secondary" key={item}>
                   <Check aria-hidden="true" className="mt-0.5 shrink-0 text-primary" size={16} />
                   {item}
                 </li>
@@ -61,12 +61,12 @@ export function ConsultationReassurance() {
             <div>
               <Video aria-hidden="true" className="text-primary" size={26} />
               <h3 className="mt-5 text-xl font-semibold">{t('homepage.pricing.onlineTitle')}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/80">{t('homepage.pricing.onlineDescription')}</p>
+              <p className="mt-3 text-sm font-[450] leading-6 text-white">{t('homepage.pricing.onlineDescription')}</p>
             </div>
             <div className="border-t border-white/15 pt-8">
               <Building2 aria-hidden="true" className="text-primary" size={26} />
               <h3 className="mt-5 text-xl font-semibold">{t('homepage.pricing.offlineTitle')}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/80">{t('homepage.pricing.offlineDescription')}</p>
+              <p className="mt-3 text-sm font-[450] leading-6 text-white">{t('homepage.pricing.offlineDescription')}</p>
             </div>
           </div>
           <figure className="relative min-h-[24rem] overflow-hidden bg-[#d9c1a4] lg:min-h-full">

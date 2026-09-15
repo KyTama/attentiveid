@@ -36,7 +36,7 @@ export function HomepageHero() {
           >
             {copy.title}
           </h1>
-          <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-secondary/85 sm:text-lg">
+          <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed sm:leading-8 font-[450] text-secondary sm:text-lg">
             {copy.description}
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -60,7 +60,7 @@ export function HomepageHero() {
               <ArrowDownRight aria-hidden="true" size={18} />
             </motion.a>
           </div>
-          <p className="mt-6 text-sm text-secondary/80">{t('homepage.hero.reassurance')}</p>
+          <p className="mt-6 text-sm font-medium text-secondary/90">{t('homepage.hero.reassurance')}</p>
         </div>
 
         <div className="relative min-w-0 min-h-[22rem] overflow-hidden rounded-tl-[6rem] bg-[#ded8cd] sm:min-h-[30rem] lg:my-8 lg:min-h-0 lg:rounded-tl-[10rem]">
@@ -79,7 +79,7 @@ export function HomepageHero() {
       <dl className="mx-auto grid max-w-7xl grid-cols-2 bg-white py-10 text-center sm:grid-cols-4">
         {metrics.map((metric, metricIndex) => (
           <div className="flex min-w-0 flex-col items-center border-r border-primary/30 px-4 py-6 last:border-r-0 sm:px-5 lg:px-8" key={metric.label}>
-            <dt className="order-2 mt-3 text-xs font-semibold text-secondary/75">{metric.label}</dt>
+            <dt className="order-2 mt-3 text-xs font-bold uppercase tracking-wider text-secondary">{metric.label}</dt>
             <dd className="flex flex-col items-center text-4xl font-bold tracking-[-0.03em] text-secondary sm:text-5xl">
               <img alt="" className="mb-4 size-9 object-contain" height="36" loading="lazy" src={`/images/figma/trust-${metricIndex + 1}.svg`} width="36" />
               {metric.value}

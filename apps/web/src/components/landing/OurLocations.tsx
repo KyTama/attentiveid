@@ -29,7 +29,7 @@ export function OurLocations() {
           <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">
             {t('homepage.locations.title', 'Ruang Konseling Nyaman & Privat untukmu')}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-secondary/85 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">
             {t('homepage.locations.description', 'Temukan ruang aman untuk sesi tatap muka langsung di Jakarta dan BSD, atau jadwalkan sesi daring dari mana saja. Cabang Malang segera hadir.')}
           </p>
         </div>
@@ -70,7 +70,7 @@ export function OurLocations() {
                       )}
                       {branchBadge}
                     </span>
-                    <span className="text-xs font-medium uppercase tracking-wider text-secondary/60">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#845c1b]">
                       {branchCity}
                     </span>
                   </div>
@@ -79,14 +79,14 @@ export function OurLocations() {
                   <h3 className="mt-5 text-2xl font-bold tracking-tight text-secondary">
                     {branchName}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-secondary/75">
+                  <p className="mt-3 text-sm leading-relaxed font-[450] text-secondary">
                     {branchDescription}
                   </p>
 
                   {/* Address Section */}
                   <div className="mt-6 flex items-start gap-3 rounded-xl border border-secondary/10 bg-white p-4">
                     <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
-                    <p className="text-xs leading-relaxed text-secondary/80">
+                    <p className="text-xs leading-relaxed font-medium text-secondary">
                       {branchAddress}
                     </p>
                   </div>
@@ -96,7 +96,7 @@ export function OurLocations() {
                     {Array.isArray(highlights) &&
                       highlights.map((feature, idx) => (
                         <span
-                          className="rounded-md border border-secondary/10 bg-white/70 px-2.5 py-1 text-[0.72rem] font-medium text-secondary/70"
+                          className="rounded-md border border-secondary/10 bg-white/80 px-2.5 py-1 text-[0.72rem] font-semibold text-secondary shadow-2xs"
                           key={idx}
                         >
                           {feature}

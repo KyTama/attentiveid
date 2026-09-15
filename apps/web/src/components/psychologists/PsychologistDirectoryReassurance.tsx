@@ -16,7 +16,7 @@ export function PsychologistDirectoryReassurance() {
           <h2 className="mt-4 text-[2rem] font-semibold tracking-[-0.03em] text-secondary sm:text-balance sm:text-4xl">
             {t('routes.psychologists.comparison.title')}
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-secondary/80">{t('routes.psychologists.comparison.description')}</p>
+          <p className="mx-auto mt-5 max-w-2xl text-base font-[450] leading-relaxed text-secondary sm:text-lg sm:leading-8">{t('routes.psychologists.comparison.description')}</p>
           <motion.a
             className="mt-8 inline-flex items-center gap-2 rounded-md bg-secondary px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             href={whatsappUrl}
@@ -38,7 +38,7 @@ export function PsychologistDirectoryReassurance() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t('routes.psychologists.help.eyebrow')}</p>
             <h2 className="mt-4 max-w-2xl text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-5xl">{t('routes.psychologists.help.title')}</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/80">{t('routes.psychologists.help.description')}</p>
+            <p className="mt-5 max-w-2xl text-base font-[450] leading-relaxed text-white sm:text-lg sm:leading-8">{t('routes.psychologists.help.description')}</p>
           </div>
           <motion.a
             className="inline-flex items-center justify-center gap-3 rounded-md bg-primary px-6 py-4 font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-white"

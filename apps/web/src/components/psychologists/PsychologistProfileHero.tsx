@@ -60,7 +60,7 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
             </div>
 
             {psychologist.shortBio && (
-              <p className="mt-5 text-sm sm:text-base leading-relaxed text-secondary/85">
+              <p className="mt-5 text-base sm:text-lg leading-relaxed sm:leading-8 font-[450] text-secondary">
                 {psychologist.shortBio}
               </p>
             )}
@@ -89,13 +89,13 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
                 <ArrowDown aria-hidden="true" size={14} className="opacity-70" />
               </motion.a>
             </div>
-            <p className="mt-4 text-sm leading-6 text-secondary/75">{t('routes.profile.bookingHandoff')}</p>
+            <p className="mt-4 text-sm leading-6 font-[450] text-secondary">{t('routes.profile.bookingHandoff')}</p>
           </div>
           <div className="md:col-span-2 xl:col-span-1">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#946a22]">{t('routes.profile.supportLabel')}</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[#845c1b]">{t('routes.profile.supportLabel')}</h2>
             <ul className="mt-4 flex flex-wrap gap-2 xl:flex-col">
               {psychologist.specializations.map((specialization) => (
-                <li className="rounded-full border border-primary/30 bg-[#fcf8f1] px-4 py-2 text-xs leading-5 text-secondary" key={specialization}>{specialization}</li>
+                <li className="rounded-full border border-primary/40 bg-[#fcf8f1] px-4 py-2 text-xs font-semibold leading-5 text-secondary shadow-2xs" key={specialization}>{specialization}</li>
               ))}
             </ul>
           </div>

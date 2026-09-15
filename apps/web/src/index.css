@@ -3,7 +3,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 300 700;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/montserrat-latin-variable.woff2') format('woff2');
 }
 
@@ -11,7 +11,7 @@
   font-family: 'Montserrat';
   font-style: italic;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/montserrat-latin-italic.woff2') format('woff2');
 }
 
@@ -164,6 +164,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+    font-weight: 450;
   }
 
   /* Typography from Hugo theme */

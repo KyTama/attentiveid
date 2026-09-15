@@ -182,7 +182,7 @@ export function ConsultationIntakeModal({
               <h2 id={titleId} className="text-xl font-bold tracking-tight text-secondary">
                 {t('intakeDialog.title')}
               </h2>
-              <p className="text-xs text-secondary/70">{t('intakeDialog.subtitle')}</p>
+              <p className="text-xs font-medium text-secondary/85">{t('intakeDialog.subtitle')}</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -300,7 +300,7 @@ export function ConsultationIntakeModal({
               >
                 <div>
                   <h3 className="text-lg font-bold text-secondary">{t('intakeDialog.step1Title')}</h3>
-                  <p className="text-sm text-secondary/70 mt-1">{t('intakeDialog.step1Lead')}</p>
+                  <p className="text-sm font-[450] text-secondary mt-1">{t('intakeDialog.step1Lead')}</p>
                 </div>
 
                 {/* Concern Cards Grid */}
@@ -320,7 +320,7 @@ export function ConsultationIntakeModal({
                       >
                         <div>
                           <p className="font-semibold text-sm text-secondary">{item.title[currentLang]}</p>
-                          <p className="text-xs text-secondary/70 mt-1 leading-relaxed">{item.description[currentLang]}</p>
+                          <p className="text-xs font-[450] text-secondary mt-1 leading-relaxed">{item.description[currentLang]}</p>
                         </div>
                       </button>
                     )
@@ -436,7 +436,7 @@ export function ConsultationIntakeModal({
               >
                 <div>
                   <h3 className="text-lg font-bold text-secondary">{t('intakeDialog.step2Title')}</h3>
-                  <p className="text-sm text-secondary/70 mt-1">{t('intakeDialog.step2Lead')}</p>
+                  <p className="text-sm font-[450] text-secondary mt-1">{t('intakeDialog.step2Lead')}</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -535,7 +535,7 @@ export function ConsultationIntakeModal({
               >
                 <div>
                   <h3 className="text-lg font-bold text-secondary">{t('intakeDialog.step3Title')}</h3>
-                  <p className="text-sm text-secondary/70 mt-1">{t('intakeDialog.step3Lead')}</p>
+                  <p className="text-sm font-[450] text-secondary mt-1">{t('intakeDialog.step3Lead')}</p>
                 </div>
 
                 {effectiveIsCrisis && (
@@ -603,11 +603,11 @@ export function ConsultationIntakeModal({
                                 <span className="font-bold text-sm text-secondary">{psychologist.name}</span>
                                 <span className="text-xs text-secondary/60">{psychologist.title}</span>
                               </div>
-                              <p className="text-[11px] text-secondary/70 mt-0.5">
+                              <p className="text-[11px] font-medium text-secondary mt-0.5">
                                 SIPP: {psychologist.sipp} · {psychologist.experience}
                               </p>
                               {psychologist.shortBio && (
-                                <p className="text-xs text-secondary/75 mt-1.5 line-clamp-2 leading-relaxed">
+                                <p className="text-xs font-[450] text-secondary mt-1.5 line-clamp-2 leading-relaxed">
                                   {psychologist.shortBio}
                                 </p>
                               )}
@@ -701,7 +701,7 @@ export function ConsultationIntakeModal({
                               <span>Pendekatan {activeChosen.nickname}:</span>
                               <span className="text-[10px] text-secondary/60 font-normal">Short Bio</span>
                             </div>
-                            <p className="leading-relaxed text-secondary/85">
+                            <p className="leading-relaxed font-[450] text-secondary">
                               {activeChosen.shortBio}
                             </p>
                           </div>

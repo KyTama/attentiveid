@@ -15,13 +15,13 @@ export function SiteFooter() {
           <Link className="inline-block outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/">
             <img alt="Attentive.id" className="h-auto w-36" height="144" loading="lazy" src="/images/figma/attentive-logo.webp" width="528" />
           </Link>
-          <p className="mt-3 max-w-xs text-xs leading-relaxed text-secondary/75">{t('homepage.footer.statement')}</p>
+          <p className="mt-3 max-w-xs text-xs font-[450] leading-relaxed text-secondary">{t('homepage.footer.statement')}</p>
         </div>
 
         {/* Explore Links */}
         <div>
           <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-secondary">{t('homepage.footer.explore')}</h2>
-          <div className="mt-3 grid gap-1.5 text-xs text-secondary/70">
+          <div className="mt-3 grid gap-1.5 text-xs font-medium text-secondary/85">
             <a className="inline-flex min-h-7 items-center hover:text-secondary" href="/#support">{t('homepage.nav.support')}</a>
             <Link className="inline-flex min-h-7 items-center hover:text-secondary" to="/psychologists">{t('homepage.nav.psychologists')}</Link>
             <a className="inline-flex min-h-7 items-center hover:text-secondary" href="/#locations">{t('homepage.nav.locations', 'Lokasi')}</a>
@@ -35,7 +35,7 @@ export function SiteFooter() {
           <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-secondary">
             {t('homepage.footer.locations', 'Lokasi Praktik')}
           </h2>
-          <div className="mt-3 grid gap-1.5 text-xs text-secondary/70">
+          <div className="mt-3 grid gap-1.5 text-xs font-medium text-secondary/85">
             {clinicBranches.map((branch) => {
               const isOpeningSoon = branch.status === 'opening_soon'
               const displayName = branch.name.replace(/^Attentive\s+/, '')
@@ -66,7 +66,7 @@ export function SiteFooter() {
           <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-secondary">
             {t('homepage.footer.contact', 'Kontak')}
           </h2>
-          <div className="mt-3 grid gap-1.5 text-xs text-secondary/70">
+          <div className="mt-3 grid gap-1.5 text-xs font-medium text-secondary/85">
             <a className="inline-flex min-h-7 items-center gap-2 hover:text-secondary" href={whatsappUrl} rel="noopener noreferrer" target="_blank">
               <MessageCircle aria-hidden="true" className="size-3.5 text-primary" />
               <span>{contact.whatsapp.displayNumber}</span>
@@ -79,7 +79,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-7xl border-t border-secondary/10 pt-4 text-[0.7rem] text-secondary/60">
+      <p className="mx-auto mt-8 max-w-7xl border-t border-secondary/10 pt-4 text-[0.7rem] font-medium text-secondary/75">
         © {new Date().getFullYear()} Attentive.id. {t('homepage.footer.rights')}
       </p>
     </footer>

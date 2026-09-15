@@ -35,21 +35,21 @@ export function PsychologistDirectoryCard({ psychologist }: PsychologistDirector
 
       <div className="flex flex-1 flex-col p-5">
         <h2 className="text-balance text-lg font-bold tracking-[-0.02em] text-secondary">{psychologist.name}</h2>
-        <p className="mt-2 text-sm text-secondary/80">{psychologist.credential}</p>
-        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-secondary/80">
+        <p className="mt-2 text-sm font-medium text-secondary">{psychologist.credential}</p>
+        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-secondary">
           <Clock3 aria-hidden="true" className="text-primary" size={17} />
           {t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}
         </p>
 
         {psychologist.shortBio && (
-          <p className="mt-3 text-xs leading-relaxed text-secondary/70 line-clamp-2">
+          <p className="mt-3 text-xs leading-relaxed font-[450] text-secondary line-clamp-2">
             {psychologist.shortBio}
           </p>
         )}
 
         <div className="mt-4 flex flex-wrap gap-2" aria-label={t('routes.psychologists.cards.supportAreasLabel')}>
           {psychologist.specializations.slice(0, 4).map((specialization) => (
-            <span className="rounded-full border border-secondary/10 bg-[#f7f3ec] px-2 py-1 text-xs leading-5 text-secondary/80" key={specialization}>
+            <span className="rounded-full border border-secondary/10 bg-[#f7f3ec] px-2 py-1 text-xs font-semibold leading-5 text-secondary" key={specialization}>
               {specialization}
             </span>
           ))}

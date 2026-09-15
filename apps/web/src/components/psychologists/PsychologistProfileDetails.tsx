@@ -40,22 +40,22 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
           </figure>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#946a22]">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#845c1b]">
               {t('routes.profile.personalLetterLabel', { name: psychologist.nickname })}
             </p>
             <h2 className="mt-2 text-balance text-2xl font-bold tracking-tight text-secondary sm:text-3xl">{t('routes.profile.noteTitle', { name: psychologist.nickname })}</h2>
             {biographyParagraphs.length > 0 ? (
-              <div className="mt-6 space-y-5">
+              <div className="mt-6 space-y-6">
                 {biographyParagraphs.map((paragraph, idx) => (
-                  <p key={idx} className="text-base sm:text-lg leading-relaxed text-secondary/90">
+                  <p key={idx} className="text-base sm:text-lg leading-relaxed sm:leading-8 font-[450] text-secondary">
                     {paragraph}
                   </p>
                 ))}
               </div>
             ) : (
-              <div className="mt-6 space-y-5">
-                <p className="text-base sm:text-lg leading-relaxed text-secondary/90">{t('routes.profile.conversationDescription')}</p>
-                <p className="text-base sm:text-lg leading-relaxed text-secondary/90">{t('routes.profile.supportAreasDescription', { name: psychologist.nickname })}</p>
+              <div className="mt-6 space-y-6">
+                <p className="text-base sm:text-lg leading-relaxed sm:leading-8 font-[450] text-secondary">{t('routes.profile.conversationDescription')}</p>
+                <p className="text-base sm:text-lg leading-relaxed sm:leading-8 font-[450] text-secondary">{t('routes.profile.supportAreasDescription', { name: psychologist.nickname })}</p>
               </div>
             )}
           </div>
@@ -71,7 +71,7 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
                 <span className="text-4xl font-light tabular-nums text-[#946a22]">0{stepIndex + 1}</span>
                 <div>
                   <h3 className="text-base font-bold text-secondary">{step.title}</h3>
-                  <p className="mt-2 max-w-xl text-sm sm:text-base leading-relaxed text-secondary/85">{step.description}</p>
+                  <p className="mt-2 max-w-xl text-sm sm:text-base leading-relaxed font-[450] text-secondary">{step.description}</p>
                 </div>
               </li>
             ))}
@@ -82,7 +82,7 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.2fr_0.8fr]">
           <div>
             <h2 className="max-w-xl text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t('routes.profile.bookingTitle')}</h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-white/90">{t('routes.profile.bookingDescription', { name: psychologist.nickname })}</p>
+            <p className="mt-4 max-w-xl text-base sm:text-lg leading-relaxed font-[450] text-white">{t('routes.profile.bookingDescription', { name: psychologist.nickname })}</p>
             <div className="mt-7 flex flex-wrap gap-4">
               <motion.a className="inline-flex min-h-12 items-center justify-center gap-3 rounded-md bg-primary px-7 py-4 font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
                 <MessageCircle aria-hidden="true" size={19} />{t('routes.profile.bookingAction')}
