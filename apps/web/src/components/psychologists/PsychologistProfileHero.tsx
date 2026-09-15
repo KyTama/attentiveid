@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowDown, ArrowLeft, BookOpen, Clock3, GraduationCap, ShieldCheck, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PsychologistProfile } from '@/features/psychologists'
@@ -14,6 +14,10 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
   const { t } = useTranslation()
   const { openIntake } = useIntakeModal()
 
+  const highlightSpecialty = psychologist.specializations.find((s) =>
+    /brainspotting|art therapy|cbt|trauma|child/i.test(s)
+  ) || psychologist.specializations[0]
+
   return (
     <section className="bg-white px-5 pb-12 pt-6 lg:px-8 lg:pb-16">
       <div className="mx-auto max-w-7xl">
@@ -26,28 +30,73 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
           </div>
           <div className="py-3">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#946a22]">{t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}</p>
-            <h1 className="mt-5 text-balance text-3xl font-bold leading-tight tracking-[-0.03em] text-secondary outline-none sm:text-4xl" data-route-heading tabIndex={-1}>{psychologist.name}</h1>
-            <p className="mt-3 text-base text-secondary">{psychologist.credential}</p>
-            <p className="mt-4 text-sm italic text-secondary/80">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</p>
+            <h1 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight text-secondary outline-none sm:text-4xl" data-route-heading tabIndex={-1}>{psychologist.name}</h1>
+            
+            {/* Trust Badges Cluster */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-[#fcf8f1] px-3 py-1 text-xs font-semibold text-secondary">
+                <GraduationCap aria-hidden="true" size={13} className="text-[#946a22]" />
+                {psychologist.credential}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-[#fcf8f1] px-3 py-1 text-xs font-semibold text-secondary">
+                <Clock3 aria-hidden="true" size={13} className="text-[#946a22]" />
+                {t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}
+              </span>
+              {psychologist.licenseNumber && (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-[#fcf8f1] px-3 py-1 text-xs font-semibold text-secondary"
+                  title={psychologist.licenseNumber}
+                >
+                  <ShieldCheck aria-hidden="true" size={13} className="text-[#946a22]" />
+                  <span>{t('routes.profile.verifiedLicense')}: <span className="font-normal">{psychologist.licenseNumber}</span></span>
+                </span>
+              )}
+              {highlightSpecialty && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-[#fcf8f1] px-3 py-1 text-xs font-semibold text-secondary">
+                  <Sparkles aria-hidden="true" size={13} className="text-[#946a22]" />
+                  {highlightSpecialty}
+                </span>
+              )}
+            </div>
+
             {psychologist.shortBio && (
-              <p className="mt-5 text-sm leading-7 text-secondary/80">
+              <p className="mt-5 text-sm sm:text-base leading-relaxed text-secondary/85">
                 {psychologist.shortBio}
               </p>
             )}
-            <div className="mt-8 flex flex-wrap gap-3">
-              <motion.a className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <motion.a
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                href={psychologist.bookingUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+                transition={INTERACTIVE_SPRING}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
               </motion.a>
+
+              <motion.a
+                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-xs transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                href="#profile-story"
+                transition={INTERACTIVE_SPRING}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <BookOpen aria-hidden="true" size={16} className="text-[#946a22]" />
+                {t('routes.profile.getStory', { name: psychologist.nickname })}
+                <ArrowDown aria-hidden="true" size={14} className="opacity-70" />
+              </motion.a>
+
               <button
                 type="button"
                 onClick={() => openIntake({ psychologistId: psychologist.id })}
-                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-sm"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-secondary/20 bg-white px-4 py-3 text-sm font-medium text-secondary/80 outline-none hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-2xs"
               >
                 {t('intakeDialog.title')}
               </button>
-              <a className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 px-4 py-3 text-sm text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary" href="#profile-booking">
-                {t('routes.profile.helpAction')}<ArrowRight aria-hidden="true" size={16} />
-              </a>
             </div>
             <p className="mt-4 text-sm leading-6 text-secondary/75">{t('routes.profile.bookingHandoff')}</p>
           </div>
