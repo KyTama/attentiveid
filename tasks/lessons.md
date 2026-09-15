@@ -75,3 +75,10 @@
 - **Problem**: When rendering adjacent inline JSX elements (e.g. `<span className="font-bold">{psychologist.nickname}</span>` and `<span ...>{t(supportArea)}</span>`) without an explicit whitespace literal `{' '}`, JSX collapses them into a single string in the DOM (`"JeanetteAdult clinical"`). Accessible name queries like `getByRole('button', { name: /jeanette adult clinical/i })` fail because the expected word boundary space is absent.
 - **Solution**: Always insert an explicit `{' '}` between adjacent inline text elements when they represent distinct words, or assign an explicit `title` or `aria-label` attribute on the interactive parent element.
 
+## 15. CTA Hierarchy & Test Role Uniqueness Across Layout Boundaries
+- **Problem**: When elevating or adding action buttons in page views (e.g., promoting consultation intake in `PsychologistProfileHero`), standard Testing Library queries like `screen.getByRole('button', { name: /plan a consultation session/i })` fail with `Found multiple elements with the role "button"` because global layout components (`SiteHeader`) and bottom booking sections simultaneously render buttons with identical accessible names.
+- **Solution**:
+  1. In route and page tests where layout headers and page bodies coexist, use `screen.getAllByRole('button', { name: ... })` with length assertions (`toBeGreaterThanOrEqual(1)`) or scope queries to semantic landmarks (`within(screen.getByRole('main')).getByRole(...)`).
+  2. Pair global accessible name assertions with unique section-specific anchors (e.g., asserting `screen.getByRole('link', { name: /get to know syazka/i })` with `href="#profile-story"`) to conclusively prove the hero component rendered correctly without ambiguity.
+
+
