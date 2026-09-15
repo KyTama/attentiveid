@@ -121,7 +121,7 @@ services:
       - /tmp:size=16m,uid=1000,gid=1000,mode=0700
     env_file:
       - ${HOST_SECRET_FILE:?HOST_SECRET_FILE is required}
-    command: ["bun", "run", "dist/seed-psychologists.js", "--upsert"]
+    command: ["bun", "run", "dist/seed-psychologists.js"]
     networks:
       postgres: {}
 
