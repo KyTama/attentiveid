@@ -140,24 +140,21 @@ export function FeaturedPsychologists() {
                 opts={{ align: 'start', loop: true }}
                 setApi={setApi}
               >
-                <CarouselContent>
+                <CarouselContent className="-ml-3 sm:-ml-4">
                   {roster.map((psychologist) => (
-                    <CarouselItem className="basis-full" key={psychologist.slug}>
-                      <div className="grid items-stretch gap-8 rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
+                    <CarouselItem className="basis-full pl-3 sm:pl-4" key={psychologist.slug}>
+                      <div className="grid items-stretch gap-8 overflow-hidden rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
                         {/* Photo Column */}
-                        <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-t-[3.5rem] rounded-b-2xl bg-[#eee8df] shadow-sm lg:mx-0">
+                        <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] sm:max-w-sm overflow-hidden rounded-t-[2.5rem] rounded-b-2xl bg-[#eee8df] shadow-sm lg:mx-0">
                           <img
                             alt={psychologist.name}
-                            className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                            className="absolute inset-0 h-full w-full object-cover object-[center_12%] transition-transform duration-500 hover:scale-105"
                             decoding="async"
                             height="750"
                             loading="lazy"
                             src={psychologist.imageUrl}
                             width="600"
                           />
-                          <div className="absolute top-4 left-4 rounded-full bg-white/95 px-3.5 py-1 text-xs font-bold text-secondary backdrop-blur-xs shadow-xs">
-                            {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
-                          </div>
                         </div>
 
                         {/* Details Column */}

@@ -1,37 +1,40 @@
-# Active Task Checklist: Phase 1.18 — Legibility & Typographic Substance Enhancement
+# Active Task Checklist: Phase 1.19 — Navigation Hierarchy, Mobile Photo Positioning & Brand Theme Evaluation
 
 > **Status:** COMPLETED  
-> **Milestone:** Milestone 1.8 (Typography & Reading Experience Optimization)  
-> **Active Focus:** Solve thin/faint typography across the psychologist profile and the entire website by switching font-display to swap, increasing baseline body weight to 450 on Montserrat variable font, replacing washed-out opacity modifiers (text-secondary/70-85) with solid high-contrast text-secondary and font-[450], verifying all 56 tests, and pushing atomic commits.
+> **Milestone:** Milestone 1.9 (IA Streamlining, Mobile Framing & Brand Cohesion)  
+> **Active Focus:** Fix fragmented navigation link order and page ping-pong, fix mobile photo collision and positioning in the homepage carousel, provide architectural trade-off evaluation for brand navy navigator & footer, and execute verified implementation.
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Global Font Engine & Base Weight Upgrade**:
-  - In `apps/web/src/index.css`: Update `@font-face` definitions to use `font-display: swap;`.
-  - Set `font-weight: 450;` on `body` in `@layer base` to eliminate spindly glyph strokes on Montserrat variable font.
-- [x] **Step 2: Psychologist Profile Story & Hero Typographic Enhancement**:
-  - In `PsychologistProfileDetails.tsx`: Upgrade biography/letter paragraphs to `text-base sm:text-lg sm:leading-8 font-[450] text-secondary` with `max-w-prose` optimal measure.
-  - In `PsychologistProfileHero.tsx`: Upgrade `shortBio` to `text-base sm:text-lg font-[450] text-secondary sm:leading-8` and sharpen trust badge contrast.
-  - In `PsychologistProfileDetails.tsx`: Strengthen First Steps descriptions and booking reassurance text.
-- [x] **Step 3: Site-wide Text Legibility & Contrast Audit**:
-  - Eliminate washed-out `text-secondary/70` through `text-secondary/85` across landing components (`HomepageHero`, `SupportExplorer`, `FeaturedPsychologists`, `CareJourney`, `ClientStories`, `OurLocations`, `FrequentlyAskedQuestions`, `ClosingInvitation`, `ConsultationReassurance`).
-  - Upgrade psychologist directory, card, reassurance, footer, and intake modal texts to `font-[450] text-secondary` with generous line-height for effortless reading.
-- [x] **Step 4: Verification & Atomic Push**:
+- [x] **Step 1: Streamline Header Navigation Flow & Eliminate Page Ping-Pong**:
+  - Reorder navigation items into cohesive user journey: Layanan (`/#support`), Psikolog Kami (`/#psychologists`), Lokasi (`/#locations`), FAQ (`/#faq`), Artikel (`/articles`).
+  - Implement smooth on-page anchor scroll on homepage so clicking menu items scrolls natively instead of reloading or jumping jarringly.
+  - Update mobile drawer so selecting an anchor smoothly scrolls and closes the drawer cleanly.
+- [x] **Step 2: Fix Homepage Psychologist Mobile Photo Positioning & Card Collision**:
+  - In `FeaturedPsychologists.tsx`: remove the redundant floating badge (`absolute top-4 left-4`) that was blocking the psychologist's forehead/face.
+  - Improve image framing: calibrate object-position (`object-[center_12%]`) and headroom so portraits are never cropped by top arches.
+  - Fix mobile card collisions: enforce proper slide spacing (`-ml-3 sm:-ml-4` and `pl-3 sm:pl-4`), max-width constraints (`max-w-[260px] sm:max-w-sm`), and `overflow-hidden` on card container so slides never overlap or bump adjacent cards during swipe.
+- [x] **Step 3: Brand Identity Sparring & Architectural Guidance (Navy Navigator vs Footer)**:
+  - Deliver deep comparative analysis (Option 1: Navy Footer only [Recommended], Option 2: Navy Header + Footer [Bookends], Option 3: Navy Header only).
+  - Implement Option 1 (Deep Navy Brand Footer with gold logo and high-contrast typography) to ground the page seamlessly after `ClosingInvitation`.
+- [x] **Step 4: Verification & Autonomous Push**:
   - Run `apps/web` linter (0 errors) and full vitest suite (56 tests passed).
-  - Run `./scripts/ci/verify-runtime-config.sh` and `./scripts/ci/verify.sh && DATABASE_ADMIN_URL=... bun run verify:shared-content` (all passed).
-  - Make atomic git commits and push to `origin/master`.
+  - Verify CI contracts and runtime configurations (100% passed).
+  - Stage and commit atomically, then push to `origin/master`.
 
 ---
 
-## Review & Audit
-- **Montserrat Variable Font Stem Density**:
-  - Replaced `font-display: optional;` with `font-display: swap;` so glyphs do not silently drop back to razor-thin system fonts.
-  - Baseline `body` weight elevated to `font-weight: 450`, giving body text substance without making it chunky like 500.
-- **Reading Measure & Leading**:
-  - Added `sm:leading-8` (32px line height) to biography paragraphs and section leads for optimal vertical rhythm.
-- **Contrast Ratios**:
-  - Switched body text from opacity-reduced navy (`text-secondary/70` = ~4.2:1 contrast) to full high-contrast dark navy (`text-secondary` = ~9.8:1 contrast), easily exceeding WCAG AAA standards on cream/off-white backgrounds.
+## Review & Sparring Summary
+- **Navigation Flow**:
+  - Eliminated the zig-zag page reload pattern where clicking between Layanan and Lokasi kicked the user to a separate `/psychologists` page.
+  - 1 through 4 now correspond directly to on-page sections that smooth-scroll natively without hash jumps.
+- **Mobile Photo Framing & Collision Prevention**:
+  - Photo container given mobile width constraint `max-w-[260px]` and softened top arch (`rounded-t-[2.5rem]`).
+  - Added `overflow-hidden` on card and normalized Embla margin offsets to eliminate slide collision.
+  - Removed redundant floating badge that was covering Nichi's and other psychologists' foreheads.
+- **Navy Brand Footer**:
+  - Footer converted from light beige to `bg-secondary text-white` with gold headers (`text-primary`) and gold logo, perfectly continuing `ClosingInvitation`.
 
 
 

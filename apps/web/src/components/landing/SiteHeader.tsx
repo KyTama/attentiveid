@@ -2,16 +2,16 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronRight, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useIntakeModal } from '@/components/intake'
 
 const navItems = [
   { key: 'support', href: '/#support' },
-  { key: 'find', href: '/psychologists' },
+  { key: 'psychologists', href: '/#psychologists' },
   { key: 'locations', href: '/#locations' },
-  { key: 'articles', href: '/articles' },
   { key: 'faq', href: '/#faq' },
+  { key: 'articles', href: '/articles' },
 ] as const
 
 function LanguageToggle() {
@@ -50,9 +50,22 @@ function LanguageToggle() {
 
 export function SiteHeader() {
   const { t } = useTranslation()
+  const location = useLocation()
   const { openIntake } = useIntakeModal()
   const [menuOpen, setMenuOpen] = useState(false)
   const reduceMotion = useReducedMotion()
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (location.pathname === '/' && href.startsWith('/#')) {
+      e.preventDefault()
+      const targetId = href.replace('/#', '')
+      const targetEl = document.getElementById(targetId)
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth' })
+        window.history.pushState(null, '', href)
+      }
+    }
+  }
 
   return (
     <motion.header
@@ -86,6 +99,7 @@ export function SiteHeader() {
                 className="rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 href={item.href}
                 key={item.key}
+                onClick={(e) => handleNavClick(e, item.href)}
               >
                 {t(`homepage.nav.${item.key}`)}
               </a>
@@ -169,7 +183,10 @@ export function SiteHeader() {
                       className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       href={item.href}
                       key={item.key}
-                      onClick={() => setMenuOpen(false)}
+                      onClick={(e) => {
+                        setMenuOpen(false)
+                        handleNavClick(e, item.href)
+                      }}
                     >
                       <span>{t(`homepage.nav.${item.key}`)}</span>
                       <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
