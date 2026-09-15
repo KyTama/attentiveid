@@ -1,31 +1,29 @@
-# Active Task Checklist: Phase 1.16 — Navigation Redesign & Profile Hero Refinement
+# Active Task Checklist: Phase 1.17 — Header De-cluttering & Navigator Streamlining
 
 > **Status:** COMPLETED  
-> **Milestone:** Milestone 1.6 (Navigation Experience & Profile Action Streamlining)  
-> **Active Focus:** Prune redundant WhatsApp button from psychologist profile hero, rename ambiguous "Support" navigation item to "Services / Layanan", redesign desktop & mobile header with premium clinical aesthetics and spring physics, verify all tests, and push atomic commits to master.
+> **Milestone:** Milestone 1.7 (Navigation Clarity & Visual Polish)  
+> **Active Focus:** Eliminate navbar clutter by removing redundant "How it works" link, routing "Find your psychologist" directly as a clean primary nav item, eliminating the redundant second desktop CTA button to leave a single authoritative Consultation CTA, upgrading layout spacing and typography, verifying tests, and pushing atomic commits.
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Prune WhatsApp Button in PsychologistProfileHero**:
-  - Remove redundant `Ask about {{name}} on WhatsApp` button from `PsychologistProfileHero.tsx`.
-  - Elevate `Plan a Consultation Session` (`openIntake`) as primary CTA with spring physics.
-  - Retain `Kenali {{name}} Lebih Dekat ↓` (`#profile-story`) as secondary smooth-scroll anchor.
-- [x] **Step 2: Update Profile Route Tests**:
-  - Update `apps/web/tests/app-routes.test.tsx` to assert the dedicated booking link in `#profile-booking` (`/continue on whatsapp/i`).
-  - Verify route test suite passes (`bun run --cwd apps/web test tests/app-routes.test.tsx`).
-- [x] **Step 3: Rename Ambiguous "Support" Navigation Item**:
-  - In `apps/web/src/i18n/locales/en.json`: Change `"homepage.nav.support"` from `"Support"` to `"Services"`.
-  - In `apps/web/src/i18n/locales/id.json`: Change `"homepage.nav.support"` from `"Dukungan"` to `"Layanan"`.
-- [x] **Step 4: Redesign Navigation Area (`SiteHeader.tsx`)**:
-  - Modernize desktop nav items: clean typography (`text-sm font-medium`), subtle hover pill background.
-  - Upgrade `LanguageToggle`: Replace boxy square button with sleek `EN / ID` segmented pill while maintaining exact `aria-label` for tests and accessibility.
-  - Harmonize CTA hierarchy: Rounded-full gold button for consultation intake + refined ghost/outline pill for psychologist directory.
-  - Polish mobile menu drawer: Clean structured layout, smooth spring animations, accessible Escape key handler.
-- [x] **Step 5: Full Verification & Atomic Push**:
+- [x] **Step 1: Streamline Nav Items in SiteHeader**:
+  - Remove `{ key: 'process', href: '/#process' }` ("How it works") from top navigation.
+  - Consolidate psychologist navigation into `{ key: 'find', href: '/psychologists' }` as a first-class nav link.
+  - Settle on 5 clean, focused links: Services, Find your psychologist, Locations, Articles, FAQ.
+- [x] **Step 2: Eliminate Redundant Secondary Desktop CTA**:
+  - Remove redundant "Find your psychologist" secondary button from header action group.
+  - Establish a single, authoritative primary CTA: "Plan a Consultation Session" (`openIntake`) styled with rounded-full gold pill and Emil Kowalski spring physics.
+- [x] **Step 3: Elevate Visual Architecture & Spacing**:
+  - Reduce bloated header height to a sleek `h-18` (72px).
+  - Open up spacious link gaps (`gap-6 xl:gap-8`) for an uncluttered, modern boutique aesthetic.
+  - Streamline mobile menu drawer to display the clean 5 links with chevrons and a single primary consultation CTA.
+- [x] **Step 4: Verification & Atomic Push**:
   - Run `apps/web` linter and full vitest suite (56 tests).
-  - Run `./scripts/ci/verify-runtime-config.sh` and `./scripts/ci/verify.sh && bun run verify:shared-content`.
-  - Commit atomic changes and push to `origin/master`.
+  - Run `./scripts/ci/verify-runtime-config.sh` and `./scripts/ci/verify.sh && DATABASE_ADMIN_URL=... bun run verify:shared-content`.
+  - Make atomic git commits and push to `origin/master`.
+
+
 
 
 

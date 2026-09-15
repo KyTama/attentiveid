@@ -8,10 +8,9 @@ import { useIntakeModal } from '@/components/intake'
 
 const navItems = [
   { key: 'support', href: '/#support' },
-  { key: 'psychologists', href: '/#psychologists' },
+  { key: 'find', href: '/psychologists' },
   { key: 'locations', href: '/#locations' },
   { key: 'articles', href: '/articles' },
-  { key: 'process', href: '/#process' },
   { key: 'faq', href: '/#faq' },
 ] as const
 
@@ -62,19 +61,19 @@ export function SiteHeader() {
       layout
       transition={INTERACTIVE_SPRING}
     >
-      <nav aria-label={t('homepage.nav.label')} className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/">
-          <img alt="Attentive.id" className="h-auto w-36 sm:w-44" height="144" src="/images/figma/attentive-logo.webp" width="528" />
+      <nav aria-label={t('homepage.nav.label')} className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
+        <Link className="flex items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/">
+          <img alt="Attentive.id" className="h-auto w-36 sm:w-40" height="144" src="/images/figma/attentive-logo.webp" width="528" />
         </Link>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden items-center gap-1 xl:gap-2 lg:flex">
+        <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
             if (isInternal) {
               return (
                 <Link
-                  className="rounded-full px-3 py-1.5 text-[13px] xl:text-sm font-medium text-secondary/70 transition-colors hover:bg-black/[0.04] hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   key={item.key}
                   to={item.href}
                 >
@@ -84,7 +83,7 @@ export function SiteHeader() {
             }
             return (
               <a
-                className="rounded-full px-3 py-1.5 text-[13px] xl:text-sm font-medium text-secondary/70 transition-colors hover:bg-black/[0.04] hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 href={item.href}
                 key={item.key}
               >
@@ -94,28 +93,20 @@ export function SiteHeader() {
           })}
         </div>
 
-        {/* Desktop Actions & CTAs */}
-        <div className="hidden items-center gap-3 lg:flex">
+        {/* Desktop Actions & Single Primary CTA */}
+        <div className="hidden items-center gap-4 lg:flex">
           <LanguageToggle />
 
-          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-            <Link
-              className="inline-flex items-center rounded-full border border-secondary/20 bg-transparent px-3.5 xl:px-4 py-2 text-xs xl:text-sm font-semibold text-secondary transition-colors hover:border-secondary/40 hover:bg-secondary/5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              to="/psychologists"
-            >
-              {t('homepage.nav.find')}
-            </Link>
-          </motion.div>
-
-          <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-            <button
-              type="button"
-              onClick={() => openIntake()}
-              className="inline-flex items-center justify-center rounded-full bg-primary px-4 xl:px-5 py-2 text-xs xl:text-sm font-bold text-secondary shadow-xs hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer transition-colors"
-            >
-              {t('intakeDialog.title')}
-            </button>
-          </motion.div>
+          <motion.button
+            type="button"
+            onClick={() => openIntake()}
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+            transition={INTERACTIVE_SPRING}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            {t('intakeDialog.title')}
+          </motion.button>
         </div>
 
         {/* Mobile Header Controls */}
@@ -156,8 +147,8 @@ export function SiteHeader() {
             initial={{ height: 0, opacity: reduceMotion ? 1 : 0 }}
             transition={INTERACTIVE_SPRING}
           >
-            <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6">
-              <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/70 p-1.5 shadow-2xs">
+            <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6">
+              <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/80 p-1.5 shadow-2xs">
                 {navItems.map((item) => {
                   const isInternal = !item.href.includes('#')
                   if (isInternal) {
@@ -187,7 +178,7 @@ export function SiteHeader() {
                 })}
               </nav>
 
-              <div className="mt-3 flex flex-col gap-2.5">
+              <div className="mt-2">
                 <button
                   type="button"
                   className="w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
@@ -198,13 +189,6 @@ export function SiteHeader() {
                 >
                   {t('intakeDialog.title')}
                 </button>
-                <Link
-                  className="w-full rounded-full border border-secondary/20 bg-white/80 px-5 py-3.5 text-center font-semibold text-secondary transition-colors hover:bg-white outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  onClick={() => setMenuOpen(false)}
-                  to="/psychologists"
-                >
-                  {t('homepage.nav.find')}
-                </Link>
               </div>
             </div>
           </motion.div>
