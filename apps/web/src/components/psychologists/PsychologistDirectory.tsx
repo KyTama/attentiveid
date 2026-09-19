@@ -38,7 +38,7 @@ function DirectoryLoadingState() {
 }
 
 export function PsychologistDirectory() {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [requestVersion, setRequestVersion] = useState(0)
   const query = useMemo(() => parsePsychologistListQuery(searchParams), [searchParams])
@@ -47,7 +47,8 @@ export function PsychologistDirectory() {
   const search = query.search ?? ''
   const [searchDraft, setSearchDraft] = useState({ urlValue: search, value: search })
   const searchInputValue = searchDraft.urlValue === search ? searchDraft.value : search
-  const requestKey = `${search}\u0000${supportArea}\u0000${experienceLevel}\u0000${requestVersion}`
+  const locale = i18n.resolvedLanguage === 'id' ? 'id' as const : 'en' as const
+  const requestKey = `${search}\u0000${supportArea}\u0000${experienceLevel}\u0000${requestVersion}\u0000${locale}`
   const [requestState, setRequestState] = useState<{
     key: string
     result: PsychologistListState
@@ -61,7 +62,7 @@ export function PsychologistDirectory() {
   useEffect(() => {
     let isActive = true
 
-    listPsychologists({ search, supportArea, experienceLevel })
+    listPsychologists({ search, supportArea, experienceLevel, locale })
       .then((result) => {
         if (isActive) setRequestState({ key: requestKey, result })
       })
@@ -72,7 +73,7 @@ export function PsychologistDirectory() {
     return () => {
       isActive = false
     }
-  }, [experienceLevel, requestKey, search, supportArea])
+  }, [experienceLevel, locale, requestKey, search, supportArea])
 
   useEffect(() => {
     const normalizedDraft = searchDraft.value.trim()

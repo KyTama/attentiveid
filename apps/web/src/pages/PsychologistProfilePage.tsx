@@ -17,7 +17,7 @@ import {
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
 export function PsychologistProfilePage() {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
   const { slug = '' } = useParams()
   const [requestVersion, setRequestVersion] = useState(0)
   const [request, setRequest] = useState<{
@@ -28,11 +28,12 @@ export function PsychologistProfilePage() {
     ? request.state
     : { status: 'loading' }
   const whatsappUrl = createWhatsAppLink(defaultContactMessage)
+  const locale = i18n.resolvedLanguage === 'id' ? 'id' : 'en'
 
   useEffect(() => {
     let isActive = true
 
-    Promise.all([getPsychologistBySlug(slug), listRelatedPsychologists(slug)])
+    Promise.all([getPsychologistBySlug(slug, locale), listRelatedPsychologists(slug, 3, locale)])
       .then(([lookup, related]) => {
         if (!isActive) return
         if (lookup.status === 'not-found' || lookup.status === 'unavailable') {
@@ -55,7 +56,7 @@ export function PsychologistProfilePage() {
     return () => {
       isActive = false
     }
-  }, [requestVersion, slug])
+  }, [locale, requestVersion, slug])
 
   useEffect(() => {
     if (state.status === 'loading') return

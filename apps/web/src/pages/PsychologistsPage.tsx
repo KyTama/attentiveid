@@ -5,13 +5,14 @@ import { listPsychologists, type PsychologistListState } from '@/features/psycho
 import { PsychologistDirectory } from '@/components/psychologists/PsychologistDirectory'
 
 export function LegacyPsychologistsPage() {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
   const [state, setState] = useState<PsychologistListState>({ status: 'loading' })
+  const locale = i18n.resolvedLanguage === 'id' ? 'id' as const : 'en' as const
 
   useEffect(() => {
     let isActive = true
 
-    listPsychologists()
+    listPsychologists({ locale })
       .then((result) => {
         if (isActive) setState(result)
       })
@@ -22,7 +23,7 @@ export function LegacyPsychologistsPage() {
     return () => {
       isActive = false
     }
-  }, [])
+  }, [locale])
 
   return (
     <main className="min-h-screen bg-dominant px-4 py-20">
