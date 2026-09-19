@@ -35,9 +35,9 @@ describe('homepage', () => {
     )
     expect(await screen.findAllByRole('button', { name: /adult clinical|child and adolescent|educational/i })).toHaveLength(psychologists.length)
     expect(screen.getByText('20190974-2021-02-1552')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /jeanette adult clinical/i }))
-    expect(screen.getByText('440/3378/Dinkes/2020')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /view jeanette's profile/i })).toHaveAttribute('href', '/psychologists/jean')
+    await user.click(screen.getByRole('button', { name: /gita adult clinical/i }))
+    expect(screen.getByText('20200657-2023-02-2669')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /view gita's profile/i })).toHaveAttribute('href', '/psychologists/gita')
     expect(screen.getByRole('link', { name: /read our google reviews/i })).toHaveAttribute(
       'href',
       expect.stringContaining('google.com/maps'),

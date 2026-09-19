@@ -9,7 +9,7 @@
     <title>Attentive.id</title>
     <script>
       const pathname = window.location.pathname.replace(/\/$/, '') || '/'
-      const psychologistSlugs = new Set(['syazka', 'gita', 'mayda', 'anggun', 'dinda', 'ilham', 'nichi', 'dewinta', 'sekar', 'kia', 'disa', 'jean'])
+      const psychologistSlugs = new Set(['syazka', 'gita', 'mayda', 'anggun', 'dinda', 'ilham', 'nichi', 'dewinta', 'sekar', 'kia', 'disa'])
       const profileMatch = pathname.match(/^\/psychologists\/([a-z0-9-]+)$/)
       const profileSlug = profileMatch?.[1]
       const imageHref = pathname === '/'

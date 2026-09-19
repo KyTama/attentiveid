@@ -36,7 +36,7 @@ export interface PsychologistSeedFixture {
     bookingUrl: string;
     premiumBookingUrl: string;
     featured: boolean;
-    featuredOrder: number;
+    featuredOrder: number | null;
     profile: {
         biography: LocalizedText;
         shortBio?: LocalizedText;
@@ -60,7 +60,7 @@ interface PsychologistInput {
     name: string;
     nickname: string;
     featured: boolean;
-    featuredOrder: number;
+    featuredOrder: number | null;
 }
 
 interface ProfileInput {
@@ -640,6 +640,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
         }),
     fixture({
             slug: 'jean',
+            status: 'inactive',
+            acceptingNewClients: false,
             name: 'Jeanete Ophilia Papilaya',
             nickname: 'Jeanette',
             credential: 'M.Psi., Psikolog',
@@ -659,8 +661,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             licenseNumber: 'SIPPK 503/446/826/SIPPK/DPMPTSP/X/2025 (s.d. 2030)',
             bookingUrl: bookingUrl('Jeanete', 'regular'),
             premiumBookingUrl: bookingUrl('Jeanete', 'premium'),
-            featured: true,
-            featuredOrder: 12,
+            featured: false,
+            featuredOrder: null,
             media: {
                 reference: 'media/psychologists/jean.webp',
                 width: 971,
@@ -691,7 +693,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Andri', 'regular'),
             premiumBookingUrl: bookingUrl('Andri', 'premium'),
             featured: true,
-            featuredOrder: 13,
+            featuredOrder: 12,
             media: {
                 reference: 'media/psychologists/andri.webp',
                 width: 600,
@@ -722,7 +724,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Jessica', 'regular'),
             premiumBookingUrl: bookingUrl('Jessica', 'premium'),
             featured: true,
-            featuredOrder: 14,
+            featuredOrder: 13,
             media: {
                 reference: 'media/psychologists/jessica.webp',
                 width: 600,
@@ -754,7 +756,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Valencia', 'regular'),
             premiumBookingUrl: bookingUrl('Valencia', 'premium'),
             featured: true,
-            featuredOrder: 15,
+            featuredOrder: 14,
             media: {
                 reference: 'media/psychologists/valencia.webp',
                 width: 600,
@@ -786,7 +788,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Audri', 'regular'),
             premiumBookingUrl: bookingUrl('Audri', 'premium'),
             featured: true,
-            featuredOrder: 16,
+            featuredOrder: 15,
             media: {
                 reference: 'media/psychologists/audria.webp',
                 width: 600,
@@ -816,7 +818,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Farah', 'regular'),
             premiumBookingUrl: bookingUrl('Farah', 'premium'),
             featured: true,
-            featuredOrder: 17,
+            featuredOrder: 16,
             media: {
                 reference: 'media/psychologists/farahdilla.webp',
                 width: 600,
@@ -847,7 +849,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Angel', 'regular'),
             premiumBookingUrl: bookingUrl('Angel', 'premium'),
             featured: true,
-            featuredOrder: 18,
+            featuredOrder: 17,
             media: {
                 reference: 'media/psychologists/angelina.webp',
                 width: 600,
@@ -881,7 +883,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Gisella', 'regular'),
             premiumBookingUrl: bookingUrl('Gisella', 'premium'),
             featured: true,
-            featuredOrder: 19,
+            featuredOrder: 18,
             profile: gisellaBio,
             media: {
                 reference: 'media/psychologists/gisella.webp',
@@ -913,7 +915,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Farhan', 'regular'),
             premiumBookingUrl: bookingUrl('Farhan', 'premium'),
             featured: true,
-            featuredOrder: 20,
+            featuredOrder: 19,
             media: {
                 reference: 'media/psychologists/farhan.webp',
                 width: 600,
@@ -944,7 +946,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Grace', 'regular'),
             premiumBookingUrl: bookingUrl('Grace', 'premium'),
             featured: true,
-            featuredOrder: 21,
+            featuredOrder: 20,
             media: {
                 reference: 'media/psychologists/grace.webp',
                 width: 600,
@@ -974,7 +976,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Dominika', 'regular'),
             premiumBookingUrl: bookingUrl('Dominika', 'premium'),
             featured: true,
-            featuredOrder: 22,
+            featuredOrder: 21,
             profile: dominikaBio,
             media: {
                 reference: 'media/psychologists/dominika.webp',
@@ -1005,7 +1007,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             bookingUrl: bookingUrl('Nuzul', 'regular'),
             premiumBookingUrl: bookingUrl('Nuzul', 'premium'),
             featured: true,
-            featuredOrder: 23,
+            featuredOrder: 22,
             media: {
                 reference: 'media/psychologists/nuzul.webp',
                 width: 600,
@@ -1074,12 +1076,13 @@ const isValidFixture = (candidate: PsychologistSeedFixture) => {
 
 const validateFixtures = (fixtures: readonly PsychologistSeedFixture[]) => {
     const slugs = new Set(fixtures.map(({ slug }) => slug));
-    const featuredOrders = new Set(fixtures.map(({ featuredOrder }) => featuredOrder));
+    const featuredFixtures = fixtures.filter(({ featured }) => featured);
+    const featuredOrders = new Set(featuredFixtures.map(({ featuredOrder }) => featuredOrder));
     const mediaReferences = new Set(fixtures.map(({ media }) => media.reference));
 
     if (fixtures.length === 0
         || slugs.size !== fixtures.length
-        || featuredOrders.size !== fixtures.length
+        || featuredOrders.size !== featuredFixtures.length
         || mediaReferences.size !== fixtures.length
         || fixtures.some((candidate) => !isValidFixture(candidate))) {
         throw new Error('Invalid psychologist seed fixture.');
