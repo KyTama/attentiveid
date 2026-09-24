@@ -1,17 +1,81 @@
-import { motion } from 'framer-motion'
-import { ArrowDownRight, ArrowRight } from 'lucide-react'
+import { animate, motion, useInView } from 'framer-motion'
+import { ArrowRight, CalendarCheck2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
+import { useIntakeModal } from '@/components/intake'
 
 interface TrustMetric {
   label: string
   value: string
 }
 
+function parseMetricValue(raw: string) {
+  const match = raw.match(/^([^\d]*)([\d.,]+)([^\d]*)$/)
+  if (!match) return null
+
+  const [, prefix, numStr, suffix] = match
+  const isDecimal =
+    (numStr.includes(',') && numStr.split(',')[1].length === 1) ||
+    (numStr.includes('.') && numStr.split('.')[1].length === 1)
+
+  if (isDecimal) {
+    const sep = numStr.includes(',') ? ',' : '.'
+    const target = parseFloat(numStr.replace(',', '.'))
+    return { prefix, target, suffix, isDecimal: true, sep }
+  }
+
+  const cleanNum = numStr.replace(/\./g, '').replace(/,/g, '')
+  const target = parseInt(cleanNum, 10)
+  const sep = numStr.includes('.') ? '.' : numStr.includes(',') ? ',' : ''
+  return { prefix, target, suffix, isDecimal: false, sep }
+}
+
+function AnimatedMetricValue({ value }: { value: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-40px 0px' })
+  const [displayValue, setDisplayValue] = useState(value)
+  const parsed = parseMetricValue(value)
+
+  useEffect(() => {
+    if (!isInView || !parsed) return
+
+    const { prefix, target, suffix, isDecimal, sep } = parsed
+    const controls = animate(0, target, {
+      duration: 1.5,
+      ease: [0.16, 1, 0.3, 1], // Emil Kowalski quintic ease-out
+      onUpdate: (latest) => {
+        if (isDecimal) {
+          const formatted = latest.toFixed(1).replace('.', sep)
+          setDisplayValue(`${prefix}${formatted}${suffix}`)
+        } else {
+          const rounded = Math.round(latest)
+          const formatted = sep
+            ? rounded.toLocaleString('id-ID').replace(/,/g, sep)
+            : rounded.toString()
+          setDisplayValue(`${prefix}${formatted}${suffix}`)
+        }
+      },
+      onComplete: () => {
+        setDisplayValue(value)
+      },
+    })
+
+    return () => controls.stop()
+  }, [isInView, value, parsed])
+
+  return (
+    <span ref={ref} className="tabular-nums" aria-label={value}>
+      {displayValue}
+    </span>
+  )
+}
+
 export function HomepageHero() {
   const { t } = useTranslation()
+  const { openIntake } = useIntakeModal()
   const managed = useLandingSection('hero')
   const metrics = managed
     ? [...managed.section.items]
@@ -40,25 +104,29 @@ export function HomepageHero() {
             {copy.description}
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                className="inline-flex w-full items-center justify-center gap-3 rounded-md bg-secondary px-6 py-4 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
-                to="/psychologists"
-              >
-                {copy.primaryAction}
-                <ArrowRight aria-hidden="true" size={18} />
-              </Link>
-            </motion.div>
-            <motion.a
-              className="inline-flex items-center justify-center gap-3 rounded-md border border-secondary/20 px-6 py-4 text-sm font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              href="#support"
+            {/* Primary Action on Left: Plan your session */}
+            <motion.button
+              type="button"
+              onClick={() => openIntake()}
+              className="inline-flex w-full items-center justify-center gap-3 rounded-md bg-secondary px-6 py-4 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer sm:w-auto"
               transition={INTERACTIVE_SPRING}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
-              {copy.secondaryAction}
-              <ArrowDownRight aria-hidden="true" size={18} />
-            </motion.a>
+              <CalendarCheck2 aria-hidden="true" size={18} className="text-primary" />
+              {copy.primaryAction}
+            </motion.button>
+
+            {/* Secondary Action on Right: Find your Psychologist */}
+            <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                className="inline-flex w-full items-center justify-center gap-3 rounded-md border border-secondary/20 bg-white/70 px-6 py-4 text-sm font-semibold text-secondary shadow-2xs outline-none hover:bg-white hover:border-secondary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
+                to="/psychologists"
+              >
+                {copy.secondaryAction}
+                <ArrowRight aria-hidden="true" size={18} />
+              </Link>
+            </motion.div>
           </div>
           <p className="mt-6 text-sm font-medium text-secondary/90">{t('homepage.hero.reassurance')}</p>
         </div>
@@ -82,7 +150,7 @@ export function HomepageHero() {
             <dt className="order-2 mt-3 text-xs font-bold uppercase tracking-wider text-secondary">{metric.label}</dt>
             <dd className="flex flex-col items-center text-4xl font-bold tracking-[-0.03em] text-secondary sm:text-5xl">
               <img alt="" className="mb-4 size-9 object-contain" height="36" loading="lazy" src={`/images/figma/trust-${metricIndex + 1}.svg`} width="36" />
-              {metric.value}
+              <AnimatedMetricValue value={metric.value} />
             </dd>
           </div>
         ))}

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, Building2, Car, ExternalLink, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
+import { Building2, CalendarCheck2, CalendarClock, Car, ExternalLink, MapPin, ShieldCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { clinicBranches, type ClinicBranch } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
@@ -64,7 +64,7 @@ export function OurLocations() {
                       }
                     >
                       {isOpeningSoon ? (
-                        <Sparkles aria-hidden="true" className="size-3.5 text-[#c27d60]" />
+                        <CalendarClock aria-hidden="true" className="size-3.5 text-[#c27d60]" />
                       ) : (
                         <span className="size-1.5 rounded-full bg-primary" />
                       )}
@@ -105,34 +105,68 @@ export function OurLocations() {
                   </div>
                 </div>
 
-                {/* Card Action Button */}
-                <div className="mt-8 pt-5 border-t border-secondary/10">
+                {/* Card Action Buttons (Dual Buttons: Booking / Plan Session + Google Maps) */}
+                <div className="mt-8 grid gap-2.5 pt-5 border-t border-secondary/10">
                   {isOpeningSoon ? (
-                    <motion.button
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3.5 text-sm font-semibold text-white shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                      onClick={() => openIntake()}
-                      transition={INTERACTIVE_SPRING}
-                      type="button"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
-                      <ArrowRight aria-hidden="true" className="size-4" />
-                    </motion.button>
+                    <>
+                      <motion.button
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                        onClick={() => openIntake({ initialFormat: 'online' })}
+                        transition={INTERACTIVE_SPRING}
+                        type="button"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
+                        <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
+                      </motion.button>
+
+                      {branch.mapsUrl && (
+                        <motion.a
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary/20 bg-white/70 px-4 py-2.5 text-xs font-semibold text-secondary shadow-2xs hover:bg-white hover:border-secondary/35 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                          href={branch.mapsUrl}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          transition={INTERACTIVE_SPRING}
+                          whileHover={{ y: -1 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <MapPin aria-hidden="true" className="size-3.5 text-primary" />
+                          <span>{t('homepage.locations.openMaps', 'Buka di Google Maps')}</span>
+                          <ExternalLink aria-hidden="true" className="size-3 opacity-60" />
+                        </motion.a>
+                      )}
+                    </>
                   ) : (
-                    <motion.a
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white border border-secondary/20 px-5 py-3.5 text-sm font-semibold text-secondary shadow-sm hover:border-secondary hover:bg-secondary hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                      href={branch.mapsUrl}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      transition={INTERACTIVE_SPRING}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <MapPin aria-hidden="true" className="size-4 text-primary" />
-                      <span>{t('homepage.locations.openMaps', 'Buka di Google Maps')}</span>
-                      <ExternalLink aria-hidden="true" className="size-3.5 opacity-60" />
-                    </motion.a>
+                    <>
+                      {/* Button 1: Plan Offline Session */}
+                      <motion.button
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                        onClick={() => openIntake({ initialFormat: 'offline' })}
+                        transition={INTERACTIVE_SPRING}
+                        type="button"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
+                        <span>{t('homepage.locations.planOfflineSession', 'Jadwalkan Sesi Offline')}</span>
+                      </motion.button>
+
+                      {/* Button 2: Google Maps Link */}
+                      <motion.a
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary/20 bg-white/70 px-4 py-2.5 text-xs font-semibold text-secondary shadow-2xs hover:bg-white hover:border-secondary/35 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                        href={branch.mapsUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                        transition={INTERACTIVE_SPRING}
+                        whileHover={{ y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <MapPin aria-hidden="true" className="size-3.5 text-primary" />
+                        <span>{t('homepage.locations.openMaps', 'Buka di Google Maps')}</span>
+                        <ExternalLink aria-hidden="true" className="size-3 opacity-60" />
+                      </motion.a>
+                    </>
                   )}
                 </div>
               </motion.div>

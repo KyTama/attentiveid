@@ -99,7 +99,7 @@ describe('homepage', () => {
   it('shows all six support choices without hiding content behind tabs', async () => {
     renderHomepage()
 
-    const links = screen.getAllByRole('link', { name: /explore psychologists:/i })
+    const links = screen.getAllByRole('link', { name: /learn more:/i })
     expect(links).toHaveLength(6)
     for (const link of links) expect(link).toHaveAttribute('href', '/psychologists')
     expect(screen.getByRole('heading', { name: /child and adolescent support/i })).toBeInTheDocument()

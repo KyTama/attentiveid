@@ -27,11 +27,12 @@ function PublicIntakeModalWrapper() {
 
   return (
     <ConsultationIntakeModal
-      key={`${isOpen}-${options.concernId}-${options.psychologistId}`}
+      key={`${isOpen}-${options.concernId}-${options.psychologistId}-${options.initialFormat}`}
       isOpen={isOpen}
       onClose={closeIntake}
       initialConcernId={options.concernId}
       initialPsychologistId={options.psychologistId}
+      initialFormat={options.initialFormat}
     />
   )
 }

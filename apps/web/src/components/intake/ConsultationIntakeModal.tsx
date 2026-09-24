@@ -22,6 +22,7 @@ export interface ConsultationIntakeModalProps {
   onClose: () => void
   initialConcernId?: IntakeConcernId
   initialPsychologistId?: string
+  initialFormat?: IntakeSessionFormat
 }
 
 export function ConsultationIntakeModal({
@@ -29,6 +30,7 @@ export function ConsultationIntakeModal({
   onClose,
   initialConcernId,
   initialPsychologistId,
+  initialFormat,
 }: ConsultationIntakeModalProps) {
   const { t, i18n } = useTranslation()
   const currentLang = (i18n.language?.startsWith('en') ? 'en' : 'id') as 'id' | 'en'
@@ -36,7 +38,7 @@ export function ConsultationIntakeModal({
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [concernId, setConcernId] = useState<IntakeConcernId>(initialConcernId || 'anxiety_mood')
-  const [format, setFormat] = useState<IntakeSessionFormat>('online')
+  const [format, setFormat] = useState<IntakeSessionFormat>(initialFormat || 'online')
   const [genderPreference, setGenderPreference] = useState<IntakeGenderPreference>('any')
   const [clientCategory, setClientCategory] = useState<IntakeClientCategory>('individual')
   const [isCrisisManual, setIsCrisisManual] = useState(false)

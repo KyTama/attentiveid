@@ -497,15 +497,15 @@
     "hero": {
       "title": "Support starts with feeling understood.",
       "description": "Every story is different. We take the time to understand you before helping you find psychological support that feels right for you.",
-      "primaryAction": "Find your psychologist",
-      "secondaryAction": "Explore support options",
+      "primaryAction": "Plan your session",
+      "secondaryAction": "Find your psychologist",
       "reassurance": "No diagnosis needed. Start with what has been on your mind.",
       "imageAlt": "Attentive psychologist ready to listen",
       "imageCardTitle": "Care shaped around you",
       "imageCardBody": "Start with your story, your comfort, and the kind of support you need.",
       "metrics": [
         { "value": "3,000+", "label": "Sessions delivered" },
-        { "value": "18", "label": "Psychologists" },
+        { "value": "23", "label": "Psychologists" },
         { "value": "5.0", "label": "Google rating" },
         { "value": "53", "label": "Google reviews" }
       ]
@@ -514,7 +514,7 @@
       "title": "What has been on your mind?",
       "description": "You do not need to know exactly what kind of support to ask for. Begin with the area closest to your experience.",
       "selectedLabel": "A place to begin",
-      "action": "Explore psychologists",
+      "action": "Learn more",
       "topics": [
         { "id": "adult", "title": "Individual counseling", "description": "A private space for anxiety, mood, trauma, self-esteem, emotional regulation, and personal growth." },
         { "id": "relationships", "title": "Couples and relationships", "description": "Support for communication, trust, conflict, premarital concerns, and changing relationship patterns." },
@@ -597,6 +597,7 @@
       "title": "Comfortable & Private Counseling Spaces",
       "description": "Find a safe, welcoming space for in-person sessions in Jakarta and BSD, or join online sessions from anywhere. Malang branch opening soon.",
       "openMaps": "Open in Google Maps",
+      "planOfflineSession": "Plan In-Person Session",
       "openingSoon": "Opening Soon",
       "onlineAvailable": "Online Counseling Available",
       "offlineAvailable": "In-Person & Online Counseling",

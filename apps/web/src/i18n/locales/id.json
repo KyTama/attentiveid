@@ -497,15 +497,15 @@
     "hero": {
       "title": "Dukungan dimulai saat kamu merasa dipahami.",
       "description": "Setiap cerita berbeda. Kami meluangkan waktu untuk memahami kamu sebelum membantu menemukan dukungan psikologis yang terasa tepat.",
-      "primaryAction": "Temukan psikologmu",
-      "secondaryAction": "Lihat pilihan dukungan",
+      "primaryAction": "Rencanakan sesi konseling",
+      "secondaryAction": "Temukan psikologmu",
       "reassurance": "Tidak perlu diagnosis. Mulai dari hal yang sedang memenuhi pikiranmu.",
       "imageAlt": "Psikolog Attentive yang siap mendengarkan",
       "imageCardTitle": "Dukungan yang mengikuti kebutuhanmu",
       "imageCardBody": "Mulai dari ceritamu, kenyamananmu, dan dukungan yang sedang kamu butuhkan.",
       "metrics": [
         { "value": "3.000+", "label": "Sesi terlaksana" },
-        { "value": "18", "label": "Psikolog" },
+        { "value": "23", "label": "Psikolog" },
         { "value": "5,0", "label": "Rating Google" },
         { "value": "53", "label": "Ulasan Google" }
       ]
@@ -514,7 +514,7 @@
       "title": "Apa yang sedang memenuhi pikiranmu?",
       "description": "Kamu tidak harus langsung tahu jenis bantuan yang tepat. Mulailah dari area yang paling dekat dengan pengalamanmu.",
       "selectedLabel": "Tempat untuk memulai",
-      "action": "Jelajahi psikolog",
+      "action": "Pelajari layanan",
       "topics": [
         { "id": "adult", "title": "Konseling individual", "description": "Ruang privat untuk kecemasan, suasana hati, trauma, kepercayaan diri, regulasi emosi, dan pengembangan diri." },
         { "id": "relationships", "title": "Pasangan dan relasi", "description": "Dukungan untuk komunikasi, kepercayaan, konflik, persiapan pernikahan, dan pola relasi yang ingin diubah." },
@@ -597,6 +597,7 @@
       "title": "Ruang Konseling Nyaman & Privat untukmu",
       "description": "Temukan ruang aman untuk sesi tatap muka langsung di Jakarta dan BSD, atau jadwalkan sesi daring dari mana saja. Cabang Malang segera hadir.",
       "openMaps": "Buka di Google Maps",
+      "planOfflineSession": "Jadwalkan Sesi Offline",
       "openingSoon": "Segera Hadir",
       "onlineAvailable": "Konseling Online Tersedia",
       "offlineAvailable": "Konseling Tatap Muka & Daring",

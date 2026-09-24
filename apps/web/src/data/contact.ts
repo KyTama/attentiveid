@@ -74,7 +74,8 @@ export const contact = {
     branches: clinicBranches,
     social: {
         instagram: 'https://instagram.com/attentive.id',
-        // Add more as needed
+        linkedin: 'https://www.linkedin.com/company/attentive-id',
+        email: 'mailto:halo@attentive.id',
     },
 } as const
 

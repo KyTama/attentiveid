@@ -1,4 +1,4 @@
-import { ExternalLink, Instagram, MessageCircle } from 'lucide-react'
+import { ExternalLink, Instagram, Linkedin, Mail, MessageCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { clinicBranches, contact, createWhatsAppLink, defaultContactMessage } from '@/data/contact'
@@ -73,7 +73,15 @@ export function SiteFooter() {
             </a>
             <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.instagram} rel="noopener noreferrer" target="_blank">
               <Instagram aria-hidden="true" className="size-3.5 text-primary" />
-              <span>@attentive.id</span>
+              <span>Instagram: @attentive.id</span>
+            </a>
+            <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.linkedin} rel="noopener noreferrer" target="_blank">
+              <Linkedin aria-hidden="true" className="size-3.5 text-primary" />
+              <span>LinkedIn: Attentive.id</span>
+            </a>
+            <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.email}>
+              <Mail aria-hidden="true" className="size-3.5 text-primary" />
+              <span>halo@attentive.id</span>
             </a>
           </div>
         </div>
