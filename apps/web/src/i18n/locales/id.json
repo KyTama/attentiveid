@@ -5,7 +5,8 @@
     "psychologists": "Psikolog",
     "articles": "Artikel",
     "services": "Layanan",
-    "contact": "Kontak"
+    "contact": "Kontak",
+    "headerCta": "Konsultasi sekarang"
   },
   "hero": {
     "hello": "Halo,",
@@ -490,6 +491,7 @@
       "faq": "Tanya jawab",
       "locations": "Lokasi",
       "find": "Temukan psikologmu",
+      "headerCta": "Konsultasi sekarang",
       "openMenu": "Buka menu navigasi",
       "closeMenu": "Tutup menu navigasi",
       "languageSwitch": "Ganti bahasa ke {{language}}"

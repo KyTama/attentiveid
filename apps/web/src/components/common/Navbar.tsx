@@ -104,7 +104,7 @@ export function Navbar() {
                         onClick={() => openIntake()}
                         className="btn-primary shrink-0"
                     >
-                        {t('intakeDialog.title')}
+                        {t('nav.headerCta')}
                     </Button>
                 </div>
 
@@ -136,7 +136,7 @@ export function Navbar() {
                                     }}
                                     className="btn-primary w-full mt-2"
                                 >
-                                    {t('intakeDialog.title')}
+                                    {t('nav.headerCta')}
                                 </Button>
                             </div>
                         </SheetContent>

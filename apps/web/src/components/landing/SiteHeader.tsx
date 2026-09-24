@@ -119,7 +119,7 @@ export function SiteHeader() {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
-            {t('intakeDialog.title')}
+            {t('homepage.nav.headerCta')}
           </motion.button>
         </div>
 
@@ -204,7 +204,7 @@ export function SiteHeader() {
                     openIntake()
                   }}
                 >
-                  {t('intakeDialog.title')}
+                  {t('homepage.nav.headerCta')}
                 </button>
               </div>
             </div>

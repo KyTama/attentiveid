@@ -5,7 +5,8 @@
     "psychologists": "Psychologists",
     "articles": "Articles",
     "services": "Services",
-    "contact": "Contact"
+    "contact": "Contact",
+    "headerCta": "Plan a session"
   },
   "hero": {
     "hello": "Hello,",
@@ -490,6 +491,7 @@
       "faq": "FAQ",
       "locations": "Locations",
       "find": "Find your psychologist",
+      "headerCta": "Plan a session",
       "openMenu": "Open navigation menu",
       "closeMenu": "Close navigation menu",
       "languageSwitch": "Switch language to {{language}}"
@@ -794,7 +796,7 @@
     }
   },
   "intakeDialog": {
-      "title": "Plan a Consultation Session",
+      "title": "Plan Your Consultation",
       "subtitle": "Attentive Psychological Bureau",
       "close": "Close consultation form",
       "stepNeed": "Needs",

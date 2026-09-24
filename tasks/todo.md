@@ -1,29 +1,25 @@
-# Active Task Checklist: Stakeholder Feedback Execution (Hero, Locations, Services, Footer)
+# Active Task Checklist: Wording Alignment (Option B: Consultation & Care Narrative)
 
 > **Status:** COMPLETED (Committed locally, NOT pushed)  
 > **Milestone:** Milestone 1.9 (Stakeholder Review & Brand Architecture Convergence)  
-> **Active Focus:** Implemented Hero CTA reorder, animated tabular numbers, Location cards with dual buttons (Maps + Plan Offline Session), complete social links in Footer including LinkedIn, and created `/services` content guidance document. (Commit locally, DO NOT PUSH per user request).
+> **Active Focus:** Aligned CTA wording and modal titles across Header, Hero, and Intake Modal according to Option B (Care & Consultation Narrative).
 
 ---
 
 ## Task Checklist
-- [x] **Step 1: Hero Section (Buttons & Animated Numbers)**:
-  - Reordered Hero CTA: Left primary "Plan your session" (`openIntake()`) + Right secondary "Find your Psychologist" (`/psychologists`).
-  - Added smooth in-view animated counter for trust metrics with `framer-motion` (`useInView`), `tabular-nums`, and zero CLS.
-  - Updated locales (`id.json` & `en.json`) with "Plan your session" translations and updated count to 23 psikolog.
-- [x] **Step 2: Location Section Dual Buttons**:
-  - In `OurLocations.tsx`: Provided 2 distinct buttons on active cards:
-    - Button 1: "Plan Offline Session" (opens intake modal prefilled with offline format & location).
-    - Button 2: "Buka di Google Maps" (external link to Google Maps).
-  - Replaced `<Sparkles>` with clean semantic icon (`CalendarClock`).
-- [x] **Step 3: Footer Social Links Expansion**:
-  - Added LinkedIn, Instagram, WhatsApp, and email in `SiteFooter.tsx` with accessible touch targets and proper aria-labels.
-  - Updated `contact.social` in `apps/web/src/data/contact.ts`.
-- [x] **Step 4: Services Section Guidance Document**:
-  - Created `.docs/specifications/services-page-guidance.md` for Tama & Ditto outlining architecture, clinical categories, what to expect, and CTA evolution.
-  - In `SupportExplorer.tsx` / locales: Updated secondary action copy from "Explore psychologists" to "Learn more" / "Pelajari Layanan".
-- [x] **Step 5: Verification, Local Commit (No Push) & Graph Sync**:
-  - Ran `bun run test:web` (56/56 tests passing).
-  - Ran `./scripts/ci/verify.sh` (build + linter + contract tests clean).
-  - Committed locally with descriptive message (NOT pushed).
-  - Updated knowledge graph index.
+- [x] **Step 1: Check Current Usage & Blast Radius**:
+  - Found `intakeDialog.title` in `id.json` and `en.json`.
+  - Identified usage in `SiteHeader.tsx`, `Navbar.tsx`, `HomepageHero.tsx`, and `ConsultationIntakeModal.tsx`.
+- [x] **Step 2: Update Locales (EN & ID)**:
+  - Header CTA: "Plan a session" (EN) / "Konsultasi sekarang" (ID) via `homepage.nav.headerCta` & `nav.headerCta`.
+  - Intake Dialog title: "Plan Your Consultation" (EN) / "Atur Sesi Konseling" (ID).
+  - Hero primaryAction: "Plan your session" (EN) / "Rencanakan sesi konseling" (ID).
+  - Hero secondaryAction: "Find your psychologist" (EN) / "Temukan psikologmu" (ID).
+- [x] **Step 3: Update Header & Navbar Call-To-Action**:
+  - In `SiteHeader.tsx` & `Navbar.tsx`: use dedicated header CTA translation (`t('homepage.nav.headerCta')` & `t('nav.headerCta')`).
+- [x] **Step 4: Verify Tests & Build**:
+  - Ran `bun run test:web` (57/57 tests passing).
+  - Ran `cd apps/web && bun run build` (Clean build with zero TS errors).
+- [x] **Step 5: Local Commit (NO PUSH) & Knowledge Graph Update**:
+  - Commit locally with descriptive commit message.
+  - Update knowledge graph index with `build_or_update_graph_tool`.

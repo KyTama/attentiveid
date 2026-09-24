@@ -34,7 +34,7 @@ describe('public routes', () => {
     const heading = await screen.findByRole('heading', { name: 'Syazka Kirani Narindra' })
     expect(heading).toBeInTheDocument()
     await waitFor(() => expect(heading).toHaveFocus())
-    expect(screen.getAllByRole('button', { name: /plan a consultation session/i }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByRole('button', { name: /plan your consultation/i }).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByRole('link', { name: /get to know syazka/i })).toHaveAttribute('href', '#profile-story')
     expect(screen.getByRole('link', { name: /continue on whatsapp/i })).toHaveAttribute(
       'href',
