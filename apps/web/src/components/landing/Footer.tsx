@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { contact } from "@/data/contact";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -17,17 +18,17 @@ export function Footer() {
               {t("hero.tagline", "Professional psychological services for your well-being.")}
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
+              <a href={contact.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
+              <a href={contact.social.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
                 <Linkedin size={20} />
+              </a>
+              <a href={contact.social.email} aria-label="Email" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
+                <Mail size={20} />
+              </a>
+              <a href={contact.whatsapp.link} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-primary hover:shadow-sm transition-all">
+                <Phone size={20} />
               </a>
             </div>
           </div>

@@ -74,7 +74,7 @@ export const contact = {
     branches: clinicBranches,
     social: {
         instagram: 'https://instagram.com/attentive.id',
-        linkedin: 'https://www.linkedin.com/company/attentive-id',
+        linkedin: 'https://www.linkedin.com/company/biro-psikologi-attentive',
         email: 'mailto:halo@attentive.id',
     },
 } as const

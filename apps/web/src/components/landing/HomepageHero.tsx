@@ -37,10 +37,12 @@ function AnimatedMetricValue({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-40px 0px' })
   const [displayValue, setDisplayValue] = useState(value)
-  const parsed = parseMetricValue(value)
 
   useEffect(() => {
-    if (!isInView || !parsed) return
+    if (!isInView) return
+
+    const parsed = parseMetricValue(value)
+    if (!parsed) return
 
     const { prefix, target, suffix, isDecimal, sep } = parsed
     const controls = animate(0, target, {
@@ -52,8 +54,10 @@ function AnimatedMetricValue({ value }: { value: string }) {
           setDisplayValue(`${prefix}${formatted}${suffix}`)
         } else {
           const rounded = Math.round(latest)
-          const formatted = sep
-            ? rounded.toLocaleString('id-ID').replace(/,/g, sep)
+          const formatted = sep === ','
+            ? rounded.toLocaleString('en-US')
+            : sep === '.'
+            ? rounded.toLocaleString('id-ID')
             : rounded.toString()
           setDisplayValue(`${prefix}${formatted}${suffix}`)
         }
@@ -64,7 +68,7 @@ function AnimatedMetricValue({ value }: { value: string }) {
     })
 
     return () => controls.stop()
-  }, [isInView, value, parsed])
+  }, [isInView, value])
 
   return (
     <span ref={ref} className="tabular-nums" aria-label={value}>

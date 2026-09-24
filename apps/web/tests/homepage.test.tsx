@@ -106,6 +106,19 @@ describe('homepage', () => {
     await screen.findByRole('link', { name: /view syazka's profile/i })
   })
 
+  it('renders hero trust metrics with accessible values', () => {
+    renderHomepage()
+
+    expect(screen.getByLabelText('3,000+')).toBeInTheDocument()
+    expect(screen.getByLabelText('23')).toBeInTheDocument()
+    expect(screen.getByLabelText('5.0')).toBeInTheDocument()
+    expect(screen.getByLabelText('53')).toBeInTheDocument()
+    expect(screen.getByText('Sessions delivered')).toBeInTheDocument()
+    expect(screen.getByText('Psychologists')).toBeInTheDocument()
+    expect(screen.getByText('Google rating')).toBeInTheDocument()
+    expect(screen.getByText('Google reviews')).toBeInTheDocument()
+  })
+
   it('closes mobile navigation with Escape and restores toggle focus', async () => {
     const user = userEvent.setup()
     renderHomepage()
