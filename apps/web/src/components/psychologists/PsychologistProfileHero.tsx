@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowDown, ArrowLeft, BookOpen, Clock3, GraduationCap, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowDown, ArrowLeft, BookOpen, Clock3, GraduationCap, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PsychologistProfile } from '@/features/psychologists'
@@ -66,10 +66,23 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
+              <motion.a
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer shadow-xs"
+                href={psychologist.bookingUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+                transition={INTERACTIVE_SPRING}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <MessageCircle aria-hidden="true" size={17} />
+                {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
+              </motion.a>
+
               <motion.button
                 type="button"
                 onClick={() => openIntake({ psychologistId: psychologist.id })}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer shadow-xs"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-secondary/25 bg-white px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-2xs hover:bg-[#faf7f2] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
                 transition={INTERACTIVE_SPRING}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.98 }}
@@ -78,7 +91,7 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
               </motion.button>
 
               <motion.a
-                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-xs transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-2xs transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
                 href="#profile-story"
                 transition={INTERACTIVE_SPRING}
                 whileHover={{ y: -3 }}
