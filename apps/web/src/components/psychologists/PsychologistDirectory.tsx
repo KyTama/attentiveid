@@ -25,7 +25,7 @@ function DirectoryLoadingState() {
     <div aria-label={t('routes.common.loading')} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="status">
       {Array.from({ length: 6 }, (_, index) => (
         <div className="overflow-hidden rounded-xl border border-secondary/10 bg-white" key={index}>
-          <div className="aspect-[1.65/1] bg-[#e9ece9]" />
+          <div className="aspect-[4/5] bg-[#e9ece9]" />
           <div className="space-y-4 p-7">
             <div className="h-7 w-3/4 rounded-full bg-[#eee8df]" />
             <div className="h-4 w-1/2 rounded-full bg-[#eee8df]" />

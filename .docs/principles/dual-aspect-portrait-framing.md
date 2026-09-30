@@ -13,3 +13,5 @@ In casual or seated studio poses where subjects cross their arms or lean slightl
 1. **Locate Facial Midline**: Measure the $x$-coordinates of the facial midline (hair parting line, nose bridge, eyes midpoint). Ensure this midline aligns with the horizontal center ($x = W / 2$) of the target canvas.
 2. **Dual-Container Simulation**: Before exporting, simulate both the unclipped full portrait ($4:5$) and the cropped card container (e.g. $1.65:1$ with `object-[center_22%]`) to ensure natural margins and zero visual crowding.
 3. **Preserve Verified High-Res Close-Ups**: When a subject already has an existing well-framed portrait asset, reuse that asset rather than downsampling/re-cropping full-body sitting shots that risk stretching or distortion.
+4. **Container-Asset Ratio Convergence**: When recurring micro-crop friction occurs across differing page layouts, converge the UI container's aspect ratio (e.g. updating cards from `1.65/1` to `4/5`) to achieve 1:1 parity with the master media asset. This eliminates artificial cropping, preserves clinical body language, and removes per-photo CSS overrides.
+

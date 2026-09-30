@@ -29,4 +29,12 @@
   - Address: `Grand Arumba B17, Jl. Grand Arumba, Blok B No.17, Tunggulwulung, Kota Malang 65143`
   - Maps URL: `https://goo.gl/maps/2F9E5WrHKEPvhTYX7?g_st=ac`
   - Updated `contact.ts`, `id.json`, `en.json`, CMS branch label, and scripts. Verified dual buttons (Online Consultation booking + Google Maps).
+- [x] **Step 8: Unify Directory Card Aspect Ratio to 4:5 (Portrait)**:
+  - Updated `PsychologistDirectoryCard.tsx`: changed image container from `aspect-[1.65/1]` to `aspect-[4/5]`.
+  - Normalised image framing with `object-cover object-[center_12%]`.
+  - Updated `DirectoryLoadingState` in `PsychologistDirectory.tsx` to `aspect-[4/5]` to preserve zero CLS.
+  - Verified 57/57 unit tests and clean Vite production build.
+  - Rebuilt AST knowledge graph index.
+
+
 

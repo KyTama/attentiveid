@@ -18,10 +18,10 @@ export function PsychologistDirectoryCard({ psychologist }: PsychologistDirector
       transition={INTERACTIVE_SPRING}
       whileHover={{ y: -6 }}
     >
-      <div className="relative aspect-[1.65/1] overflow-hidden bg-[#e9ece9]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#e9ece9]">
         <img
           alt={psychologist.name}
-          className="absolute inset-0 h-full w-full object-cover object-[center_22%]"
+          className="absolute inset-0 h-full w-full object-cover object-[center_12%]"
           decoding="async"
           height="750"
           loading="lazy"
