@@ -729,7 +729,7 @@ export function PsychologistsCmsPage() {
                       >
                         <option value="tbi">Jakarta Selatan (TBI Pusat)</option>
                         <option value="bsd">Delrey BizTown BSD</option>
-                        <option value="malang">Malang Singosari (Opening Soon)</option>
+                        <option value="malang">Malang - Grand Arumba (Opening Soon)</option>
                         <option value="online_only">Online Only</option>
                         <option value="multiple">Multiple (TBI & BSD)</option>
                       </select>

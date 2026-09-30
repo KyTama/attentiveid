@@ -391,7 +391,7 @@ MAPPING_RULES = [
         "nickname": "Nuzul",
         "gender": "female",
         "tier": "mid",
-        "branch": "malang", # Domisili Malang Singosari
+        "branch": "malang", # Domisili Malang (Grand Arumba Tunggulwulung)
         "recent_license": "SIPP 20251606-2025-01-1503 (STR-PK TO00001944176240)",
         "status": "active",
         "accepting_new_clients": True,

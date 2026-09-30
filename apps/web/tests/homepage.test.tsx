@@ -96,12 +96,22 @@ describe('homepage', () => {
     }
   })
 
-  it('shows all six support choices without hiding content behind tabs', async () => {
+  it('shows all six support choices with smart deep-links to directory filters', async () => {
     renderHomepage()
 
     const links = screen.getAllByRole('link', { name: /learn more:/i })
     expect(links).toHaveLength(6)
-    for (const link of links) expect(link).toHaveAttribute('href', '/psychologists')
+    const expectedHrefs = [
+      '/psychologists?support=adultClinical',
+      '/psychologists?q=relationship',
+      '/psychologists?support=childAdolescent',
+      '/psychologists?q=family',
+      '/psychologists?support=educational',
+      '/psychologists?q=career',
+    ]
+    links.forEach((link, index) => {
+      expect(link).toHaveAttribute('href', expectedHrefs[index])
+    })
     expect(screen.getByRole('heading', { name: /child and adolescent support/i })).toBeInTheDocument()
     await screen.findByRole('link', { name: /view syazka's profile/i })
   })

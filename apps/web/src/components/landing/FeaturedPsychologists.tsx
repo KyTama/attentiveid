@@ -142,12 +142,7 @@ export function FeaturedPsychologists() {
               >
                 <CarouselContent className="ml-0">
                   {roster.map((psychologist) => {
-                    const focalPosition =
-                      psychologist.slug === 'haykal'
-                        ? 'object-[60%_10%]'
-                        : psychologist.slug === 'nuzul'
-                        ? 'object-[42%_10%]'
-                        : 'object-[center_12%]'
+                    const focalPosition = 'object-[center_12%]'
 
                     return (
                       <CarouselItem className="basis-full pl-0" key={psychologist.slug}>

@@ -8,7 +8,9 @@ node_modules/
 .agents/
 .claude/
 .cursor/
-.docs/
+.docs/*
+!.docs/principles/
+!.docs/common-issues/
 .kiro/
 .planning/
 .github/copilot-instructions.md
@@ -79,6 +81,8 @@ coverage/
 # Misc
 *.tsbuildinfo
 .cache/
+anti-slop/
+apps/web/public/images/Foto Psikolog Attentive (New)/
 
 
 docs/*

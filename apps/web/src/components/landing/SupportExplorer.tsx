@@ -15,6 +15,15 @@ const topicToIntakeConcern: Record<string, IntakeConcernId> = {
   career: 'career_burnout',
 }
 
+const topicToDirectoryQuery: Record<string, { en: string; id: string }> = {
+  adult: { en: '/psychologists?support=adultClinical', id: '/psychologists?support=adultClinical' },
+  relationships: { en: '/psychologists?q=relationship', id: '/psychologists?q=relasi' },
+  child: { en: '/psychologists?support=childAdolescent', id: '/psychologists?support=childAdolescent' },
+  family: { en: '/psychologists?q=family', id: '/psychologists?q=keluarga' },
+  assessment: { en: '/psychologists?support=educational', id: '/psychologists?support=educational' },
+  career: { en: '/psychologists?q=career', id: '/psychologists?q=karir' },
+}
+
 interface SupportTopic {
   description: string
   id: string
@@ -22,7 +31,8 @@ interface SupportTopic {
 }
 
 export function SupportExplorer() {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
+  const locale = i18n.resolvedLanguage === 'id' ? 'id' : 'en'
   const { openIntake } = useIntakeModal()
   const managed = useLandingSection('supportExplorer')
   const topics = managed
@@ -55,7 +65,10 @@ export function SupportExplorer() {
                   >
                     {t('intakeDialog.title')}
                   </button>
-                  <Link className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/psychologists">
+                  <Link
+                    className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    to={topicToDirectoryQuery[topic.id]?.[locale] ?? '/psychologists'}
+                  >
                     {t('homepage.support.action')}
                     <span className="sr-only">: {topic.title}</span>
                   </Link>
