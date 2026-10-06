@@ -36,7 +36,7 @@ const tierLabels: Record<string, string> = {
 const branchLabels: Record<string, string> = {
   tbi: 'Jakarta (TBI Pusat)',
   bsd: 'Delrey BizTown BSD',
-  malang: 'Malang (Opening Soon)',
+  malang: 'Malang (Grand Arumba)',
   online_only: 'Online Only',
   multiple: 'Multiple (TBI & BSD)',
 }
@@ -729,7 +729,7 @@ export function PsychologistsCmsPage() {
                       >
                         <option value="tbi">Jakarta Selatan (TBI Pusat)</option>
                         <option value="bsd">Delrey BizTown BSD</option>
-                        <option value="malang">Malang - Grand Arumba (Opening Soon)</option>
+                        <option value="malang">Malang (Grand Arumba)</option>
                         <option value="online_only">Online Only</option>
                         <option value="multiple">Multiple (TBI & BSD)</option>
                       </select>

@@ -30,7 +30,7 @@ export function OurLocations() {
             {t('homepage.locations.title', 'Ruang Konseling Nyaman & Privat untukmu')}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">
-            {t('homepage.locations.description', 'Temukan ruang aman untuk sesi tatap muka langsung di Jakarta dan BSD, atau jadwalkan sesi daring dari mana saja. Cabang Malang segera hadir.')}
+            {t('homepage.locations.description', 'Temukan ruang aman untuk sesi tatap muka langsung di Jakarta, BSD, dan Malang, atau jadwalkan sesi daring dari mana saja.')}
           </p>
         </div>
 
@@ -54,6 +54,21 @@ export function OurLocations() {
                 whileHover={{ y: -4 }}
               >
                 <div>
+                  {/* Branch Architectural Photo */}
+                  {branch.image && (
+                    <div className="relative mb-6 aspect-[16/10] overflow-hidden rounded-xl border border-secondary/10 bg-[#e9ece9] shadow-2xs">
+                      <img
+                        alt={branchName}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        decoding="async"
+                        height="500"
+                        loading="lazy"
+                        src={branch.image}
+                        width="800"
+                      />
+                    </div>
+                  )}
+
                   {/* Top Badge & City Header */}
                   <div className="flex items-center justify-between gap-3">
                     <span

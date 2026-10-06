@@ -597,7 +597,7 @@
     "locations": {
       "eyebrow": "Clinic & Practice Locations",
       "title": "Comfortable & Private Counseling Spaces",
-      "description": "Find a safe, welcoming space for in-person sessions in Jakarta and BSD, or join online sessions from anywhere. Malang branch opening soon.",
+      "description": "Find a safe, welcoming space for in-person sessions in Jakarta, BSD, and Malang, or join online sessions from anywhere.",
       "openMaps": "Open in Google Maps",
       "planOfflineSession": "Plan In-Person Session",
       "openingSoon": "Opening Soon",
@@ -623,11 +623,11 @@
       },
       "malang": {
         "title": "Attentive Malang",
-        "badge": "Opening Soon",
+        "badge": "Malang Branch",
         "city": "Malang, East Java",
         "address": "Grand Arumba B17, Jl. Grand Arumba, Blok B No.17, Tunggulwulung, Kota Malang 65143",
-        "description": "Preparing a dedicated sanctuary for the mental well-being of Malang and East Java. While the physical space is being finalized, all our psychologists are accessible via Online Counseling.",
-        "highlights": ["Online Counseling Active Now", "Physical Clinic Opening Soon", "Serving Greater Malang & Beyond"]
+        "description": "Located in the peaceful and lush area of Grand Arumba Tunggulwulung. Providing a comfortable, confidential sanctuary for in-person and online counseling across Greater Malang & East Java.",
+        "highlights": ["In-Person & Online Counseling", "Private & Serene Space", "Serving Greater Malang & East Java"]
       },
       "reassurance": {
         "privacyTitle": "100% Confidentiality & Privacy",

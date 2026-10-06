@@ -19,6 +19,7 @@ export interface ClinicBranch {
     status: 'active' | 'opening_soon'
     tag: string
     features: readonly string[]
+    image: string
 }
 
 export const clinicBranches: readonly ClinicBranch[] = [
@@ -32,6 +33,7 @@ export const clinicBranches: readonly ClinicBranch[] = [
         status: 'active',
         tag: 'Pusat Layanan Utama',
         features: ['Konseling Tatap Muka & Online', 'Ruang Privat Kedap Suara', 'Akses KRL St. Tanjung Barat'],
+        image: '/images/locations/jakarta.webp',
     },
     {
         id: 'bsd',
@@ -43,6 +45,7 @@ export const clinicBranches: readonly ClinicBranch[] = [
         status: 'active',
         tag: 'Cabang BSD',
         features: ['Konseling Tatap Muka & Online', 'Kawasan Modern & Tenang', 'Parkir Luas & Akses Tol BSD'],
+        image: '/images/locations/bsd.webp',
     },
     {
         id: 'malang',
@@ -51,9 +54,10 @@ export const clinicBranches: readonly ClinicBranch[] = [
         region: 'Jawa Timur',
         address: 'Grand Arumba B17, Jl. Grand Arumba, Blok B No.17, Tunggulwulung, Kota Malang 65143',
         mapsUrl: 'https://goo.gl/maps/2F9E5WrHKEPvhTYX7?g_st=ac',
-        status: 'opening_soon',
-        tag: 'Opening Soon',
-        features: ['Konseling Online Tersedia', 'Ruang Offline Segera Hadir', 'Jangkauan Malang Raya & Jatim'],
+        status: 'active',
+        tag: 'Cabang Malang',
+        features: ['Konseling Tatap Muka & Online', 'Ruang Privat & Asri', 'Jangkauan Malang Raya & Jatim'],
+        image: '/images/locations/malang.webp',
     },
 ] as const
 

@@ -35,6 +35,21 @@
   - Updated `DirectoryLoadingState` in `PsychologistDirectory.tsx` to `aspect-[4/5]` to preserve zero CLS.
   - Verified 57/57 unit tests and clean Vite production build.
   - Rebuilt AST knowledge graph index.
+- [x] **Step 9: Integrate Real Location Photos into Clinic Branch Cards**:
+  - Converted `TB.jpeg` (Jakarta), `BSD.jpeg` (BSD), and `Malang.jpeg` (Malang) to optimized 16:10 WebP assets in `public/images/locations/` (total <160KB).
+  - Added `image` field to `ClinicBranch` in `contact.ts`.
+  - Rendered architectural location photo inside `OurLocations.tsx` with zero CLS, spring hover physics, and lazy loading.
+  - Verified 57/57 unit tests and clean Vite production build.
+  - Rebuilt AST knowledge graph index.
+- [x] **Step 10: Activate Malang Clinic Branch (Opening Soon -> Active)**:
+  - Updated status in `contact.ts` to `active`, tag to `Cabang Malang`, and features to in-person & online counseling.
+  - Updated translations in `id.json` and `en.json` (badge, descriptions, features, and landing section hero copy).
+  - Updated `PsychologistsCmsPage.tsx` branch labels and selector options to `Malang (Grand Arumba)`.
+  - Converted CTA in `OurLocations.tsx` from online fallback to dual buttons (Offline Session Booking + Google Maps).
+  - Verified 57/57 unit tests and clean Vite production build.
+  - Rebuilt AST knowledge graph index.
+
+
 
 
 
