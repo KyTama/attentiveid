@@ -28,4 +28,5 @@ verbatim — distil it to a transferable principle first.
 | 10 | Knowledge graph continuous sync — read first, rebuild on done | [knowledge-graph-continuous-sync.md](./knowledge-graph-continuous-sync.md) |
 | 11 | Dual-aspect portrait framing & facial landmark calibration | [dual-aspect-portrait-framing.md](./dual-aspect-portrait-framing.md) |
 | 12 | Architectural location imagery & synchronized lifecycle states | [architectural-location-state-sync.md](./architectural-location-state-sync.md) |
+| 13 | Dashboard craft normalization & anti-AI-slop copy foundations | [dashboard-craft-and-antislop.md](./dashboard-craft-and-antislop.md) |
 

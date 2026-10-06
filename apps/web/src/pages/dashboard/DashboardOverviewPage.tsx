@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import {
+  Users,
+  LayoutTemplate,
+  FileText,
+  ShieldCheck,
+  UserCheck,
+} from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { useTranslation } from 'react-i18next'
 
@@ -88,20 +95,18 @@ export function DashboardOverviewPage() {
           <motion.div
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-sm"
+            className="p-5 bg-white rounded-2xl border border-slate-200/70 shadow-xs hover:shadow-sm"
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Direktori Psikolog</span>
-              <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+              <div className="size-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+                <Users className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-slate-900 tabular-nums">
               {isLoading ? '...' : `${stats?.psychologists.active || 0} Aktif`}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 tabular-nums">
               Dari total {stats?.psychologists.total || 0} profil ({stats?.psychologists.featured || 0} tampil di Hero)
             </p>
           </motion.div>
@@ -110,14 +115,12 @@ export function DashboardOverviewPage() {
           <motion.div
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-sm"
+            className="p-5 bg-white rounded-2xl border border-slate-200/70 shadow-xs hover:shadow-sm"
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Landing Page</span>
-              <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
-                </svg>
+              <div className="size-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center">
+                <LayoutTemplate className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">
@@ -134,20 +137,18 @@ export function DashboardOverviewPage() {
           <motion.div
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-sm"
+            className="p-5 bg-white rounded-2xl border border-slate-200/70 shadow-xs hover:shadow-sm"
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Artikel Edukasi</span>
-              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
+              <div className="size-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                <FileText className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-slate-900 tabular-nums">
               {isLoading ? '...' : `${stats?.articles.published || 0} Terbit`}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 tabular-nums">
               {stats?.articles.draft || 0} draft • {stats?.articles.archived || 0} arsip
             </p>
           </motion.div>
@@ -156,20 +157,18 @@ export function DashboardOverviewPage() {
           <motion.div
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-sm"
+            className="p-5 bg-white rounded-2xl border border-slate-200/70 shadow-xs hover:shadow-sm"
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Staff & Kredensial</span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 002-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+              <div className="size-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                <ShieldCheck className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-slate-900 tabular-nums">
               {isLoading ? '...' : `${stats?.staff.total || 0} Akun`}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 tabular-nums">
               {stats?.staff.admins || 0} Admin • {stats?.staff.psychologists || 0} Psikolog
             </p>
           </motion.div>
@@ -193,10 +192,8 @@ export function DashboardOverviewPage() {
                 to="/dashboard/profile"
                 className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
               >
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <UserCheck className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
                 <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                   Profil Mandiri Saya
@@ -217,10 +214,8 @@ export function DashboardOverviewPage() {
                 to="/dashboard/landing"
                 className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
               >
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
-                  </svg>
+                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <LayoutTemplate className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
                 <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                   Landing Content CMS
@@ -241,10 +236,8 @@ export function DashboardOverviewPage() {
                 to="/dashboard/psychologists"
                 className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
               >
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <Users className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
                 <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                   Direktori Psikolog
@@ -264,10 +257,8 @@ export function DashboardOverviewPage() {
               to="/dashboard/articles"
               className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
             >
-              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
+              <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <FileText className="size-5 stroke-[1.75]" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                 Manajemen Artikel
@@ -287,10 +278,8 @@ export function DashboardOverviewPage() {
                 to="/dashboard/users"
                 className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
               >
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
+                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <ShieldCheck className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
                 <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                   Manajemen Staff & User
