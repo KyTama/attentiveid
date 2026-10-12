@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  LayoutTemplate,
+  Users,
+  UserCheck,
+  FileText,
+  ShieldCheck,
+  Menu,
+  X,
+  LogOut,
+} from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { LanguageSwitcher } from '../common/LanguageSwitcher'
 import { useTranslation } from 'react-i18next'
@@ -18,61 +29,37 @@ export function DashboardLayout() {
       to: '/dashboard',
       end: true,
       label: t('dashboard.navOverview', 'Overview'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      ),
+      icon: <LayoutDashboard className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: true,
     },
     {
       to: '/dashboard/landing',
       label: t('dashboard.navLanding', 'Landing Content'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-        </svg>
-      ),
+      icon: <LayoutTemplate className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
     },
     {
       to: '/dashboard/psychologists',
       label: t('dashboard.navPsychologists', 'Psychologists'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
+      icon: <Users className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
     },
     {
       to: '/dashboard/profile',
       label: t('dashboard.navProfile', 'Profil Saya'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      ),
+      icon: <UserCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: true,
     },
     {
       to: '/dashboard/articles',
       label: t('dashboard.navArticles', 'Articles Management'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-      ),
+      icon: <FileText className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: true,
     },
     {
       to: '/dashboard/users',
       label: t('dashboard.navUsers', 'Manajemen Staff'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
+      icon: <ShieldCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
     },
   ].filter((item) => item.show)
@@ -142,9 +129,7 @@ export function DashboardLayout() {
               className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
               aria-label="Toggle menu"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="size-5 stroke-[1.75]" aria-hidden="true" />
             </button>
             <h2 className="text-base font-semibold text-slate-900 truncate">
               {user?.name || 'Dashboard'}
@@ -164,9 +149,10 @@ export function DashboardLayout() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleLogout}
-                className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-lg border border-slate-300 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-lg border border-slate-300 transition-colors"
               >
-                {t('auth.logout', 'Sign Out')}
+                <LogOut className="size-3.5 stroke-[1.75]" aria-hidden="true" />
+                <span>{t('auth.logout', 'Sign Out')}</span>
               </motion.button>
             </div>
           </div>
@@ -195,8 +181,9 @@ export function DashboardLayout() {
                   <button
                     onClick={() => setIsMobileOpen(false)}
                     className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                    aria-label="Close menu"
                   >
-                    ✕
+                    <X className="size-5 stroke-[1.75]" aria-hidden="true" />
                   </button>
                 </div>
 
