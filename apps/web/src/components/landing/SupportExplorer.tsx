@@ -50,14 +50,28 @@ export function SupportExplorer() {
           <h2 className="text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{title}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">{description}</p>
         </div>
-        <ul className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-12 grid gap-6 md:grid-cols-2">
           {topics.map((topic, topicIndex) => (
-            <motion.li className="relative flex min-h-80 overflow-hidden rounded-xl bg-[#f5efe5]" key={topic.id} transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }}>
-              <div className="relative z-10 flex w-[64%] flex-col p-5 sm:p-6">
-                <img alt="" className="size-10 object-contain" height="40" loading="lazy" src={`/images/figma/support-icon-${topicIndex + 1}.webp`} width="40" />
-                <h3 className="mt-5 text-lg font-bold leading-6 text-secondary">{topic.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed font-[450] text-secondary">{topic.description}</p>
-                <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5">
+            <motion.li
+              className="group relative flex flex-col sm:flex-row min-h-[300px] overflow-hidden rounded-2xl border border-secondary/10 bg-[#f5efe5] shadow-xs"
+              key={topic.id}
+              transition={INTERACTIVE_SPRING}
+              whileHover={{ y: -4 }}
+            >
+              <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <img
+                    alt=""
+                    className="size-9 object-contain"
+                    height="36"
+                    loading="lazy"
+                    src={`/images/figma/support-icon-${topicIndex + 1}.webp`}
+                    width="36"
+                  />
+                  <h3 className="mt-4 text-xl font-bold leading-snug text-secondary">{topic.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed font-[450] text-secondary/85">{topic.description}</p>
+                </div>
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 pt-4">
                   <button
                     type="button"
                     onClick={() => openIntake({ concernId: topicToIntakeConcern[topic.id] || 'anxiety_mood' })}
@@ -74,7 +88,16 @@ export function SupportExplorer() {
                   </Link>
                 </div>
               </div>
-              <img alt="" className="absolute right-0 top-0 h-full w-[38%] object-cover" height="388" loading="lazy" src={`/images/figma/support-${topicIndex + 1}.webp`} width="169" />
+              <div className="relative aspect-4/3 w-full sm:aspect-auto sm:w-[48%] overflow-hidden bg-secondary/5">
+                <img
+                  alt={topic.title}
+                  className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  height="400"
+                  loading="lazy"
+                  src={`/images/figma/support-${topicIndex + 1}.webp`}
+                  width="600"
+                />
+              </div>
             </motion.li>
           ))}
         </ul>
