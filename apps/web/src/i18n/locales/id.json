@@ -519,10 +519,10 @@
       "action": "Pelajari layanan",
       "topics": [
         { "id": "adult", "title": "Konseling individual", "description": "Ruang privat untuk kecemasan, suasana hati, trauma, kepercayaan diri, regulasi emosi, dan pengembangan diri." },
+        { "id": "assessment", "title": "Asesmen psikologis", "description": "Asesmen terstruktur untuk memahami kekuatan, kebutuhan, pola belajar, atau langkah lanjutan yang sesuai." },
         { "id": "relationships", "title": "Pasangan dan relasi", "description": "Dukungan untuk komunikasi, kepercayaan, konflik, persiapan pernikahan, dan pola relasi yang ingin diubah." },
         { "id": "child", "title": "Anak dan remaja", "description": "Dukungan sesuai usia untuk perkembangan, emosi, perilaku, pembelajaran, relasi sosial, dan kebutuhan keluarga." },
         { "id": "family", "title": "Terapi keluarga", "description": "Ruang terpandu untuk memahami konflik berulang, membangun kembali kedekatan, dan menemukan cara yang lebih sehat." },
-        { "id": "assessment", "title": "Asesmen psikologis", "description": "Asesmen terstruktur untuk memahami kekuatan, kebutuhan, pola belajar, atau langkah lanjutan yang sesuai." },
         { "id": "career", "title": "Karier dan pekerjaan", "description": "Dukungan untuk burnout, stres kerja, arah karier, kepercayaan diri, pengambilan keputusan, dan perkembangan profesional." }
       ]
     },

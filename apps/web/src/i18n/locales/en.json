@@ -519,10 +519,10 @@
       "action": "Learn more",
       "topics": [
         { "id": "adult", "title": "Individual counseling", "description": "A private space for anxiety, mood, trauma, self-esteem, emotional regulation, and personal growth." },
+        { "id": "assessment", "title": "Psychological assessment", "description": "Structured assessment to better understand strengths, needs, learning patterns, or the next suitable step." },
         { "id": "relationships", "title": "Couples and relationships", "description": "Support for communication, trust, conflict, premarital concerns, and changing relationship patterns." },
         { "id": "child", "title": "Child and adolescent support", "description": "Age-appropriate support for development, emotions, behavior, learning, social relationships, and family concerns." },
         { "id": "family", "title": "Family therapy", "description": "A guided space for families to understand recurring conflict, rebuild connection, and find healthier ways forward." },
-        { "id": "assessment", "title": "Psychological assessment", "description": "Structured assessment to better understand strengths, needs, learning patterns, or the next suitable step." },
         { "id": "career", "title": "Career and work", "description": "Support for burnout, workplace stress, career direction, confidence, decision-making, and professional growth." }
       ]
     },

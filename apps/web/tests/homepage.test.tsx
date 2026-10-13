@@ -103,10 +103,10 @@ describe('homepage', () => {
     expect(links).toHaveLength(6)
     const expectedHrefs = [
       '/psychologists?support=adultClinical',
+      '/psychologists?support=educational',
       '/psychologists?q=relationship',
       '/psychologists?support=childAdolescent',
       '/psychologists?q=family',
-      '/psychologists?support=educational',
       '/psychologists?q=career',
     ]
     links.forEach((link, index) => {

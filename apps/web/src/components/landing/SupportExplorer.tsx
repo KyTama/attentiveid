@@ -24,9 +24,50 @@ const topicToDirectoryQuery: Record<string, { en: string; id: string }> = {
   career: { en: '/psychologists?q=career', id: '/psychologists?q=karir' },
 }
 
+const topicToAssetNumber: Record<string, number> = {
+  adult: 1,
+  'individual-counseling': 1,
+  'sup-1': 1,
+  assessment: 5,
+  'psychological-assessment': 5,
+  'sup-3': 5,
+  relationships: 2,
+  'couples-relationships': 2,
+  child: 3,
+  'child-adolescent': 3,
+  'sup-2': 3,
+  family: 4,
+  'family-therapy': 4,
+  career: 6,
+  'career-work': 6,
+}
+
+function resolveTopicKey(id: string, title: string): string {
+  if (topicToIntakeConcern[id]) return id
+  const lower = title.toLowerCase()
+  if (lower.includes('asesmen') || lower.includes('assessment')) return 'assessment'
+  if (lower.includes('individual') || lower.includes('dewasa') || lower.includes('adult')) return 'adult'
+  if (lower.includes('pasangan') || lower.includes('relasi') || lower.includes('couple') || lower.includes('relationship')) return 'relationships'
+  if (lower.includes('anak') || lower.includes('remaja') || lower.includes('child') || lower.includes('adolescent')) return 'child'
+  if (lower.includes('keluarga') || lower.includes('family')) return 'family'
+  if (lower.includes('karier') || lower.includes('karir') || lower.includes('career') || lower.includes('work')) return 'career'
+  return id
+}
+
+const canonicalOrder: Record<string, number> = {
+  adult: 0,
+  assessment: 1,
+  relationships: 2,
+  child: 3,
+  family: 4,
+  career: 5,
+}
+
 interface SupportTopic {
   description: string
   id: string
+  originalId?: string
+  position?: number
   title: string
 }
 
@@ -35,11 +76,24 @@ export function SupportExplorer() {
   const locale = i18n.resolvedLanguage === 'id' ? 'id' : 'en'
   const { openIntake } = useIntakeModal()
   const managed = useLandingSection('supportExplorer')
-  const topics = managed
+  const topics: SupportTopic[] = managed
     ? [...managed.section.items]
-      .sort((left, right) => left.position - right.position)
-      .map((item) => ({ id: item.id, title: item.title[managed.locale], description: item.description[managed.locale] }))
-    : t('homepage.support.topics', { returnObjects: true }) as SupportTopic[]
+      .map((item) => {
+        const key = resolveTopicKey(item.id, item.title.en || item.title.id || '')
+        return {
+          id: key,
+          originalId: item.id,
+          position: item.position,
+          title: item.title[managed.locale],
+          description: item.description[managed.locale],
+        }
+      })
+      .sort((a, b) => {
+        const priorityA = canonicalOrder[a.id] ?? a.position
+        const priorityB = canonicalOrder[b.id] ?? b.position
+        return priorityA - priorityB
+      })
+    : (t('homepage.support.topics', { returnObjects: true }) as SupportTopic[])
   const title = managed?.section.headline[managed.locale] ?? t('homepage.support.title')
   const description = managed?.section.description[managed.locale] ?? t('homepage.support.description')
 
@@ -51,55 +105,58 @@ export function SupportExplorer() {
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed font-[450] text-secondary sm:text-lg">{description}</p>
         </div>
         <ul className="mt-12 grid gap-6 md:grid-cols-2">
-          {topics.map((topic, topicIndex) => (
-            <motion.li
-              className="group relative flex flex-col sm:flex-row min-h-[300px] overflow-hidden rounded-2xl border border-secondary/10 bg-[#f5efe5] shadow-xs"
-              key={topic.id}
-              transition={INTERACTIVE_SPRING}
-              whileHover={{ y: -4 }}
-            >
-              <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
-                <div>
+          {topics.map((topic, topicIndex) => {
+            const assetNumber = topicToAssetNumber[topic.id] ?? topicIndex + 1
+            return (
+              <motion.li
+                className="group relative flex flex-col sm:flex-row min-h-[300px] overflow-hidden rounded-2xl border border-secondary/10 bg-[#f5efe5] shadow-xs"
+                key={topic.id}
+                transition={INTERACTIVE_SPRING}
+                whileHover={{ y: -4 }}
+              >
+                <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
+                  <div>
+                    <img
+                      alt=""
+                      className="size-9 object-contain"
+                      height="36"
+                      loading="lazy"
+                      src={`/images/figma/support-icon-${assetNumber}.webp`}
+                      width="36"
+                    />
+                    <h3 className="mt-4 text-xl font-bold leading-snug text-secondary">{topic.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed font-[450] text-secondary/85">{topic.description}</p>
+                  </div>
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => openIntake({ concernId: topicToIntakeConcern[topic.id] || 'anxiety_mood' })}
+                      className="inline-flex min-h-11 items-center text-xs font-bold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                    >
+                      {t('intakeDialog.title')}
+                    </button>
+                    <Link
+                      className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      to={topicToDirectoryQuery[topic.id]?.[locale] ?? '/psychologists'}
+                    >
+                      {t('homepage.support.action')}
+                      <span className="sr-only">: {topic.title}</span>
+                    </Link>
+                  </div>
+                </div>
+                <div className="relative aspect-4/3 w-full sm:aspect-auto sm:w-[48%] overflow-hidden bg-secondary/5">
                   <img
-                    alt=""
-                    className="size-9 object-contain"
-                    height="36"
+                    alt={topic.title}
+                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    height="400"
                     loading="lazy"
-                    src={`/images/figma/support-icon-${topicIndex + 1}.webp`}
-                    width="36"
+                    src={`/images/figma/support-${assetNumber}.webp`}
+                    width="600"
                   />
-                  <h3 className="mt-4 text-xl font-bold leading-snug text-secondary">{topic.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed font-[450] text-secondary/85">{topic.description}</p>
                 </div>
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => openIntake({ concernId: topicToIntakeConcern[topic.id] || 'anxiety_mood' })}
-                    className="inline-flex min-h-11 items-center text-xs font-bold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                  >
-                    {t('intakeDialog.title')}
-                  </button>
-                  <Link
-                    className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    to={topicToDirectoryQuery[topic.id]?.[locale] ?? '/psychologists'}
-                  >
-                    {t('homepage.support.action')}
-                    <span className="sr-only">: {topic.title}</span>
-                  </Link>
-                </div>
-              </div>
-              <div className="relative aspect-4/3 w-full sm:aspect-auto sm:w-[48%] overflow-hidden bg-secondary/5">
-                <img
-                  alt={topic.title}
-                  className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  height="400"
-                  loading="lazy"
-                  src={`/images/figma/support-${topicIndex + 1}.webp`}
-                  width="600"
-                />
-              </div>
-            </motion.li>
-          ))}
+              </motion.li>
+            )
+          })}
         </ul>
       </div>
     </section>
