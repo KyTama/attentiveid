@@ -70,7 +70,7 @@ export function ConsultationReassurance() {
             </div>
           </div>
           <figure className="relative min-h-[24rem] overflow-hidden bg-[#d9c1a4] lg:min-h-full">
-            <img alt={t('homepage.pricing.imageAlt')} className="absolute inset-0 h-full w-full object-cover object-center" height="259" loading="lazy" src="/images/figma/session-video.webp" width="366" />
+            <img alt={t('homepage.pricing.imageAlt')} className="absolute inset-0 h-full w-full object-cover object-center" height="1431" loading="lazy" src="/images/figma/remote-counseling-session.webp" width="919" />
             <figcaption className="absolute inset-x-0 bottom-0 bg-secondary/90 px-6 py-5 text-sm leading-6 text-white">{t('homepage.pricing.imageCaption')}</figcaption>
           </figure>
         </div>
