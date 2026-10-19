@@ -9,9 +9,9 @@ interface JourneyStep {
   title: string
 }
 const journeyImages = [
-  { height: 174, src: '/images/figma/browse-psychologists.webp', width: 160 },
-  { height: 187, src: '/images/figma/guided-matching.webp', width: 161 },
-  { height: 259, src: '/images/figma/session-video.webp', width: 366 },
+  { height: 500, src: '/images/journey/find-your-fit.webp', width: 800 },
+  { height: 500, src: '/images/journey/choose-how-to-meet.webp', width: 800 },
+  { height: 500, src: '/images/journey/connect-at-your-pace.webp', width: 800 },
 ] as const
 
 export function CareJourney() {
@@ -53,20 +53,20 @@ export function CareJourney() {
           {steps.map((step, stepIndex) => {
             const image = journeyImages[stepIndex]
             return (
-              <li className="flex min-h-[34rem] flex-col rounded-xl border border-secondary/10 bg-white/55 p-6 sm:p-8" key={step.id}>
+              <li className="group flex min-h-[34rem] flex-col rounded-xl border border-secondary/10 bg-white/55 p-6 sm:p-8 transition-colors hover:border-secondary/25 shadow-2xs hover:shadow-xs" key={step.id}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-[#946a22]">0{stepIndex + 1}</span>
                   <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#845c1b]">{t('homepage.journey.step')}</span>
                 </div>
-                <div className="mt-7 grid h-48 place-items-center overflow-hidden rounded-2xl bg-[#eee5d8]">
+                <div className="relative mt-7 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#eee5d8] shadow-2xs">
                   <img
-                    alt=""
-                    className="max-h-40 max-w-[85%] object-contain"
+                    alt={step.title}
+                    className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                     decoding="async"
-                    height={image?.height}
+                    height={image?.height ?? 500}
                     loading="lazy"
                     src={image?.src}
-                    width={image?.width}
+                    width={image?.width ?? 800}
                   />
                 </div>
                 <h3 className="mt-8 text-xl sm:text-2xl font-bold tracking-tight text-secondary">{step.title}</h3>

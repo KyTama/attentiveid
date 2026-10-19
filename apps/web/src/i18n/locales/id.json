@@ -502,6 +502,7 @@
       "primaryAction": "Rencanakan sesi konseling",
       "secondaryAction": "Temukan psikologmu",
       "reassurance": "Tidak perlu diagnosis. Mulai dari hal yang sedang memenuhi pikiranmu.",
+      "campaignLink": "Lihat program & kampanye unggulan",
       "imageAlt": "Psikolog Attentive yang siap mendengarkan",
       "imageCardTitle": "Dukungan yang mengikuti kebutuhanmu",
       "imageCardBody": "Mulai dari ceritamu, kenyamananmu, dan dukungan yang sedang kamu butuhkan.",
@@ -511,6 +512,32 @@
         { "value": "5,0", "label": "Rating Google" },
         { "value": "53", "label": "Ulasan Google" }
       ]
+    },
+    "campaigns": {
+      "eyebrow": "Program & Layanan Unggulan",
+      "title": "Akses Cepat Menuju Dukungan yang Tepat",
+      "description": "Jelajahi inisiatif khusus dan portal layanan kami — mulai dari sesi konsultasi gratis, reservasi jadwal langsung, hingga asesmen psikologi digital.",
+      "freeSession": {
+        "badge": "Promo Khusus",
+        "title": "First Free Session Consultation",
+        "description": "Klaim sesi privat 1-on-1 tanpa biaya untuk langkah awalmu.",
+        "perks": ["100% bebas biaya", "Sesi privat & rahasia", "Tanpa komitmen lanjutan"],
+        "cta": "Klaim Sesi Gratis"
+      },
+      "booking": {
+        "badge": "Jadwal Langsung",
+        "title": "Booking / Reservasi Psikolog",
+        "description": "Pilih psikolog dan tentukan jadwal sesi online atau klinik.",
+        "perks": ["Jadwal real-time", "Tatap muka & online", "Konfirmasi instan"],
+        "cta": "Reservasi Jadwal"
+      },
+      "testCentre": {
+        "badge": "Tes Online",
+        "title": "Digital Test Centre",
+        "description": "Asesmen psikologi terstandarisasi yang siap diakses 24/7.",
+        "perks": ["Tes terstandarisasi", "Laporan hasil digital", "Akses mandiri 24/7"],
+        "cta": "Akses Tes Online"
+      }
     },
     "support": {
       "title": "Apa yang sedang memenuhi pikiranmu?",

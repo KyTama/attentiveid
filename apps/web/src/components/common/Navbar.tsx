@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from './LanguageSwitcher'
-import { useIntakeModal } from '@/components/intake'
 
 const NAV_ITEMS = [
     { key: 'about', href: '#about' },
@@ -21,7 +20,6 @@ const NAV_ITEMS = [
 export function Navbar() {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { openIntake } = useIntakeModal()
     const [isVisible, setIsVisible] = useState(true)
     const [isAtTop, setIsAtTop] = useState(true)
     const [lastScrollY, setLastScrollY] = useState(0)
@@ -100,11 +98,13 @@ export function Navbar() {
                     ))}
                     <LanguageSwitcher />
                     <Button
+                        asChild
                         size="sm"
-                        onClick={() => openIntake()}
                         className="btn-primary shrink-0"
                     >
-                        {t('nav.headerCta')}
+                        <a href="https://booking.attentiveid.com/" target="_blank" rel="noopener noreferrer">
+                            {t('nav.headerCta')}
+                        </a>
                     </Button>
                 </div>
 
@@ -130,13 +130,17 @@ export function Navbar() {
                                     </button>
                                 ))}
                                 <Button
-                                    onClick={() => {
-                                        setMobileOpen(false)
-                                        openIntake()
-                                    }}
+                                    asChild
                                     className="btn-primary w-full mt-2"
                                 >
-                                    {t('nav.headerCta')}
+                                    <a
+                                        href="https://booking.attentiveid.com/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => setMobileOpen(false)}
+                                    >
+                                        {t('nav.headerCta')}
+                                    </a>
                                 </Button>
                             </div>
                         </SheetContent>

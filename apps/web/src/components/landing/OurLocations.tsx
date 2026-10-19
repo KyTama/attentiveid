@@ -3,11 +3,9 @@ import { Building2, CalendarCheck2, CalendarClock, Car, ExternalLink, MapPin, Sh
 import { useTranslation } from 'react-i18next'
 import { clinicBranches, type ClinicBranch } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
-import { useIntakeModal } from '@/components/intake'
 
 export function OurLocations() {
   const { t } = useTranslation()
-  const { openIntake } = useIntakeModal()
 
   return (
     <section className="deferred-section relative overflow-hidden bg-white px-5 py-20 lg:px-8 lg:py-28" id="locations">
@@ -124,17 +122,18 @@ export function OurLocations() {
                 <div className="mt-8 grid gap-2.5 pt-5 border-t border-secondary/10">
                   {isOpeningSoon ? (
                     <>
-                      <motion.button
+                      <motion.a
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                        onClick={() => openIntake({ initialFormat: 'online' })}
+                        href="https://booking.attentiveid.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         transition={INTERACTIVE_SPRING}
-                        type="button"
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
                         <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
-                      </motion.button>
+                      </motion.a>
 
                       {branch.mapsUrl && (
                         <motion.a
@@ -155,17 +154,18 @@ export function OurLocations() {
                   ) : (
                     <>
                       {/* Button 1: Plan Offline Session */}
-                      <motion.button
+                      <motion.a
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                        onClick={() => openIntake({ initialFormat: 'offline' })}
+                        href="https://booking.attentiveid.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         transition={INTERACTIVE_SPRING}
-                        type="button"
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
                         <span>{t('homepage.locations.planOfflineSession', 'Jadwalkan Sesi Offline')}</span>
-                      </motion.button>
+                      </motion.a>
 
                       {/* Button 2: Google Maps Link */}
                       <motion.a

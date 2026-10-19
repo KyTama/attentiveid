@@ -502,6 +502,7 @@
       "primaryAction": "Plan your session",
       "secondaryAction": "Find your psychologist",
       "reassurance": "No diagnosis needed. Start with what has been on your mind.",
+      "campaignLink": "Explore featured programs & campaigns",
       "imageAlt": "Attentive psychologist ready to listen",
       "imageCardTitle": "Care shaped around you",
       "imageCardBody": "Start with your story, your comfort, and the kind of support you need.",
@@ -511,6 +512,32 @@
         { "value": "5.0", "label": "Google rating" },
         { "value": "53", "label": "Google reviews" }
       ]
+    },
+    "campaigns": {
+      "eyebrow": "Featured Campaigns & Portals",
+      "title": "Direct Pathways to the Right Care",
+      "description": "Explore our dedicated initiatives and specialized portals — from a free first session to direct scheduling and digital testing.",
+      "freeSession": {
+        "badge": "Limited Offer",
+        "title": "First Free Session Consultation",
+        "description": "Claim a private 1-on-1 session at no cost to begin your journey.",
+        "perks": ["100% free of charge", "Private & confidential", "No commitment required"],
+        "cta": "Claim Free Session"
+      },
+      "booking": {
+        "badge": "Direct Booking",
+        "title": "Booking / Reserve Psychologist",
+        "description": "Select your psychologist and choose an online or in-person slot.",
+        "perks": ["Real-time availability", "In-person & online", "Instant confirmation"],
+        "cta": "Book a Session"
+      },
+      "testCentre": {
+        "badge": "Digital Assessment",
+        "title": "Digital Test Centre",
+        "description": "Standardized psychological assessments accessible 24/7 on demand.",
+        "perks": ["Standardized testing", "Digital report & insights", "24/7 on-demand access"],
+        "cta": "Access Test Centre"
+      }
     },
     "support": {
       "title": "What has been on your mind?",

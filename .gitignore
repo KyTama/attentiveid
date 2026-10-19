@@ -83,6 +83,7 @@ coverage/
 .cache/
 anti-slop/
 apps/web/public/images/Foto Psikolog Attentive (New)/
+apps/landingpage/
 
 
 docs/*

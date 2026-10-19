@@ -29,4 +29,5 @@ verbatim — distil it to a transferable principle first.
 | 11 | Dual-aspect portrait framing & facial landmark calibration | [dual-aspect-portrait-framing.md](./dual-aspect-portrait-framing.md) |
 | 12 | Architectural location imagery & synchronized lifecycle states | [architectural-location-state-sync.md](./architectural-location-state-sync.md) |
 | 13 | Dashboard craft normalization & anti-AI-slop copy foundations | [dashboard-craft-and-antislop.md](./dashboard-craft-and-antislop.md) |
+| 14 | Non-intrusive mobile action docks & in-page restoration | [non-intrusive-mobile-action-docks.md](./non-intrusive-mobile-action-docks.md) |
 

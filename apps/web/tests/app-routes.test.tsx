@@ -34,7 +34,10 @@ describe('public routes', () => {
     const heading = await screen.findByRole('heading', { name: 'Syazka Kirani Narindra' })
     expect(heading).toBeInTheDocument()
     await waitFor(() => expect(heading).toHaveFocus())
-    expect(screen.getAllByRole('button', { name: /plan your consultation/i }).length).toBeGreaterThanOrEqual(1)
+    const planLinks = screen.getAllByRole('link', { name: /plan your consultation/i })
+    expect(planLinks.length).toBeGreaterThanOrEqual(1)
+    expect(planLinks[0]).toHaveAttribute('href', 'https://booking.attentiveid.com/')
+    expect(planLinks[0]).toHaveAttribute('target', '_blank')
     expect(screen.getByRole('link', { name: /get to know syazka/i })).toHaveAttribute('href', '#profile-story')
     expect(screen.getByRole('link', { name: /continue on whatsapp/i })).toHaveAttribute(
       'href',

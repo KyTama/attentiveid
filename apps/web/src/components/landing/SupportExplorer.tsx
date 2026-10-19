@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
-import { useIntakeModal } from '@/components/intake'
 import type { IntakeConcernId } from '@attentiveid/shared'
 
 const topicToIntakeConcern: Record<string, IntakeConcernId> = {
@@ -74,7 +73,6 @@ interface SupportTopic {
 export function SupportExplorer() {
   const { i18n, t } = useTranslation()
   const locale = i18n.resolvedLanguage === 'id' ? 'id' : 'en'
-  const { openIntake } = useIntakeModal()
   const managed = useLandingSection('supportExplorer')
   const topics: SupportTopic[] = managed
     ? [...managed.section.items]
@@ -128,13 +126,14 @@ export function SupportExplorer() {
                     <p className="mt-2 text-sm leading-relaxed font-[450] text-secondary/85">{topic.description}</p>
                   </div>
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => openIntake({ concernId: topicToIntakeConcern[topic.id] || 'anxiety_mood' })}
+                    <a
+                      href="https://booking.attentiveid.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex min-h-11 items-center text-xs font-bold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
                     >
                       {t('intakeDialog.title')}
-                    </button>
+                    </a>
                     <Link
                       className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       to={topicToDirectoryQuery[topic.id]?.[locale] ?? '/psychologists'}

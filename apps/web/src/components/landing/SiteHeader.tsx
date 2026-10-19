@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
-import { useIntakeModal } from '@/components/intake'
 
 const navItems = [
   { key: 'support', href: '/#support' },
@@ -51,7 +50,6 @@ function LanguageToggle() {
 export function SiteHeader() {
   const { t } = useTranslation()
   const location = useLocation()
-  const { openIntake } = useIntakeModal()
   const [menuOpen, setMenuOpen] = useState(false)
   const reduceMotion = useReducedMotion()
 
@@ -111,16 +109,17 @@ export function SiteHeader() {
         <div className="hidden items-center gap-4 lg:flex">
           <LanguageToggle />
 
-          <motion.button
-            type="button"
-            onClick={() => openIntake()}
+          <motion.a
+            href="https://booking.attentiveid.com/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
             transition={INTERACTIVE_SPRING}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
             {t('homepage.nav.headerCta')}
-          </motion.button>
+          </motion.a>
         </div>
 
         {/* Mobile Header Controls */}
@@ -196,16 +195,15 @@ export function SiteHeader() {
               </nav>
 
               <div className="mt-2">
-                <button
-                  type="button"
-                  className="w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                  onClick={() => {
-                    setMenuOpen(false)
-                    openIntake()
-                  }}
+                <a
+                  href="https://booking.attentiveid.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                  onClick={() => setMenuOpen(false)}
                 >
                   {t('homepage.nav.headerCta')}
-                </button>
+                </a>
               </div>
             </div>
           </motion.div>

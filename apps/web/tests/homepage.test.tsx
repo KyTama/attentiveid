@@ -141,4 +141,35 @@ describe('homepage', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(toggle).toHaveFocus()
   })
+
+  it('renders hero campaign redirect links safely with external target and rel', () => {
+    renderHomepage()
+
+    const freeSessionLinks = screen.getAllByRole('link', { name: /first free session/i })
+    expect(freeSessionLinks.length).toBeGreaterThanOrEqual(1)
+    for (const link of freeSessionLinks) {
+      expect(link).toHaveAttribute('href', 'https://attentive-free-session.page.gd/')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
+    }
+
+    const bookingLinks = screen.getAllByRole('link', { name: /booking \/ reserve psychologist/i })
+    expect(bookingLinks.length).toBeGreaterThanOrEqual(1)
+    for (const link of bookingLinks) {
+      expect(link).toHaveAttribute('href', 'https://booking.attentiveid.com/')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
+    }
+
+    const testCentreLinks = screen.getAllByRole('link', { name: /digital test centre/i })
+    expect(testCentreLinks.length).toBeGreaterThanOrEqual(1)
+    for (const link of testCentreLinks) {
+      expect(link).toHaveAttribute('href', 'https://attentive.portproject.my.id/')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
+    }
+  })
 })

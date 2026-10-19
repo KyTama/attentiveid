@@ -1,3 +1,4 @@
+import { CampaignFloatingDock } from './CampaignFloatingDock'
 import { CareJourney } from './CareJourney'
 import { CarePromise } from './CarePromise'
 import { ClientStories } from './ClientStories'
@@ -33,6 +34,7 @@ export function Homepage() {
         {visible('frequentlyAskedQuestions') && <FrequentlyAskedQuestions />}
         {visible('closingInvitation') && <ClosingInvitation />}
       </main>
+      <CampaignFloatingDock />
       <SiteFooter />
     </div>
   )
