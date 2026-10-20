@@ -4,6 +4,7 @@ export type PsychologistSupportArea =
   | 'adultClinical'
   | 'childAdolescent'
   | 'educational'
+  | 'psychologyScientist'
 
 export type PsychologistExperienceLevel =
   | 'earlyCareer'

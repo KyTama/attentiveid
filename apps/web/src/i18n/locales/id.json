@@ -420,7 +420,7 @@
       "name": "Dr. Haykal Hafizul Arifin",
       "nickname": "Haykal",
       "title": "S.Psi., M.Si.",
-      "category": "Social Psychologist",
+      "category": "Ilmuwan Psikologi",
       "image": "images/psychologists/Haykal.webp",
       "icon": "images/research-class.webp",
       "specializations": [
@@ -724,7 +724,8 @@
           "all": "Semua area dukungan",
           "adultClinical": "Dewasa",
           "childAdolescent": "Anak dan remaja",
-          "educational": "Pendidikan dan perkembangan"
+          "educational": "Pendidikan dan perkembangan",
+          "psychologyScientist": "Ilmuwan Psikologi"
         },
         "experienceLegend": "Pengalaman profesional",
         "experience": {
@@ -743,7 +744,8 @@
         "supportArea": {
           "adultClinical": "Klinis dewasa",
           "childAdolescent": "Anak dan remaja",
-          "educational": "Pendidikan"
+          "educational": "Pendidikan",
+          "psychologyScientist": "Ilmuwan Psikologi"
         },
         "experience": "{{count}}+ tahun pengalaman",
         "supportAreasLabel": "Area pengalaman"
@@ -879,5 +881,14 @@
       "errorName": "Lengkapi nama Anda.",
       "errorWa": "Masukkan nomor WhatsApp yang valid (minimal 9 digit).",
       "errorConsent": "Mohon centang persetujuan etika kerahasiaan sebelum lanjut."
-    }
+  },
+  "articles": {
+    "headerTitle": "Artikel Ilmiah",
+    "headerSubtitle": "Wawasan ilmiah dan artikel edukasi psikologi berbasis bukti dari para profesional Attentive.id.",
+    "searchPlaceholder": "Cari topik atau judul artikel ilmiah...",
+    "noArticlesFound": "Tidak ada artikel ilmiah yang sesuai dengan pencarian Anda.",
+    "readMore": "Baca Selengkapnya",
+    "backToArticles": "Kembali ke Artikel Ilmiah",
+    "categoryEducation": "Artikel Ilmiah"
   }
+}

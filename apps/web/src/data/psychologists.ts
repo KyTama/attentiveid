@@ -7,7 +7,7 @@ import { PSYCHOLOGISTS as PHOTOS } from '@/assets/images'
  * UI text is handled by i18n, this is for data that doesn't change between languages.
  */
 
-export type PsychologistCategory = 'adultClinical' | 'childAdolescent' | 'educational'
+export type PsychologistCategory = 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'
 
 export interface Psychologist {
     id: string
@@ -326,6 +326,30 @@ export const psychologists: Psychologist[] = [
         premiumLink: createWaLink('Dominika', 'premium'),
         shortBio: "Dominika Arthalia (Domi) is an educational psychologist working with children, adolescents, and families on learning challenges, motivation, and parenting dynamics. Her holistic approach nurtures every learner to thrive at their own unique pace.",
         biography: "Dominika Arthalia A. P., M.Psi., Psikolog (Domi)\nEducational Psychologist\n\nDomi is an educational psychologist who works with children from preschool age through adolescence, as well as young adults. She has experience supporting children with special needs, learning difficulties, motivation challenges, and concerns related to school readiness and learning. She also provides psychological assessments such as aptitude and interest assessments, school readiness assessments, and other assessments to help children and families better understand their strengths, needs, and potential.\n\nDomi believes that a child’s learning and development are shaped not only by their learning methods or abilities, but also by their home environment, relationships, and family dynamics. A warm and supportive environment gives children the space to explore themselves, understand how they learn best, and develop their potential, while stressful or conflict-filled environments can make it harder for them to do so.\n\nWith experience across schools, child development centers, psychological services, and educational programs, Domi takes a holistic approach to understanding children's challenges. She also works with parents, particularly when parent-child dynamics may be affecting a child's learning, motivation, or academic performance. Her goal is not only to understand what a child is struggling with, but also to look at the broader context around them and identify ways to support their development.\n\nDomi completed her Bachelor's degree in Psychology at Universitas Indonesia in 2015 and her Master's & Professional degree in Educational Psychology in 2022. She aims to create a supportive space where children and parents can better understand their needs and work together toward the child's optimal development.",
+    },
+    {
+        id: 'haykal',
+        name: 'Dr. Haykal Hafizul Arifin',
+        nickname: 'Haykal',
+        title: 'S.Psi., M.Si.',
+        category: 'psychologyScientist',
+        image: '/media/psychologists/haykal.webp',
+        specializations: [
+            'Makna dan tujuan hidup (Meaning in Life)',
+            'Berpikir kritis (Critical Thinking)',
+            'Struktur dan dinamika kepribadian',
+            'Efikasi diri dan prokrastinasi',
+            'Metode riset dan psikologi eksperimen',
+            'Pengendalian diri (Self Control)',
+            'Studi ekstremisme kekerasan',
+            'Kebebasan dan otonomi diri',
+        ],
+        experience: '12 Tahun',
+        sipp: 'Peneliti & Konsultan Psikologi Sosial (Non-Klinis)',
+        reservationLink: createWaLink('Haykal', 'regular'),
+        premiumLink: createWaLink('Haykal', 'premium'),
+        shortBio: "Dr. Haykal Hafizul Arifin adalah ilmuwan psikologi sosial dan konsultan senior di Attentive.id dengan spesialisasi makna hidup, berpikir kritis, dan efikasi diri.",
+        biography: "Dr. Haykal Hafizul Arifin, S.Psi., M.Si. merupakan peneliti dan konsultan psikologi sosial non-klinis dengan pengalaman lebih dari 12 tahun. Pendekatan beliau berakar pada dialog Sokratik, refleksi mendalam, saintifik, dan berorientasi pada pencarian makna hidup.",
     },
 ]
 

@@ -11,7 +11,7 @@ export const psychologistApi = {
   list: (query: {
     locale: 'id' | 'en'
     search?: string
-    supportArea?: 'adultClinical' | 'childAdolescent' | 'educational'
+    supportArea?: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'
     minimumExperienceYears?: number
     limit?: number
     offset?: number

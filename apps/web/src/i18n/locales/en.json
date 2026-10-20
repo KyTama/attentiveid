@@ -420,7 +420,7 @@
       "name": "Dr. Haykal Hafizul Arifin",
       "nickname": "Haykal",
       "title": "S.Psi., M.Si.",
-      "category": "Social Psychologist",
+      "category": "Psychology Scientist",
       "image": "images/psychologists/Haykal.webp",
       "icon": "images/research-class.webp",
       "specializations": [
@@ -724,7 +724,8 @@
           "all": "All support areas",
           "adultClinical": "Adults",
           "childAdolescent": "Children and adolescents",
-          "educational": "Education and development"
+          "educational": "Education and development",
+          "psychologyScientist": "Psychology Scientist"
         },
         "experienceLegend": "Professional experience",
         "experience": {
@@ -744,7 +745,8 @@
         "supportArea": {
           "adultClinical": "Adult clinical",
           "childAdolescent": "Child and adolescent",
-          "educational": "Educational"
+          "educational": "Educational",
+          "psychologyScientist": "Psychology Scientist"
         },
         "experience_one": "{{count}}+ year of experience",
         "experience_other": "{{count}}+ years of experience",
@@ -881,5 +883,14 @@
       "errorName": "Please enter your name.",
       "errorWa": "Please enter a valid WhatsApp number (minimum 9 digits).",
       "errorConsent": "Please confirm the confidentiality agreement to continue."
-    }
+  },
+  "articles": {
+    "headerTitle": "Scientific Articles",
+    "headerSubtitle": "Scientific insights and evidence-based psychoeducational perspectives from Attentive.id professionals.",
+    "searchPlaceholder": "Search scientific topics or article titles...",
+    "noArticlesFound": "No scientific articles found matching your search.",
+    "readMore": "Read Full Article",
+    "backToArticles": "Back to Scientific Articles",
+    "categoryEducation": "Scientific Article"
   }
+}

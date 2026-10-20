@@ -170,7 +170,7 @@ describe('psychologist seed bootstrap', () => {
             [...firstSnapshot.mediaObjects.values()].map(({ id, reference }) => ({ id, reference }))
         );
         expect([...secondSnapshot.psychologists.values()].map(({ featuredOrder }) => featuredOrder)).toEqual(
-            Array.from({ length: psychologistSeedFixtures.length }, (_, index) => index)
+            psychologistSeedFixtures.map(({ featuredOrder }) => featuredOrder)
         );
     });
 

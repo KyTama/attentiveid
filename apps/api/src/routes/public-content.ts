@@ -105,7 +105,8 @@ export const createPublicContentRoutes = (dependencies: PublicContentDependencie
             supportArea: t.Optional(t.Union([
                 t.Literal('adultClinical'),
                 t.Literal('childAdolescent'),
-                t.Literal('educational')
+                t.Literal('educational'),
+                t.Literal('psychologyScientist')
             ])),
             minimumExperienceYears: t.Optional(t.Numeric({ minimum: 0, maximum: 80 })),
             limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50 })),

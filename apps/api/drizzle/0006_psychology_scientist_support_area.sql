@@ -1,0 +1,1 @@
+ALTER TYPE "public"."psychologist_support_area" ADD VALUE 'psychologyScientist';

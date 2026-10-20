@@ -1,4 +1,4 @@
-import { count, sql } from 'drizzle-orm';
+import { count, eq, sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import {
@@ -115,6 +115,7 @@ interface MediaAttachmentInput {
 
 export interface PsychologistSeedTransaction {
     resetFeaturedOrders?(): Promise<void>;
+    deleteSupportAreas?(psychologistId: string): Promise<void>;
     upsertPsychologist(input: PsychologistInput): Promise<string>;
     upsertProfile(input: ProfileInput): Promise<void>;
     upsertProfileTranslation(input: ProfileTranslationInput): Promise<void>;
@@ -149,7 +150,8 @@ const mediaReferencePolicy = { publicHosts: [] } as const;
 const supportAreaNames: Record<SupportArea, LocalizedText> = {
     adultClinical: { id: 'psikologi klinis dewasa', en: 'adult clinical psychology' },
     childAdolescent: { id: 'psikologi anak dan remaja', en: 'child and adolescent psychology' },
-    educational: { id: 'psikologi pendidikan', en: 'educational psychology' }
+    educational: { id: 'psikologi pendidikan', en: 'educational psychology' },
+    psychologyScientist: { id: 'ilmuwan psikologi', en: 'psychology scientist' }
 };
 
 const bookingUrl = (name: string, type: 'regular' | 'premium') => {
@@ -255,9 +257,11 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             name: 'Dr. Haykal Hafizul Arifin',
             nickname: 'Haykal',
             credential: 'S.Psi., M.Si.',
+            status: 'inactive',
             tier: 'consultant',
             primaryBranch: 'tbi',
-            supportArea: 'adultClinical',
+            acceptingNewClients: false,
+            supportArea: 'psychologyScientist',
             specializations: [
                 localizedLabel('Makna dan tujuan hidup (Meaning in Life)', 'Meaning and purpose in life'),
                 localizedLabel('Berpikir kritis (Critical Thinking)', 'Critical thinking'),
@@ -272,8 +276,8 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             licenseNumber: 'Peneliti & Konsultan Psikologi Sosial (Non-Klinis)',
             bookingUrl: bookingUrl('Haykal', 'regular'),
             premiumBookingUrl: bookingUrl('Haykal', 'premium'),
-            featured: true,
-            featuredOrder: 0,
+            featured: false,
+            featuredOrder: null,
             media: {
                 reference: 'media/psychologists/haykal.webp',
                 width: 600,
@@ -1148,6 +1152,10 @@ export async function seedPsychologists(
                     });
                 }
 
+                if (transaction.deleteSupportAreas) {
+                    await transaction.deleteSupportAreas(psychologistId);
+                }
+
                 for (const [position, supportArea] of candidate.supportAreas.entries()) {
                     await transaction.upsertSupportArea({
                         psychologistId,
@@ -1259,6 +1267,11 @@ export const createDrizzlePsychologistSeedDatabase = (
                         availabilityMessage: input.availabilityMessage
                     }
                 });
+        },
+        deleteSupportAreas: async (psychologistId: string) => {
+            await transaction
+                .delete(schema.psychologistSupportAreas)
+                .where(eq(schema.psychologistSupportAreas.psychologistId, psychologistId));
         },
         upsertSupportArea: async (input) => {
             await transaction

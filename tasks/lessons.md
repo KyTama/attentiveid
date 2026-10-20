@@ -81,4 +81,13 @@
   1. In route and page tests where layout headers and page bodies coexist, use `screen.getAllByRole('button', { name: ... })` with length assertions (`toBeGreaterThanOrEqual(1)`) or scope queries to semantic landmarks (`within(screen.getByRole('main')).getByRole(...)`).
   2. Pair global accessible name assertions with unique section-specific anchors (e.g., asserting `screen.getByRole('link', { name: /get to know syazka/i })` with `href="#profile-story"`) to conclusively prove the hero component rendered correctly without ambiguity.
 
+## 16. PostgreSQL Enum Migrations & Junction Table Seed Replacement
+- **Problem**: When changing an entity's category to a newly introduced enum value in a junction table with composite unique constraints (e.g. `(psychologist_id, position)`), two issues arise:
+  1. PostgreSQL enums are static in the DB and reject values added only in TypeScript code without an explicit `ALTER TYPE ... ADD VALUE` migration.
+  2. Drizzle's `onConflictDoUpdate` targeting `[psychologist_id, support_area]` fails because the changed category triggers an `INSERT` rather than an `UPDATE`, colliding with existing rows at `position = 0`.
+- **Solution**:
+  1. Always generate a Drizzle migration (`0006_psychology_scientist_support_area.sql`) using `drizzle-kit generate`.
+  2. Implement `deleteSupportAreas(psychologistId)` inside the seed transaction to clean out stale category links before inserting the updated ones.
+
+
 

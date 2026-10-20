@@ -132,7 +132,7 @@ export interface PsychologistCandidate {
   name: string
   nickname: string
   title?: string
-  category: 'adultClinical' | 'childAdolescent' | 'educational'
+  category: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'
   gender?: 'female' | 'male'
   specializations: string[]
   experience?: string | number

@@ -23,6 +23,7 @@ const supportAreaLabels: Record<string, string> = {
   adultClinical: 'Dewasa & Klinis',
   childAdolescent: 'Anak & Remaja',
   educational: 'Pendidikan & Edukasi',
+  psychologyScientist: 'Ilmuwan Psikologi',
 }
 
 const tierLabels: Record<string, string> = {
@@ -57,7 +58,7 @@ interface FormState {
   premiumBookingUrl: string
   featured: boolean
   featuredOrder: string
-  supportAreas: { supportArea: 'adultClinical' | 'childAdolescent' | 'educational'; primary: boolean }[]
+  supportAreas: { supportArea: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'; primary: boolean }[]
   specializations: { id: string; labelId: string; labelEn: string }[]
   shortBioId: string
   shortBioEn: string
@@ -175,7 +176,7 @@ export function PsychologistsCmsPage() {
         premiumBookingUrl: full.premiumBookingUrl || '',
         featured: full.featured,
         featuredOrder: full.featuredOrder !== null ? String(full.featuredOrder) : '',
-        supportAreas: full.supportAreas.map((sa: { supportArea: 'adultClinical' | 'childAdolescent' | 'educational'; primary: boolean }) => ({ supportArea: sa.supportArea, primary: sa.primary })),
+        supportAreas: full.supportAreas.map((sa: { supportArea: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'; primary: boolean }) => ({ supportArea: sa.supportArea, primary: sa.primary })),
         specializations: full.specializations.map((sp: { id?: string; label: { id: string; en: string } }, index: number) => ({
           id: sp.id || `spec-${index}`,
           labelId: sp.label.id,
@@ -264,7 +265,7 @@ export function PsychologistsCmsPage() {
     }
   }
 
-  const toggleSupportArea = (areaKey: 'adultClinical' | 'childAdolescent' | 'educational') => {
+  const toggleSupportArea = (areaKey: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist') => {
     const exists = formState.supportAreas.some((sa) => sa.supportArea === areaKey)
     if (exists) {
       if (formState.supportAreas.length <= 1) return // Keep at least one
@@ -280,7 +281,7 @@ export function PsychologistsCmsPage() {
     }
   }
 
-  const setPrimarySupportArea = (areaKey: 'adultClinical' | 'childAdolescent' | 'educational') => {
+  const setPrimarySupportArea = (areaKey: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist') => {
     setFormState((prev) => ({
       ...prev,
       supportAreas: prev.supportAreas.map((sa) => ({
@@ -366,6 +367,7 @@ export function PsychologistsCmsPage() {
               <option value="adultClinical">Dewasa & Klinis</option>
               <option value="childAdolescent">Anak & Remaja</option>
               <option value="educational">Pendidikan</option>
+              <option value="psychologyScientist">Ilmuwan Psikologi</option>
             </select>
 
             <div className="relative flex-1 sm:w-64">
@@ -829,6 +831,7 @@ export function PsychologistsCmsPage() {
                           { key: 'adultClinical', label: 'Dewasa & Klinis' },
                           { key: 'childAdolescent', label: 'Anak & Remaja' },
                           { key: 'educational', label: 'Pendidikan' },
+                          { key: 'psychologyScientist', label: 'Ilmuwan Psikologi' },
                         ].map((area) => {
                           const item = formState.supportAreas.find((sa) => sa.supportArea === area.key)
                           const isSelected = !!item
@@ -848,7 +851,7 @@ export function PsychologistsCmsPage() {
                                 <input
                                   type="checkbox"
                                   checked={isSelected}
-                                  onChange={() => toggleSupportArea(area.key as 'adultClinical' | 'childAdolescent' | 'educational')}
+                                  onChange={() => toggleSupportArea(area.key as 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist')}
                                   className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500"
                                 />
                               </div>
@@ -856,7 +859,7 @@ export function PsychologistsCmsPage() {
                               {isSelected && (
                                 <button
                                   type="button"
-                                  onClick={() => setPrimarySupportArea(area.key as 'adultClinical' | 'childAdolescent' | 'educational')}
+                                  onClick={() => setPrimarySupportArea(area.key as 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist')}
                                   className={`w-full text-[10px] font-semibold py-1 rounded-md transition-colors ${
                                     isPrimary
                                       ? 'bg-teal-600 text-white'

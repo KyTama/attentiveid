@@ -1,21 +1,27 @@
-# Active Task Checklist: Update BSD Branch Photo with Optimized WebP
+# Active Task Checklist: Add Psychology Scientist Category & Wording Updates
 
 > **Status:** COMPLETED  
-> **Milestone:** Visual Polish & Clinic Branch Showcase  
-> **Active Focus:** Replaced BSD branch clinic photo with `/Users/kytama/Projects/Neo-Attentive/Docs/Images/additional LP/bsd.jpeg` converted to 800x500 WebP (`apps/web/public/images/locations/bsd.webp`) with zero CLS and optimal framing. Provided SQL restoration for truncated `media_attachments`.
+> **Milestone:** Psychologist Categorization & Scientific Article Wording  
+> **Active Focus:** Add "ilmuwan psikologi" (Psychology Scientist) category for psychologists, categorize Dr. Haykal as Psychology Scientist, and update articles page title wording to "Artikel Ilmiah" / "Scientific Article". (No commits).
 
 ---
 
 ## Action Items
-- [x] **Convert BSD branch photo to WebP**:
-  - Converted `/Users/kytama/Projects/Neo-Attentive/Docs/Images/additional LP/bsd.jpeg` to WebP.
-  - Centered framing on the Attentive sign with sleek modern architecture (crop y=600, 800x500 at 90% quality, 28 KB).
-  - Saved to `apps/web/public/images/locations/bsd.webp`.
-- [x] **Verify Layout and Zero CLS**:
-  - Checked `apps/web/src/data/contact.ts` and `apps/web/src/components/landing/OurLocations.tsx`.
-  - Intrinsic image aspect ratio (16:10, 800x500) matches HTML dimensions (`width="800"` and `height="500"`).
+- [x] **Add "psychologyScientist" category / support area**:
+  - Update `packages/shared/src/content.ts` (`PSYCHOLOGIST_SUPPORT_AREAS`)
+  - Update `apps/web/src/features/psychologists/types.ts` & `query.ts`
+  - Update `apps/web/src/data/psychologists.ts` (`PsychologistCategory`)
+  - Update `apps/web/src/i18n/locales/id.json` & `en.json` with "Ilmuwan Psikologi" / "Psychology Scientist"
+- [x] **Categorize Dr. Haykal as Psychology Scientist**:
+  - Update `apps/api/src/db/seed-psychologists.ts` (`supportArea: 'psychologyScientist'`)
+  - Add Dr. Haykal to `apps/web/src/data/psychologists.ts` with `category: 'psychologyScientist'`
+- [x] **Update Articles Page Wording**:
+  - In `apps/web/src/pages/ArticlesPage.tsx`: change header wording to "Artikel Ilmiah" / "Scientific Article"
+  - In `apps/web/src/pages/ArticleDetailPage.tsx`: update breadcrumb and badge wording
+  - In `apps/web/src/i18n/locales/id.json` and `en.json`: update `headerTitle` and related keys
+  - In `apps/web/tests/articles-pages.test.tsx`: update test assertion
 - [x] **Verification**:
-  - Ran `bun run test:web` (58/58 tests passing).
-  - Ran `cd apps/web && bun run build` (build succeeded cleanly).
-- [x] **Database `media_attachments` Recovery Guidance**:
-  - Formulated SQL query to re-link all 24 psychologists with their media objects in PostgreSQL.
+  - Run `bun test packages/shared/src/content.test.ts`
+  - Run `bun test apps/api/src/db/`
+  - Run `bun run test:web`
+  - Run `bun run build`

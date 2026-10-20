@@ -28,7 +28,7 @@ export const PSYCHOLOGIST_LIFECYCLE_STATES = ['draft', 'active', 'inactive', 'ar
 export const ARTICLE_LIFECYCLE_STATES = ['draft', 'published', 'unpublished', 'archived'] as const
 export const ARTICLE_REVISION_STATES = ['draft', 'inReview', 'approved', 'rejected'] as const
 export const MEDIA_LIFECYCLE_STATES = ['active', 'orphaned', 'deleted'] as const
-export const PSYCHOLOGIST_SUPPORT_AREAS = ['adultClinical', 'childAdolescent', 'educational'] as const
+export const PSYCHOLOGIST_SUPPORT_AREAS = ['adultClinical', 'childAdolescent', 'educational', 'psychologyScientist'] as const
 export const PSYCHOLOGIST_TIERS = ['principal', 'senior', 'senior_mid', 'mid', 'consultant'] as const
 export type PsychologistTier = typeof PSYCHOLOGIST_TIERS[number]
 export const PRACTICE_BRANCHES = ['tbi', 'bsd', 'malang', 'online_only', 'multiple'] as const
@@ -199,6 +199,7 @@ export const PsychologistMutationSchema = Type.Object({
     Type.Literal('adultClinical'),
     Type.Literal('childAdolescent'),
     Type.Literal('educational'),
+    Type.Literal('psychologyScientist'),
   ]),
   specializations: Type.Array(Type.String({ minLength: 1, maxLength: 200 }), {
     minItems: 1,
@@ -443,6 +444,7 @@ export const FullPsychologistMutationSchema = Type.Object({
       Type.Literal('adultClinical'),
       Type.Literal('childAdolescent'),
       Type.Literal('educational'),
+      Type.Literal('psychologyScientist'),
     ]),
     primary: Type.Boolean(),
   })),

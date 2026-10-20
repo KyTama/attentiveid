@@ -55,26 +55,7 @@ export function ArticleDetailPage() {
           }
         }
       } catch {
-        // Sample fallback for preview
-        if (mounted && slug === 'memahami-kecemasan-dan-cara-mengatasinya') {
-          setArticleData({
-            id: 'art-001',
-            slug: 'memahami-kecemasan-dan-cara-mengatasinya',
-            title: {
-              id: 'Memahami Kecemasan dan Strategi Mengatasinya dalam Kehidupan Sehari-hari',
-              en: 'Understanding Anxiety and Everyday Coping Strategies',
-            },
-            summary: {
-              id: 'Kecemasan adalah respons alami tubuh terhadap stres. Pelajari cara mengenali pemicunya dan teknik regulasi emosi yang efektif.',
-              en: 'Anxiety is a natural body response to stress. Learn how to recognize triggers and effective emotional regulation techniques.',
-            },
-            body: {
-              id: 'Kecemasan (anxiety) dapat dialami oleh siapa saja. Ketika beban pikiran terasa mengganggu produktivitas dan relasi harian, mengenali tanda awal dan mengalirkan emosi secara sehat merupakan langkah awal yang sangat penting.\n\nDalam sesi konseling psikologi, kita belajar memahami akar kecemasan melalui pendekatan berbasis bukti seperti Cognitive Behavioral Therapy (CBT) dan Mindfulness.',
-              en: 'Anxiety can affect anyone. When thoughts disrupt daily productivity and relationships, recognizing early signs and managing emotions healthily is a critical first step.\n\nIn psychological counseling, we learn to understand anxiety triggers through evidence-based approaches such as Cognitive Behavioral Therapy (CBT) and Mindfulness.',
-            },
-            publishedAt: '2026-09-01T12:00:00Z',
-          })
-        } else if (mounted) {
+        if (mounted) {
           setIsNotFound(true)
         }
       } finally {
@@ -151,11 +132,11 @@ export function ArticleDetailPage() {
           <div>
             <Link to="/articles" className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary/70 hover:text-secondary mb-4 transition-colors">
               <ArrowLeft size={14} />
-              {t('articles.backToArticles', 'Kembali ke Artikel')}
+              {t('articles.backToArticles', currentLang === 'en' ? 'Back to Scientific Articles' : 'Kembali ke Artikel Ilmiah')}
             </Link>
             <div className="flex flex-wrap items-center gap-3 text-xs text-secondary/60 mb-3">
               <span className="rounded-full bg-[#eee8df] px-2.5 py-0.5 font-medium text-secondary">
-                {t('articles.categoryEducation', 'Edukasi Psikologi')}
+                {t('articles.categoryEducation', currentLang === 'en' ? 'Scientific Article' : 'Artikel Ilmiah')}
               </span>
               <span>•</span>
               <span>

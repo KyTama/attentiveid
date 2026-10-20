@@ -9,6 +9,7 @@ export const psychologistSupportAreaOptions = [
   'adultClinical',
   'childAdolescent',
   'educational',
+  'psychologyScientist',
 ] as const satisfies readonly (PsychologistSupportArea | 'all')[]
 
 export const psychologistExperienceOptions = [

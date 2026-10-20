@@ -33,7 +33,7 @@ describe('homepage', () => {
       'href',
       '/psychologists/syazka',
     )
-    expect(await screen.findAllByRole('button', { name: /adult clinical|child and adolescent|educational/i })).toHaveLength(psychologists.length)
+    expect(await screen.findAllByRole('button', { name: /adult clinical|child and adolescent|educational|psychology scientist|ilmuwan psikologi/i })).toHaveLength(psychologists.length)
     expect(screen.getByText('20190974-2021-02-1552')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /gita adult clinical/i }))
     expect(screen.getByText('20200657-2023-02-2669')).toBeInTheDocument()

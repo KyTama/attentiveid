@@ -427,7 +427,7 @@ export function ArticlesCmsPage() {
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    placeholder="memahami-kecemasan-dan-cara-mengatasinya"
+                    placeholder="judul-artikel-ilmiah"
                     required
                     disabled={Boolean(editingArticleId)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed"

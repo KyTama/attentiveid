@@ -43,6 +43,13 @@
       "when": 1789450293610,
       "tag": "0005_psychologist_short_bio",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792535431265,
+      "tag": "0006_psychology_scientist_support_area",
+      "breakpoints": true
     }
   ]
 }

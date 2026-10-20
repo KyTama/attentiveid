@@ -63,7 +63,7 @@ describe('Public Articles & Article CMS Pages', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Artikel & Edukasi Psikologi')).toBeDefined()
+      expect(screen.getByText(/Artikel Ilmiah|Scientific Article/i)).toBeDefined()
       expect(screen.getByText(/Understanding Anxiety|Memahami Kecemasan/i)).toBeDefined()
     })
   })

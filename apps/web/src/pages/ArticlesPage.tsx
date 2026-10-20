@@ -42,24 +42,8 @@ export function ArticlesPage() {
           }
         }
       } catch {
-        // Fallback to sample article for static preview if API isn't up
         if (mounted) {
-          setArticles([
-            {
-              id: 'art-001',
-              slug: 'memahami-kecemasan-dan-cara-mengatasinya',
-              title: {
-                id: 'Memahami Kecemasan dan Strategi Mengatasinya dalam Kehidupan Sehari-hari',
-                en: 'Understanding Anxiety and Everyday Coping Strategies',
-              },
-              summary: {
-                id: 'Kecemasan adalah respons alami tubuh terhadap stres. Pelajari cara mengenali pemicunya dan teknik regulasi emosi yang efektif.',
-                en: 'Anxiety is a natural body response to stress. Learn how to recognize triggers and effective emotional regulation techniques.',
-              },
-              publishedAt: '2026-09-01T12:00:00Z',
-              authorName: 'Dr. Syazka, M.Psi., Psikolog',
-            },
-          ])
+          setArticles([])
         }
       } finally {
         if (mounted) setIsLoading(false)
@@ -87,10 +71,10 @@ export function ArticlesPage() {
         {/* Header Banner */}
         <div className="text-center max-w-2xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            {t('articles.headerTitle', 'Artikel & Edukasi Psikologi')}
+            {t('articles.headerTitle', currentLang === 'en' ? 'Scientific Articles' : 'Artikel Ilmiah')}
           </h1>
           <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
-            {t('articles.headerSubtitle', 'Wawasan ilmiah dan panduan praktis dari para psikolog profesional Attentive.id.')}
+            {t('articles.headerSubtitle', currentLang === 'en' ? 'Scientific insights and evidence-based psychoeducational perspectives from Attentive.id professionals.' : 'Wawasan ilmiah dan artikel edukasi psikologi berbasis bukti dari para profesional Attentive.id.')}
           </p>
 
           {/* Search Box */}
