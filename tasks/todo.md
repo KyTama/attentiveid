@@ -1,31 +1,21 @@
-# Active Task Checklist: Redirect Intake CTA Buttons to External Booking Portal
+# Active Task Checklist: Update BSD Branch Photo with Optimized WebP
 
 > **Status:** COMPLETED  
-> **Milestone:** Milestone 2.3 (Conversion Flow & External Booking Integration)  
-> **Active Focus:** Redirected all consultation intake buttons/triggers to `https://booking.attentiveid.com/` (`target="_blank" rel="noopener noreferrer"`), while completely preserving existing dialog architecture for future reuse.
+> **Milestone:** Visual Polish & Clinic Branch Showcase  
+> **Active Focus:** Replaced BSD branch clinic photo with `/Users/kytama/Projects/Neo-Attentive/Docs/Images/additional LP/bsd.jpeg` converted to 800x500 WebP (`apps/web/public/images/locations/bsd.webp`) with zero CLS and optimal framing. Provided SQL restoration for truncated `media_attachments`.
 
 ---
 
 ## Action Items
-- [x] **Audit all `openIntake` call sites across the codebase**:
-  - `HomepageHero.tsx` (Completed)
-  - `SiteHeader.tsx` (Completed)
-  - `SupportExplorer.tsx` (Completed)
-  - `ClosingInvitation.tsx` (Completed)
-  - `OurLocations.tsx` (Completed)
-  - `PsychologistProfileHero.tsx` (Completed)
-  - `PsychologistProfileDetails.tsx` (Completed)
-  - Legacy components: `Navbar.tsx`, `CtaScreening.tsx`, `HeroSection.tsx` (Completed)
-- [x] **Update SupportExplorer.tsx & ClosingInvitation.tsx**:
-  - Replaced button click handlers with direct external anchors to `https://booking.attentiveid.com/` (`target="_blank" rel="noopener noreferrer"`).
-- [x] **Update OurLocations.tsx**:
-  - Replaced online & offline booking buttons with direct anchors to `https://booking.attentiveid.com/`.
-- [x] **Update Psychologist Profile components (`PsychologistProfileHero.tsx`, `PsychologistProfileDetails.tsx`)**:
-  - Linked consultation intake CTAs directly to `https://booking.attentiveid.com/`.
-- [x] **Update legacy landing components (`Navbar.tsx`, `CtaScreening.tsx`, `HeroSection.tsx`)**:
-  - Converted desktop and mobile intake CTA buttons to direct external anchors.
-- [x] **Preserve Modal Code & Verify Integrity**:
-  - Kept `ConsultationIntakeModal.tsx`, `IntakeModalContext.tsx`, `useIntakeModal.ts` untouched and functional.
-  - Verified 58/58 tests passing (`bun run test:web`).
-  - Verified clean TypeScript checks and production bundle build (`bun run build`).
-  - Synchronized knowledge graph via `code-review-graph`.
+- [x] **Convert BSD branch photo to WebP**:
+  - Converted `/Users/kytama/Projects/Neo-Attentive/Docs/Images/additional LP/bsd.jpeg` to WebP.
+  - Centered framing on the Attentive sign with sleek modern architecture (crop y=600, 800x500 at 90% quality, 28 KB).
+  - Saved to `apps/web/public/images/locations/bsd.webp`.
+- [x] **Verify Layout and Zero CLS**:
+  - Checked `apps/web/src/data/contact.ts` and `apps/web/src/components/landing/OurLocations.tsx`.
+  - Intrinsic image aspect ratio (16:10, 800x500) matches HTML dimensions (`width="800"` and `height="500"`).
+- [x] **Verification**:
+  - Ran `bun run test:web` (58/58 tests passing).
+  - Ran `cd apps/web && bun run build` (build succeeded cleanly).
+- [x] **Database `media_attachments` Recovery Guidance**:
+  - Formulated SQL query to re-link all 24 psychologists with their media objects in PostgreSQL.
