@@ -22,7 +22,8 @@
         "build:web": "cd apps/web && bun run build",
         "start": "bun run apps/api/src/index.ts",
         "db:generate": "cd apps/api && bunx drizzle-kit generate",
-        "db:migrate": "cd apps/api && bunx drizzle-kit migrate"
+        "db:migrate": "cd apps/api && bunx drizzle-kit migrate",
+        "db:seed:articles": "cd apps/api && bun run db:seed:articles"
     },
     "devDependencies": {
         "@types/bun": "1.4.0",

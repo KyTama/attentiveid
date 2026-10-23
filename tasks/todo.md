@@ -22,3 +22,8 @@
   - Run backend route tests: `bun test apps/api/src/routes/articles.test.ts` (10/10 passed).
   - Run web tests: `bun --cwd apps/web test` (58/58 passed).
   - Run web build: `bun run build:web` (0 errors).
+- [x] **4. Database Seeding & Migration**:
+  - Implement `apps/api/src/db/seed-articles.ts` resolving circular aggregate foreign keys (`articles` -> `article_revisions`).
+  - Add `apps/api/src/db/seed-articles.test.ts` unit tests (2/2 passed).
+  - Add npm script `db:seed:articles` in `apps/api/package.json` and root `package.json`.
+  - Successfully seeded 18 Scholar articles into local PostgreSQL (`attentiveid`).

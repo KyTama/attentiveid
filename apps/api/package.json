@@ -11,6 +11,7 @@
         "db:migrate": "bun src/db/migrate.ts",
         "db:seed:landing": "bun src/db/seed-landing.ts",
         "db:seed:psychologists": "bun src/db/seed-psychologists.ts",
+        "db:seed:articles": "bun src/db/seed-articles.ts",
         "db:seed:users": "bun src/db/seed-users.ts"
     },
     "dependencies": {

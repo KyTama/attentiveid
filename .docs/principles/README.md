@@ -31,4 +31,5 @@ verbatim — distil it to a transferable principle first.
 | 13 | Dashboard craft normalization & anti-AI-slop copy foundations | [dashboard-craft-and-antislop.md](./dashboard-craft-and-antislop.md) |
 | 14 | Non-intrusive mobile action docks & in-page restoration | [non-intrusive-mobile-action-docks.md](./non-intrusive-mobile-action-docks.md) |
 | 15 | Academic publication metadata enrichment & admin content governance | [academic-publication-metadata-and-admin-governance.md](./academic-publication-metadata-and-admin-governance.md) |
+| 16 | Circular foreign key seeding in aggregate roots | [circular-foreign-key-seeding-in-aggregates.md](./circular-foreign-key-seeding-in-aggregates.md) |
 
