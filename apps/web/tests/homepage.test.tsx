@@ -148,7 +148,7 @@ describe('homepage', () => {
     const freeSessionLinks = screen.getAllByRole('link', { name: /first free session/i })
     expect(freeSessionLinks.length).toBeGreaterThanOrEqual(1)
     for (const link of freeSessionLinks) {
-      expect(link).toHaveAttribute('href', 'https://attentive-free-session.page.gd/')
+      expect(link).toHaveAttribute('href', 'https://free-session.attentiveid.com')
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
       expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
@@ -166,7 +166,7 @@ describe('homepage', () => {
     const testCentreLinks = screen.getAllByRole('link', { name: /digital test centre/i })
     expect(testCentreLinks.length).toBeGreaterThanOrEqual(1)
     for (const link of testCentreLinks) {
-      expect(link).toHaveAttribute('href', 'https://attentive.portproject.my.id/')
+      expect(link).toHaveAttribute('href', 'https://assessment.attentiveid.com/')
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
       expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))

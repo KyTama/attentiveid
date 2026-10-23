@@ -30,7 +30,7 @@ export function CampaignFloatingDock() {
           <div className="flex h-8.5 sm:h-9.5 items-center gap-0.5 rounded-full border border-white/20 bg-secondary/95 p-1 shadow-xl backdrop-blur-xl sm:gap-1 sm:p-1.5">
             {/* Item 1: Free Session */}
             <motion.a
-              href="https://attentive-free-session.page.gd/"
+              href="https://free-session.attentiveid.com"
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${t('homepage.campaigns.freeSession.title')} - ${t('homepage.campaigns.freeSession.cta')}`}
@@ -68,7 +68,7 @@ export function CampaignFloatingDock() {
 
             {/* Item 3: Test Centre */}
             <motion.a
-              href="https://attentive.portproject.my.id/"
+              href="https://assessment.attentiveid.com/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${t('homepage.campaigns.testCentre.title')} - ${t('homepage.campaigns.testCentre.cta')}`}

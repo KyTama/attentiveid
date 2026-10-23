@@ -204,7 +204,7 @@ export function HomepageHero() {
           <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Card 1: First Free Session Consultation */}
             <motion.a
-              href="https://attentive-free-session.page.gd/"
+              href="https://free-session.attentiveid.com"
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${t('homepage.campaigns.freeSession.title')} - ${t('homepage.campaigns.freeSession.cta')}`}
@@ -270,7 +270,7 @@ export function HomepageHero() {
 
             {/* Card 3: Digital Test Centre */}
             <motion.a
-              href="https://attentive.portproject.my.id/"
+              href="https://assessment.attentiveid.com/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${t('homepage.campaigns.testCentre.title')} - ${t('homepage.campaigns.testCentre.cta')}`}

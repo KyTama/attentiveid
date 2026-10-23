@@ -33,7 +33,7 @@ export function CampaignSection() {
       description: t('homepage.campaigns.freeSession.description'),
       perks: t('homepage.campaigns.freeSession.perks', { returnObjects: true }) as string[],
       cta: t('homepage.campaigns.freeSession.cta'),
-      href: 'https://attentive-free-session.page.gd/',
+      href: 'https://free-session.attentiveid.com',
       isFeatured: true,
       icon: Gift,
       accentColor: {
@@ -68,7 +68,7 @@ export function CampaignSection() {
       description: t('homepage.campaigns.testCentre.description'),
       perks: t('homepage.campaigns.testCentre.perks', { returnObjects: true }) as string[],
       cta: t('homepage.campaigns.testCentre.cta'),
-      href: 'https://attentive.portproject.my.id/',
+      href: 'https://assessment.attentiveid.com/',
       icon: ClipboardCheck,
       accentColor: {
         badge: 'bg-[#EBF3FB] text-[#1E568A] border-[#C8DFFA]',
