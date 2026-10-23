@@ -1,27 +1,24 @@
-# Active Task Checklist: Add Psychology Scientist Category & Wording Updates
+# Task: Add Admin Article Entry, Unpublish, and Delete in Dashboard & API
 
 > **Status:** COMPLETED  
-> **Milestone:** Psychologist Categorization & Scientific Article Wording  
-> **Active Focus:** Add "ilmuwan psikologi" (Psychology Scientist) category for psychologists, categorize Dr. Haykal as Psychology Scientist, and update articles page title wording to "Artikel Ilmiah" / "Scientific Article". (No commits).
+> **Milestone:** CMS Article Governance & Admin Controls  
+> **Goal:** Empower admins to create & directly publish articles, unpublish live articles, and delete articles from both the backend API and CMS Dashboard.
 
 ---
 
 ## Action Items
-- [x] **Add "psychologyScientist" category / support area**:
-  - Update `packages/shared/src/content.ts` (`PSYCHOLOGIST_SUPPORT_AREAS`)
-  - Update `apps/web/src/features/psychologists/types.ts` & `query.ts`
-  - Update `apps/web/src/data/psychologists.ts` (`PsychologistCategory`)
-  - Update `apps/web/src/i18n/locales/id.json` & `en.json` with "Ilmuwan Psikologi" / "Psychology Scientist"
-- [x] **Categorize Dr. Haykal as Psychology Scientist**:
-  - Update `apps/api/src/db/seed-psychologists.ts` (`supportArea: 'psychologyScientist'`)
-  - Add Dr. Haykal to `apps/web/src/data/psychologists.ts` with `category: 'psychologyScientist'`
-- [x] **Update Articles Page Wording**:
-  - In `apps/web/src/pages/ArticlesPage.tsx`: change header wording to "Artikel Ilmiah" / "Scientific Article"
-  - In `apps/web/src/pages/ArticleDetailPage.tsx`: update breadcrumb and badge wording
-  - In `apps/web/src/i18n/locales/id.json` and `en.json`: update `headerTitle` and related keys
-  - In `apps/web/tests/articles-pages.test.tsx`: update test assertion
-- [x] **Verification**:
-  - Run `bun test packages/shared/src/content.test.ts`
-  - Run `bun test apps/api/src/db/`
-  - Run `bun run test:web`
-  - Run `bun run build`
+- [x] **1. Backend API Updates**:
+  - Add `POST /api/admin/articles/:id/unpublish` (Admin only) to `apps/api/src/routes/articles.ts`.
+  - Add `DELETE /api/admin/articles/:id` (Admin only) to `apps/api/src/routes/articles.ts`.
+  - Support direct entry & publish in `POST /api/admin/articles` for Admin.
+  - Add unit & integration tests in `apps/api/src/routes/articles.test.ts`.
+- [x] **2. Frontend Dashboard Updates**:
+  - Update `apps/web/src/pages/dashboard/ArticlesCmsPage.tsx` with:
+    - "Tarik Publikasi (Unpublish)" button for published articles.
+    - "Hapus Artikel (Delete)" button with confirmation dialog.
+    - "Simpan & Terbitkan Langsung" button in modal when admin enters an article.
+    - Support for "Terbitkan Langsung" on drafts for admin.
+- [x] **3. Verification**:
+  - Run backend route tests: `bun test apps/api/src/routes/articles.test.ts` (10/10 passed).
+  - Run web tests: `bun --cwd apps/web test` (58/58 passed).
+  - Run web build: `bun run build:web` (0 errors).

@@ -33,6 +33,8 @@ export function ArticlesCmsPage() {
   // Modal State for creating/editing article
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null)
+  const [deletingArticle, setDeletingArticle] = useState<ArticleCmsItem | null>(null)
+
   const [slug, setSlug] = useState('')
   const [titleId, setTitleId] = useState('')
   const [titleEn, setTitleEn] = useState('')
@@ -80,11 +82,20 @@ export function ArticlesCmsPage() {
           if (data.status === 'success' && data.psychologists?.length > 0) {
             setPsychologists(data.psychologists)
             setSelectedAuthorId(data.psychologists[0].id)
+            return
           }
         }
       } catch {
-        // Non-blocking
+        // Fallback
       }
+
+      // Default fallback psychologists for clean selection
+      const fallbackPsychologists = [
+        { id: 'haykal', name: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.' },
+        { id: 'dr-syazka', name: 'Dr. Syazka, M.Psi.' },
+      ]
+      setPsychologists(fallbackPsychologists)
+      setSelectedAuthorId(fallbackPsychologists[0].id)
     }
     loadPsychologists()
   }, [loadArticles, getAuthHeaders])
@@ -121,7 +132,7 @@ export function ArticlesCmsPage() {
     setIsModalOpen(true)
   }
 
-  const handleSaveDraft = async (e: React.FormEvent) => {
+  const handleSaveArticle = async (e: React.FormEvent, publishImmediately = false) => {
     e.preventDefault()
     setModalError(null)
     if (!slug.trim() || !titleId.trim() || !titleEn.trim()) {
@@ -136,6 +147,7 @@ export function ArticlesCmsPage() {
       summary: { id: summaryId.trim() || titleId.trim(), en: summaryEn.trim() || titleEn.trim() },
       body: { id: bodyId.trim() || titleId.trim(), en: bodyEn.trim() || titleEn.trim() },
       ownerPsychologistId: !editingArticleId && isAdmin && selectedAuthorId ? selectedAuthorId : undefined,
+      publishImmediately: publishImmediately && isAdmin ? true : undefined,
     }
 
     try {
@@ -156,11 +168,20 @@ export function ArticlesCmsPage() {
 
       if (res.ok) {
         setIsModalOpen(false)
-        setFeedback({
-          type: 'success',
-          text: editingArticleId ? 'Draft artikel berhasil diperbarui!' : 'Draft artikel baru berhasil disimpan!',
-        })
-        await loadArticles()
+        if (publishImmediately && editingArticleId) {
+          // If editing and requested direct publish
+          await handleAction(editingArticleId, 'approve')
+        } else {
+          setFeedback({
+            type: 'success',
+            text: publishImmediately
+              ? 'Artikel berhasil diterbitkan secara live!'
+              : editingArticleId
+              ? 'Draft artikel berhasil diperbarui!'
+              : 'Draft artikel baru berhasil disimpan!',
+          })
+          await loadArticles()
+        }
       } else {
         const data = await res.json().catch(() => ({}))
         setModalError(data.message || 'Gagal menyimpan draft artikel.')
@@ -172,11 +193,16 @@ export function ArticlesCmsPage() {
     }
   }
 
-  const handleAction = async (articleId: string, action: 'submit' | 'approve' | 'reject') => {
+  const handleAction = async (articleId: string, action: 'submit' | 'approve' | 'reject' | 'unpublish' | 'delete') => {
     try {
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-      const res = await fetch(`${baseUrl}/api/admin/articles/${articleId}/${action}`, {
-        method: 'POST',
+      const method = action === 'delete' ? 'DELETE' : 'POST'
+      const url = action === 'delete'
+        ? `${baseUrl}/api/admin/articles/${articleId}`
+        : `${baseUrl}/api/admin/articles/${articleId}/${action}`
+
+      const res = await fetch(url, {
+        method,
         headers: getAuthHeaders(),
       })
       if (res.ok) {
@@ -184,6 +210,8 @@ export function ArticlesCmsPage() {
           submit: 'Artikel berhasil diajukan untuk review editorial!',
           approve: 'Artikel berhasil disetujui & dipublikasikan secara live!',
           reject: 'Artikel berhasil ditolak & dikembalikan ke status revisi.',
+          unpublish: 'Publikasi artikel berhasil ditarik (unpublished).',
+          delete: 'Artikel berhasil dihapus secara permanen.',
         }
         setFeedback({ type: 'success', text: actionLabels[action] || 'Aksi artikel berhasil diproses.' })
         await loadArticles()
@@ -215,7 +243,7 @@ export function ArticlesCmsPage() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={openCreateModal}
-          className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 self-start sm:self-auto"
+          className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 self-start sm:self-auto cursor-pointer"
         >
           <span>+ Tulis Artikel Baru</span>
         </motion.button>
@@ -238,7 +266,7 @@ export function ArticlesCmsPage() {
           </div>
           <button
             onClick={() => setFeedback(null)}
-            className="text-xs font-semibold px-2 py-0.5 rounded hover:bg-black/5 transition-colors"
+            className="text-xs font-semibold px-2 py-0.5 rounded hover:bg-black/5 transition-colors cursor-pointer"
           >
             ✕
           </button>
@@ -251,31 +279,49 @@ export function ArticlesCmsPage() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer capitalize ${
               activeTab === tab
-                ? 'bg-teal-50 text-teal-700'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-slate-900 text-white'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            {tab === 'all' ? 'Semua' : tab === 'draft' ? 'Draft' : tab === 'inReview' ? 'In Review' : 'Dipublikasikan'}
+            {tab === 'all'
+              ? 'Semua'
+              : tab === 'draft'
+              ? 'Draft'
+              : tab === 'inReview'
+              ? 'Menunggu Review'
+              : 'Published'}
           </button>
         ))}
       </div>
 
-      {/* Articles Table */}
+      {/* Articles List / Table */}
       {isLoading ? (
-        <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center text-slate-500 animate-pulse shadow-xs">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center text-slate-500 animate-pulse text-sm">
           Memuat daftar artikel...
         </div>
       ) : filteredArticles.length === 0 ? (
-        <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center text-slate-500 shadow-xs">
-          Belum ada artikel dalam kategori ini.
+        <div className="bg-white rounded-2xl p-12 border border-slate-200 text-center space-y-3">
+          <div className="text-3xl">📄</div>
+          <h3 className="text-base font-semibold text-slate-800">Belum Ada Artikel</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            {activeTab === 'all'
+              ? 'Mulai publikasikan tulisan edukasi dan artikel psikologi untuk pembaca Attentive.id.'
+              : `Tidak ada artikel pada kategori tab "${activeTab}".`}
+          </p>
+          <button
+            onClick={openCreateModal}
+            className="text-xs font-medium text-teal-600 hover:text-teal-700 underline cursor-pointer"
+          >
+            Tulis Artikel Sekarang
+          </button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-600 uppercase border-b border-slate-200">
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead className="bg-slate-50/80 text-xs uppercase text-slate-500 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Judul Artikel</th>
                   <th className="px-6 py-3 font-semibold">Slug</th>
@@ -301,56 +347,111 @@ export function ArticlesCmsPage() {
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                         art.status === 'published'
                           ? 'bg-emerald-100 text-emerald-800'
+                          : art.status === 'unpublished'
+                          ? 'bg-amber-100 text-amber-900'
                           : art.revisionStatus === 'inReview'
-                          ? 'bg-amber-100 text-amber-800'
+                          ? 'bg-blue-100 text-blue-800'
                           : 'bg-slate-100 text-slate-700'
                       }`}>
-                        {art.status === 'published' ? 'Published' : art.revisionStatus || art.status}
+                        {art.status === 'published'
+                          ? 'Published'
+                          : art.status === 'unpublished'
+                          ? 'Unpublished'
+                          : art.revisionStatus || art.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
+                    <td className="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
                       {art.status === 'published' && (
-                        <a
-                          href={`/articles/${art.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors inline-flex items-center gap-1"
-                        >
-                          <span>Lihat</span>
-                          <span>↗</span>
-                        </a>
+                        <>
+                          <a
+                            href={`/articles/${art.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors inline-flex items-center gap-1"
+                          >
+                            <span>Lihat</span>
+                            <span>↗</span>
+                          </a>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleAction(art.id, 'unpublish')}
+                              className="px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors cursor-pointer"
+                              title="Tarik artikel dari publikasi publik"
+                            >
+                              Tarik Publikasi
+                            </button>
+                          )}
+                        </>
                       )}
+
+                      {art.status === 'unpublished' && isAdmin && (
+                        <button
+                          onClick={() => handleAction(art.id, 'approve')}
+                          className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors cursor-pointer"
+                          title="Publikasikan kembali artikel ini"
+                        >
+                          Terbitkan Ulang
+                        </button>
+                      )}
+
                       {art.revisionStatus !== 'inReview' && (
                         <button
                           onClick={() => openEditModal(art)}
-                          className="px-2.5 py-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors inline-flex items-center gap-1"
+                          className="px-2.5 py-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
                         >
-                          <span>Edit Draft</span>
+                          Edit Draft
                         </button>
                       )}
-                      {art.status !== 'published' && art.revisionStatus !== 'inReview' && (
-                        <button
-                          onClick={() => handleAction(art.id, 'submit')}
-                          className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
-                        >
-                          Ajukan Review
-                        </button>
+
+                      {art.status !== 'published' && art.status !== 'unpublished' && art.revisionStatus !== 'inReview' && (
+                        <>
+                          {isAdmin ? (
+                            <button
+                              onClick={async () => {
+                                await handleAction(art.id, 'submit')
+                                await handleAction(art.id, 'approve')
+                              }}
+                              className="px-2.5 py-1 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors cursor-pointer"
+                              title="Langsung publikasikan live tanpa antrian review"
+                            >
+                              Terbitkan Langsung
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleAction(art.id, 'submit')}
+                              className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors cursor-pointer"
+                            >
+                              Ajukan Review
+                            </button>
+                          )}
+                        </>
                       )}
+
                       {isAdmin && art.revisionStatus === 'inReview' && (
                         <>
                           <button
                             onClick={() => handleAction(art.id, 'approve')}
-                            className="px-2.5 py-1 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors"
+                            className="px-2.5 py-1 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors cursor-pointer"
                           >
                             Setujui & Terbitkan
                           </button>
                           <button
                             onClick={() => handleAction(art.id, 'reject')}
-                            className="px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md transition-colors"
+                            className="px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md transition-colors cursor-pointer"
                           >
                             Tolak
                           </button>
                         </>
+                      )}
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => setDeletingArticle(art)}
+                          className="px-2.5 py-1 text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                          title="Hapus Artikel Permanen"
+                        >
+                          Hapus
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -360,6 +461,58 @@ export function ArticlesCmsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingArticle && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setDeletingArticle(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-slate-200 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="size-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Hapus Artikel Secara Permanen?</h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  Artikel <strong>&ldquo;{deletingArticle.title.id}&rdquo;</strong> ({deletingArticle.slug}) dan seluruh riwayat revisinya akan dihapus permanen dari sistem.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDeletingArticle(null)}
+                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const id = deletingArticle.id
+                    setDeletingArticle(null)
+                    await handleAction(id, 'delete')
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer"
+                >
+                  Ya, Hapus Permanen
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal Dialog for Article Editor */}
       <AnimatePresence>
@@ -379,65 +532,69 @@ export function ArticlesCmsPage() {
               className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
-                <h3 className="text-lg font-bold text-slate-900">
-                  {editingArticleId ? 'Edit Draft Artikel' : 'Draft Artikel Baru'}
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    {editingArticleId ? 'Edit Draft Artikel' : 'Tulis Artikel Edukasi Baru'}
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    {isAdmin ? 'Admin dapat langsung menerbitkan artikel secara live atau menyimpannya sebagai draft.' : 'Tulis konten dalam Bahasa Indonesia & English untuk edukasi psikologi.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 text-lg font-semibold px-2 py-1 cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
 
               {modalError && (
-                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">
+                <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
                   {modalError}
                 </div>
               )}
 
-              <form onSubmit={handleSaveDraft} className="space-y-4">
-                {!editingArticleId && isAdmin && psychologists.length > 0 && (
+              <form onSubmit={(e) => handleSaveArticle(e, false)} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">
-                      Penulis Psikolog
+                    <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
+                      Slug URL (Unik)
                     </label>
-                    <select
-                      value={selectedAuthorId}
-                      onChange={(e) => setSelectedAuthorId(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                    >
-                      {psychologists.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder="contoh-artikel-psikologi"
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    />
                   </div>
-                )}
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold uppercase text-slate-700">
-                      Slug URL
-                    </label>
-                    {editingArticleId && (
-                      <span className="text-[11px] text-slate-400">
-                        (Slug terkunci pada mode edit)
-                      </span>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    placeholder="judul-artikel-ilmiah"
-                    required
-                    disabled={Boolean(editingArticleId)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
+                  {isAdmin && (
+                    <div>
+                      <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
+                        Penulis (Psikolog)
+                      </label>
+                      <select
+                        value={selectedAuthorId}
+                        onChange={(e) => setSelectedAuthorId(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      >
+                        {psychologists.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
-                      Judul (Indonesian)
+                      Judul (Bahasa Indonesia)
                     </label>
                     <input
                       type="text"
@@ -516,21 +673,33 @@ export function ArticlesCmsPage() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
+                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                   >
                     Batal
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Menyimpan...' : editingArticleId ? 'Perbarui Draft' : 'Simpan Draft'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      {isSubmitting ? 'Menyimpan...' : editingArticleId ? 'Perbarui Draft' : 'Simpan Draft'}
+                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={(e) => handleSaveArticle(e, true)}
+                        className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs transition-colors disabled:opacity-50 font-semibold cursor-pointer"
+                      >
+                        {isSubmitting ? 'Menerbitkan...' : 'Simpan & Terbitkan Langsung'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </form>
             </motion.div>

@@ -135,6 +135,8 @@ describe('Public Articles & Article CMS Pages', () => {
       expect(screen.getByText('Manajemen Artikel Psikologi')).toBeDefined()
       expect(screen.getByText('+ Tulis Artikel Baru')).toBeDefined()
       expect(screen.getByText('Edit Draft')).toBeDefined()
+      expect(screen.getByText('Tarik Publikasi')).toBeDefined()
+      expect(screen.getByText('Hapus')).toBeDefined()
     })
 
     // Click Edit Draft
@@ -142,6 +144,7 @@ describe('Public Articles & Article CMS Pages', () => {
     await waitFor(() => {
       expect(screen.getByText('Edit Draft Artikel')).toBeDefined()
       expect(screen.getByText('Perbarui Draft')).toBeDefined()
+      expect(screen.getByText('Simpan & Terbitkan Langsung')).toBeDefined()
     })
   })
 

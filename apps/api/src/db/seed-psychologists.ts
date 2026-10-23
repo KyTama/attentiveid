@@ -257,10 +257,10 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             name: 'Dr. Haykal Hafizul Arifin',
             nickname: 'Haykal',
             credential: 'S.Psi., M.Si.',
-            status: 'inactive',
+            status: 'active',
             tier: 'consultant',
             primaryBranch: 'tbi',
-            acceptingNewClients: false,
+            acceptingNewClients: true,
             supportArea: 'psychologyScientist',
             specializations: [
                 localizedLabel('Makna dan tujuan hidup (Meaning in Life)', 'Meaning and purpose in life'),

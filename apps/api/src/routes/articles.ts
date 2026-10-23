@@ -129,6 +129,15 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
 
           const authorCap = createPsychologistAuthorCapability(authorPsychologistId)
           const result = await dependencies.contentTransitions.createArticleDraft(authorCap, input)
+
+          if (body.publishImmediately && currentUser.role === 'admin') {
+            const adminCap = createAdminCapability(currentUser.id)
+            const now = new Date().toISOString()
+            await dependencies.contentTransitions.submitArticleRevision(authorCap, result.revision.id, now)
+            await dependencies.contentTransitions.approveArticleRevision(adminCap, result.revision.id, 'Approved upon entry by admin', now)
+            await dependencies.contentTransitions.publishArticleRevision(adminCap, result.article.id, result.revision.id)
+          }
+
           set.status = 201
           return { status: 'success', article: result.article, revision: result.revision }
         } catch (err: any) {
@@ -144,11 +153,12 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
           summary: t.Object({ id: t.String(), en: t.String() }),
           body: t.Object({ id: t.String(), en: t.String() }),
           ownerPsychologistId: t.Optional(t.String()),
+          publishImmediately: t.Optional(t.Boolean()),
         }),
         detail: {
           tags: ['Articles CMS'],
-          summary: 'Create article draft',
-          description: 'Creates a new article aggregate and initial draft revision.',
+          summary: 'Create article draft or publish directly',
+          description: 'Creates a new article aggregate and initial draft revision (optionally publishes directly for admin).',
         },
       }
     )
@@ -329,6 +339,78 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
           tags: ['Articles CMS'],
           summary: 'Reject article revision',
           description: 'Admin rejects article revision back to draft.',
+        },
+      }
+    )
+    .post(
+      '/api/admin/articles/:id/unpublish',
+      async ({ params: { id }, currentUser, set }: any) => {
+        try {
+          const adminCap = createAdminCapability(currentUser.id)
+          let articleId = id
+
+          if (dependencies.db) {
+            const [article] = await dependencies.db.select().from(schema.articles).where(eq(schema.articles.id, id)).limit(1)
+            if (article) {
+              articleId = article.id
+            }
+          }
+
+          if (dependencies.contentTransitions?.unpublishArticle) {
+            await dependencies.contentTransitions.unpublishArticle(adminCap, articleId)
+          } else if (dependencies.db) {
+            await dependencies.db.update(schema.articles)
+              .set({ status: 'unpublished', updatedAt: new Date().toISOString() })
+              .where(eq(schema.articles.id, articleId))
+          }
+
+          return { status: 'success', message: 'Article unpublished successfully.' }
+        } catch (err: any) {
+          set.status = 400
+          return { status: 'error', message: err.message || 'Failed to unpublish article.' }
+        }
+      },
+      {
+        requireRole: ['admin'],
+        detail: {
+          tags: ['Articles CMS'],
+          summary: 'Unpublish live article',
+          description: 'Transitions published article to unpublished state.',
+        },
+      }
+    )
+    .delete(
+      '/api/admin/articles/:id',
+      async ({ params: { id }, set }: any) => {
+        try {
+          const articleId = id
+
+          if (dependencies.db) {
+            await dependencies.db.transaction(async (tx: any) => {
+              await tx.update(schema.articles)
+                .set({ draftRevisionId: null, publishedRevisionId: null })
+                .where(eq(schema.articles.id, articleId))
+
+              await tx.delete(schema.articleRevisions)
+                .where(eq(schema.articleRevisions.articleId, articleId))
+
+              await tx.delete(schema.articles)
+                .where(eq(schema.articles.id, articleId))
+            })
+          }
+
+          return { status: 'success', message: 'Article deleted successfully.' }
+        } catch (err: any) {
+          set.status = 400
+          return { status: 'error', message: err.message || 'Failed to delete article.' }
+        }
+      },
+      {
+        requireRole: ['admin'],
+        detail: {
+          tags: ['Articles CMS'],
+          summary: 'Delete article permanently',
+          description: 'Permanently deletes an article and all its revisions.',
         },
       }
     )

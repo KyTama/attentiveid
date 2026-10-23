@@ -197,5 +197,50 @@ describe('article API routes (/api/content/articles & /api/admin/articles)', () 
     )
     expect(res.status).toBe(422)
   })
+
+  it('POST /api/admin/articles/:id/unpublish requires admin role', async () => {
+    const { accessToken: psychToken } = tokenService.issueAccessToken(psychologistUser)
+    const psychRes = await app.handle(
+      new Request('http://localhost/api/admin/articles/article-001/unpublish', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${psychToken}` },
+      })
+    )
+    expect(psychRes.status).toBe(403)
+
+    const { accessToken: adminToken } = tokenService.issueAccessToken(adminUser)
+    const adminRes = await app.handle(
+      new Request('http://localhost/api/admin/articles/article-001/unpublish', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}` },
+      })
+    )
+    expect(adminRes.status).toBe(200)
+    const json = await adminRes.json()
+    expect(json.status).toBe('success')
+  })
+
+  it('DELETE /api/admin/articles/:id requires admin role', async () => {
+    const { accessToken: psychToken } = tokenService.issueAccessToken(psychologistUser)
+    const psychRes = await app.handle(
+      new Request('http://localhost/api/admin/articles/article-001', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${psychToken}` },
+      })
+    )
+    expect(psychRes.status).toBe(403)
+
+    const { accessToken: adminToken } = tokenService.issueAccessToken(adminUser)
+    const adminRes = await app.handle(
+      new Request('http://localhost/api/admin/articles/article-001', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminToken}` },
+      })
+    )
+    expect(adminRes.status).toBe(200)
+    const json = await adminRes.json()
+    expect(json.status).toBe('success')
+  })
 })
+
 
