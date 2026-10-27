@@ -13,7 +13,11 @@ i18n
       en: { translation: enTranslation },
       id: { translation: idTranslation }
     },
-    fallbackLng: 'en',
+    fallbackLng: 'id',
+    detection: {
+      order: ['localStorage', 'cookie'],
+      caches: ['localStorage', 'cookie']
+    },
     interpolation: {
       escapeValue: false // React already does escaping
     }

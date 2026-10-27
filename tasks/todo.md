@@ -1,24 +1,18 @@
-# Task: Update Campaign Redirect URLs for Free Session and Assessment
+# Task: Set Landing Page Default Language to Indonesian (id)
 
 > **Status:** COMPLETED  
-> **Goal:** Update outbound campaign URLs for `free-session` and `assessment` (test centre) across landing components and tests.
+> **Goal:** Set default language of the landing page (`apps/web`) to Indonesian (`id`), prioritizing it over browser defaults while respecting explicit user language selection in `localStorage`.
 
 ---
 
 ## Action Items
-- [x] **1. Landing Components Update**:
-  - Update `apps/web/src/components/landing/CampaignFloatingDock.tsx`:
-    - `free-session` -> `https://free-session.attentiveid.com`
-    - `assessment` / `test-centre` -> `https://assessment.attentiveid.com/`
-  - Update `apps/web/src/components/landing/CampaignSection.tsx`:
-    - `free-session` -> `https://free-session.attentiveid.com`
-    - `test-centre` -> `https://assessment.attentiveid.com/`
-  - Update `apps/web/src/components/landing/HomepageHero.tsx`:
-    - `free-session` -> `https://free-session.attentiveid.com`
-    - `test-centre` -> `https://assessment.attentiveid.com/`
-- [x] **2. Test Suite Update**:
-  - Update `apps/web/tests/homepage.test.tsx` assertions for new URLs.
-- [x] **3. Verification & Knowledge Graph Sync**:
-  - Run `bun --filter web test` (58/58 tests passed).
-  - Run `bun --filter web build` (production build passed, zero TypeScript/Vite errors).
-  - Synchronize knowledge graph index.
+- [x] **1. Update i18n Configuration**:
+  - Update `apps/web/src/i18n/index.ts`:
+    - Set `fallbackLng: 'id'`
+    - Adjust `LanguageDetector` options (`detection: { order: ['localStorage', 'cookie'], caches: ['localStorage', 'cookie'] }`) so first-time visitors default to Indonesian (`id`) regardless of browser locale, while retaining user toggle in `localStorage`.
+- [x] **2. Verify Test Suite & Build**:
+  - Run `bun run test:web` (58/58 passed)
+  - Run `bun run build:web` (Vite production build passed cleanly)
+- [x] **3. Graph Rebuild & Harvest**:
+  - Update knowledge graph (synced with HEAD commit)
+  - Complete checklist
