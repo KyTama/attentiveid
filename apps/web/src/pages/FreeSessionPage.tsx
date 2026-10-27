@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   FREE_SESSION_BOOKING_URL,
@@ -29,6 +29,8 @@ const emptyValues: FreeSessionFormValues = {
   agreed: false,
   website: '',
 }
+
+const PAGE_TITLE = 'Sesi Gratis 60 Menit dengan Psikolog — Attentive'
 
 const fieldClass =
   'block w-full rounded-lg border border-border bg-white px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:text-sm'
@@ -75,6 +77,21 @@ export function FreeSessionPage() {
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    const previousTitle = document.title
+    document.title = PAGE_TITLE
+    return () => {
+      document.title = previousTitle
+    }
+  }, [])
+
+  // Move keyboard/screen-reader focus to the first invalid field after a failed submit.
+  const focusFirstError = () =>
+    window.requestAnimationFrame(() => {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+    })
 
   const update = <K extends keyof FreeSessionFormValues>(key: K, value: FreeSessionFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
@@ -89,6 +106,7 @@ export function FreeSessionPage() {
     const checked = validateFreeSessionSubmission(values)
     if (!checked.ok) {
       setErrors(checked.errors)
+      focusFirstError()
       return
     }
     setErrors({})
@@ -109,6 +127,7 @@ export function FreeSessionPage() {
     }
     if (result.status === 'invalid') {
       setErrors(result.errors)
+      focusFirstError()
       return
     }
     setFormError(
@@ -127,29 +146,29 @@ export function FreeSessionPage() {
 
   return (
     <main className="min-h-screen bg-dominant lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      <aside className="relative overflow-hidden bg-secondary px-6 py-10 text-white sm:px-10 lg:px-14 lg:py-16">
-        <div className="relative z-10 flex h-full flex-col gap-10">
+      <aside className="relative overflow-hidden bg-secondary px-6 py-6 text-white sm:px-10 lg:px-14 lg:py-16">
+        <div className="relative z-10 flex h-full flex-col gap-6 lg:gap-10">
           <Link to="/" className="flex items-center gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <img src="/images/attentive-logo-01.webp" alt="" width={48} height={48} className="size-12 rounded-full bg-white object-contain p-1" />
             <span className="text-2xl font-bold tracking-tight">attentive.</span>
           </Link>
 
-          <div className="space-y-4">
+          <div className="space-y-3 lg:space-y-4">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Sesi Gratis 60 Menit</p>
             <h1
-              className="text-3xl font-bold leading-tight outline-none md:text-4xl"
+              className="text-2xl font-bold leading-tight outline-none sm:text-3xl md:text-4xl"
               data-route-heading
               tabIndex={-1}
             >
               Ruang yang aman untuk memulai cerita kamu.
             </h1>
-            <p className="max-w-md text-sm leading-relaxed text-white/80">
+            <p className="hidden max-w-md text-sm leading-relaxed text-white/80 lg:block">
               Khusus pengguna baru Attentive. Ceritakan kebutuhanmu dan kami akan merekomendasikan psikolog yang
               paling sesuai berdasarkan keluhan atau masalah yang kamu sampaikan.
             </p>
           </div>
 
-          <p className="mt-auto text-xs leading-relaxed text-white/70">
+          <p className="mt-auto hidden text-xs leading-relaxed text-white/70 lg:block">
             <strong className="font-semibold text-white">Biro Psikologi Attentive</strong>
             <br />
             Informasi yang kamu berikan dijaga kerahasiaannya dan hanya digunakan untuk proses layanan Attentive.
@@ -157,7 +176,7 @@ export function FreeSessionPage() {
         </div>
       </aside>
 
-      <section className="flex items-start justify-center px-4 py-10 sm:px-8 lg:py-16">
+      <section className="flex items-start justify-center px-4 py-6 sm:px-8 lg:py-16">
         <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-border sm:p-10">
           {whatsappUrl ? (
             <div className="space-y-5" role="status">
@@ -184,12 +203,16 @@ export function FreeSessionPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} noValidate className="space-y-6" aria-label="Pendaftaran sesi gratis">
+            <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-6" aria-label="Pendaftaran sesi gratis">
               <div className="space-y-2">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Selamat datang</p>
                 <h2 className="text-2xl font-bold text-secondary">Yuk, mulai daftar sesi gratis.</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   Isi beberapa informasi singkat agar kami bisa mencocokkan kebutuhanmu dengan psikolog yang sesuai.
+                </p>
+                <p className="text-xs leading-relaxed text-muted-foreground lg:hidden">
+                  Khusus pengguna baru Attentive. Informasi yang kamu berikan dijaga kerahasiaannya dan hanya
+                  digunakan untuk proses layanan Attentive.
                 </p>
               </div>
 

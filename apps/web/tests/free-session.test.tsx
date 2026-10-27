@@ -42,6 +42,22 @@ describe('/free-session page', () => {
     expect(screen.queryByLabelText(/nama lengkap/i)).not.toBeInTheDocument()
   })
 
+  it('sets a page-specific document title and restores it on leave', () => {
+    document.title = 'Original'
+    const { unmount } = renderPage()
+    expect(document.title).toMatch(/sesi gratis 60 menit/i)
+    unmount()
+    expect(document.title).toBe('Original')
+  })
+
+  it('moves focus to the first invalid field after a failed submit', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('radio', { name: /belum, ini pertama kali/i }))
+    await user.click(screen.getByRole('button', { name: /daftar sesi gratis/i }))
+    await waitFor(() => expect(screen.getByLabelText(/nama lengkap/i)).toHaveFocus())
+  })
+
   it('sends returning users to regular booking and never shows the form', async () => {
     const user = userEvent.setup()
     renderPage()
