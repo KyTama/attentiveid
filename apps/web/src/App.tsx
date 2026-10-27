@@ -14,12 +14,14 @@ import { PsychologistsPage } from './pages/PsychologistsPage'
 import { PreviewLandingPage } from './pages/PreviewLandingPage'
 import { ArticlesPage } from './pages/ArticlesPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
+import { FreeSessionPage } from './pages/FreeSessionPage'
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
 import { PsychologistsCmsPage } from './pages/dashboard/PsychologistsCmsPage'
 import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
 import { PsychologistProfileSelfPage } from './pages/dashboard/PsychologistProfileSelfPage'
 import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
+import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
 import type { LandingContentLoader } from './features/content/service'
 
 export function AppRoutes({
@@ -40,6 +42,7 @@ export function AppRoutes({
           <Route path="psychologists/:slug" element={<PsychologistProfilePage />} />
           <Route path="articles" element={<ArticlesPage />} />
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
+          <Route path="free-session" element={<FreeSessionPage />} />
         </Route>
 
         {/* Obscured Staff Authentication Gate (Decommissioned /login) */}
@@ -93,6 +96,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UsersManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="free-session"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <FreeSessionCmsPage />
               </ProtectedRoute>
             }
           />

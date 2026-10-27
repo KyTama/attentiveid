@@ -9,12 +9,15 @@ import { createPsychologistsCmsRoutes } from './routes/psychologists-cms';
 import { createOverviewRoutes } from './routes/overview.routes';
 import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes';
 import { createUsersManagementRoutes } from './routes/users-management.routes';
+import { createFreeSessionRoutes } from './routes/free-session.routes';
+import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
     articlesRepository?: any;
     landingContentRepository?: any;
     contentTransitions?: any;
     db?: any;
+    freeSessionRepository?: FreeSessionRepository;
 };
 
 export const createApp = (dependencies: AppDependencies) => {
@@ -36,6 +39,7 @@ export const createApp = (dependencies: AppDependencies) => {
                     { name: 'Reservations', description: 'Reservation management' },
                     { name: 'Admin', description: 'Admin operations' },
                     { name: 'Psychologist', description: 'Psychologist operations' },
+                    { name: 'Free Session', description: 'Free session registration form and admin report' },
                 ],
             },
         }))
@@ -109,6 +113,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 db: dependencies.db,
+            }))
+            .use(createFreeSessionRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                freeSessionRepository: dependencies.freeSessionRepository || createFreeSessionRepository(dependencies.db),
             }));
     }
 

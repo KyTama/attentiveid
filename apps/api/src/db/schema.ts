@@ -504,3 +504,22 @@ export const mediaAttachmentsRelations = relations(mediaAttachments, ({ one }) =
         references: [articleRevisions.id]
     })
 }));
+
+// Leads from the public "Sesi Gratis 60 Menit" form. Append-only audit trail:
+// duplicates are kept here and only collapsed in the admin report.
+export const freeSessionSubmissions = pgTable('free_session_submissions', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    age: integer('age').notNull(),
+    gender: text('gender'),
+    phone: text('phone').notNull(),
+    email: text('email'),
+    keluhan: text('keluhan').notNull(),
+    keluhanDetail: text('keluhan_detail'),
+    agreedAt: timestamp('agreed_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('free_session_submissions_created_at_idx').on(table.createdAt),
+    index('free_session_submissions_phone_idx').on(table.phone),
+    check('free_session_submissions_age_range', sql`${table.age} between 15 and 99`)
+]);

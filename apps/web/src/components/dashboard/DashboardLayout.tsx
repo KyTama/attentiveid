@@ -8,6 +8,7 @@ import {
   UserCheck,
   FileText,
   ShieldCheck,
+  ClipboardList,
   Menu,
   X,
   LogOut,
@@ -60,6 +61,12 @@ export function DashboardLayout() {
       to: '/dashboard/users',
       label: t('dashboard.navUsers', 'Manajemen Staff'),
       icon: <ShieldCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
+    },
+    {
+      to: '/dashboard/free-session',
+      label: t('dashboard.navFreeSession', 'Sesi Gratis'),
+      icon: <ClipboardList className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
     },
   ].filter((item) => item.show)
