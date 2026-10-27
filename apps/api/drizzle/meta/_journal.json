@@ -50,6 +50,13 @@
       "when": 1792535431265,
       "tag": "0006_psychology_scientist_support_area",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793092515149,
+      "tag": "0007_free_session_submissions",
+      "breakpoints": true
     }
   ]
 }
