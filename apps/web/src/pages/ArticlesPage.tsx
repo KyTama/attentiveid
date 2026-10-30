@@ -104,7 +104,7 @@ export function ArticlesPage() {
 
       try {
         const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-        const res = await fetch(`${baseUrl}/api/content/articles?locale=${currentLang}`)
+        const res = await fetch(`${baseUrl}/api/content/articles?locale=${currentLang}&limit=50`)
         if (res.ok) {
           const data = await res.json()
           if (mounted && data.status === 'success' && Array.isArray(data.articles) && data.articles.length > 0) {
@@ -136,7 +136,11 @@ export function ArticlesPage() {
   const filteredArticles = articles.filter((article) => {
     const titleText = article.title[currentLang] || article.title.id
     const summaryText = article.summary[currentLang] || article.summary.id
-    const authorsText = article.authors ? article.authors.join(' ') : ''
+    const authorsText = [
+      article.authors?.join(' '),
+      article.author?.name,
+      article.authorName
+    ].filter(Boolean).join(' ')
     const journalText = article.journal?.name || ''
     const query = searchQuery.toLowerCase()
 
