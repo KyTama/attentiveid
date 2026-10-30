@@ -234,6 +234,21 @@ const gitaBio = {
     }
 };
 
+const jessicaBio = {
+    shortBio: {
+        en: 'Everyone carries a story that is far richer than what appears on the surface. Behind every emotion, behavior, or present struggle lie life experiences, relationships, and values that shape how a person understands themselves and the world around them. A genuine curiosity to understand the story behind each individual is what shapes Jessica’s approach to psychological counseling.',
+        id: 'Setiap orang memiliki cerita yang lebih luas daripada apa yang terlihat di permukaan. Di balik emosi, perilaku, atau kesulitan yang sedang dihadapi, ada pengalaman hidup, relasi, serta nilai-nilai yang turut membentuk cara seseorang memahami dirinya dan dunia di sekitarnya. Ketertarikan untuk memahami cerita di balik setiap individu inilah yang mewarnai cara Jessica memandang dan menjalani proses pendampingan psikologis.'
+    },
+    biography: {
+        en: `As an adult clinical psychologist, Jessica believes that truly understanding someone means understanding how they make meaning of their life from multiple perspectives. Life experiences, relationships, and social, cultural, and spiritual values all shape how a person views themselves and navigates different situations. Because of this, Jessica strives to understand each individual holistically—not only through the immediate challenges they face, but also through the broader context of their life story.\n\nThroughout the counseling process, Jessica is dedicated to creating a safe and welcoming space where clients can share openly without fear of judgment. She views therapy as a collaborative journey where client and psychologist explore experiences, recognize patterns, and deepen self-understanding together, rather than simply dispensing advice or directions. Jessica also recognizes that personal growth is rarely linear, and that every individual moves at their own pace along a unique journey.\n\nIn her practice, Jessica provides individual and couples counseling, as well as psychological assessments. She takes an integrative approach, drawing on principles from Cognitive Behavioral Therapy (CBT), Rational Emotive Behavior Therapy (REBT), Dialectical Behavior Therapy (DBT), and Acceptance and Commitment Therapy (ACT), tailored to each client's unique needs and context.\n\nBeyond clinical practice, Jessica is actively involved in psychoeducation as a speaker and facilitator, as well as in psychological assessment and observation projects across educational and personal development settings. These diverse experiences have further broadened her perspective in understanding individuals and fostering psychological well-being across different stages of life.`,
+        id: `Sebagai psikolog klinis dewasa, Jessica memandang bahwa memahami seseorang berarti memahami bagaimana ia memaknai kehidupannya dari berbagai sudut pandang. Pengalaman hidup, relasi, serta nilai sosial, budaya, dan spiritual turut membentuk cara seseorang melihat dirinya dan menghadapi berbagai situasi. Karena itu, Jessica berupaya memahami individu secara menyeluruh, tidak hanya dari persoalan yang sedang dihadapi, tetapi juga dari konteks kehidupan yang melatarbelakanginya.\n\nDalam proses pendampingan, Jessica berupaya menciptakan ruang yang aman dan nyaman bagi klien untuk bercerita tanpa merasa dihakimi. Ia memandang konseling sebagai proses kolaboratif yang memberikan ruang bagi klien untuk mengeksplorasi pengalaman, mengenali pola, dan memahami dirinya bersama, alih-alih sekadar menerima saran atau arahan. Jessica juga memahami bahwa proses perubahan tidak selalu berjalan secara linear dan setiap individu memiliki ritme serta perjalanan yang berbeda.\n\nDalam praktiknya, Jessica menyediakan layanan konseling individu dan pasangan, serta asesmen psikologis. Ia menggunakan pendekatan integratif dengan memanfaatkan prinsip-prinsip Cognitive Behavioral Therapy (CBT), Rational Emotive Behavior Therapy (REBT), Dialectical Behavior Therapy (DBT), dan Acceptance and Commitment Therapy (ACT), sesuai dengan kebutuhan dan konteks klien.\n\nDi luar praktik klinis, Jessica juga terlibat dalam kegiatan psikoedukasi sebagai pembicara dan fasilitator, serta berbagai proyek asesmen dan observasi psikologis dalam konteks pendidikan dan pengembangan individu. Pengalaman tersebut turut memperluas keterlibatannya dalam memahami individu dan mendukung kesejahteraan psikologis di berbagai konteks kehidupan.`
+    },
+    availabilityMessage: {
+        id: 'Hubungi admin Attentive.id untuk informasi ketersediaan jadwal bersama Jessica.',
+        en: 'Contact the Attentive.id admin for current schedule availability with Jessica.'
+    }
+};
+
 const fixture = (input: Omit<PsychologistSeedFixture, 'supportAreas' | 'status' | 'tier' | 'primaryBranch' | 'acceptingNewClients'> & {
     supportArea: SupportArea;
     status?: PsychologistStatus;
@@ -714,6 +729,7 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
             tier: 'mid',
             primaryBranch: 'bsd',
             supportArea: 'adultClinical',
+            profile: jessicaBio,
             specializations: [
                 localizedLabel('Kecemasan', 'Anxiety'),
                 localizedLabel('Masalah akademik dan pekerjaan', 'Academic and work concerns'),
