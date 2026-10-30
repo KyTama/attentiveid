@@ -136,7 +136,7 @@ export function FeaturedPsychologists() {
           {roster.length > 0 && selected && (
             <div>
               <Carousel
-                className="w-full"
+                className="w-full min-w-0"
                 opts={{ align: 'center', loop: true }}
                 setApi={setApi}
               >
@@ -145,8 +145,8 @@ export function FeaturedPsychologists() {
                     const focalPosition = 'object-[center_12%]'
 
                     return (
-                      <CarouselItem className="basis-full pl-0" key={psychologist.slug}>
-                        <div className="grid items-stretch gap-8 overflow-hidden rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
+                      <CarouselItem className="basis-full min-w-0 pl-0" key={psychologist.slug}>
+                        <div className="grid w-full min-w-0 items-stretch gap-8 overflow-hidden rounded-3xl border border-secondary/10 bg-[#faf6ef] p-6 sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:p-12 shadow-xs">
                           {/* Photo Column */}
                           <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] sm:max-w-sm overflow-hidden rounded-t-[2.5rem] rounded-b-2xl bg-[#eee8df] shadow-sm lg:mx-0">
                             <img
@@ -161,29 +161,29 @@ export function FeaturedPsychologists() {
                           </div>
 
                         {/* Details Column */}
-                        <div className="flex flex-col justify-center">
+                        <div className="flex w-full min-w-0 flex-col justify-center">
                           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#946a22]">
                             {t(`routes.psychologists.cards.supportArea.${psychologist.supportArea}`)}
                           </p>
-                          <h3 className="mt-3 text-3xl font-bold tracking-tight text-secondary sm:text-4xl">
+                          <h3 className="mt-3 text-2xl font-bold tracking-tight text-secondary sm:text-3xl lg:text-4xl break-words">
                             {psychologist.name}
                           </h3>
-                          <p className="mt-2 text-base font-semibold text-secondary">{psychologist.credential}</p>
+                          <p className="mt-2 text-base font-semibold text-secondary break-words">{psychologist.credential}</p>
                           {psychologist.shortBio && (
-                            <p className="mt-4 text-sm sm:text-base leading-relaxed font-[450] text-secondary line-clamp-3">
+                            <p className="mt-4 text-sm sm:text-base leading-relaxed font-[450] text-secondary line-clamp-3 break-words">
                               {psychologist.shortBio}
                             </p>
                           )}
 
                           {/* Trust Badges */}
-                          <div className="mt-6 grid gap-3 text-sm font-medium text-secondary sm:grid-cols-2">
-                            <div className="flex items-center gap-2">
+                          <div className="mt-6 grid w-full min-w-0 gap-3 text-sm font-medium text-secondary sm:grid-cols-2">
+                            <div className="flex min-w-0 items-center gap-2">
                               <Clock3 aria-hidden="true" className="shrink-0 text-[#946a22]" size={18} />
-                              <span className="font-semibold">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</span>
+                              <span className="font-semibold break-words">{t('routes.psychologists.cards.experience', { count: psychologist.experienceYears })}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <BadgeCheck aria-hidden="true" className="shrink-0 text-[#946a22]" size={18} />
-                              <span className="truncate">
+                            <div className="flex min-w-0 items-start gap-2">
+                              <BadgeCheck aria-hidden="true" className="mt-0.5 shrink-0 text-[#946a22]" size={18} />
+                              <span className="min-w-0 break-words leading-snug">
                                 <span className="font-bold text-secondary">{t('routes.profile.licenseLabel')}:</span>{' '}
                                 {psychologist.licenseNumber ?? t('homepage.featured.licenseUnavailable')}
                               </span>
@@ -191,14 +191,14 @@ export function FeaturedPsychologists() {
                           </div>
 
                           {/* Specializations */}
-                          <div className="mt-6">
+                          <div className="mt-6 w-full min-w-0">
                             <p className="text-xs font-bold uppercase tracking-[0.14em] text-secondary">
                               {t('homepage.featured.specializationsLabel')}
                             </p>
                             <div className="mt-3 flex flex-wrap gap-2">
                               {psychologist.specializations.slice(0, 5).map((specialization) => (
                                 <span
-                                  className="rounded-full border border-primary/30 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-secondary shadow-2xs"
+                                  className="rounded-full border border-primary/30 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-secondary shadow-2xs break-words"
                                   key={specialization}
                                 >
                                   {specialization}
