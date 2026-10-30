@@ -57,13 +57,14 @@ function formatPublicationDate(dateStr?: string, locale = 'id'): string {
 }
 
 function mapScholarArticleToItem(art: ScholarArticle): ArticleItem {
+  const isJessica = art.authors?.some((a) => a.toLowerCase().includes('jessica'))
   return {
     id: art.id,
     slug: art.slug,
     title: { id: art.title, en: art.title },
     summary: {
-      id: art.abstract || 'Publikasi ilmiah oleh Dr. Haykal Hafizul Arifin.',
-      en: art.abstract || 'Scientific publication by Dr. Haykal Hafizul Arifin.'
+      id: art.abstract || (isJessica ? 'Publikasi ilmiah oleh Jessica Raphaela.' : 'Publikasi ilmiah oleh Dr. Haykal Hafizul Arifin.'),
+      en: art.abstract || (isJessica ? 'Scientific publication by Jessica Raphaela.' : 'Scientific publication by Dr. Haykal Hafizul Arifin.')
     },
     publishedAt: art.publicationDate,
     authors: art.authors,
@@ -72,12 +73,18 @@ function mapScholarArticleToItem(art: ScholarArticle): ArticleItem {
     doiUrl: art.doiUrl,
     citationsCount: art.citationsCount,
     scholarUrl: art.scholarUrl,
-    author: {
-      id: 'haykal',
-      name: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.',
-      slug: 'haykal'
-    },
-    authorName: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.'
+    author: isJessica
+      ? {
+          id: 'jessica',
+          name: 'Jessica Raphaela, M.Psi., Psikolog',
+          slug: 'jessica'
+        }
+      : {
+          id: 'haykal',
+          name: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.',
+          slug: 'haykal'
+        },
+    authorName: isJessica ? 'Jessica Raphaela, M.Psi., Psikolog' : 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.'
   }
 }
 

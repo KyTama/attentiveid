@@ -112,14 +112,15 @@ export function ArticleDetailPage() {
       if (mounted) {
         if (scholarMatch) {
           setScholarArticle(scholarMatch)
+          const isJessica = scholarMatch.authors?.some((a) => a.toLowerCase().includes('jessica'))
           setArticleData({
             id: scholarMatch.id,
             articleId: scholarMatch.id,
             slug: scholarMatch.slug,
             title: { id: scholarMatch.title, en: scholarMatch.title },
             summary: {
-              id: scholarMatch.abstract || 'Publikasi ilmiah oleh Dr. Haykal Hafizul Arifin.',
-              en: scholarMatch.abstract || 'Scientific publication by Dr. Haykal Hafizul Arifin.'
+              id: scholarMatch.abstract || (isJessica ? 'Publikasi ilmiah oleh Jessica Raphaela.' : 'Publikasi ilmiah oleh Dr. Haykal Hafizul Arifin.'),
+              en: scholarMatch.abstract || (isJessica ? 'Scientific publication by Jessica Raphaela.' : 'Scientific publication by Dr. Haykal Hafizul Arifin.')
             },
             body: {
               id: scholarMatch.abstract || 'Abstrak belum tersedia untuk publikasi ini.',
@@ -132,13 +133,23 @@ export function ArticleDetailPage() {
             doiUrl: scholarMatch.doiUrl,
             citationsCount: scholarMatch.citationsCount,
             scholarUrl: scholarMatch.scholarUrl,
-            author: {
-              id: 'haykal',
-              name: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.',
-              slug: 'haykal',
-              title: 'Ilmuwan Psikologi & Peneliti Sosial',
-              specializations: ['Psikologi Sosial', 'Social Cognition', 'Psikometri & Validasi Skala']
-            }
+            author: isJessica
+              ? {
+                  id: 'jessica',
+                  name: 'Jessica Raphaela, M.Psi., Psikolog',
+                  slug: 'jessica',
+                  title: 'Psikolog Klinis Dewasa',
+                  photoUrl: '/media/psychologists/jessica.webp',
+                  specializations: ['Kecemasan', 'Relasi Interpersonal', 'Pengelolaan Emosi', 'Stres & Burnout']
+                }
+              : {
+                  id: 'haykal',
+                  name: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Sc.',
+                  slug: 'haykal',
+                  title: 'Ilmuwan Psikologi & Peneliti Sosial',
+                  photoUrl: '/media/psychologists/haykal.webp',
+                  specializations: ['Psikologi Sosial', 'Social Cognition', 'Psikometri & Validasi Skala']
+                }
           })
         } else {
           setIsNotFound(true)
@@ -318,7 +329,8 @@ export function ArticleDetailPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-full border border-secondary/20 bg-white px-3 py-1.5 text-xs font-medium text-secondary hover:bg-secondary/5 transition-colors"
                   >
-                    <span>Google Scholar</span>
+                    <BookOpen size={13} className="text-primary" />
+                    <span>{articleData.scholarUrl.includes('scholar.google') ? 'Google Scholar' : 'Proceeding / Paper PDF'}</span>
                     <ExternalLink size={12} className="text-secondary/60" />
                   </a>
                 )}

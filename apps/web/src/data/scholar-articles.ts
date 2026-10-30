@@ -53,9 +53,9 @@ export function formatApaCitation(article: ScholarArticle): string {
   const authorText = article.authors.length > 0 ? article.authors.join(', ') : 'Arifin, H. H.';
   const yearText = article.year ? `(${article.year})` : '(n.d.)';
   const journalText = formatJournalCitation(article);
-  const doiText = article.doiUrl ? ` ${article.doiUrl}` : '';
+  const linkText = article.doiUrl ? ` ${article.doiUrl}` : article.scholarUrl ? ` ${article.scholarUrl}` : '';
 
-  return `${authorText} ${yearText}. ${article.title}. ${journalText}.${doiText}`.trim();
+  return `${authorText} ${yearText}. ${article.title}. ${journalText}.${linkText}`.trim();
 }
 
 /**

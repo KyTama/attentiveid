@@ -62,18 +62,25 @@ function formatArticleBody(art: ScholarArticleFixture): string {
     lines.push(`**DOI**: [${art.doi}](${art.doiUrl})`);
   }
   if (art.scholarUrl) {
-    lines.push(`**Google Scholar**: [View on Google Scholar](${art.scholarUrl})`);
+    const isScholar = art.scholarUrl.includes('scholar.google');
+    lines.push(`**${isScholar ? 'Google Scholar' : 'Proceeding / Paper PDF'}**: [${isScholar ? 'View on Google Scholar' : 'Download / View PDF'}](${art.scholarUrl})`);
   }
   return lines.join('\n');
 }
 
 export async function seedArticles(database: any, articlesList: ScholarArticleFixture[] = scholarArticles as ScholarArticleFixture[]) {
   return await database.transaction(async (tx: any) => {
-    // 1. Find Dr. Haykal psychologist record
+    // 1. Find default psychologist records
     const [haykal] = await tx
       .select({ id: schema.psychologists.id })
       .from(schema.psychologists)
       .where(eq(schema.psychologists.slug, 'haykal'))
+      .limit(1);
+
+    const [jessica] = await tx
+      .select({ id: schema.psychologists.id })
+      .from(schema.psychologists)
+      .where(eq(schema.psychologists.slug, 'jessica'))
       .limit(1);
 
     if (!haykal) {
@@ -87,6 +94,8 @@ export async function seedArticles(database: any, articlesList: ScholarArticleFi
       const pubDateIso = parsePublicationDateToIso(item.publicationDate);
       const bodyContent = formatArticleBody(item);
       const summaryText = item.abstract || item.title;
+      const isJessica = item.authors?.some((a) => a.toLowerCase().includes('jessica'));
+      const ownerPsychologistId = (isJessica && jessica?.id) ? jessica.id : haykal.id;
 
       // Check if article with this slug exists
       const [existing] = await tx
@@ -102,7 +111,7 @@ export async function seedArticles(database: any, articlesList: ScholarArticleFi
         // 1. Insert article first with null revision pointers to satisfy foreign key constraints
         await tx.insert(schema.articles).values({
           id: articleId,
-          ownerPsychologistId: haykal.id,
+          ownerPsychologistId,
           slug: item.slug,
           status: 'published',
           publishedRevisionId: null,
