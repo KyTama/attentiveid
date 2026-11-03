@@ -113,14 +113,14 @@ class MemoryPsychologistSeedDatabase implements PsychologistBootstrapDatabase {
 }
 
 const expectedCounts = {
-    psychologists: 24,
-    profiles: 24,
-    profileTranslations: 48,
-    supportAreas: 24,
-    specializations: 179,
-    specializationTranslations: 358,
-    mediaObjects: 24,
-    mediaAttachments: 24
+    psychologists: 25,
+    profiles: 25,
+    profileTranslations: 50,
+    supportAreas: 25,
+    specializations: 187,
+    specializationTranslations: 374,
+    mediaObjects: 25,
+    mediaAttachments: 25
 };
 
 describe('psychologist seed bootstrap', () => {

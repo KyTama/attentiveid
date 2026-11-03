@@ -351,6 +351,30 @@ export const psychologists: Psychologist[] = [
         shortBio: "Dr. Haykal Hafizul Arifin adalah ilmuwan psikologi sosial dan konsultan senior di Attentive.id dengan spesialisasi makna hidup, berpikir kritis, dan efikasi diri.",
         biography: "Dr. Haykal Hafizul Arifin, S.Psi., M.Si. merupakan peneliti dan konsultan psikologi sosial non-klinis dengan pengalaman lebih dari 12 tahun. Pendekatan beliau berakar pada dialog Sokratik, refleksi mendalam, saintifik, dan berorientasi pada pencarian makna hidup.",
     },
+    {
+        id: 'ratri',
+        name: 'Diptya Ratri P.',
+        nickname: 'Ratri',
+        title: 'M.Psi., Psikolog',
+        category: 'adultClinical',
+        image: '/media/psychologists/ratri.webp',
+        specializations: [
+            'Relasi interpersonal (keluarga, pertemanan, hubungan romantis)',
+            'Stres dan burnout',
+            'Regulasi emosi',
+            'Kecemasan',
+            'Depresi',
+            'Trauma',
+            'Gangguan kepribadian',
+            'Masalah terkait pengembangan diri, pekerjaan, dan karir',
+        ],
+        experience: '4 Tahun',
+        sipp: 'SIPP 20220002-2024-02-3561',
+        reservationLink: createWaLink('Ratri', 'regular'),
+        premiumLink: createWaLink('Ratri', 'premium'),
+        shortBio: 'Diptya Ratri P. (Ratri) adalah psikolog klinis dewasa lulusan Universitas Indonesia yang berfokus mendampingi dinamika relasi interpersonal, manajemen stres dan burnout, regulasi emosi, serta pemulihan trauma.',
+        biography: 'Diptya Ratri P., M.Psi., Psikolog (Ratri) adalah psikolog klinis dewasa yang menyelesaikan pendidikan profesi di Universitas Indonesia. Dalam praktiknya, Ratri mendampingi individu dalam mengurai berbagai tantangan hidup seperti dinamika relasi interpersonal (keluarga, pertemanan, maupun hubungan romantis), stres dan burnout, regulasi emosi, kecemasan, depresi, trauma, hingga isu kepribadian dan pengembangan karier. Ratri berkomitmen menghadirkan ruang yang aman, empatik, dan tanpa penghakiman untuk membantu klien memahami diri secara utuh dan menemukan kembali keseimbangan emosional.',
+    },
 ]
 
 // Helper to filter by category

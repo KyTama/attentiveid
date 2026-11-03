@@ -83,6 +83,7 @@ export const PSYCHOLOGISTS = {
     nichi: `${BASE}/psychologists/Nichi.webp`,
     sekar: `${BASE}/psychologists/Sekar.webp`,
     syazka: `${BASE}/psychologists/Syazka.webp`,
+    ratri: `${BASE}/psychologists/Ratri.webp`,
 } as const
 
 /**

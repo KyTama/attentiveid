@@ -48,6 +48,16 @@
 ## 10. Tailwind v4 Dark Mode Isolation & Pure Light Theme Guard
 - **Problem**: In Tailwind CSS v4, default setup listens to OS-level `@media (prefers-color-scheme: dark)`. When a user operates macOS in Dark Mode, dashboard elements containing `dark:` variants inadvertently trigger high-contrast dark styles, clashing with the brand's warm clinical aesthetic. Furthermore, mixing loosely-typed form handlers with `any` creates silent runtime bugs on state transitions.
 - **Solution**:
+  - Enforce explicit light theme root locking and disable unintended OS dark-mode overrides in core layout wrappers.
+  - Eliminate all `any` usages in dashboard form handlers, replacing them with strict type unions matching schema models.
+
+## 11. CSS Flexbox/Grid Track Containment & Unbounded String Blowout in Responsive Carousels
+- **Problem**: When rendering data with variable-length text (e.g. detailed professional licenses like `Peneliti & Konsultan Psikologi Sosial (Non-Klinis)` or `Lulusan Baru Profesi UI (Proses SIPP/STR)`), missing `min-w-0` on CSS flex and grid ancestor containers causes them to fall back to `min-width: auto`. This prevents child text from truncating or wrapping within the mobile viewport width (e.g. 360px–440px), forcing the entire carousel slide card to expand beyond 100vw. As a consequence, `mx-auto` on the photo calculates centering relative to the oversized card (shifting the photo rightward/off-center), and the right edge of text and CTAs gets clipped by the carousel's `overflow-hidden` viewport.
+- **Solution**:
+  1. Enforce `min-w-0` and `w-full` on all levels of the carousel slide hierarchy (`CarouselItem`, card root, details column, and badge flex containers).
+  2. Use `break-words leading-snug` with `items-start` on badge labels rather than relying on uncontained truncation, allowing lengthy descriptions to wrap cleanly onto two lines without blowing out container width.
+  3. Ensure headings and titles include `break-words` and scale fluidly (`text-2xl sm:text-3xl lg:text-4xl`) for long multi-word practitioner names.
+
   1. Scope dark variants explicitly in CSS: `@custom-variant dark (&:where(.dark, .dark *));`. This ensures dark classes only apply when an ancestor explicitly possesses the `.dark` class, eliminating OS-driven style leaks.
   2. In internal portals (Dashboard/Admin/Psychologist CMS), systematically replace disparate `dark:` utility classes with warm light clinical tokens (`#FEFAF6` canvas, pure white card containers, slate typography, teal accents).
   3. Strongly type all CMS API responses and mutation payloads (`AdminPsychologistItem`, `LandingCmsData`, `LandingSection`) to eliminate `@typescript-eslint/no-explicit-any` and ensure clean Vite production builds (`tsc -b`).

@@ -249,6 +249,21 @@ const jessicaBio = {
     }
 };
 
+const ratriBio = {
+    shortBio: {
+        id: 'Diptya Ratri P. (Ratri) adalah psikolog klinis dewasa lulusan Universitas Indonesia yang berfokus mendampingi dinamika relasi interpersonal, manajemen stres dan burnout, regulasi emosi, serta pemulihan trauma.',
+        en: 'Diptya Ratri P. (Ratri) is an adult clinical psychologist from Universitas Indonesia who supports individuals through interpersonal relationship dynamics, stress and burnout, emotional regulation, and trauma recovery.'
+    },
+    biography: {
+        id: 'Diptya Ratri P., M.Psi., Psikolog (Ratri) adalah psikolog klinis dewasa yang menyelesaikan pendidikan profesi di Universitas Indonesia. Dalam praktiknya, Ratri mendampingi individu dalam mengurai berbagai tantangan hidup seperti dinamika relasi interpersonal (keluarga, pertemanan, maupun hubungan romantis), stres dan burnout, regulasi emosi, kecemasan, depresi, trauma, hingga isu kepribadian dan pengembangan karier. Ratri berkomitmen menghadirkan ruang yang aman, empatik, dan tanpa penghakiman untuk membantu klien memahami diri secara utuh dan menemukan kembali keseimbangan emosional.',
+        en: 'Diptya Ratri P., M.Psi., Psikolog (Ratri) is an adult clinical psychologist who completed her professional psychology education at Universitas Indonesia. In her practice, Ratri supports individuals navigating life challenges including interpersonal relationships (family, friendship, and romantic dynamics), stress and burnout, emotional regulation, anxiety, depression, trauma, personality concerns, and career development. She is committed to creating a safe, empathetic, and non-judgmental space to help clients gain deep self-understanding and restore emotional well-being.'
+    },
+    availabilityMessage: {
+        id: 'Hubungi admin Attentive.id untuk informasi ketersediaan jadwal bersama Ratri.',
+        en: 'Contact the Attentive.id admin for current schedule availability with Ratri.'
+    }
+};
+
 const fixture = (input: Omit<PsychologistSeedFixture, 'supportAreas' | 'status' | 'tier' | 'primaryBranch' | 'acceptingNewClients'> & {
     supportArea: SupportArea;
     status?: PsychologistStatus;
@@ -1033,6 +1048,39 @@ export const psychologistSeedFixtures: readonly PsychologistSeedFixture[] = [
                 width: 600,
                 height: 750,
                 alt: { id: 'Foto profil Annisah Nurul Azizah', en: 'Profile photo of Annisah Nurul Azizah' },
+                mimeType: 'image/webp'
+            }
+        }),
+    fixture({
+            slug: 'ratri',
+            name: 'Diptya Ratri P.',
+            nickname: 'Ratri',
+            credential: 'M.Psi., Psikolog',
+            tier: 'senior_mid',
+            primaryBranch: 'tbi',
+            supportArea: 'adultClinical',
+            specializations: [
+                localizedLabel('Relasi interpersonal (keluarga, pertemanan, hubungan romantis)', 'Interpersonal relationships (family, friendship, and romance)'),
+                localizedLabel('Stres dan burnout', 'Stress and burnout'),
+                localizedLabel('Regulasi emosi', 'Emotional regulation'),
+                localizedLabel('Kecemasan', 'Anxiety'),
+                localizedLabel('Depresi', 'Depression'),
+                localizedLabel('Trauma', 'Trauma'),
+                localizedLabel('Gangguan kepribadian', 'Personality disorders'),
+                localizedLabel('Masalah terkait pengembangan diri, pekerjaan, dan karir', 'Personal development, workplace, and career concerns')
+            ],
+            experienceYears: 4,
+            licenseNumber: 'SIPP 20220002-2024-02-3561',
+            bookingUrl: bookingUrl('Ratri', 'regular'),
+            premiumBookingUrl: bookingUrl('Ratri', 'premium'),
+            featured: true,
+            featuredOrder: 23,
+            profile: ratriBio,
+            media: {
+                reference: 'media/psychologists/ratri.webp',
+                width: 600,
+                height: 750,
+                alt: { id: 'Foto profil Diptya Ratri P.', en: 'Profile photo of Diptya Ratri P.' },
                 mimeType: 'image/webp'
             }
         })
