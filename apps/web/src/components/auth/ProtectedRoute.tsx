@@ -6,10 +6,12 @@ import { useTranslation } from 'react-i18next'
 
 export interface ProtectedRouteProps {
   allowedRoles?: UserRole[]
+  /** Extra gate: only these account emails (lowercase) may pass, on top of allowedRoles. */
+  allowedEmails?: string[]
   children?: React.ReactNode
 }
 
-export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
+export function ProtectedRoute({ allowedRoles, allowedEmails, children }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
@@ -31,7 +33,10 @@ export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) 
     return <Navigate to="/portal-gate" state={{ from: location }} replace />
   }
 
-  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  const roleDenied = allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)
+  const emailDenied = allowedEmails && !allowedEmails.includes(user.email.trim().toLowerCase())
+
+  if (roleDenied || emailDenied) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
         <div className="max-w-md w-full text-center bg-white dark:bg-slate-800 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-700">
