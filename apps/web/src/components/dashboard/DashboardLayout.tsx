@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   LayoutTemplate,
@@ -9,6 +9,10 @@ import {
   FileText,
   ShieldCheck,
   ClipboardList,
+  FlaskConical,
+  TextCursorInput,
+  CalendarDays,
+  ChevronDown,
   Menu,
   X,
   LogOut,
@@ -16,16 +20,26 @@ import {
 import { useAuth } from '../../features/auth/auth-context'
 import { LanguageSwitcher } from '../common/LanguageSwitcher'
 import { useTranslation } from 'react-i18next'
+import { canAccessExperimental } from '../../features/experimental/access'
+
+type NavLeaf = { to: string; label: string; icon: ReactNode; end?: boolean; show: boolean }
+type NavGroup = { id: string; label: string; icon: ReactNode; show: boolean; children: NavLeaf[] }
+type NavEntry = NavLeaf | NavGroup
+
+const isGroup = (entry: NavEntry): entry is NavGroup => 'children' in entry
 
 export function DashboardLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const location = useLocation()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
   const isAdmin = user?.role === 'admin'
+  const showExperimental = isAdmin && canAccessExperimental(user?.email)
 
-  const navItems = [
+  const navEntries: NavEntry[] = [
     {
       to: '/dashboard',
       end: true,
@@ -64,12 +78,97 @@ export function DashboardLayout() {
       show: isAdmin,
     },
     {
-      to: '/dashboard/free-session',
-      label: t('dashboard.navFreeSession', 'Sesi Gratis'),
-      icon: <ClipboardList className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
+      id: 'experimental',
+      label: t('dashboard.navExperimental', 'Experimental'),
+      icon: <FlaskConical className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: showExperimental,
+      children: [
+        {
+          to: '/dashboard/experimental/forms',
+          label: t('dashboard.navForms', 'Forms'),
+          icon: <TextCursorInput className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/experimental/events',
+          label: t('dashboard.navEvents', 'Events'),
+          icon: <CalendarDays className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/free-session',
+          label: t('dashboard.navFreeSession', 'Sesi Gratis'),
+          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+      ],
     },
-  ].filter((item) => item.show)
+  ].filter((entry) => entry.show)
+
+  const linkClass = (isActive: boolean, nested: boolean) =>
+    `flex items-center gap-3 rounded-xl text-sm font-medium transition-all ${nested ? 'px-3 py-2' : 'px-3 py-2.5'} ${
+      isActive
+        ? 'bg-teal-50 text-teal-800 font-semibold shadow-xs'
+        : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'
+    }`
+
+  const renderNav = (onNavigate?: () => void) =>
+    navEntries.map((entry) => {
+      if (!isGroup(entry)) {
+        return (
+          <NavLink
+            key={entry.to}
+            to={entry.to}
+            end={entry.end}
+            onClick={onNavigate}
+            className={({ isActive }) => linkClass(isActive, false)}
+          >
+            {entry.icon}
+            <span>{entry.label}</span>
+          </NavLink>
+        )
+      }
+
+      const children = entry.children.filter((child) => child.show)
+      const hasActiveChild = children.some((child) => location.pathname.startsWith(child.to))
+      const isOpen = expandedGroups[entry.id] ?? hasActiveChild
+      const panelId = `nav-group-${entry.id}`
+
+      return (
+        <div key={entry.id}>
+          <button
+            type="button"
+            aria-expanded={isOpen}
+            aria-controls={panelId}
+            onClick={() => setExpandedGroups((current) => ({ ...current, [entry.id]: !isOpen }))}
+            className={`w-full ${linkClass(false, false)} ${hasActiveChild && !isOpen ? 'text-teal-800' : ''}`}
+          >
+            {entry.icon}
+            <span className="flex-1 text-left">{entry.label}</span>
+            <ChevronDown
+              className={`size-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+          {isOpen ? (
+            <div id={panelId} className="mt-1 ml-4 space-y-1 border-l border-slate-200 pl-2">
+              {children.map((child) => (
+                <NavLink
+                  key={child.to}
+                  to={child.to}
+                  end={child.end}
+                  onClick={onNavigate}
+                  className={({ isActive }) => linkClass(isActive, true)}
+                >
+                  {child.icon}
+                  <span>{child.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )
+    })
 
   const handleLogout = async () => {
     await logout()
@@ -93,23 +192,7 @@ export function DashboardLayout() {
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-teal-50 text-teal-800 font-semibold shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'
-                }`
-              }
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {renderNav()}
         </nav>
 
         <div className="p-3 border-t border-slate-200/80">
@@ -195,24 +278,7 @@ export function DashboardLayout() {
                 </div>
 
                 <nav className="space-y-1">
-                  {navItems.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      end={item.end}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
-                          isActive
-                            ? 'bg-teal-50 text-teal-800 font-semibold'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        }`
-                      }
-                    >
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </NavLink>
-                  ))}
+                  {renderNav(() => setIsMobileOpen(false))}
                 </nav>
               </motion.div>
             </motion.div>
