@@ -1,4 +1,4 @@
-import { CalendarDays, TextCursorInput } from 'lucide-react'
+import { TextCursorInput } from 'lucide-react'
 
 function PageHeader({ title, description }: { title: string; description: string }) {
   return (
@@ -22,21 +22,6 @@ export function ExperimentalFormsPage() {
         <TextCursorInput className="size-8 text-slate-400" aria-hidden="true" />
         <p className="text-sm font-semibold text-slate-900">Belum ada form.</p>
         <p className="max-w-sm text-xs text-slate-500">Bagian ini masih kosong.</p>
-      </div>
-    </div>
-  )
-}
-
-export function ExperimentalEventsPage() {
-  return (
-    <div className="max-w-6xl space-y-6">
-      <PageHeader title="Events" description="Kelola acara dan pendaftaran peserta." />
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-        <CalendarDays className="size-8 text-slate-400" aria-hidden="true" />
-        <p className="text-sm font-semibold text-slate-900">Belum ada event.</p>
-        <p className="max-w-sm text-xs text-slate-500">
-          Bagian ini masih kosong. Event akan tampil di sini setelah fiturnya dibuat.
-        </p>
       </div>
     </div>
   )

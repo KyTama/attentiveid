@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { canAccessExperimental } from '../../features/experimental/access'
 
 type NavLeaf = { to: string; label: string; icon: ReactNode; end?: boolean; show: boolean }
-type NavGroup = { id: string; label: string; icon: ReactNode; show: boolean; children: NavLeaf[] }
+type NavGroup = { id: string; label: string; icon: ReactNode; show: boolean; children: NavEntry[] }
 type NavEntry = NavLeaf | NavGroup
 
 const isGroup = (entry: NavEntry): entry is NavGroup => 'children' in entry
@@ -90,16 +90,18 @@ export function DashboardLayout() {
           show: true,
         },
         {
-          to: '/dashboard/experimental/events',
+          id: 'events',
           label: t('dashboard.navEvents', 'Events'),
           icon: <CalendarDays className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
-        },
-        {
-          to: '/dashboard/free-session',
-          label: t('dashboard.navFreeSession', 'Sesi Gratis'),
-          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
+          children: [
+            {
+              to: '/dashboard/free-session',
+              label: t('dashboard.navFreeSession', 'Sesi Gratis'),
+              icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+              show: true,
+            },
+          ],
         },
       ],
     },
@@ -112,63 +114,60 @@ export function DashboardLayout() {
         : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'
     }`
 
-  const renderNav = (onNavigate?: () => void) =>
-    navEntries.map((entry) => {
-      if (!isGroup(entry)) {
-        return (
-          <NavLink
-            key={entry.to}
-            to={entry.to}
-            end={entry.end}
-            onClick={onNavigate}
-            className={({ isActive }) => linkClass(isActive, false)}
-          >
-            {entry.icon}
-            <span>{entry.label}</span>
-          </NavLink>
-        )
-      }
+  const hasActiveDescendant = (group: NavGroup): boolean =>
+    group.children.some((child) =>
+      isGroup(child) ? hasActiveDescendant(child) : location.pathname.startsWith(child.to),
+    )
 
-      const children = entry.children.filter((child) => child.show)
-      const hasActiveChild = children.some((child) => location.pathname.startsWith(child.to))
-      const isOpen = expandedGroups[entry.id] ?? hasActiveChild
-      const panelId = `nav-group-${entry.id}`
+  const renderEntry = (entry: NavEntry, depth: number, onNavigate?: () => void): ReactNode => {
+    const nested = depth > 0
 
+    if (!isGroup(entry)) {
       return (
-        <div key={entry.id}>
-          <button
-            type="button"
-            aria-expanded={isOpen}
-            aria-controls={panelId}
-            onClick={() => setExpandedGroups((current) => ({ ...current, [entry.id]: !isOpen }))}
-            className={`w-full ${linkClass(false, false)} ${hasActiveChild && !isOpen ? 'text-teal-800' : ''}`}
-          >
-            {entry.icon}
-            <span className="flex-1 text-left">{entry.label}</span>
-            <ChevronDown
-              className={`size-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-              aria-hidden="true"
-            />
-          </button>
-          {isOpen ? (
-            <div id={panelId} className="mt-1 ml-4 space-y-1 border-l border-slate-200 pl-2">
-              {children.map((child) => (
-                <NavLink
-                  key={child.to}
-                  to={child.to}
-                  end={child.end}
-                  onClick={onNavigate}
-                  className={({ isActive }) => linkClass(isActive, true)}
-                >
-                  {child.icon}
-                  <span>{child.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        <NavLink
+          key={entry.to}
+          to={entry.to}
+          end={entry.end}
+          onClick={onNavigate}
+          className={({ isActive }) => linkClass(isActive, nested)}
+        >
+          {entry.icon}
+          <span>{entry.label}</span>
+        </NavLink>
       )
-    })
+    }
+
+    const children = entry.children.filter((child) => child.show)
+    const hasActiveChild = hasActiveDescendant(entry)
+    const isOpen = expandedGroups[entry.id] ?? hasActiveChild
+    const panelId = `nav-group-${entry.id}`
+
+    return (
+      <div key={entry.id}>
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          onClick={() => setExpandedGroups((current) => ({ ...current, [entry.id]: !isOpen }))}
+          className={`w-full ${linkClass(false, nested)} ${hasActiveChild && !isOpen ? 'text-teal-800' : ''}`}
+        >
+          {entry.icon}
+          <span className="flex-1 text-left">{entry.label}</span>
+          <ChevronDown
+            className={`size-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
+        {isOpen ? (
+          <div id={panelId} className="mt-1 ml-4 space-y-1 border-l border-slate-200 pl-2">
+            {children.map((child) => renderEntry(child, depth + 1, onNavigate))}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  const renderNav = (onNavigate?: () => void) => navEntries.map((entry) => renderEntry(entry, 0, onNavigate))
 
   const handleLogout = async () => {
     await logout()

@@ -22,7 +22,7 @@ import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
 import { PsychologistProfileSelfPage } from './pages/dashboard/PsychologistProfileSelfPage'
 import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
-import { ExperimentalEventsPage, ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
+import { ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
 import { EXPERIMENTAL_EMAILS } from './features/experimental/access'
 import type { LandingContentLoader } from './features/content/service'
 
@@ -114,14 +114,6 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
                 <ExperimentalFormsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="experimental/events"
-            element={
-              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
-                <ExperimentalEventsPage />
               </ProtectedRoute>
             }
           />
