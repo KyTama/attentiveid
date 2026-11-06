@@ -126,7 +126,7 @@ const defaultLandingData: LandingCmsData = {
       headline: { id: 'Siap Memulai Langkah Pertama Anda?', en: 'Ready to Take Your First Step?' },
       description: { id: 'Jangan ragu menghubungi tim kami untuk pertanyaan lebih lanjut.', en: 'Do not hesitate to reach out to our team for further inquiries.' },
       primaryCta: { id: 'Konsultasi Sekarang', en: 'Consult Now' },
-      contact: { id: 'WhatsApp: +62 851-5641-0912 | Email: halo@attentive.id', en: 'WhatsApp: +62 851-5641-0912 | Email: halo@attentive.id' },
+      contact: { id: 'WhatsApp: +62 851-5641-0912 | Email: contact@attentiveid.com', en: 'WhatsApp: +62 851-5641-0912 | Email: contact@attentiveid.com' },
     },
   ],
 }

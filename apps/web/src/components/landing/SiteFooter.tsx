@@ -81,7 +81,7 @@ export function SiteFooter() {
             </a>
             <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.email}>
               <Mail aria-hidden="true" className="size-3.5 text-primary" />
-              <span>halo@attentive.id</span>
+              <span>contact@attentiveid.com</span>
             </a>
           </div>
         </div>

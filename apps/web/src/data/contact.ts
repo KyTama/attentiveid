@@ -79,7 +79,7 @@ export const contact = {
     social: {
         instagram: 'https://instagram.com/attentive.id',
         linkedin: 'https://www.linkedin.com/company/biro-psikologi-attentive',
-        email: 'mailto:halo@attentive.id',
+        email: 'mailto:contact@attentiveid.com',
     },
 } as const
 
