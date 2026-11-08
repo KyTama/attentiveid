@@ -33,7 +33,7 @@ export const PSYCHOLOGIST_TIERS = ['principal', 'senior', 'senior_mid', 'mid', '
 export type PsychologistTier = typeof PSYCHOLOGIST_TIERS[number]
 export const PRACTICE_BRANCHES = ['tbi', 'bsd', 'malang', 'online_only', 'multiple'] as const
 export type PracticeBranch = typeof PRACTICE_BRANCHES[number]
-export const USER_ROLES = ['admin', 'psychologist'] as const
+export const USER_ROLES = ['superadmin', 'admin', 'psychologist'] as const
 export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const
 
 
@@ -477,6 +477,26 @@ export const validateFullPsychologistMutation = (value: unknown): value is FullP
   return true
 }
 
+export const getFullPsychologistMutationErrors = (value: unknown): string[] => {
+  const errors: string[] = []
+  if (!Value.Check(FullPsychologistMutationSchema, value)) {
+    for (const err of Value.Errors(FullPsychologistMutationSchema, value)) {
+      const field = err.path.replace(/^\//, '').replace(/\//g, '.')
+      errors.push(`${field ? `Field '${field}': ` : ''}${err.message}`)
+    }
+  }
+  const obj = value as any
+  if (obj && typeof obj === 'object') {
+    if (obj.featured && (obj.featuredOrder === undefined || obj.featuredOrder === null)) {
+      errors.push("Field 'featuredOrder' wajib diisi jika featured diaktifkan.")
+    }
+    if (!obj.featured && obj.featuredOrder !== null && obj.featuredOrder !== undefined) {
+      errors.push("Field 'featuredOrder' harus null jika featured tidak diaktifkan.")
+    }
+  }
+  return errors
+}
+
 export const validateArticleDraftMutation = (value: unknown): value is ArticleDraftMutation => (
   Value.Check(ArticleDraftMutationSchema, value)
 )
@@ -593,7 +613,7 @@ export const validateMediaMutation = (
   && validateMediaReference(value.reference, policy)
 )
 
-export const UserRoleSchema = Type.Union([Type.Literal('admin'), Type.Literal('psychologist')])
+export const UserRoleSchema = Type.Union([Type.Literal('superadmin'), Type.Literal('admin'), Type.Literal('psychologist')])
 export const UserStatusSchema = Type.Union([Type.Literal('active'), Type.Literal('inactive'), Type.Literal('suspended')])
 
 export const EmailSchema = Type.String({ minLength: 3, maxLength: 254, pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$' })

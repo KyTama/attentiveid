@@ -98,6 +98,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 psychologistsRepository: dependencies.psychologistsRepository,
+                db: dependencies.db,
             }))
             .use(createOverviewRoutes({
                 tokenService: dependencies.tokenService,

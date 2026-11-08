@@ -94,7 +94,7 @@ export const createRoleGuardPlugin = (dependencies: AuthGuardDependencies) =>
                             ctx.set.status = auth.error?.status || 401;
                             return auth.error?.body || { status: 'unauthorized', message: 'Unauthorized.' };
                         }
-                        if (!allowedRoles.includes(auth.user.role)) {
+                        if (auth.user.role !== 'superadmin' && !allowedRoles.includes(auth.user.role)) {
                             ctx.set.status = 403;
                             return { status: 'forbidden', message: 'Insufficient permissions.' };
                         }
@@ -112,7 +112,7 @@ export const createRoleGuardPlugin = (dependencies: AuthGuardDependencies) =>
                             return auth.error?.body || { status: 'unauthorized', message: 'Unauthorized.' };
                         }
                         const targetId = ctx.params?.[paramName];
-                        if (auth.user.id === targetId || allowedRoles.includes(auth.user.role)) {
+                        if (auth.user.role === 'superadmin' || auth.user.id === targetId || allowedRoles.includes(auth.user.role)) {
                             ctx.currentUser = auth.user;
                             return;
                         }

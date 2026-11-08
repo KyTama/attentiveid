@@ -22,7 +22,7 @@ export interface ArticleCmsItem {
 
 export function ArticlesCmsPage() {
   const { user, getAuthHeaders } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
 
   const [articles, setArticles] = useState<ArticleCmsItem[]>([])
   const [psychologists, setPsychologists] = useState<Array<{ id: string; name: string }>>([])

@@ -111,3 +111,54 @@ export const updatePsychologistStatus = async (
   const json = await response.json()
   return json.psychologist
 }
+
+export const uploadPsychologistPhoto = async (
+  file: File,
+  metadata?: {
+    slug?: string
+    name?: string
+    altId?: string
+    altEn?: string
+    width?: number
+    height?: number
+  },
+  options?: { headers?: Record<string, string> }
+): Promise<{
+  status: string
+  message: string
+  media: {
+    id: string
+    reference: string
+    width: number
+    height: number
+    alt: { id: string; en: string }
+  }
+}> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (metadata?.slug) formData.append('slug', metadata.slug)
+  if (metadata?.name) formData.append('name', metadata.name)
+  if (metadata?.altId) formData.append('altId', metadata.altId)
+  if (metadata?.altEn) formData.append('altEn', metadata.altEn)
+  if (metadata?.width) formData.append('width', String(metadata.width))
+  if (metadata?.height) formData.append('height', String(metadata.height))
+
+  const authHeaders = getActiveAuthHeaders()
+  const customHeaders = options?.headers || {}
+  const headers: Record<string, string> = { ...authHeaders, ...customHeaders }
+  delete headers['Content-Type']
+
+  const response = await fetch('/api/admin/psychologists/upload-photo', {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const errorJson = await response.json().catch(() => ({}))
+    throw new Error(errorJson?.message || `Failed to upload photo (${response.status})`)
+  }
+
+  return response.json()
+}

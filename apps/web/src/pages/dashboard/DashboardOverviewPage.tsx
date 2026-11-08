@@ -25,7 +25,7 @@ export function DashboardOverviewPage() {
   const [stats, setStats] = useState<OverviewStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
 
   useEffect(() => {
     const fetchStats = async () => {

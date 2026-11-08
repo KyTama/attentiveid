@@ -36,8 +36,8 @@ export function DashboardLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
-  const isAdmin = user?.role === 'admin'
-  const showExperimental = isAdmin && canAccessExperimental(user?.email)
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
+  const showExperimental = user?.role === 'superadmin' || (isAdmin && canAccessExperimental(user?.email))
 
   const navEntries: NavEntry[] = [
     {

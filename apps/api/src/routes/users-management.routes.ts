@@ -101,7 +101,7 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
                     email: t.String(),
                     name: t.String(),
                     password: t.String({ minLength: 8 }),
-                    role: t.Union([t.Literal('admin'), t.Literal('psychologist')]),
+                    role: t.Union([t.Literal('superadmin'), t.Literal('admin'), t.Literal('psychologist')]),
                     psychologistId: t.Optional(t.Nullable(t.String()))
                 })
             }

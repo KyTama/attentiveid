@@ -99,5 +99,24 @@
   1. Always generate a Drizzle migration (`0006_psychology_scientist_support_area.sql`) using `drizzle-kit generate`.
   2. Implement `deleteSupportAreas(psychologistId)` inside the seed transaction to clean out stale category links before inserting the updated ones.
 
+## 17. Multi-Tab Form UX, Silent Browser Native Validation Blocks, & Unique Constraint Error Translation
+- **Problem**:
+  1. Splitting an entity form across 6 fragmented tabs forces excessive clicking, hides mandatory fields across unrendered tab DOM trees, and creates silent form submission freezes when hidden native `<input required>` elements block browser form dispatch without UI feedback.
+  2. Database unique constraints (such as `psychologists_featured_order_unique` or `psychologists_slug_unique`) throw raw Postgres 500 exceptions if duplicate numbers/slugs are entered, leaving users confused.
+- **Solution**:
+  1. Consolidate form into 3 high-cohesion logical steps (`1. Identitas & SIP`, `2. Layanan & Keahlian`, `3. Bio & Jadwal`), keeping the photo dropzone permanently visible on the Left Column alongside the live 4:5 aspect ratio card preview.
+  2. Provide a Live Required Validation Tracker Banner at the top of the form with interactive badges that let admins jump directly to any missing field in 1 click.
+  3. Eliminate native `required` attributes on hidden DOM inputs, handling validation entirely through reactive state pre-flight checks with inline field highlights.
+  4. Provide smart helpers: auto-generate slug, nickname, and booking URL on name input; auto-suggest the next available `featuredOrder` (`max + 1`); and offer a 1-click `⚡ Salin Semua ID ke EN` sync button and `Isi Contoh Cepat` prefill button.
+  5. Intercept PostgreSQL duplicate key errors (`code: '23505'`) on the backend API and translate them into actionable 400 badRequest responses.
 
 
+
+
+
+## 11. Dual-Declaration TypeBox & Drizzle Enum Consistency
+- **Problem**: When adding a new role (e.g., `'superadmin'`) to a shared enum (`USER_ROLES`), updating `const USER_ROLES = [...]` is not enough if TypeBox schemas (`UserRoleSchema = Type.Union([...])`) and JWT payload validators (`isJwtPayload`) are declared independently. This results in cryptic runtime 401s from `authenticateBearerToken` because `isJwtPayload` silently rejects the new role.
+- **Solution**: Whenever extending a domain enum:
+  1. Add migration in PostgreSQL (`ALTER TYPE "public"."user_role" ADD VALUE IF NOT EXISTS 'superadmin';`).
+  2. Update TypeBox schemas (`UserRoleSchema`) and runtime guards (`isJwtPayload`, `role-guard.ts`).
+  3. Ensure token issuers, refresh stores, and frontend role checks (`ProtectedRoute`, `DashboardLayout`) recognize the elevated permissions.

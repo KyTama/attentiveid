@@ -77,7 +77,7 @@ const isJwtPayload = (value: unknown): value is JwtAccessTokenPayload => {
         && payload.email.includes('@')
         && typeof payload.name === 'string'
         && payload.name.length > 0
-        && (payload.role === 'admin' || payload.role === 'psychologist')
+        && (payload.role === 'superadmin' || payload.role === 'admin' || payload.role === 'psychologist')
         && (payload.psychologistId === null || (typeof payload.psychologistId === 'string' && identifierPattern.test(payload.psychologistId)))
         && typeof payload.iat === 'number'
         && Number.isFinite(payload.iat)

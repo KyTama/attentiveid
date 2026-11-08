@@ -57,6 +57,13 @@
       "when": 1793092515149,
       "tag": "0007_free_session_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794148000000,
+      "tag": "0008_superadmin_user_role",
+      "breakpoints": true
     }
   ]
 }

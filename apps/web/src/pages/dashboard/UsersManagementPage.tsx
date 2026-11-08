@@ -9,7 +9,7 @@ interface UserAccount {
   id: string
   email: string
   name: string
-  role: 'admin' | 'psychologist'
+  role: 'superadmin' | 'admin' | 'psychologist'
   status: 'active' | 'suspended'
   psychologistId: string | null
   psychologistName: string | null
@@ -28,7 +28,7 @@ export function UsersManagementPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'psychologist'>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin' | 'psychologist'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all')
 
   // Modals
@@ -40,7 +40,7 @@ export function UsersManagementPage() {
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [newRole, setNewRole] = useState<'admin' | 'psychologist'>('psychologist')
+  const [newRole, setNewRole] = useState<'superadmin' | 'admin' | 'psychologist'>('psychologist')
   const [newPsychologistId, setNewPsychologistId] = useState<string>('')
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false)
 
@@ -294,10 +294,11 @@ export function UsersManagementPage() {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as 'all' | 'admin' | 'psychologist')}
+            onChange={(e) => setRoleFilter(e.target.value as 'all' | 'superadmin' | 'admin' | 'psychologist')}
             className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           >
             <option value="all">Semua Role</option>
+            <option value="superadmin">Superadmin</option>
             <option value="admin">Administrator</option>
             <option value="psychologist">Psikolog</option>
           </select>
@@ -355,7 +356,9 @@ export function UsersManagementPage() {
                     <td className="py-3.5 px-4">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          u.role === 'admin'
+                          u.role === 'superadmin'
+                            ? 'bg-amber-50 text-amber-900 border border-amber-300/60'
+                            : u.role === 'admin'
                             ? 'bg-teal-50 text-teal-800 border border-teal-200/60'
                             : 'bg-sky-50 text-sky-800 border border-sky-200/60'
                         }`}
@@ -495,11 +498,12 @@ export function UsersManagementPage() {
                     </label>
                     <select
                       value={newRole}
-                      onChange={(e) => setNewRole(e.target.value as 'admin' | 'psychologist')}
+                      onChange={(e) => setNewRole(e.target.value as 'superadmin' | 'admin' | 'psychologist')}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                     >
                       <option value="psychologist">Psikolog</option>
                       <option value="admin">Administrator</option>
+                      <option value="superadmin">Superadmin</option>
                     </select>
                   </div>
 
