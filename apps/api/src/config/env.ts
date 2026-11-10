@@ -6,7 +6,8 @@ const EnvSchema = t.Object({
     PORT: t.Optional(t.String()),
     FRONTEND_URL: t.Optional(t.String()),
     PREVIEW_HMAC_SECRET: t.Optional(t.String()),
-    JWT_SECRET: t.Optional(t.String())
+    JWT_SECRET: t.Optional(t.String()),
+    MEDIA_DIR: t.Optional(t.String())
 });
 
 export const parseEnv = (source: Record<string, string | undefined>) => {

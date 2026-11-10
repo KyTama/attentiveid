@@ -19,3 +19,4 @@ Run the engine: [`how-to-learn.md`](../principles/how-to-learn.md) (7 steps).
 | 8 | Register Drizzle migrations in journal and seed with force upsert | [drizzle-migration-journal-and-seed-upsert.md](./drizzle-migration-journal-and-seed-upsert.md) |
 | 9 | Account for updated practitioner seed fixtures in contract test assertions | [seed-fixture-coupling-in-contract-tests.md](./seed-fixture-coupling-in-contract-tests.md) |
 | 10 | Keep PII and secrets out of git for public lead forms; neutralize CSV formula cells | [public-form-pii-and-csv-export.md](./public-form-pii-and-csv-export.md) |
+| 11 | Containerized media uploads in read-only filesystems require shared volumes and configurable MEDIA_DIR | [readonly-filesystem-and-shared-media-volume.md](./readonly-filesystem-and-shared-media-volume.md) |

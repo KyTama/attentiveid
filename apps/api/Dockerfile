@@ -10,6 +10,7 @@ RUN bun install --frozen-lockfile
 
 COPY packages/shared packages/shared
 COPY apps/api apps/api
+COPY apps/web/public/media apps/web/public/media
 RUN bun run build:api && \
     cd apps/api && \
     bun build src/db/migrate.ts --outfile=dist/migrate.js --target=bun && \
@@ -23,9 +24,14 @@ WORKDIR /app/apps/api
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV MIGRATIONS_DIR=/app/apps/api/drizzle
+ENV MEDIA_DIR=/app/apps/api/uploads/media
+
+RUN mkdir -p /app/apps/api/uploads/media/psychologists /app/apps/api/uploads/media/landing && \
+    chown -R bun:bun /app/apps/api/uploads
 
 COPY --from=build --chown=bun:bun /app/apps/api/dist ./dist
 COPY --from=build --chown=bun:bun /app/apps/api/drizzle ./drizzle
+COPY --from=build --chown=bun:bun /app/apps/web/public/media ./uploads/media
 
 USER bun
 EXPOSE 3000

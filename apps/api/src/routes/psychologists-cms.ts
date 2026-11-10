@@ -1,6 +1,4 @@
 import { Elysia, t } from 'elysia'
-import fs from 'fs'
-import path from 'path'
 import { eq } from 'drizzle-orm'
 import {
   getFullPsychologistMutationErrors,
@@ -12,6 +10,7 @@ import type { AuthTokenService, AuthUserRepository } from './auth'
 import { db as defaultDb } from '../db'
 import * as schema from '../db/schema'
 import { extractImageDimensions } from '../services/image-metadata'
+import { saveMediaFile } from '../services/media-storage'
 
 export interface PsychologistsCmsRoutesDependencies {
   tokenService: Pick<AuthTokenService, 'verifyAccessToken'>
@@ -302,20 +301,12 @@ export const createPsychologistsCmsRoutes = (dependencies: PsychologistsCmsRoute
           const filename = `${safeSlug}.${ext}`
           const objectKey = `media/psychologists/${filename}`
 
-          // Storage destination: apps/web/public/media/psychologists
-          const webRoot = fs.existsSync(path.resolve(process.cwd(), 'apps/web'))
-            ? path.resolve(process.cwd(), 'apps/web')
-            : path.resolve(process.cwd(), '../web')
-          const storageDir = path.resolve(webRoot, 'public/media/psychologists')
-          fs.mkdirSync(storageDir, { recursive: true })
-          fs.writeFileSync(path.join(storageDir, filename), buffer)
-
-          // If apps/web/dist exists (production / preview build), sync it too
-          const distDir = path.resolve(webRoot, 'dist/media/psychologists')
-          if (fs.existsSync(path.resolve(webRoot, 'dist'))) {
-            fs.mkdirSync(distDir, { recursive: true })
-            fs.writeFileSync(path.join(distDir, filename), buffer)
-          }
+          // Save media safely via centralized storage helper
+          await saveMediaFile({
+            subDir: 'psychologists',
+            filename,
+            buffer
+          })
 
           const altId = body.altId || `Foto profil ${body.name || safeSlug}`
           const altEn = body.altEn || `Profile photo of ${body.name || safeSlug}`

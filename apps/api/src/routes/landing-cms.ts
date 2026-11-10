@@ -1,6 +1,4 @@
 import { Elysia, t } from 'elysia'
-import fs from 'fs'
-import path from 'path'
 import { eq } from 'drizzle-orm'
 import {
   type LandingContentMutation,
@@ -12,6 +10,7 @@ import { createAdminCapability } from '../services/authorization-capability'
 import type { AuthTokenService, AuthUserRepository } from './auth'
 import * as schema from '../db/schema'
 import { extractImageDimensions } from '../services/image-metadata'
+import { saveMediaFile } from '../services/media-storage'
 
 const getDefaultDb = () => {
   const { db } = require('../db')
@@ -165,20 +164,12 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
           const filename = `${safeSlug}.${ext}`
           const objectKey = `media/landing/${filename}`
 
-          // Storage destination: apps/web/public/media/landing
-          const webRoot = fs.existsSync(path.resolve(process.cwd(), 'apps/web'))
-            ? path.resolve(process.cwd(), 'apps/web')
-            : path.resolve(process.cwd(), '../web')
-          const storageDir = path.resolve(webRoot, 'public/media/landing')
-          fs.mkdirSync(storageDir, { recursive: true })
-          fs.writeFileSync(path.join(storageDir, filename), buffer)
-
-          // If apps/web/dist exists (production / preview build), sync it too
-          const distDir = path.resolve(webRoot, 'dist/media/landing')
-          if (fs.existsSync(path.resolve(webRoot, 'dist'))) {
-            fs.mkdirSync(distDir, { recursive: true })
-            fs.writeFileSync(path.join(distDir, filename), buffer)
-          }
+          // Save media safely via centralized storage helper
+          await saveMediaFile({
+            subDir: 'landing',
+            filename,
+            buffer
+          })
 
           const altId = body.altId || `Gambar ${body.sectionKey || 'landing'} Attentive.id`
           const altEn = body.altEn || `Attentive.id ${body.sectionKey || 'landing'} illustration`

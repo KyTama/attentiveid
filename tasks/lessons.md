@@ -130,3 +130,16 @@
   1. Dock the control topbar edge-to-edge at `-mt-4 -mx-4 ... sticky top-0 z-20` relative to `main`, ensuring scrolled content cleanly tucks under the solid blur backdrop without clipping.
   2. Model carousel slides as a distinct array (`slides: Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })`) hydrated from `hero_slide` media attachments with `position` order.
   3. Adaptive carousel rendering: when `slideCount === 1`, automatically suppress counter, arrows, caption overlays, and dot indicators to deliver a clean single photograph view; when `slideCount >= 2`, smoothly activate Framer Motion spring physics (`stiffness: 350, damping: 32`), swipe navigation, auto-advance timers, and accessibility pause-on-hover controls.
+
+## 19. Containerized Media Storage in Hardened Read-Only Environments (EROFS Prevention)
+- **Problem**:
+  1. In production VPS deployments (`compose.production.yml`), security-hardened containers run with `read_only: true`, dropping all capabilities (`cap_drop: ALL`) and running as non-root users (`USER bun`, UID 1000).
+  2. Relative path resolutions like `path.resolve(process.cwd(), '../web/public/media/...')` fail because:
+     - The `apps/web` directory does not exist in the API container image.
+     - Node/Bun attempts `fs.mkdirSync('/app/apps/web/public/media/...')` against the root container filesystem, which throws `EROFS: read-only file system, mkdir '/app/apps/web'`.
+  3. Even without read-only rootfs, writing files to the API container's internal filesystem prevents the web container (Caddy reverse proxy) from serving those uploaded files to clients.
+- **Solution**:
+  1. Centralize all media file operations in a resilient storage service (`media-storage.ts`) that reads `process.env.MEDIA_DIR`, falls back to local monorepo web public directories in dev, and falls back to writable tmpfs (`/tmp/uploads/media`) if `EROFS` occurs.
+  2. Define a shared Docker volume (`attentive_media`) mounted read-write to API at `/app/apps/api/uploads/media` and read-only to Web at `/srv/media:ro`.
+  3. Copy seed media assets during Docker build into `/app/apps/api/uploads/media` with `bun:bun` ownership (UID 1000) so newly created volumes initialize with seed photos.
+  4. Provide native high-performance Bun static file serving in the API (`/media/*` and `/api/media/*`) using `Bun.file()` with directory traversal guards so assets are accessible through both reverse proxy paths.

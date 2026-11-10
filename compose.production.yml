@@ -12,6 +12,8 @@ services:
     tmpfs:
       - /config:size=16m,uid=10001,gid=10001,mode=0700
       - /data:size=16m,uid=10001,gid=10001,mode=0700
+    volumes:
+      - attentive_media:/srv/media:ro
     healthcheck:
       test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:8080/healthz]
       interval: 15s
@@ -43,11 +45,14 @@ services:
       - no-new-privileges:true
     tmpfs:
       - /tmp:size=16m,uid=1000,gid=1000,mode=0700
+    volumes:
+      - attentive_media:/app/apps/api/uploads/media
     env_file:
       - ${HOST_SECRET_FILE:?HOST_SECRET_FILE is required}
     environment:
       FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL is required}
       PORT: "3000"
+      MEDIA_DIR: "/app/apps/api/uploads/media"
     healthcheck:
       test: [CMD, bun, -e, "const response = await fetch('http://127.0.0.1:3000/ready'); if (!response.ok) process.exit(1)"]
       interval: 15s
@@ -132,3 +137,6 @@ networks:
   postgres:
     name: ${POSTGRES_NETWORK:?POSTGRES_NETWORK is required}
     external: true
+
+volumes:
+  attentive_media:

@@ -11,6 +11,7 @@ import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes'
 import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
+import { getMediaFilePath } from './services/media-storage';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
     articlesRepository?: any;
@@ -75,6 +76,36 @@ export const createApp = (dependencies: AppDependencies) => {
                 tags: ['Health'],
                 summary: 'API information',
                 description: 'Returns basic API information and available endpoints',
+            },
+        })
+        .get('/media/*', ({ params, set }: { params: Record<string, string>; set: any }) => {
+            const requestedPath = params['*'];
+            const filePath = getMediaFilePath(requestedPath);
+            if (!filePath) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Media file not found' };
+            }
+            return Bun.file(filePath);
+        }, {
+            detail: {
+                tags: ['Media'],
+                summary: 'Serve static media file',
+                description: 'Serves uploaded psychologist photos and landing page media assets',
+            },
+        })
+        .get('/api/media/*', ({ params, set }: { params: Record<string, string>; set: any }) => {
+            const requestedPath = params['*'];
+            const filePath = getMediaFilePath(requestedPath);
+            if (!filePath) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Media file not found' };
+            }
+            return Bun.file(filePath);
+        }, {
+            detail: {
+                tags: ['Media'],
+                summary: 'Serve static media file alias',
+                description: 'Serves uploaded media through api path prefix',
             },
         });
 
