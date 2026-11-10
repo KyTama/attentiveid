@@ -49,17 +49,26 @@ export const LocalizedTextSchema = Type.Object({
   en: NonEmptyTextSchema,
 }, { additionalProperties: false })
 
+export const LandingMediaSchema = Type.Object({
+  reference: Type.String({ minLength: 1, maxLength: 2_048 }),
+  width: Type.Optional(Type.Integer({ minimum: 1 })),
+  height: Type.Optional(Type.Integer({ minimum: 1 })),
+  alt: Type.Optional(LocalizedTextSchema),
+}, { additionalProperties: false })
+
 export const LandingItemSchema = Type.Object({
   id: IdentifierSchema,
   position: Type.Integer({ minimum: 0 }),
   title: LocalizedTextSchema,
   description: LocalizedTextSchema,
+  media: Type.Optional(LandingMediaSchema),
 }, { additionalProperties: false })
 
 const sectionCopyProperties = {
   visible: Type.Boolean(),
   headline: LocalizedTextSchema,
   description: LocalizedTextSchema,
+  media: Type.Optional(LandingMediaSchema),
 }
 
 const HeroSectionSchema = Type.Object({
@@ -67,6 +76,7 @@ const HeroSectionSchema = Type.Object({
   ...sectionCopyProperties,
   primaryCta: LocalizedTextSchema,
   secondaryCta: LocalizedTextSchema,
+  slides: Type.Optional(Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })),
   items: Type.Array(LandingItemSchema, {
     minItems: LANDING_REPEATER_BOUNDS.hero.min,
     maxItems: LANDING_REPEATER_BOUNDS.hero.max,
@@ -373,6 +383,7 @@ export interface MediaReferencePolicy {
 }
 
 export type LocalizedText = Static<typeof LocalizedTextSchema>
+export type LandingMedia = Static<typeof LandingMediaSchema>
 export type LandingContentMutation = Static<typeof LandingContentMutationSchema>
 export type PsychologistMutation = Static<typeof PsychologistMutationSchema>
 export type PsychologistPublicLookup = Static<typeof PsychologistPublicLookupSchema>

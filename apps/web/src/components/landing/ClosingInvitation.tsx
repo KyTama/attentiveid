@@ -13,7 +13,28 @@ export function ClosingInvitation() {
   return (
     <section className="deferred-section bg-[#fbf8f2] px-5 py-12 sm:py-16 lg:px-8 lg:py-20">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-secondary px-7 py-14 text-white sm:px-12 sm:py-20 lg:px-16 shadow-lg">
-        <img alt="" className="pointer-events-none absolute bottom-0 right-0 h-full w-1/2 object-contain object-right opacity-30 lg:opacity-100" height="614" loading="lazy" src="/images/figma/closing-landscape.webp" width="680" />
+        {(() => {
+          const sectionMedia = managed?.section.media
+          const closingImageSrc = sectionMedia?.reference
+            ? (sectionMedia.reference.startsWith('/') ? sectionMedia.reference : `/${sectionMedia.reference}`)
+            : '/images/figma/closing-landscape.webp'
+          const closingImageAlt = (sectionMedia?.alt && managed?.locale && sectionMedia.alt[managed.locale])
+            ? sectionMedia.alt[managed.locale]
+            : ''
+          const closingImageWidth = sectionMedia?.width ?? 680
+          const closingImageHeight = sectionMedia?.height ?? 614
+
+          return (
+            <img
+              alt={closingImageAlt}
+              className="pointer-events-none absolute bottom-0 right-0 h-full w-1/2 object-contain object-right opacity-30 lg:opacity-100"
+              height={closingImageHeight}
+              loading="lazy"
+              src={closingImageSrc}
+              width={closingImageWidth}
+            />
+          )
+        })()}
         <div className="relative max-w-2xl">
           <h2 className="text-balance text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.closing.title')}</h2>
           <p className="mt-5 max-w-xl text-base leading-relaxed font-[450] text-white/90 sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.closing.description')}</p>

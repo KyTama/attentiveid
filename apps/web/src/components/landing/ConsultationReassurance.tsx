@@ -70,7 +70,28 @@ export function ConsultationReassurance() {
             </div>
           </div>
           <figure className="relative min-h-[24rem] overflow-hidden bg-[#d9c1a4] lg:min-h-full">
-            <img alt={t('homepage.pricing.imageAlt')} className="absolute inset-0 h-full w-full object-cover object-center" height="1431" loading="lazy" src="/images/figma/remote-counseling-session.webp" width="919" />
+            {(() => {
+              const sectionMedia = managed?.section.media
+              const sessionImageSrc = sectionMedia?.reference
+                ? (sectionMedia.reference.startsWith('/') ? sectionMedia.reference : `/${sectionMedia.reference}`)
+                : '/images/figma/remote-counseling-session.webp'
+              const sessionImageAlt = (sectionMedia?.alt && managed?.locale && sectionMedia.alt[managed.locale])
+                ? sectionMedia.alt[managed.locale]
+                : t('homepage.pricing.imageAlt')
+              const sessionImageWidth = sectionMedia?.width ?? 919
+              const sessionImageHeight = sectionMedia?.height ?? 1431
+
+              return (
+                <img
+                  alt={sessionImageAlt}
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  height={sessionImageHeight}
+                  loading="lazy"
+                  src={sessionImageSrc}
+                  width={sessionImageWidth}
+                />
+              )
+            })()}
             <figcaption className="absolute inset-x-0 bottom-0 bg-secondary/90 px-6 py-5 text-sm leading-6 text-white">{t('homepage.pricing.imageCaption')}</figcaption>
           </figure>
         </div>

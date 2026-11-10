@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'bun:test'
+import { afterAll, describe, expect, it } from 'bun:test'
+import fs from 'fs'
+import path from 'path'
 import { Elysia } from 'elysia'
 import type { UserDto } from '@attentiveid/shared'
 import { createTokenService } from '../security/token-service'
@@ -41,10 +43,31 @@ const userRepository = {
 }
 
 describe('landing CMS API routes (/api/admin/landing)', () => {
+  const mockDb: any = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: async () => []
+        })
+      })
+    }),
+    insert: () => ({
+      values: () => ({
+        returning: async () => [{ id: 'mock-media-id-1' }]
+      })
+    }),
+    update: () => ({
+      set: () => ({
+        where: async () => []
+      })
+    })
+  }
+
   const app = new Elysia().use(
     createLandingCmsRoutes({
       tokenService,
       userRepository,
+      db: mockDb,
     })
   )
 
@@ -93,5 +116,64 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
       })
     )
     expect(adminRes.status).toBe(200)
+  })
+
+  it('POST /api/admin/landing/upload-image uploads image and returns media reference', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const formData = new FormData()
+    const mockFile = new File(['fake webp content for landing'], 'hero.webp', { type: 'image/webp' })
+    formData.append('file', mockFile)
+    formData.append('sectionKey', 'hero')
+    formData.append('slug', 'consultation-hero')
+    formData.append('width', '1600')
+    formData.append('height', '900')
+
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/landing/upload-image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      })
+    )
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.status).toBe('success')
+    expect(json.media.reference).toBe('media/landing/consultation-hero.webp')
+    expect(json.media.width).toBe(1600)
+    expect(json.media.height).toBe(900)
+  })
+
+  it('POST /api/admin/landing/upload-image rejects file larger than 5 MB with 413', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const formData = new FormData()
+    const largeBuffer = new Uint8Array(6 * 1024 * 1024)
+    const largeFile = new File([largeBuffer], 'giant-hero.webp', { type: 'image/webp' })
+    formData.append('file', largeFile)
+
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/landing/upload-image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      })
+    )
+    expect(res.status).toBe(413)
+    const json = await res.json()
+    expect(json.message).toContain('5 MB')
+  })
+
+  afterAll(() => {
+    const testFile = path.resolve(process.cwd(), 'apps/web/public/media/landing/consultation-hero.webp')
+    if (fs.existsSync(testFile)) {
+      fs.unlinkSync(testFile)
+    }
+    const distTestFile = path.resolve(process.cwd(), 'apps/web/dist/media/landing/consultation-hero.webp')
+    if (fs.existsSync(distTestFile)) {
+      fs.unlinkSync(distTestFile)
+    }
   })
 })

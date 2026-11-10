@@ -303,13 +303,16 @@ export const createPsychologistsCmsRoutes = (dependencies: PsychologistsCmsRoute
           const objectKey = `media/psychologists/${filename}`
 
           // Storage destination: apps/web/public/media/psychologists
-          const storageDir = path.resolve(process.cwd(), 'apps/web/public/media/psychologists')
+          const webRoot = fs.existsSync(path.resolve(process.cwd(), 'apps/web'))
+            ? path.resolve(process.cwd(), 'apps/web')
+            : path.resolve(process.cwd(), '../web')
+          const storageDir = path.resolve(webRoot, 'public/media/psychologists')
           fs.mkdirSync(storageDir, { recursive: true })
           fs.writeFileSync(path.join(storageDir, filename), buffer)
 
-          // If apps/web/dist/media/psychologists exists (production / preview build), sync it too
-          const distDir = path.resolve(process.cwd(), 'apps/web/dist/media/psychologists')
-          if (fs.existsSync(path.resolve(process.cwd(), 'apps/web/dist'))) {
+          // If apps/web/dist exists (production / preview build), sync it too
+          const distDir = path.resolve(webRoot, 'dist/media/psychologists')
+          if (fs.existsSync(path.resolve(webRoot, 'dist'))) {
             fs.mkdirSync(distDir, { recursive: true })
             fs.writeFileSync(path.join(distDir, filename), buffer)
           }

@@ -40,6 +40,8 @@ export const mapLandingSectionMutation = (section: LandingSectionInput, position
         position,
         visible: section.visible
     },
+    media: 'media' in section ? section.media : undefined,
+    slides: 'slides' in section ? section.slides : undefined,
     translations: CONTENT_LOCALES.map((locale) => ({
         locale,
         headline: section.headline[locale],
@@ -55,6 +57,7 @@ export const mapLandingSectionMutation = (section: LandingSectionInput, position
         ? section.items.map((item) => ({
             id: item.id,
             position: item.position,
+            media: 'media' in item ? item.media : undefined,
             translations: CONTENT_LOCALES.map((locale) => ({
                 locale,
                 title: item.title[locale],
@@ -122,6 +125,21 @@ interface DrizzleLandingSectionRow {
     items: DrizzleLandingItemRow[];
 }
 
+interface DrizzleMediaAttachmentRow {
+    role: string;
+    position: number;
+    detachedAt: string | null;
+    mediaObject?: {
+        id: string;
+        objectKey: string | null;
+        publicUrl: string | null;
+        width: number;
+        height: number;
+        altId: string;
+        altEn: string;
+    } | null;
+}
+
 interface DrizzleLandingRevisionRow {
     id: string;
     aggregateId: string;
@@ -131,6 +149,7 @@ interface DrizzleLandingRevisionRow {
     createdAt: string;
     publishedAt: string | null;
     sections: DrizzleLandingSectionRow[];
+    mediaAttachments?: DrizzleMediaAttachmentRow[];
 }
 
 const localizedFromRows = <Row extends { locale: typeof CONTENT_LOCALES[number] }>(
@@ -144,20 +163,55 @@ const localizedFromRows = <Row extends { locale: typeof CONTENT_LOCALES[number] 
     return id && en ? { id, en } : null;
 };
 
-const mapSectionRow = (section: DrizzleLandingSectionRow) => {
+const mapSectionRow = (section: DrizzleLandingSectionRow, mediaAttachments?: DrizzleMediaAttachmentRow[]) => {
     const headline = localizedFromRows(section.translations, (row) => row.headline);
     const description = localizedFromRows(section.translations, (row) => row.description);
     if (!headline || !description) {
         return null;
     }
 
-    const base = { key: section.key, visible: section.visible, headline, description };
+    const activeMedia = (mediaAttachments || []).filter((att) => !att.detachedAt && att.mediaObject);
+    const sectionMediaAtt = activeMedia.find((att) => att.role === section.key && att.position === 0);
+    const sectionMedia = sectionMediaAtt?.mediaObject ? {
+        reference: sectionMediaAtt.mediaObject.objectKey || sectionMediaAtt.mediaObject.publicUrl || '',
+        width: sectionMediaAtt.mediaObject.width,
+        height: sectionMediaAtt.mediaObject.height,
+        alt: {
+            id: sectionMediaAtt.mediaObject.altId,
+            en: sectionMediaAtt.mediaObject.altEn,
+        }
+    } : undefined;
+
+    const base = {
+        key: section.key,
+        visible: section.visible,
+        headline,
+        description,
+        ...(sectionMedia ? { media: sectionMedia } : {})
+    };
     const items = section.items.map((item) => {
         const title = localizedFromRows(item.translations, (row) => row.title);
         const itemDescription = localizedFromRows(item.translations, (row) => row.description);
-        return title && itemDescription
-            ? { id: item.id, position: item.position, title, description: itemDescription }
-            : null;
+        if (!title || !itemDescription) return null;
+
+        const itemMediaAtt = activeMedia.find((att) => att.role === `${section.key}_item` && att.position === item.position);
+        const itemMedia = itemMediaAtt?.mediaObject ? {
+            reference: itemMediaAtt.mediaObject.objectKey || itemMediaAtt.mediaObject.publicUrl || '',
+            width: itemMediaAtt.mediaObject.width,
+            height: itemMediaAtt.mediaObject.height,
+            alt: {
+                id: itemMediaAtt.mediaObject.altId,
+                en: itemMediaAtt.mediaObject.altEn,
+            }
+        } : undefined;
+
+        return {
+            id: item.id,
+            position: item.position,
+            title,
+            description: itemDescription,
+            ...(itemMedia ? { media: itemMedia } : {})
+        };
     });
     if (items.some((item) => item === null)) {
         return null;
@@ -166,8 +220,31 @@ const mapSectionRow = (section: DrizzleLandingSectionRow) => {
     if (section.key === 'hero') {
         const primaryCta = localizedFromRows(section.translations, (row) => row.primaryCta);
         const secondaryCta = localizedFromRows(section.translations, (row) => row.secondaryCta);
+        const heroSlideAtts = activeMedia
+            .filter((att) => att.role === 'hero_slide')
+            .sort((a, b) => a.position - b.position);
+
+        const slides = heroSlideAtts.length > 0
+            ? heroSlideAtts.map((att) => ({
+                reference: att.mediaObject!.objectKey || att.mediaObject!.publicUrl || '',
+                width: att.mediaObject!.width,
+                height: att.mediaObject!.height,
+                alt: {
+                    id: att.mediaObject!.altId,
+                    en: att.mediaObject!.altEn,
+                }
+            }))
+            : undefined;
+
         return primaryCta && secondaryCta
-            ? { ...base, key: section.key, primaryCta, secondaryCta, items: items.filter((item) => item !== null) }
+            ? {
+                ...base,
+                key: section.key,
+                primaryCta,
+                secondaryCta,
+                ...(slides ? { slides } : {}),
+                items: items.filter((item) => item !== null)
+            }
             : null;
     }
     if (section.key === 'consultationReassurance') {
@@ -200,7 +277,7 @@ const toProjection = (revision: DrizzleLandingRevisionRow | null | undefined): L
     }
 
     const orderedSections = [...revision.sections].sort((left, right) => left.position - right.position);
-    const mappedSections = orderedSections.map(mapSectionRow);
+    const mappedSections = orderedSections.map((sec) => mapSectionRow(sec, revision.mediaAttachments));
     if (mappedSections.some((section) => section === null)) {
         return null;
     }
@@ -231,6 +308,11 @@ const revisionWithContent = () => ({
                 orderBy: [asc(schema.landingItems.position)],
                 with: { translations: true as const }
             }
+        }
+    },
+    mediaAttachments: {
+        with: {
+            mediaObject: true as const
         }
     }
 });

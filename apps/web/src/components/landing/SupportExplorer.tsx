@@ -68,6 +68,12 @@ interface SupportTopic {
   originalId?: string
   position?: number
   title: string
+  media?: {
+    reference: string
+    width?: number
+    height?: number
+    alt?: { id: string; en: string }
+  }
 }
 
 export function SupportExplorer() {
@@ -84,6 +90,7 @@ export function SupportExplorer() {
           position: item.position,
           title: item.title[managed.locale],
           description: item.description[managed.locale],
+          media: item.media,
         }
       })
       .sort((a, b) => {
@@ -144,14 +151,24 @@ export function SupportExplorer() {
                   </div>
                 </div>
                 <div className="relative aspect-4/3 w-full sm:aspect-auto sm:w-[48%] overflow-hidden bg-secondary/5">
-                  <img
-                    alt={topic.title}
-                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    height="400"
-                    loading="lazy"
-                    src={`/images/figma/support-${assetNumber}.webp`}
-                    width="600"
-                  />
+                  {(() => {
+                    const cardImageSrc = topic.media?.reference
+                      ? (topic.media.reference.startsWith('/') ? topic.media.reference : `/${topic.media.reference}`)
+                      : `/images/figma/support-${assetNumber}.webp`
+                    const cardImageWidth = topic.media?.width ?? 600
+                    const cardImageHeight = topic.media?.height ?? 400
+
+                    return (
+                      <img
+                        alt={topic.title}
+                        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        height={cardImageHeight}
+                        loading="lazy"
+                        src={cardImageSrc}
+                        width={cardImageWidth}
+                      />
+                    )
+                  })()}
                 </div>
               </motion.li>
             )

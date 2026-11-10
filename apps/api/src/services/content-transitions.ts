@@ -524,6 +524,76 @@ export const createDrizzleContentTransitionDatabase = (
                     await transaction.insert(schema.landingSectionTranslations).values(
                         mapped.translations.map((translation) => ({ sectionId: section.id, ...translation }))
                     );
+                    if (mapped.media) {
+                        const [existingMedia] = await transaction.select({ id: schema.mediaObjects.id })
+                            .from(schema.mediaObjects)
+                            .where(eq(schema.mediaObjects.objectKey, mapped.media.reference))
+                            .limit(1);
+
+                        let mediaObjectId = existingMedia?.id;
+                        if (!mediaObjectId) {
+                            const [newMedia] = await transaction.insert(schema.mediaObjects)
+                                .values({
+                                    objectKey: mapped.media.reference,
+                                    width: mapped.media.width ?? 1200,
+                                    height: mapped.media.height ?? 800,
+                                    altId: mapped.media.alt?.id ?? '',
+                                    altEn: mapped.media.alt?.en ?? '',
+                                    mimeType: 'image/webp',
+                                    lifecycle: 'active'
+                                })
+                                .returning({ id: schema.mediaObjects.id });
+                            mediaObjectId = newMedia.id;
+                        }
+
+                        await transaction.insert(schema.mediaAttachments).values({
+                            mediaObjectId,
+                            landingRevisionId: revision.id,
+                            role: mapped.section.key,
+                            position: 0
+                        });
+                    }
+
+                    if (mapped.section.key === 'hero' && (mapped as any).slides && Array.isArray((mapped as any).slides)) {
+                        const heroSlides = (mapped as any).slides as Array<{
+                            reference: string;
+                            width?: number;
+                            height?: number;
+                            alt?: { id: string; en: string };
+                        }>;
+                        for (let slideIdx = 0; slideIdx < heroSlides.length; slideIdx++) {
+                            const slide = heroSlides[slideIdx];
+                            if (!slide || !slide.reference) continue;
+
+                            const [existingMedia] = await transaction.select({ id: schema.mediaObjects.id })
+                                .from(schema.mediaObjects)
+                                .where(eq(schema.mediaObjects.objectKey, slide.reference))
+                                .limit(1);
+
+                            let mediaObjectId = existingMedia?.id;
+                            if (!mediaObjectId) {
+                                const [newMedia] = await transaction.insert(schema.mediaObjects)
+                                    .values({
+                                        objectKey: slide.reference,
+                                        width: slide.width ?? 1600,
+                                        height: slide.height ?? 901,
+                                        altId: slide.alt?.id ?? '',
+                                        altEn: slide.alt?.en ?? '',
+                                        mimeType: 'image/webp',
+                                        lifecycle: 'active'
+                                    })
+                                    .returning({ id: schema.mediaObjects.id });
+                                mediaObjectId = newMedia.id;
+                            }
+
+                            await transaction.insert(schema.mediaAttachments).values({
+                                mediaObjectId,
+                                landingRevisionId: revision.id,
+                                role: 'hero_slide',
+                                position: slideIdx
+                            });
+                        }
+                    }
                     for (const itemInput of mapped.items) {
                         const [item] = await transaction.insert(schema.landingItems).values({
                             sectionId: section.id,
@@ -533,6 +603,35 @@ export const createDrizzleContentTransitionDatabase = (
                         await transaction.insert(schema.landingItemTranslations).values(
                             itemInput.translations.map((translation) => ({ itemId: item.id, ...translation }))
                         );
+                        if (itemInput.media) {
+                            const [existingMedia] = await transaction.select({ id: schema.mediaObjects.id })
+                                .from(schema.mediaObjects)
+                                .where(eq(schema.mediaObjects.objectKey, itemInput.media.reference))
+                                .limit(1);
+
+                            let mediaObjectId = existingMedia?.id;
+                            if (!mediaObjectId) {
+                                const [newMedia] = await transaction.insert(schema.mediaObjects)
+                                    .values({
+                                        objectKey: itemInput.media.reference,
+                                        width: itemInput.media.width ?? 800,
+                                        height: itemInput.media.height ?? 600,
+                                        altId: itemInput.media.alt?.id ?? '',
+                                        altEn: itemInput.media.alt?.en ?? '',
+                                        mimeType: 'image/webp',
+                                        lifecycle: 'active'
+                                    })
+                                    .returning({ id: schema.mediaObjects.id });
+                                mediaObjectId = newMedia.id;
+                            }
+
+                            await transaction.insert(schema.mediaAttachments).values({
+                                mediaObjectId,
+                                landingRevisionId: revision.id,
+                                role: `${mapped.section.key}_item`,
+                                position: itemInput.position
+                            });
+                        }
                     }
                 }
                 await transaction.update(schema.landingAggregates).set({

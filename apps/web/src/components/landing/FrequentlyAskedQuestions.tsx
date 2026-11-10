@@ -26,7 +26,28 @@ export function FrequentlyAskedQuestions() {
         <div className="min-w-0">
           <h2 className="max-w-lg text-balance text-3xl font-bold tracking-tight text-secondary sm:text-4xl lg:text-5xl">{managed?.section.headline[managed.locale] ?? t('homepage.faq.title')}</h2>
           <p className="mt-4 max-w-md text-base leading-relaxed font-[450] text-secondary sm:text-lg">{managed?.section.description[managed.locale] ?? t('homepage.faq.description')}</p>
-          <img alt="" className="mt-10 aspect-[538/410] w-full rounded-xl object-cover" height="410" loading="lazy" src="/images/figma/faq-room.webp" width="538" />
+          {(() => {
+            const sectionMedia = managed?.section.media
+            const faqImageSrc = sectionMedia?.reference
+              ? (sectionMedia.reference.startsWith('/') ? sectionMedia.reference : `/${sectionMedia.reference}`)
+              : '/images/figma/faq-room.webp'
+            const faqImageAlt = (sectionMedia?.alt && managed?.locale && sectionMedia.alt[managed.locale])
+              ? sectionMedia.alt[managed.locale]
+              : ''
+            const faqImageWidth = sectionMedia?.width ?? 538
+            const faqImageHeight = sectionMedia?.height ?? 410
+
+            return (
+              <img
+                alt={faqImageAlt}
+                className="mt-10 aspect-[538/410] w-full rounded-xl object-cover"
+                height={faqImageHeight}
+                loading="lazy"
+                src={faqImageSrc}
+                width={faqImageWidth}
+              />
+            )
+          })()}
         </div>
         <div className="rounded-xl bg-[#fcf8f1] px-5 sm:px-7">
           {items.map((item, itemIndex) => {

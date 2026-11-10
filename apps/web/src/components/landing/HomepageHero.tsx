@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
 import { useCampaignDock } from './use-campaign-dock'
+import { HeroCarousel, type HeroCarouselSlide } from './HeroCarousel'
 
 interface TrustMetric {
   label: string
@@ -156,15 +157,57 @@ export function HomepageHero() {
         </div>
 
         <div className="relative min-w-0 min-h-[22rem] overflow-hidden rounded-tl-[6rem] bg-[#ded8cd] sm:min-h-[30rem] lg:my-8 lg:min-h-0 lg:rounded-tl-[10rem]">
-          <img
-            alt={t('homepage.hero.imageAlt')}
-            className="absolute inset-0 h-full w-full object-cover object-center"
-            decoding="async"
-            fetchPriority="high"
-            height="901"
-            src="/images/figma/consultation-hero.webp"
-            width="1600"
-          />
+          {(() => {
+            const heroMedia = managed?.section.media
+            const heroImageSrc = heroMedia?.reference
+              ? (heroMedia.reference.startsWith('/') ? heroMedia.reference : `/${heroMedia.reference}`)
+              : '/images/figma/consultation-hero.webp'
+            const heroImageAlt = (heroMedia?.alt && managed?.locale && heroMedia.alt[managed.locale])
+              ? heroMedia.alt[managed.locale]
+              : t('homepage.hero.imageAlt')
+            const heroImageWidth = heroMedia?.width ?? 1600
+            const heroImageHeight = heroMedia?.height ?? 901
+
+            const heroSlides = (managed?.section.slides && managed.section.slides.length > 0)
+              ? managed.section.slides
+              : null
+
+            const slides: HeroCarouselSlide[] = heroSlides
+              ? heroSlides.map((slide, idx) => {
+                  const src = slide.reference.startsWith('/') ? slide.reference : `/${slide.reference}`
+                  const alt = (slide.alt && managed?.locale && slide.alt[managed.locale])
+                    ? slide.alt[managed.locale]
+                    : (slide.alt?.id || t('homepage.hero.imageAlt'))
+                  return {
+                    id: `hero-slide-${idx}-${slide.reference}`,
+                    imageSrc: src,
+                    alt,
+                    tag: idx === 0
+                      ? (isId ? 'Konseling Tatap Muka & Daring' : 'In-Person & Online Counseling')
+                      : (isId ? `Sorotan Layanan #${idx + 1}` : `Service Highlight #${idx + 1}`),
+                    caption: isId
+                      ? (slide.alt?.id || 'Sesi privat bersama psikolog berlisensi SIP resmi di ruang kedap suara.')
+                      : (slide.alt?.en || 'Private sessions with licensed clinical psychologists in quiet acoustic suites.'),
+                    width: slide.width ?? 1600,
+                    height: slide.height ?? 901,
+                  }
+                })
+              : [
+                  {
+                    id: 'consultation-primary',
+                    imageSrc: heroImageSrc,
+                    alt: heroImageAlt,
+                    tag: isId ? 'Konseling Tatap Muka & Daring' : 'In-Person & Online Counseling',
+                    caption: isId
+                      ? 'Sesi privat bersama psikolog berlisensi SIP resmi di ruang kedap suara.'
+                      : 'Private sessions with licensed clinical psychologists in quiet acoustic suites.',
+                    width: heroImageWidth,
+                    height: heroImageHeight,
+                  },
+                ]
+
+            return <HeroCarousel slides={slides} />
+          })()}
         </div>
       </div>
 

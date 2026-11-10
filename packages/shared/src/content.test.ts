@@ -124,6 +124,44 @@ describe('shared content contracts', () => {
     expect(validateLandingContentMutation(validLandingMutation())).toBe(true)
   })
 
+  it('accepts optional media references on sections and repeater items', () => {
+    const withMedia = validLandingMutation()
+    withMedia.sections[0]!.media = {
+      reference: 'media/landing/hero-consultation.webp',
+      width: 1600,
+      height: 900,
+      alt: localized('Konsultasi Tatap Muka', 'In-Person Consultation'),
+    }
+    withMedia.sections[1]!.items![0]!.media = {
+      reference: 'media/landing/support-topic-1.webp',
+      width: 600,
+      height: 400,
+    }
+    expect(validateLandingContentMutation(withMedia)).toBe(true)
+
+    // Supports dynamic hero slides (min 1, max 10)
+    const withHeroSlides = validLandingMutation()
+    withHeroSlides.sections[0]!.slides = [
+      {
+        reference: 'media/landing/hero-slide-1.webp',
+        width: 1600,
+        height: 900,
+        alt: { id: 'Slide 1', en: 'Slide 1' },
+      },
+      {
+        reference: 'media/landing/hero-slide-2.webp',
+        width: 1600,
+        height: 900,
+      },
+    ]
+    expect(validateLandingContentMutation(withHeroSlides)).toBe(true)
+
+    // Rejects empty slides array (min 1 required)
+    const withEmptyHeroSlides = validLandingMutation()
+    withEmptyHeroSlides.sections[0]!.slides = []
+    expect(validateLandingContentMutation(withEmptyHeroSlides)).toBe(false)
+  })
+
   it('rejects reordered sections and incomplete bilingual copy', () => {
     const reordered = validLandingMutation()
     ;[reordered.sections[0], reordered.sections[1]] = [reordered.sections[1]!, reordered.sections[0]!]

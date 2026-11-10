@@ -25,9 +25,10 @@ export function CareJourney() {
         id: item.id,
         title: item.title[managed.locale],
         description: item.description[managed.locale],
+        media: item.media,
         points: sourceSteps[index]?.points ?? [],
       }))
-    : sourceSteps.map((step, index) => ({ ...step, id: `journey-${index}` }))
+    : sourceSteps.map((step, index) => ({ ...step, id: `journey-${index}`, media: undefined }))
   const title = managed?.section.headline[managed.locale] ?? t('homepage.journey.title')
   const description = managed?.section.description[managed.locale] ?? t('homepage.journey.description')
 
@@ -51,7 +52,13 @@ export function CareJourney() {
         </div>
         <ol className="mt-12 grid gap-6 lg:grid-cols-3">
           {steps.map((step, stepIndex) => {
-            const image = journeyImages[stepIndex]
+            const defaultImage = journeyImages[stepIndex]
+            const stepImageSrc = step.media?.reference
+              ? (step.media.reference.startsWith('/') ? step.media.reference : `/${step.media.reference}`)
+              : defaultImage?.src
+            const stepImageWidth = step.media?.width ?? defaultImage?.width ?? 800
+            const stepImageHeight = step.media?.height ?? defaultImage?.height ?? 500
+
             return (
               <li className="group flex min-h-[34rem] flex-col rounded-xl border border-secondary/10 bg-white/55 p-6 sm:p-8 transition-colors hover:border-secondary/25 shadow-2xs hover:shadow-xs" key={step.id}>
                 <div className="flex items-center justify-between">
@@ -63,10 +70,10 @@ export function CareJourney() {
                     alt={step.title}
                     className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                     decoding="async"
-                    height={image?.height ?? 500}
+                    height={stepImageHeight}
                     loading="lazy"
-                    src={image?.src}
-                    width={image?.width ?? 800}
+                    src={stepImageSrc}
+                    width={stepImageWidth}
                   />
                 </div>
                 <h3 className="mt-8 text-xl sm:text-2xl font-bold tracking-tight text-secondary">{step.title}</h3>

@@ -120,3 +120,13 @@
   1. Add migration in PostgreSQL (`ALTER TYPE "public"."user_role" ADD VALUE IF NOT EXISTS 'superadmin';`).
   2. Update TypeBox schemas (`UserRoleSchema`) and runtime guards (`isJwtPayload`, `role-guard.ts`).
   3. Ensure token issuers, refresh stores, and frontend role checks (`ProtectedRoute`, `DashboardLayout`) recognize the elevated permissions.
+
+## 18. Dynamic Carousel Schema Design, Scroll-Container Stacking Contexts, & Adaptive Single/Multi Slide UX
+- **Problem**:
+  1. CSS `position: sticky` is scoped to the nearest scrolling ancestor container (`main.overflow-y-auto`). Placing a `sticky top-16` floating card inside an overflowing `main` causes scrolled content to pass through the 64px gap above the card and clip directly underneath form elements.
+  2. Reusing existing repeater slots (`hero.items`) for carousel photos breaks database bounds `{ min: 3, max: 4 }` meant for bottom trust metrics.
+  3. Forcing carousel chrome (counters, navigation arrows, dot indicators) when only 1 photo is configured looks amateurish and clutters the interface.
+- **Solution**:
+  1. Dock the control topbar edge-to-edge at `-mt-4 -mx-4 ... sticky top-0 z-20` relative to `main`, ensuring scrolled content cleanly tucks under the solid blur backdrop without clipping.
+  2. Model carousel slides as a distinct array (`slides: Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })`) hydrated from `hero_slide` media attachments with `position` order.
+  3. Adaptive carousel rendering: when `slideCount === 1`, automatically suppress counter, arrows, caption overlays, and dot indicators to deliver a clean single photograph view; when `slideCount >= 2`, smoothly activate Framer Motion spring physics (`stiffness: 350, damping: 32`), swipe navigation, auto-advance timers, and accessibility pause-on-hover controls.
