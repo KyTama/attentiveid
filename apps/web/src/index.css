@@ -263,6 +263,35 @@
     animation: fadeInUp 0.6s ease-out forwards;
   }
 
+  /* Infinite Testimonial Marquee Carousel */
+  @keyframes marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 35s linear infinite;
+    will-change: transform;
+  }
+
+  .animate-marquee:hover,
+  .animate-marquee:focus-within {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none !important;
+      overflow-x: auto;
+    }
+  }
+
   /* Stagger animation delay utilities */
   .delay-100 {
     animation-delay: 100ms;

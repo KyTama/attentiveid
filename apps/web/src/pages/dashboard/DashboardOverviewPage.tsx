@@ -7,6 +7,7 @@ import {
   FileText,
   ShieldCheck,
   UserCheck,
+  MessageSquareQuote,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { useTranslation } from 'react-i18next'
@@ -222,6 +223,28 @@ export function DashboardOverviewPage() {
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                   Edit headline, deskripsi bilingual 9 section, urutan repeater, dan preview draft.
+                </p>
+              </Link>
+            </motion.div>
+          )}
+
+          {isAdmin && (
+            <motion.div
+              whileHover={{ y: -3 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            >
+              <Link
+                to="/dashboard/testimonials"
+                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+              >
+                <div className="size-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <MessageSquareQuote className="size-5 stroke-[1.75]" aria-hidden="true" />
+                </div>
+                <h3 className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
+                  Manajemen Testimoni
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Kelola ulasan klien, rating bintang, dan publikasikan ke auto-moving carousel homepage.
                 </p>
               </Link>
             </motion.div>

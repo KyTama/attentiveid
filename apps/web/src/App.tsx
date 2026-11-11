@@ -17,6 +17,7 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
+import { TestimonialsCmsPage } from './pages/dashboard/TestimonialsCmsPage'
 import { PsychologistsCmsPage } from './pages/dashboard/PsychologistsCmsPage'
 import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
 import { PsychologistProfileSelfPage } from './pages/dashboard/PsychologistProfileSelfPage'
@@ -66,6 +67,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <LandingCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="testimonials"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TestimonialsCmsPage />
               </ProtectedRoute>
             }
           />

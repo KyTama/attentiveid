@@ -1589,33 +1589,104 @@ export function LandingCmsPage() {
               </div>
 
               {activeSection.key === 'hero' && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900">
-                  <div>
-                    <p className="font-bold">4 Kolom Trust Metrics Counter di Bawah Banner</p>
-                    <p className="text-[11px] text-amber-700">
-                      Bagian ini mengatur 4 kartu metrik counter: Judul = Label teks (cth: Sesi terlaksana), Deskripsi = Nilai/Angka besar (cth: 3.000+).
-                    </p>
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900">
+                    <div>
+                      <p className="font-bold">4 Kolom Trust Metrics Counter di Bawah Banner</p>
+                      <p className="text-[11px] text-amber-700">
+                        Bagian ini mengatur 4 kartu counter: Judul = Label teks (cth: Sesi terlaksana), Deskripsi = Nilai/Angka besar (cth: 3.000+).
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+                            const headers = getAuthHeaders()
+                            const res = await fetch(`${baseUrl}/api/admin/overview/stats`, { headers })
+                            if (res.ok) {
+                              const json = await res.json()
+                              const activeCount = json?.data?.psychologists?.active ?? 18
+                              const newSections = [...content.sections]
+                              const heroSec = newSections[activeSectionIndex]
+                              if (Array.isArray(heroSec.items)) {
+                                heroSec.items = heroSec.items.map((item, idx) => {
+                                  if (idx === 1 || item.id === 'psychologist-count' || item.title.id.toLowerCase().includes('psikolog')) {
+                                    return {
+                                      ...item,
+                                      description: { id: String(activeCount), en: String(activeCount) },
+                                    }
+                                  }
+                                  return item
+                                })
+                              }
+                              setContent({ ...content, sections: newSections })
+                              setMessage({ type: 'success', text: `Berhasil sinkronkan jumlah psikolog aktif dari database: ${activeCount} psikolog!` })
+                            }
+                          } catch (err) {
+                            console.error(err)
+                            setMessage({ type: 'error', text: 'Gagal menghubungi server untuk sinkronisasi jumlah psikolog.' })
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-teal-300 rounded-lg text-xs font-semibold text-teal-800 hover:bg-teal-50 transition-colors shadow-2xs cursor-pointer"
+                      >
+                        <span>🔄 Sync DB Psikolog</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSections = [...content.sections]
+                          newSections[activeSectionIndex] = {
+                            ...activeSection,
+                            items: [
+                              { id: 'sessions-delivered', position: 0, title: { id: 'Sesi terlaksana', en: 'Sessions delivered' }, description: { id: '3.000+', en: '3,000+' } },
+                              { id: 'psychologist-count', position: 1, title: { id: 'Psikolog', en: 'Psychologists' }, description: { id: '18', en: '18' } },
+                              { id: 'google-rating', position: 2, title: { id: 'Rating Google', en: 'Google rating' }, description: { id: '5,0', en: '5.0' } },
+                              { id: 'google-reviews', position: 3, title: { id: 'Ulasan Google', en: 'Google reviews' }, description: { id: '53', en: '53' } },
+                            ],
+                          }
+                          setContent({ ...content, sections: newSections })
+                          setMessage({ type: 'success', text: '4 Angka Trust Metrics resmi (3.000+, 18, 5,0, 53) berhasil dipulihkan!' })
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors shadow-2xs cursor-pointer"
+                      >
+                        <span>⚡ Reset ke 4 Metrik Resmi</span>
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newSections = [...content.sections]
-                      newSections[activeSectionIndex] = {
-                        ...activeSection,
-                        items: [
-                          { id: 'sessions-delivered', position: 0, title: { id: 'Sesi terlaksana', en: 'Sessions delivered' }, description: { id: '3.000+', en: '3,000+' } },
-                          { id: 'psychologist-count', position: 1, title: { id: 'Psikolog', en: 'Psychologists' }, description: { id: '18', en: '18' } },
-                          { id: 'google-rating', position: 2, title: { id: 'Rating Google', en: 'Google rating' }, description: { id: '5,0', en: '5.0' } },
-                          { id: 'google-reviews', position: 3, title: { id: 'Ulasan Google', en: 'Google reviews' }, description: { id: '53', en: '53' } },
-                        ],
-                      }
-                      setContent({ ...content, sections: newSections })
-                      setMessage({ type: 'success', text: '4 Angka Trust Metrics resmi (3.000+, 18, 5,0, 53) berhasil dipulihkan!' })
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors shadow-2xs shrink-0 cursor-pointer"
-                  >
-                    <span>⚡ Reset ke 4 Metrik Resmi</span>
-                  </button>
+
+                  {/* Quick Milestone Presets for Sesi Terlaksana */}
+                  <div className="flex flex-wrap items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    <span className="font-semibold text-slate-600 mr-1">Preset Cepat Sesi Terlaksana:</span>
+                    {['3.000+', '3.500+', '4.000+', '5.000+'].map((milestone) => (
+                      <button
+                        key={milestone}
+                        type="button"
+                        onClick={() => {
+                          const newSections = [...content.sections]
+                          const heroSec = newSections[activeSectionIndex]
+                          if (Array.isArray(heroSec.items)) {
+                            heroSec.items = heroSec.items.map((item, idx) => {
+                              if (idx === 0 || item.id === 'sessions-delivered' || item.title.id.toLowerCase().includes('sesi')) {
+                                return {
+                                  ...item,
+                                  description: { id: milestone, en: milestone.replace('.', ',') },
+                                }
+                              }
+                              return item
+                            })
+                          }
+                          setContent({ ...content, sections: newSections })
+                          setMessage({ type: 'success', text: `Sesi terlaksana diubah menjadi: ${milestone}` })
+                        }}
+                        className="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-medium text-slate-700 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 transition-colors cursor-pointer"
+                      >
+                        {milestone}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 

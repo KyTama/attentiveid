@@ -8,6 +8,7 @@ import {
   UserCheck,
   FileText,
   ShieldCheck,
+  MessageSquareQuote,
   ClipboardList,
   FlaskConical,
   TextCursorInput,
@@ -51,6 +52,12 @@ export function DashboardLayout() {
       to: '/dashboard/landing',
       label: t('dashboard.navLanding', 'Landing Content'),
       icon: <LayoutTemplate className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
+    },
+    {
+      to: '/dashboard/testimonials',
+      label: t('dashboard.navTestimonials', 'Testimoni Klien'),
+      icon: <MessageSquareQuote className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
     },
     {
