@@ -146,9 +146,10 @@ const defaultLandingData: LandingCmsData = {
         },
       ],
       items: [
-        { id: 'item-1', position: 0, title: { id: 'Kerahasiaan Kode Etik', en: 'Clinical Confidentiality' }, description: { id: 'Rekam sesi dan privasi Anda terikat ketat kode etik HIMPSI.', en: 'Your session records are bound by psychological professional ethics.' } },
-        { id: 'item-2', position: 1, title: { id: 'Psikolog Berizin SIP', en: 'Licensed Practitioners' }, description: { id: 'Seluruh praktisi memiliki Surat Izin Praktik Psikologi aktif.', en: 'All therapists hold active professional psychology practice licenses.' } },
-        { id: 'item-3', position: 2, title: { id: 'Ruang Konseling Kedap Suara', en: 'Acoustic-Insulated Suites' }, description: { id: 'Klinik fisik privat untuk kenyamanan penuh selama sesi tatap muka.', en: 'Private clinic rooms designed for uninterrupted in-person focus.' } },
+        { id: 'item-1', position: 0, title: { id: 'Sesi terlaksana', en: 'Sessions delivered' }, description: { id: '3.000+', en: '3,000+' } },
+        { id: 'item-2', position: 1, title: { id: 'Psikolog', en: 'Psychologists' }, description: { id: '18', en: '18' } },
+        { id: 'item-3', position: 2, title: { id: 'Rating Google', en: 'Google rating' }, description: { id: '5,0', en: '5.0' } },
+        { id: 'item-4', position: 3, title: { id: 'Ulasan Google', en: 'Google reviews' }, description: { id: '53', en: '53' } },
       ],
     },
     {
@@ -1578,7 +1579,7 @@ export function LandingCmsPage() {
             <div className="space-y-4 pt-4 border-t border-slate-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
-                  Item Repeater List ({activeSection.items.length} item)
+                  {activeSection.key === 'hero' ? 'Trust Metrics Counter Bar (4 Item)' : `Item Repeater List (${activeSection.items.length} item)`}
                 </h3>
                 {ITEM_DEFAULT_IMAGES[activeSection.key] && (
                   <span className="text-[11px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md font-semibold">
@@ -1587,6 +1588,37 @@ export function LandingCmsPage() {
                 )}
               </div>
 
+              {activeSection.key === 'hero' && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900">
+                  <div>
+                    <p className="font-bold">4 Kolom Trust Metrics Counter di Bawah Banner</p>
+                    <p className="text-[11px] text-amber-700">
+                      Bagian ini mengatur 4 kartu metrik counter: Judul = Label teks (cth: Sesi terlaksana), Deskripsi = Nilai/Angka besar (cth: 3.000+).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSections = [...content.sections]
+                      newSections[activeSectionIndex] = {
+                        ...activeSection,
+                        items: [
+                          { id: 'sessions-delivered', position: 0, title: { id: 'Sesi terlaksana', en: 'Sessions delivered' }, description: { id: '3.000+', en: '3,000+' } },
+                          { id: 'psychologist-count', position: 1, title: { id: 'Psikolog', en: 'Psychologists' }, description: { id: '18', en: '18' } },
+                          { id: 'google-rating', position: 2, title: { id: 'Rating Google', en: 'Google rating' }, description: { id: '5,0', en: '5.0' } },
+                          { id: 'google-reviews', position: 3, title: { id: 'Ulasan Google', en: 'Google reviews' }, description: { id: '53', en: '53' } },
+                        ],
+                      }
+                      setContent({ ...content, sections: newSections })
+                      setMessage({ type: 'success', text: '4 Angka Trust Metrics resmi (3.000+, 18, 5,0, 53) berhasil dipulihkan!' })
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                  >
+                    <span>⚡ Reset ke 4 Metrik Resmi</span>
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-4">
                 {activeSection.items.map((item: LandingItem, itemIdx: number) => {
                   const itemTargetKey = `${activeSection.key}-item-${itemIdx}`
@@ -1594,6 +1626,12 @@ export function LandingCmsPage() {
                   const currentItemImg = item.media?.reference
                     ? (item.media.reference.startsWith('/') ? item.media.reference : `/${item.media.reference}`)
                     : defaultItemImg
+
+                  const isHero = activeSection.key === 'hero'
+                  const titlePlaceholderId = isHero ? 'Label Metrik (ID, cth: Sesi terlaksana)' : 'Title (ID)'
+                  const titlePlaceholderEn = isHero ? 'Label Metrik (EN, cth: Sessions delivered)' : 'Title (EN)'
+                  const descPlaceholderId = isHero ? 'Nilai / Angka (ID, cth: 3.000+)' : 'Description (ID)'
+                  const descPlaceholderEn = isHero ? 'Nilai / Angka (EN, cth: 3,000+)' : 'Description (EN)'
 
                   return (
                     <div key={item.id || itemIdx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
@@ -1611,7 +1649,7 @@ export function LandingCmsPage() {
                           <div className="relative">
                             <input
                               type="text"
-                              placeholder="Title (ID)"
+                              placeholder={titlePlaceholderId}
                               value={item.title?.id || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'id', e.target.value)}
                               className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
@@ -1623,7 +1661,7 @@ export function LandingCmsPage() {
                           <div className="relative">
                             <input
                               type="text"
-                              placeholder="Title (EN)"
+                              placeholder={titlePlaceholderEn}
                               value={item.title?.en || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'en', e.target.value)}
                               className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
@@ -1638,7 +1676,7 @@ export function LandingCmsPage() {
                           <div className="relative">
                             <textarea
                               rows={2}
-                              placeholder="Description (ID)"
+                              placeholder={descPlaceholderId}
                               value={item.description?.id || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'id', e.target.value)}
                               className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
@@ -1650,7 +1688,7 @@ export function LandingCmsPage() {
                           <div className="relative">
                             <textarea
                               rows={2}
-                              placeholder="Description (EN)"
+                              placeholder={descPlaceholderEn}
                               value={item.description?.en || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'en', e.target.value)}
                               className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"

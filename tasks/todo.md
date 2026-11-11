@@ -1,29 +1,28 @@
-# Task: Fix Landing CMS Publish Error (`publishLandingRevision is not a function`)
+# Task: Fix Hero Trust Metrics Content Mismatch
 
 > **Status:** COMPLETED  
 > **Goal:**
-> 1. Fix runtime TypeError: `dependencies.contentTransitions.publishLandingRevision is not a function` in `apps/api/src/routes/landing-cms.ts`.
-> 2. Align method signatures in `createContentTransitions` (`content-transitions.ts`) to support `publishLandingDraft(capability, revisionId?)` and alias `publishLandingRevision`.
-> 3. Allow `POST /api/admin/landing/publish` to publish active draft or accept current content mutation payload to save & publish atomically.
-> 4. Ensure `handlePublish` in `LandingCmsPage.tsx` sends current content so live edits are seamlessly published.
-> 5. Verify all tests (`bun test apps/api`, `bun run test --run` in web), build, deploy to VPS, and verify live on staging.
+> 1. Restore the 4 canonical trust metrics for Hero section in `defaultLandingData` (`LandingCmsPage.tsx`):
+>    - Metric 1: Value `3.000+` | Label `Sesi terlaksana` (Sessions delivered)
+>    - Metric 2: Value `18` | Label `Psikolog` (Psychologists)
+>    - Metric 3: Value `5,0` | Label `Rating Google` (Google rating)
+>    - Metric 4: Value `53` | Label `Ulasan Google` (Google reviews)
+> 2. Improve Hero item repeater UX in `LandingCmsPage.tsx`:
+>    - Clearly label inputs as "Label Metrik" and "Angka / Nilai Metrik" when editing Hero section.
+>    - Add a 1-click "Reset ke 4 Metrik Bawaan" button for Hero section.
+> 3. Update the live database revision on the VPS to restore the 4 metrics counter.
+> 4. Verify all tests, build, deploy, and verify live.
 
 ---
 
 ## Action Items
-- [x] **1. Align Content Transitions Service (`apps/api/src/services/content-transitions.ts`)**:
-  - Update `publishLandingDraft` to resolve active draft from aggregate if `revisionId` is omitted.
-  - Expose `publishLandingRevision` alias supporting both `(capability)` and `(capability, revisionId)`.
-  - Allow saving a draft when an active draft already exists by updating or superseding the active draft instead of throwing.
-- [x] **2. Fix Route Handler in `apps/api/src/routes/landing-cms.ts`**:
-  - Update `POST /api/admin/landing/publish` to call `publishLandingDraft(adminCap)`.
-  - Accept optional `body: t.Optional(LandingContentMutationSchema)` to save & publish in one step if content is provided.
-- [x] **3. Update Frontend `LandingCmsPage.tsx`**:
-  - Pass current `content` state to `POST /api/admin/landing/publish` so clicking "Terbitkan Live" publishes latest edits.
-- [x] **4. Test & Verification**:
-  - Run API unit tests (`landing-cms.test.ts`, `content-transitions.test.ts`).
-  - Run web Vitest tests.
-  - Verify build (`bun run build:api`, `bun run build:web`).
-- [x] **5. Deploy to VPS & Live Verification**:
-  - Commit, push to `master`, monitor CI/CD deployment to VPS.
-  - Verify container status, test publish endpoint live on VPS.
+- [x] **1. Fix `defaultLandingData` in `apps/web/src/pages/dashboard/LandingCmsPage.tsx`**:
+  - Update `hero.items` with the 4 canonical trust metric items (title = label, description = value).
+- [x] **2. Enhance Hero Item Repeater Editor UX in `LandingCmsPage.tsx`**:
+  - Distinguish Hero items as Trust Metrics (show "Label Metrik" and "Angka / Nilai" placeholders).
+  - Add "Kembalikan 4 Angka Metrik Resmi" quick button.
+- [x] **3. Update Live Database on VPS**:
+  - Re-publish clean revision with 4 canonical trust metrics on staging database.
+- [x] **4. Build, Test, Deploy to VPS & Verify**:
+  - Run web & API tests (`bun test apps/api`, `cd apps/web && bun run test --run`).
+  - Commit, push, monitor CI/CD deploy.

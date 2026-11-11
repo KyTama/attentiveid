@@ -21,3 +21,4 @@ Run the engine: [`how-to-learn.md`](../principles/how-to-learn.md) (7 steps).
 | 10 | Keep PII and secrets out of git for public lead forms; neutralize CSV formula cells | [public-form-pii-and-csv-export.md](./public-form-pii-and-csv-export.md) |
 | 11 | Containerized media uploads in read-only filesystems require shared volumes and configurable MEDIA_DIR | [readonly-filesystem-and-shared-media-volume.md](./readonly-filesystem-and-shared-media-volume.md) |
 | 12 | Service method signature alignment and atomic single-step CMS publish | [content-transition-method-signatures-and-atomic-publish.md](./content-transition-method-signatures-and-atomic-publish.md) |
+| 13 | Hero section trust metrics counter parity with CMS default template | [hero-section-trust-metrics-cms-parity.md](./hero-section-trust-metrics-cms-parity.md) |
