@@ -25,6 +25,7 @@ export interface LandingRevisionProjection {
 export interface LandingContentSource {
     findPublished(): Promise<LandingRevisionProjection | null>;
     findRevisionById(id: string): Promise<LandingRevisionProjection | null>;
+    findDraftOrPublished?(): Promise<LandingRevisionProjection | null>;
 }
 
 export interface LandingContentRead {
@@ -92,6 +93,17 @@ export const createLandingContentRepository = (source: LandingContentSource) => 
             return null;
         }
         return toLandingRead(await source.findRevisionById(id));
+    },
+
+    async getDraftOrPublished(): Promise<LandingContentMutation | null> {
+        if (source.findDraftOrPublished) {
+            const projection = await source.findDraftOrPublished();
+            if (projection && validateLandingContentMutation(projection.content)) {
+                return projection.content;
+            }
+        }
+        const published = await source.findPublished();
+        return published?.content ?? null;
     }
 });
 
@@ -328,6 +340,18 @@ export const createDrizzleLandingContentSource = (
             }
         });
         return toProjection(aggregate?.publishedRevision as DrizzleLandingRevisionRow | null | undefined);
+    },
+
+    async findDraftOrPublished() {
+        const aggregate = await database.query.landingAggregates.findFirst({
+            where: eq(schema.landingAggregates.singletonKey, true),
+            with: {
+                activeDraftRevision: { with: revisionWithContent() },
+                publishedRevision: { with: revisionWithContent() }
+            }
+        });
+        const target = aggregate?.activeDraftRevision ?? aggregate?.publishedRevision;
+        return toProjection(target as DrizzleLandingRevisionRow | null | undefined);
     },
 
     async findRevisionById(id) {

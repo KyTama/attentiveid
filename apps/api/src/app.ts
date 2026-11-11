@@ -122,7 +122,7 @@ export const createApp = (dependencies: AppDependencies) => {
             .use(createLandingCmsRoutes({
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
-                landingContentRepository: dependencies.landingContentRepository,
+                landingContentRepository: dependencies.landingContentRepository || dependencies.landingRepository,
                 contentTransitions: dependencies.contentTransitions,
                 db: dependencies.db,
             }))

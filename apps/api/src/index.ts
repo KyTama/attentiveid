@@ -34,9 +34,12 @@ const userRepository = createUserRepository(createDrizzleUserRepositorySource(db
 const articlesRepository = createArticlesRepository(createDrizzleArticleQuerySource(db));
 const contentTransitions = createContentTransitions(createDrizzleContentTransitionDatabase(db));
 
+const landingRepository = createLandingContentRepository(createDrizzleLandingContentSource(db));
+
 const app = createApp({
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',
-    landingRepository: createLandingContentRepository(createDrizzleLandingContentSource(db)),
+    landingRepository,
+    landingContentRepository: landingRepository,
     psychologistsRepository: createPsychologistsRepository(createDrizzlePsychologistQuerySource(db), { publicHosts: [] }),
     articlesRepository,
     contentTransitions,
