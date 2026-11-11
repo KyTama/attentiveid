@@ -53,7 +53,7 @@ export const clinicBranches: readonly ClinicBranch[] = [
         city: 'Malang',
         region: 'Jawa Timur',
         address: 'Grand Arumba B17, Jl. Grand Arumba, Blok B No.17, Tunggulwulung, Kota Malang 65143',
-        mapsUrl: 'https://goo.gl/maps/2F9E5WrHKEPvhTYX7?g_st=ac',
+        mapsUrl: 'https://maps.app.goo.gl/p8NG5KWG2nJipPnn6',
         status: 'active',
         tag: 'Cabang Malang',
         features: ['Konseling Tatap Muka & Online', 'Ruang Privat & Asri', 'Jangkauan Malang Raya & Jatim'],
