@@ -502,10 +502,10 @@
       "languageSwitch": "Ganti bahasa ke {{language}}"
     },
     "hero": {
-      "title": "Dukungan dimulai saat kamu merasa dipahami.",
-      "description": "Setiap cerita berbeda. Kami meluangkan waktu untuk memahami kamu sebelum membantu menemukan dukungan psikologis yang terasa tepat.",
-      "primaryAction": "Rencanakan sesi konseling",
-      "secondaryAction": "Temukan psikologmu",
+      "title": "Biro Psikologi Klinis & Konseling Profesional Berizin Resmi",
+      "description": "Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat bersama psikolog berlisensi SIP resmi.",
+      "primaryAction": "Jadwalkan Konsultasi",
+      "secondaryAction": "Lihat Layanan",
       "reassurance": "Tidak perlu diagnosis. Mulai dari hal yang sedang memenuhi pikiranmu.",
       "campaignLink": "Lihat program & kampanye unggulan",
       "imageAlt": "Psikolog Attentive yang siap mendengarkan",
@@ -513,7 +513,7 @@
       "imageCardBody": "Mulai dari ceritamu, kenyamananmu, dan dukungan yang sedang kamu butuhkan.",
       "metrics": [
         { "value": "3.000+", "label": "Sesi terlaksana" },
-        { "value": "23", "label": "Psikolog" },
+        { "value": "18", "label": "Psikolog" },
         { "value": "5,0", "label": "Rating Google" },
         { "value": "53", "label": "Ulasan Google" }
       ]

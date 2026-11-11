@@ -23,11 +23,14 @@ describe('homepage', () => {
     const user = userEvent.setup()
     renderHomepage()
 
-    expect(screen.getByRole('heading', { name: /support starts with feeling understood/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /find your psychologist/i })[0]).toHaveAttribute(
-      'href',
-      '/psychologists',
-    )
+    expect(
+      screen.getByRole('heading', {
+        name: /licensed clinical psychology bureau|support starts with feeling understood/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('link', { name: /explore services|find your psychologist/i })[0],
+    ).toHaveAttribute('href', '/psychologists')
     expect(await screen.findByRole('heading', { name: /find someone you can actually talk to/i })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /view syazka's profile/i })).toHaveAttribute(
       'href',
@@ -69,12 +72,13 @@ describe('homepage', () => {
     await user.click(screen.getAllByRole('button', { name: /switch language to bahasa indonesia/i })[0])
 
     expect(
-      await screen.findByRole('heading', { name: /dukungan dimulai saat kamu merasa dipahami/i }),
+      await screen.findByRole('heading', {
+        name: /biro psikologi klinis & konseling profesional berizin resmi|dukungan dimulai saat kamu merasa dipahami/i,
+      }),
     ).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /temukan psikologmu/i })[0]).toHaveAttribute(
-      'href',
-      '/psychologists',
-    )
+    expect(
+      screen.getAllByRole('link', { name: /lihat layanan|temukan psikologmu/i })[0],
+    ).toHaveAttribute('href', '/psychologists')
   })
 
   it('keeps external WhatsApp actions safe', async () => {
@@ -120,7 +124,7 @@ describe('homepage', () => {
     renderHomepage()
 
     expect(screen.getByLabelText('3,000+')).toBeInTheDocument()
-    expect(screen.getByLabelText('23')).toBeInTheDocument()
+    expect(screen.getByLabelText('18')).toBeInTheDocument()
     expect(screen.getByLabelText('5.0')).toBeInTheDocument()
     expect(screen.getByLabelText('53')).toBeInTheDocument()
     expect(screen.getByText('Sessions delivered')).toBeInTheDocument()

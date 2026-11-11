@@ -30,15 +30,15 @@ export const landingSeedContent = {
             key: 'hero',
             visible: true,
             headline: localized(
-                'Dukungan dimulai saat kamu merasa dipahami.',
-                'Support starts with feeling understood.'
+                'Biro Psikologi Klinis & Konseling Profesional Berizin Resmi',
+                'Licensed Clinical Psychology Bureau & Professional Counseling'
             ),
             description: localized(
-                'Setiap cerita berbeda. Kami meluangkan waktu untuk memahami kamu sebelum membantu menemukan dukungan psikologis yang terasa tepat.',
-                'Every story is different. We take the time to understand you before helping you find psychological support that feels right for you.'
+                'Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat bersama psikolog berlisensi SIP resmi.',
+                'Private in-person consultations in Jakarta, BSD, and Malang, or online video counseling with licensed psychologists.'
             ),
-            primaryCta: localized('Temukan psikologmu', 'Find your psychologist'),
-            secondaryCta: localized('Lihat pilihan dukungan', 'Explore support options'),
+            primaryCta: localized('Jadwalkan Konsultasi', 'Book Consultation'),
+            secondaryCta: localized('Lihat Layanan', 'Explore Services'),
             items: [
                 item('sessions-delivered', 0, 'Sesi terlaksana', 'Sessions delivered', '3.000+', '3,000+'),
                 item('psychologist-count', 1, 'Psikolog', 'Psychologists', '18', '18'),

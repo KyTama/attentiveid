@@ -502,10 +502,10 @@
       "languageSwitch": "Switch language to {{language}}"
     },
     "hero": {
-      "title": "Support starts with feeling understood.",
-      "description": "Every story is different. We take the time to understand you before helping you find psychological support that feels right for you.",
-      "primaryAction": "Plan your session",
-      "secondaryAction": "Find your psychologist",
+      "title": "Licensed Clinical Psychology Bureau & Professional Counseling",
+      "description": "Private in-person consultations in Jakarta, BSD, and Malang, or online video counseling with licensed psychologists.",
+      "primaryAction": "Book Consultation",
+      "secondaryAction": "Explore Services",
       "reassurance": "No diagnosis needed. Start with what has been on your mind.",
       "campaignLink": "Explore featured programs & campaigns",
       "imageAlt": "Attentive psychologist ready to listen",
@@ -513,7 +513,7 @@
       "imageCardBody": "Start with your story, your comfort, and the kind of support you need.",
       "metrics": [
         { "value": "3,000+", "label": "Sessions delivered" },
-        { "value": "23", "label": "Psychologists" },
+        { "value": "18", "label": "Psychologists" },
         { "value": "5.0", "label": "Google rating" },
         { "value": "53", "label": "Google reviews" }
       ]
