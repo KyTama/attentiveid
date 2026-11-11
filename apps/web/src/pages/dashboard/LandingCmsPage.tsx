@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { uploadLandingImage } from '../../features/content/service'
-import { HeroCarousel } from '../../components/landing/HeroCarousel'
+import { renderDualColorHeading } from '../../components/landing/HomepageHero'
 
 interface LocalizedText {
   id: string
@@ -242,6 +242,7 @@ export function LandingCmsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [heroPreviewSlide, setHeroPreviewSlide] = useState<0 | 1>(0)
 
   // Upload state
   const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
@@ -328,6 +329,78 @@ export function LandingCmsPage() {
   }
 
   const activeSection = content.sections[activeSectionIndex]
+
+  const getHeroSlideItem = (index: number) => {
+    const existing = (activeSection as any)?.slideItems?.[index]
+    if (existing) return existing
+    if (index === 0) {
+      return {
+        id: 'hero-slide-1',
+        tag: { id: 'Biro Psikologi Klinis · Berizin SIP Resmi', en: 'Licensed Clinical Psychology Bureau' },
+        headline: activeSection?.headline || {
+          id: 'Biro Psikologi Klinis & Konseling **Profesional Berizin Resmi.**',
+          en: 'Licensed Clinical Psychology Bureau & **Professional Counseling.**',
+        },
+        description: activeSection?.description || {
+          id: 'Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat bersama psikolog berlisensi SIP resmi.',
+          en: 'Private in-person consultations in Jakarta, BSD, and Malang, or online video counseling with licensed psychologists.',
+        },
+        primaryCta: (activeSection as any)?.primaryCta || { id: 'Jadwalkan Konsultasi', en: 'Book Consultation' },
+        secondaryCta: (activeSection as any)?.secondaryCta || { id: 'Lihat Layanan', en: 'Explore Services' },
+      }
+    }
+    return {
+      id: 'hero-slide-2',
+      tag: { id: 'Ruang Ramah Anabul', en: 'Pet Friendly Space' },
+      headline: { id: 'Biro Psikologi **Pet Friendly.**', en: 'Pet Friendly **Psychology Bureau.**' },
+      description: {
+        id: 'Di Attentive, kamu boleh mengajak hewan peliharaan kesayanganmu ke sesi konseling tatap muka. Menghadirkan rasa tenang, grounded, dan bebas cemas.',
+        en: 'At Attentive, you are warmly welcomed to bring your pet companions to in-person sessions. Creating a grounded, comforting, and anxiety-free healing space.',
+      },
+      primaryCta: { id: 'Konsultasi Ramah Anabul', en: 'Book Pet-Friendly Session' },
+      secondaryCta: { id: 'Lihat 3 Lokasi Praktik', en: 'Explore 3 Practice Locations' },
+    }
+  }
+
+  const updateHeroSlideField = (
+    slideIndex: number,
+    field: 'tag' | 'headline' | 'description' | 'primaryCta' | 'secondaryCta',
+    lang: 'id' | 'en',
+    value: string
+  ) => {
+    const slideItems = [...(((activeSection as any).slideItems as any[]) || [
+      getHeroSlideItem(0),
+      getHeroSlideItem(1),
+    ])]
+
+    if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
+    if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
+
+    slideItems[slideIndex] = {
+      ...slideItems[slideIndex],
+      [field]: {
+        ...(slideItems[slideIndex][field] || {}),
+        [lang]: value,
+      },
+    }
+
+    const newSections = [...content.sections]
+    const updatedHero: any = {
+      ...activeSection,
+      slideItems,
+    }
+
+    // Keep base section properties synced when Slide 1 is edited
+    if (slideIndex === 0) {
+      if (field === 'headline') updatedHero.headline = slideItems[0].headline
+      if (field === 'description') updatedHero.description = slideItems[0].description
+      if (field === 'primaryCta') updatedHero.primaryCta = slideItems[0].primaryCta
+      if (field === 'secondaryCta') updatedHero.secondaryCta = slideItems[0].secondaryCta
+    }
+
+    newSections[activeSectionIndex] = updatedHero
+    setContent({ ...content, sections: newSections })
+  }
 
   const updateSectionCopy = (field: 'headline' | 'description', lang: 'id' | 'en', value: string) => {
     const newSections = [...content.sections]
@@ -538,9 +611,15 @@ export function LandingCmsPage() {
   }
 
   const sectionImageMeta = SECTION_IMAGE_META[activeSection?.key]
-  const currentSectionImageSrc = activeSection?.media?.reference
-    ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
-    : sectionImageMeta?.defaultImage
+  const currentSectionImageSrc =
+    activeSection?.key === 'hero' &&
+    (!activeSection?.media?.reference ||
+      activeSection.media.reference.includes('hero-slide-1') ||
+      activeSection.media.reference.includes('malang'))
+      ? '/images/figma/consultation-hero.webp'
+      : activeSection?.media?.reference
+      ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
+      : sectionImageMeta?.defaultImage
 
   const heroSlides: LandingMedia[] = (activeSection?.key === 'hero' && activeSection.slides && activeSection.slides.length > 0)
     ? activeSection.slides
@@ -918,7 +997,7 @@ export function LandingCmsPage() {
             </label>
           </div>
 
-          {/* --- HERO ONLY: Live Hero Carousel Simulator & Showcase --- */}
+          {/* --- HERO ONLY: Live Hero Highlight Card Simulator & Showcase --- */}
           {activeSection?.key === 'hero' && (
             <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-2xl border border-slate-700 text-white space-y-4 shadow-md">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
@@ -928,49 +1007,215 @@ export function LandingCmsPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold tracking-tight text-white">Hero Showcase Carousel (Live Simulator)</h3>
+                      <h3 className="text-sm font-bold tracking-tight text-white">Hero Highlight Card (Live Simulator)</h3>
                       <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full">
-                        {heroSlides.length === 1 ? '1 Foto Aktif (Single Photo)' : `${heroSlides.length} Foto Aktif (Carousel)`}
+                        Editorial Format · 2 Slides
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300">
-                      {heroSlides.length === 1
-                        ? 'Hanya 1 foto aktif: beranda menampilkan foto bersih tanpa kontrol atau navigasi carousel.'
-                        : `${heroSlides.length} foto aktif: beranda otomatis memutar carousel interaktif dengan transisi Framer Motion spring physics.`}
+                      Format highlight card beranda dengan tipografi 2-warna trademark, architectural arch frame, dan navigasi slide.
                     </p>
                   </div>
                 </div>
-              </div>
 
-              {/* Embedded Interactive Carousel Simulator */}
-              <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-xl overflow-hidden border border-white/15 bg-black/60 shadow-lg">
-                <HeroCarousel
-                  slides={heroSlides.map((s, idx) => ({
-                    id: `preview-slide-${idx}-${s.reference}`,
-                    imageSrc: s.reference.startsWith('/') ? s.reference : `/${s.reference}`,
-                    alt: (languageView === 'en' ? s.alt?.en : s.alt?.id) || s.alt?.id || `Hero Slide ${idx + 1}`,
-                    tag: idx === 0 ? 'Konseling Tatap Muka & Daring' : `Sorotan Layanan #${idx + 1}`,
-                    caption: (languageView === 'en' ? s.alt?.en : s.alt?.id) || s.alt?.id || `Slide Foto #${idx + 1}`,
-                    width: s.width ?? 1600,
-                    height: s.height ?? 901,
-                  }))}
-                />
-              </div>
-
-              {/* Slide Chips below simulator */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-[11px] text-slate-300">
-                {heroSlides.map((s, idx) => (
-                  <div
-                    key={`hero-sim-chip-${idx}`}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 shrink-0"
+                {/* Slide Toggle Controls */}
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setHeroPreviewSlide(0)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      heroPreviewSlide === 0
+                        ? 'bg-amber-400 text-slate-950 shadow-xs'
+                        : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                    }`}
                   >
-                    <span className="size-2 rounded-full bg-amber-400 shrink-0" />
-                    <span className="font-semibold text-white">Slide #{idx + 1}</span>
-                    <span className="text-[10px] text-slate-400 max-w-[140px] truncate">
-                      {(languageView === 'en' ? s.alt?.en : s.alt?.id) || s.alt?.id || s.reference}
-                    </span>
+                    Slide 1: Konseling
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHeroPreviewSlide(1)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      heroPreviewSlide === 1
+                        ? 'bg-amber-400 text-slate-950 shadow-xs'
+                        : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                    }`}
+                  >
+                    Slide 2: Pet Friendly 🐾
+                  </button>
+                </div>
+              </div>
+
+              {/* Embedded Editorial Card Simulator */}
+              <div className="rounded-2xl border border-secondary/20 bg-[#FAF7F2] p-4 text-slate-900 sm:p-6">
+                <div className="relative overflow-hidden rounded-2xl border border-secondary/15 bg-white p-5 shadow-sm sm:p-6">
+                  {heroPreviewSlide === 0 ? (
+                    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                      <div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase text-secondary">
+                          <span className="size-1.5 rounded-full bg-[#C27803]" />
+                          {languageView === 'en' ? 'Licensed Clinical Psychology Bureau' : 'Biro Psikologi Klinis · Berizin SIP'}
+                        </span>
+
+                        <h2 className="mt-3 text-xl font-extrabold tracking-tight sm:text-2xl lg:text-3xl lg:leading-tight">
+                          {renderDualColorHeading(
+                            (languageView === 'en' ? activeSection.headline?.en : activeSection.headline?.id) ||
+                              activeSection.headline?.id ||
+                              'Biro Psikologi Klinis & Konseling Profesional Berizin Resmi'
+                          )}
+                        </h2>
+
+                        <p className="mt-2 text-xs text-secondary/80 line-clamp-3">
+                          {(languageView === 'en' ? activeSection.description?.en : activeSection.description?.id) ||
+                            activeSection.description?.id ||
+                            'Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat.'}
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-4 py-2 text-[11px] font-bold text-white shadow-xs">
+                            {(languageView === 'en' ? activeSection.primaryCta?.en : activeSection.primaryCta?.id) || 'Jadwalkan Konsultasi'}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary">
+                            {(languageView === 'en' ? activeSection.secondaryCta?.en : activeSection.secondaryCta?.id) || 'Lihat Layanan →'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Arch image */}
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-tl-[60px] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-secondary/15 bg-[#E8E2D5] shadow-sm">
+                        <img
+                          src={currentSectionImageSrc}
+                          alt="Hero Live Preview"
+                          className="h-full w-full object-cover object-center"
+                        />
+                        <div className="absolute -top-2 -right-2 z-10 flex size-14 flex-col items-center justify-center rounded-full border-2 border-white bg-[#E5A824] text-secondary shadow-md">
+                          <span className="text-[8px] font-bold uppercase">SIP</span>
+                          <span className="text-[9px] font-extrabold uppercase">RESMI+</span>
+                        </div>
+                        <div className="absolute bottom-3 left-3 z-10 rounded-xl border border-secondary/15 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-md">
+                          <span className="block text-[8px] font-bold uppercase text-secondary/60">COME AS YOU ARE</span>
+                          <span className="text-[10px] font-bold text-secondary">Ruang aman untuk didengar.</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                      <div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase text-secondary">
+                          <span className="size-1.5 rounded-full bg-[#C27803]" />
+                          {(languageView === 'en' ? getHeroSlideItem(1)?.tag?.en : getHeroSlideItem(1)?.tag?.id) || getHeroSlideItem(1)?.tag?.id || 'Ruang Ramah Anabul'}
+                        </span>
+
+                        <h2 className="mt-3 text-xl font-extrabold tracking-tight sm:text-2xl lg:text-3xl lg:leading-tight">
+                          {renderDualColorHeading(
+                            (languageView === 'en' ? getHeroSlideItem(1)?.headline?.en : getHeroSlideItem(1)?.headline?.id) ||
+                              getHeroSlideItem(1)?.headline?.id ||
+                              'Biro Psikologi **Pet Friendly.**'
+                          )}
+                        </h2>
+
+                        <p className="mt-2 text-xs text-secondary/80 line-clamp-3">
+                          {(languageView === 'en' ? getHeroSlideItem(1)?.description?.en : getHeroSlideItem(1)?.description?.id) ||
+                            getHeroSlideItem(1)?.description?.id ||
+                            'Di Attentive, kamu boleh mengajak hewan peliharaan kesayanganmu ke sesi konseling tatap muka.'}
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-4 py-2 text-[11px] font-bold text-white shadow-xs">
+                            {(languageView === 'en' ? getHeroSlideItem(1)?.primaryCta?.en : getHeroSlideItem(1)?.primaryCta?.id) || 'Konsultasi Ramah Anabul'}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary">
+                            {(languageView === 'en' ? getHeroSlideItem(1)?.secondaryCta?.en : getHeroSlideItem(1)?.secondaryCta?.id) || 'Lihat 3 Lokasi Praktik →'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Collage 4 pet photos */}
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-tl-[60px] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-secondary/15 bg-[#E8E2D5] p-2 shadow-sm grid grid-cols-2 grid-rows-2 gap-2">
+                        <img src="/images/pet-friendly/pet-friendly-1.jpg" alt="Pet 1" className="h-full w-full object-cover rounded-tl-[45px] rounded-lg" />
+                        <img src="/images/pet-friendly/pet-friendly-2.jpg" alt="Pet 2" className="h-full w-full object-cover rounded-lg" />
+                        <img src="/images/pet-friendly/pet-friendly-3.jpg" alt="Pet 3" className="h-full w-full object-cover rounded-lg" />
+                        <img src="/images/pet-friendly/pet-friendly-4.jpg" alt="Pet 4" className="h-full w-full object-cover rounded-br-xl rounded-lg" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Simulator Slide Pagination Dots */}
+                  <div className="mt-4 flex items-center justify-between border-t border-secondary/10 pt-3 text-[11px] text-secondary/70">
+                    <div className="flex items-center gap-2 font-mono font-bold">
+                      <span className="text-[#C27803]">0{heroPreviewSlide + 1}</span>
+                      <span>/ 02</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className={`h-1.5 rounded-full transition-all ${heroPreviewSlide === 0 ? 'w-6 bg-[#C27803]' : 'w-3 bg-secondary/20'}`} />
+                      <div className={`h-1.5 rounded-full transition-all ${heroPreviewSlide === 1 ? 'w-6 bg-[#C27803]' : 'w-3 bg-secondary/20'}`} />
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Minimalist Trust Ticker Ribbon in simulator */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-4 border-y border-secondary/10 py-2.5 text-center text-[10px] font-bold tracking-wide text-secondary/70">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[#C27803]">✻</span>
+                    <span>Thoughtful psychological support</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[#C27803]">✻</span>
+                    <span>Space to feel understood</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[#C27803]">✻</span>
+                    <span>Care at your own pace</span>
+                  </div>
+                </div>
+
+                {/* Sub-Hero Command Strip (Program & Layanan Unggulan) in Simulator - NAIK KE SINI */}
+                <div className="mt-4 rounded-xl border border-secondary/10 bg-white/70 p-4">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-secondary/10">
+                    <div className="flex items-center gap-1.5">
+                      <span className="grid size-5 place-items-center rounded-full bg-amber-100 text-[#8C6013]">
+                        <Sparkles size={11} />
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
+                        Program &amp; Layanan Unggulan
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-secondary/60">Akses Cepat Menuju Dukungan</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="p-3 rounded-lg bg-gradient-to-b from-white to-[#FDF8EE] border border-amber-300/60 shadow-2xs">
+                      <span className="text-[9px] font-bold uppercase bg-amber-100 text-[#8C6013] px-1.5 py-0.5 rounded">Promo Khusus</span>
+                      <h4 className="mt-1 text-xs font-bold text-secondary">First Free Session Consultation</h4>
+                      <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">Klaim sesi privat 1-on-1 tanpa biaya untuk langkah awalmu.</p>
+                      <span className="mt-2 block text-[10px] font-bold text-[#8C6013]">Klaim Sesi Gratis →</span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white border border-secondary/15 shadow-2xs">
+                      <span className="text-[9px] font-bold uppercase bg-secondary/10 text-secondary px-1.5 py-0.5 rounded">Jadwal Langsung</span>
+                      <h4 className="mt-1 text-xs font-bold text-secondary">Booking / Reservasi Psikolog</h4>
+                      <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">Pilih psikolog dan tentukan jadwal sesi online atau klinik.</p>
+                      <span className="mt-2 block text-[10px] font-bold text-secondary">Reservasi Jadwal →</span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white border border-secondary/15 shadow-2xs">
+                      <span className="text-[9px] font-bold uppercase bg-[#EBF3FB] text-[#1E568A] px-1.5 py-0.5 rounded">Tes Online</span>
+                      <h4 className="mt-1 text-xs font-bold text-secondary">Digital Test Centre</h4>
+                      <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">Asesmen psikologi terstandarisasi yang siap diakses 24/7.</p>
+                      <span className="mt-2 block text-[10px] font-bold text-[#1E568A]">Akses Tes Online →</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4 Trust Counter Metrics in Simulator - DI BAWAHNYA Program & Layanan Unggulan */}
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 rounded-xl bg-white/90 p-3 text-center border border-secondary/10 shadow-2xs">
+                  {(activeSection.items || []).map((item, idx) => (
+                    <div key={idx} className="p-2 border-r border-secondary/10 last:border-r-0">
+                      <div className="text-base sm:text-lg font-extrabold text-secondary">
+                        {(languageView === 'en' ? item.description?.en : item.description?.id) || item.description?.id || '—'}
+                      </div>
+                      <div className="text-[9px] font-bold uppercase text-secondary/70 tracking-wider">
+                        {(languageView === 'en' ? item.title?.en : item.title?.id) || item.title?.id || 'Metrik'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -1078,7 +1323,13 @@ export function LandingCmsPage() {
                         <div className="sm:col-span-4">
                           <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
                             <img
-                              src={slide.reference.startsWith('/') ? slide.reference : `/${slide.reference}`}
+                              src={
+                                slide.reference.includes('hero-slide-1') || slide.reference.includes('malang')
+                                  ? '/images/figma/consultation-hero.webp'
+                                  : slide.reference.startsWith('/')
+                                  ? slide.reference
+                                  : `/${slide.reference}`
+                              }
                               alt={slide.alt?.id || `Hero Slide ${sIdx + 1}`}
                               className="w-full h-full object-cover object-center"
                               onError={(e) => {
@@ -1363,76 +1614,292 @@ export function LandingCmsPage() {
             )
           )}
 
-          {/* Section Copy (Headline & Description) */}
+          {/* Section Copy (Headline, Description & Slide Selector for Hero) */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Judul & Deskripsi Section</h3>
-              <span className="text-[10px] text-slate-500 font-medium">
-                {languageView === 'both' ? 'Mode Dual View (ID + EN)' : languageView === 'id' ? 'Mode Bahasa Indonesia' : 'Mode English'}
-              </span>
-            </div>
+            {activeSection?.key === 'hero' ? (
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl shadow-xs space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
+                        ⚡
+                      </span>
+                      <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                        Editor Konten Slide Hero Beranda
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Beranda memiliki 2 slide interaktif. Pilih tab di samping untuk mengedit teks &amp; tombol masing-masing slide:
+                    </p>
+                  </div>
 
-            <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-              {(languageView === 'both' || languageView === 'id') && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700">Headline (Indonesian)</label>
-                    <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewSlide(0)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        heroPreviewSlide === 0
+                          ? 'bg-[#132B3A] text-white shadow-md ring-2 ring-amber-400'
+                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
+                      }`}
+                    >
+                      Slide 1: Konseling Klinis
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewSlide(1)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        heroPreviewSlide === 1
+                          ? 'bg-[#C27803] text-white shadow-md ring-2 ring-amber-400'
+                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
+                      }`}
+                    >
+                      Slide 2: Ruang Ramah Anabul 🐾
+                    </button>
                   </div>
-                  <input
-                    type="text"
-                    value={activeSection?.headline?.id || ''}
-                    onChange={(e) => updateSectionCopy('headline', 'id', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  />
                 </div>
-              )}
-              {(languageView === 'both' || languageView === 'en') && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700">Headline (English)</label>
-                    <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={activeSection?.headline?.en || ''}
-                    onChange={(e) => updateSectionCopy('headline', 'en', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Judul &amp; Deskripsi Section</h3>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  {languageView === 'both' ? 'Mode Dual View (ID + EN)' : languageView === 'id' ? 'Mode Bahasa Indonesia' : 'Mode English'}
+                </span>
+              </div>
+            )}
 
-            <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-              {(languageView === 'both' || languageView === 'id') && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700">Description (Indonesian)</label>
-                    <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                  </div>
-                  <textarea
-                    rows={3}
-                    value={activeSection?.description?.id || ''}
-                    onChange={(e) => updateSectionCopy('description', 'id', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  />
+            {activeSection?.key === 'hero' && heroPreviewSlide === 1 ? (
+              /* --- SLIDE 2 EDITOR --- */
+              <div className="space-y-4 p-4 bg-white rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="text-xs font-bold text-slate-800">
+                    Mengedit: <span className="text-[#C27803]">Slide 2 (Ruang Ramah Anabul 🐾)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {languageView === 'both' ? 'Mode Dual View (ID + EN)' : languageView === 'id' ? 'Bahasa Indonesia' : 'English'}
+                  </span>
                 </div>
-              )}
-              {(languageView === 'both' || languageView === 'en') && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-slate-700">Description (English)</label>
-                    <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                  </div>
-                  <textarea
-                    rows={3}
-                    value={activeSection?.description?.en || ''}
-                    onChange={(e) => updateSectionCopy('description', 'en', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  />
+
+                {/* Tag / Badge */}
+                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                  {(languageView === 'both' || languageView === 'id') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (ID)</label>
+                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={getHeroSlideItem(1)?.tag?.id || ''}
+                        onChange={(e) => updateHeroSlideField(1, 'tag', 'id', e.target.value)}
+                        placeholder="Cth: Ruang Ramah Anabul"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  )}
+                  {(languageView === 'both' || languageView === 'en') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (EN)</label>
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={getHeroSlideItem(1)?.tag?.en || ''}
+                        onChange={(e) => updateHeroSlideField(1, 'tag', 'en', e.target.value)}
+                        placeholder="E.g: Pet Friendly Space"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+
+                {/* Headline Slide 2 */}
+                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                  {(languageView === 'both' || languageView === 'id') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (ID)</label>
+                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={getHeroSlideItem(1)?.headline?.id || ''}
+                        onChange={(e) => updateHeroSlideField(1, 'headline', 'id', e.target.value)}
+                        placeholder="Cth: Biro Psikologi **Pet Friendly.**"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  )}
+                  {(languageView === 'both' || languageView === 'en') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (EN)</label>
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={getHeroSlideItem(1)?.headline?.en || ''}
+                        onChange={(e) => updateHeroSlideField(1, 'headline', 'en', e.target.value)}
+                        placeholder="E.g: Pet Friendly **Psychology Bureau.**"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Description Slide 2 */}
+                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                  {(languageView === 'both' || languageView === 'id') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Description Slide 2 (ID)</label>
+                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={getHeroSlideItem(1)?.description?.id || ''}
+                        onChange={(e) => updateHeroSlideField(1, 'description', 'id', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  )}
+                  {(languageView === 'both' || languageView === 'en') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Description Slide 2 (EN)</label>
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={getHeroSlideItem(1)?.description?.en || ''}
+                        onChange={(e) => updateHeroSlideField(1, 'description', 'en', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Primary & Secondary CTA Buttons for Slide 2 */}
+                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2' : 'space-y-4 pt-2'}>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tombol Utama Slide 2 (ID / EN)</label>
+                    <input
+                      type="text"
+                      value={getHeroSlideItem(1)?.primaryCta?.id || ''}
+                      onChange={(e) => updateHeroSlideField(1, 'primaryCta', 'id', e.target.value)}
+                      placeholder="Label Tombol Reservasi (ID)"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tombol Sekunder (Hyperlink Lokasi)</label>
+                    <input
+                      type="text"
+                      value={getHeroSlideItem(1)?.secondaryCta?.id || ''}
+                      onChange={(e) => updateHeroSlideField(1, 'secondaryCta', 'id', e.target.value)}
+                      placeholder="Label Tombol Lokasi (ID, cth: Lihat 3 Lokasi Praktik)"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* --- SLIDE 1 (Or Standard Section) EDITOR --- */
+              <div className="space-y-4">
+                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                  {(languageView === 'both' || languageView === 'id') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Headline {activeSection?.key === 'hero' ? 'Slide 1 (Indonesian)' : '(Indonesian)'}</label>
+                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={activeSection?.headline?.id || ''}
+                        onChange={(e) => {
+                          updateSectionCopy('headline', 'id', e.target.value)
+                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'headline', 'id', e.target.value)
+                        }}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  )}
+                  {(languageView === 'both' || languageView === 'en') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Headline {activeSection?.key === 'hero' ? 'Slide 1 (English)' : '(English)'}</label>
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={activeSection?.headline?.en || ''}
+                        onChange={(e) => {
+                          updateSectionCopy('headline', 'en', e.target.value)
+                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'headline', 'en', e.target.value)
+                        }}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* 2-Color Trademark Headline Tip for Hero Section */}
+                {activeSection?.key === 'hero' && (
+                  <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl text-xs text-amber-950 flex items-start gap-2.5 shadow-2xs">
+                    <Sparkles className="size-4 text-[#C27803] shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <div className="font-bold text-[#C27803] flex items-center gap-1.5">
+                        <span>Tip Gaya Tipografi 2 Warna (Trademark):</span>
+                      </div>
+                      <p className="text-slate-700 leading-relaxed">
+                        Gunakan tanda <code className="font-bold bg-amber-100 text-amber-900 px-1 py-0.5 rounded border border-amber-300/60">**kata emas**</code> pada kata/frasa yang ingin diberi warna aksen emas Attentive (Gold <span className="font-bold text-[#C27803]">#C27803</span>). Kalimat lainnya otomatis berwarna Deep Blue (<span className="font-bold text-[#132B3A]">#132B3A</span>).
+                      </p>
+                      <p className="text-[11px] text-slate-500 italic">
+                        Contoh: &quot;Biro Psikologi Klinis &amp; Konseling <strong className="text-[#C27803] font-bold">**Profesional Berizin Resmi.**</strong>&quot;
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                  {(languageView === 'both' || languageView === 'id') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Description {activeSection?.key === 'hero' ? 'Slide 1 (Indonesian)' : '(Indonesian)'}</label>
+                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={activeSection?.description?.id || ''}
+                        onChange={(e) => {
+                          updateSectionCopy('description', 'id', e.target.value)
+                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'description', 'id', e.target.value)
+                        }}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  )}
+                  {(languageView === 'both' || languageView === 'en') && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">Description {activeSection?.key === 'hero' ? 'Slide 1 (English)' : '(English)'}</label>
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={activeSection?.description?.en || ''}
+                        onChange={(e) => {
+                          updateSectionCopy('description', 'en', e.target.value)
+                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'description', 'en', e.target.value)
+                        }}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Section Specific Action & CTA Fields */}

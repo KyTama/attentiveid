@@ -71,12 +71,25 @@ const sectionCopyProperties = {
   media: Type.Optional(LandingMediaSchema),
 }
 
+export const HeroSlideItemSchema = Type.Object({
+  id: IdentifierSchema,
+  tag: LocalizedTextSchema,
+  headline: LocalizedTextSchema,
+  description: LocalizedTextSchema,
+  primaryCta: LocalizedTextSchema,
+  primaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  secondaryCta: LocalizedTextSchema,
+  secondaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  media: Type.Optional(LandingMediaSchema),
+}, { additionalProperties: false })
+
 const HeroSectionSchema = Type.Object({
   key: Type.Literal('hero'),
   ...sectionCopyProperties,
   primaryCta: LocalizedTextSchema,
   secondaryCta: LocalizedTextSchema,
   slides: Type.Optional(Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })),
+  slideItems: Type.Optional(Type.Array(HeroSlideItemSchema, { minItems: 1, maxItems: 5 })),
   items: Type.Array(LandingItemSchema, {
     minItems: LANDING_REPEATER_BOUNDS.hero.min,
     maxItems: LANDING_REPEATER_BOUNDS.hero.max,

@@ -19,9 +19,75 @@ import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
 import { useCampaignDock } from './use-campaign-dock'
 
-interface TrustMetric {
+export interface TrustMetric {
   label: string
   value: string
+}
+
+export function renderDualColorHeading(text: string) {
+  if (!text) return null
+
+  // 1. Explicit markdown bold syntax: **highlighted gold text**
+  if (text.includes('**')) {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g)
+    return (
+      <>
+        {parts.map((part, index) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <span key={index} className="text-[#C27803]">
+                {part.slice(2, -2)}
+              </span>
+            )
+          }
+          return (
+            <span key={index} className="text-secondary">
+              {part}
+            </span>
+          )
+        })}
+      </>
+    )
+  }
+
+  // 2. Default Indonesian pattern: split anchor & action
+  if (text.includes('Biro Psikologi Klinis & Konseling')) {
+    const remainder = text.replace('Biro Psikologi Klinis & Konseling', '').trim()
+    return (
+      <>
+        <span className="text-secondary">Biro Psikologi Klinis & Konseling</span>{' '}
+        <span className="text-[#C27803] block sm:inline">{remainder}</span>
+      </>
+    )
+  }
+
+  // 3. Default English pattern: split anchor & action
+  if (text.includes('Licensed Clinical Psychology Bureau')) {
+    const remainder = text
+      .replace('Licensed Clinical Psychology Bureau &', '')
+      .replace('Licensed Clinical Psychology Bureau', '')
+      .trim()
+    return (
+      <>
+        <span className="text-secondary">Licensed Clinical Psychology Bureau &</span>{' '}
+        <span className="text-[#C27803] block sm:inline">{remainder}</span>
+      </>
+    )
+  }
+
+  // 4. Default ampersand split fallback
+  if (text.includes('&')) {
+    const [first, ...rest] = text.split('&')
+    return (
+      <>
+        <span className="text-secondary">{first?.trim()} &</span>{' '}
+        <span className="text-[#C27803] block sm:inline">{rest.join('&').trim()}</span>
+      </>
+    )
+  }
+
+  // 5. Fallback: single color
+  return <span className="text-secondary">{text}</span>
 }
 
 function parseMetricValue(raw: string) {
@@ -114,11 +180,40 @@ export function HomepageHero() {
     description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
     primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),
     secondaryAction: managed?.section.secondaryCta[managed.locale] ?? t('homepage.hero.secondaryAction'),
-    imageSrc: managed?.section.media?.reference
-      ? managed.section.media.reference.startsWith('/')
-        ? managed.section.media.reference
-        : `/${managed.section.media.reference}`
-      : '/media/landing/hero-slide-1.jpg',
+    imageSrc:
+      managed?.section.media?.reference &&
+      !managed.section.media.reference.includes('hero-slide-1') &&
+      !managed.section.media.reference.includes('malang')
+        ? managed.section.media.reference.startsWith('/')
+          ? managed.section.media.reference
+          : `/${managed.section.media.reference}`
+        : '/images/figma/consultation-hero.webp',
+  }
+
+  // Slide 2 data (from CMS slideItems[1] if customized, otherwise default i18n)
+  const customSlide2 = (managed?.section as any)?.slideItems?.[1]
+  const slide2 = {
+    tag: customSlide2?.tag?.[managed?.locale || 'id'] ?? t('homepage.hero.slides.petFriendly.tag'),
+    headline:
+      customSlide2?.headline?.[managed?.locale || 'id'] ??
+      `${t('homepage.hero.slides.petFriendly.headlineDark')} **${t('homepage.hero.slides.petFriendly.headlineAccent')}** ${t('homepage.hero.slides.petFriendly.headlineSub')}`,
+    description:
+      customSlide2?.description?.[managed?.locale || 'id'] ??
+      t('homepage.hero.slides.petFriendly.description'),
+    location:
+      customSlide2?.location?.[managed?.locale || 'id'] ??
+      t('homepage.hero.slides.petFriendly.location'),
+    primaryAction:
+      customSlide2?.primaryCta?.[managed?.locale || 'id'] ??
+      t('homepage.hero.slides.petFriendly.primaryCta'),
+    secondaryAction:
+      customSlide2?.secondaryCta?.[managed?.locale || 'id'] ??
+      t('homepage.hero.slides.petFriendly.secondaryCta'),
+    imageSrc: customSlide2?.media?.reference
+      ? customSlide2.media.reference.startsWith('/')
+        ? customSlide2.media.reference
+        : `/${customSlide2.media.reference}`
+      : '/images/pet-friendly/pet-friendly-1.jpg',
   }
 
   return (
@@ -157,11 +252,11 @@ export function HomepageHero() {
                   </div>
 
                   <h1
-                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
+                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
                     data-route-heading
                     tabIndex={-1}
                   >
-                    {slide1.headline}
+                    {renderDualColorHeading(slide1.headline)}
                   </h1>
 
                   <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-secondary/80 sm:text-base sm:leading-7">
@@ -247,25 +342,23 @@ export function HomepageHero() {
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-2 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold tracking-wider uppercase text-secondary shadow-2xs">
                       <PawPrint size={13} className="text-[#C27803]" />
-                      {t('homepage.hero.slides.petFriendly.tag')}
+                      {slide2.tag}
                     </span>
                   </div>
 
                   <h2
-                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
+                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
                   >
-                    <span>{t('homepage.hero.slides.petFriendly.headlineDark')} </span>
-                    <span className="text-[#C27803]">{t('homepage.hero.slides.petFriendly.headlineAccent')} </span>
-                    <span className="block sm:inline">{t('homepage.hero.slides.petFriendly.headlineSub')}</span>
+                    {renderDualColorHeading(slide2.headline)}
                   </h2>
 
                   <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-secondary/80 sm:text-base sm:leading-7">
-                    {t('homepage.hero.slides.petFriendly.description')}
+                    {slide2.description}
                   </p>
 
                   <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-secondary/70">
                     <PawPrint size={15} className="text-[#C27803]" />
-                    <span>{t('homepage.hero.slides.petFriendly.location')}</span>
+                    <span>{slide2.location}</span>
                   </div>
 
                   <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -279,7 +372,7 @@ export function HomepageHero() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <PawPrint size={16} className="text-primary" />
-                      <span>{t('homepage.hero.slides.petFriendly.primaryCta')}</span>
+                      <span>{slide2.primaryAction}</span>
                       <ArrowUpRight size={16} />
                     </motion.a>
 
@@ -289,8 +382,8 @@ export function HomepageHero() {
                       transition={INTERACTIVE_SPRING}
                       whileHover={{ x: 2 }}
                     >
-                      <span>{t('homepage.hero.slides.petFriendly.secondaryCta')}</span>
-                      <ArrowUpRight size={15} />
+                      <span>{slide2.secondaryAction}</span>
+                      <ArrowRight size={15} />
                     </motion.a>
                   </div>
                 </div>
@@ -300,7 +393,7 @@ export function HomepageHero() {
                   <div className="relative h-full w-full overflow-hidden rounded-tl-[80px] rounded-tr-[28px] rounded-br-[28px] rounded-bl-[28px] border border-secondary/15 bg-[#E8E2D5] shadow-md sm:rounded-tl-[120px]">
                     {/* Primary Feature Photo */}
                     <img
-                      src="/media/landing/pet-friendly/pet-friendly-1.jpg"
+                      src="/images/pet-friendly/pet-friendly-1.jpg"
                       alt="Attentive Pet Friendly Counseling"
                       className="h-full w-full object-cover object-center"
                       loading="lazy"
@@ -310,7 +403,7 @@ export function HomepageHero() {
                     {/* Inset Photo Overlay 1 (Corner thumbnail) */}
                     <div className="absolute top-4 left-4 z-10 hidden size-24 overflow-hidden rounded-xl border-2 border-white shadow-md sm:block lg:size-28">
                       <img
-                        src="/media/landing/pet-friendly/pet-friendly-2.jpg"
+                        src="/images/pet-friendly/pet-friendly-2.jpg"
                         alt="Anabul di ruang konseling"
                         className="h-full w-full object-cover"
                         loading="lazy"
@@ -320,7 +413,7 @@ export function HomepageHero() {
                     {/* Inset Photo Overlay 2 */}
                     <div className="absolute top-20 right-4 z-10 hidden size-20 overflow-hidden rounded-xl border-2 border-white shadow-md sm:block">
                       <img
-                        src="/media/landing/pet-friendly/pet-friendly-3.jpg"
+                        src="/images/pet-friendly/pet-friendly-3.jpg"
                         alt="Kenyamanan konseling bersama anabul"
                         className="h-full w-full object-cover"
                         loading="lazy"
@@ -415,32 +508,7 @@ export function HomepageHero() {
           </div>
         </div>
 
-        {/* 4 Trust Counter Metrics (Moved Beneath the Hero Card) */}
-        <dl className="mt-4 grid grid-cols-2 rounded-2xl bg-white/70 py-8 text-center sm:grid-cols-4 sm:py-10 shadow-2xs border border-secondary/10">
-          {metrics.map((metric, metricIndex) => (
-            <div
-              className="flex min-w-0 flex-col items-center border-r border-secondary/10 px-4 py-3 last:border-r-0 sm:px-5 lg:px-8"
-              key={metric.label}
-            >
-              <dt className="order-2 mt-3 text-xs font-bold uppercase tracking-wider text-secondary">
-                {metric.label}
-              </dt>
-              <dd className="flex flex-col items-center text-3xl font-extrabold tracking-[-0.03em] text-secondary sm:text-4xl">
-                <img
-                  alt=""
-                  className="mb-3 size-8 object-contain"
-                  height="32"
-                  loading="lazy"
-                  src={`/images/figma/trust-${metricIndex + 1}.svg`}
-                  width="32"
-                />
-                <AnimatedMetricValue value={metric.value} />
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        {/* Sub-Hero Command Strip (Featured Campaigns) */}
+        {/* Sub-Hero Command Strip (Featured Campaigns: Program & Layanan Unggulan) - NAIK KE SINI */}
         <div className="mt-8 rounded-2xl border border-secondary/10 bg-[#FAF7F2] p-6 sm:p-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -585,6 +653,31 @@ export function HomepageHero() {
             </motion.a>
           </div>
         </div>
+
+        {/* 4 Trust Counter Metrics (DI BAWAHNYA Program & Layanan Unggulan) */}
+        <dl className="mt-6 grid grid-cols-2 rounded-2xl bg-white/70 py-8 text-center sm:grid-cols-4 sm:py-10 shadow-2xs border border-secondary/10">
+          {metrics.map((metric, metricIndex) => (
+            <div
+              className="flex min-w-0 flex-col items-center border-r border-secondary/10 px-4 py-3 last:border-r-0 sm:px-5 lg:px-8"
+              key={metric.label}
+            >
+              <dt className="order-2 mt-3 text-xs font-bold uppercase tracking-wider text-secondary">
+                {metric.label}
+              </dt>
+              <dd className="flex flex-col items-center text-3xl font-extrabold tracking-[-0.03em] text-secondary sm:text-4xl">
+                <img
+                  alt=""
+                  className="mb-3 size-8 object-contain"
+                  height="32"
+                  loading="lazy"
+                  src={`/images/figma/trust-${metricIndex + 1}.svg`}
+                  width="32"
+                />
+                <AnimatedMetricValue value={metric.value} />
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   )

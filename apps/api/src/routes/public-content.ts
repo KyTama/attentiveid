@@ -1,4 +1,6 @@
 import { Elysia, t } from 'elysia';
+import path from 'node:path';
+import { getMediaFilePath } from '../services/media-storage';
 import type { LandingContentRead } from '../repositories/landing-content.repository';
 import type {
     PsychologistListQuery,
@@ -80,6 +82,35 @@ export const createPublicContentRoutes = (dependencies: PublicContentDependencie
         status: 'found' as const,
         landing: await dependencies.landingRepository.getPublished()
     }))
+    .get('/api/content/og-image', async ({ set }) => {
+        try {
+            const landing = await dependencies.landingRepository.getPublished();
+            const heroSection = landing?.content.sections.find((s) => s.key === 'hero');
+            const mediaRef = heroSection?.media?.reference;
+            if (mediaRef) {
+                const cleanRef = mediaRef.startsWith('/') ? mediaRef.slice(1) : mediaRef;
+                const diskPath = getMediaFilePath(cleanRef) || path.resolve(process.cwd(), 'apps/web/public', cleanRef);
+                const file = Bun.file(diskPath);
+                if (await file.exists()) {
+                    set.headers['content-type'] = file.type || 'image/jpeg';
+                    set.headers['cache-control'] = 'public, max-age=3600, stale-while-revalidate=86400';
+                    return file;
+                }
+            }
+        } catch {
+            // fallback
+        }
+
+        const fallback = Bun.file(path.resolve(process.cwd(), 'apps/web/public/images/og-attentive.jpg'));
+        if (await fallback.exists()) {
+            set.headers['content-type'] = 'image/jpeg';
+            set.headers['cache-control'] = 'public, max-age=3600, stale-while-revalidate=86400';
+            return fallback;
+        }
+
+        set.status = 404;
+        return 'Not Found';
+    })
     .get('/api/content/psychologists/featured', async ({ query }) => ({
         status: 'found' as const,
         psychologists: await dependencies.psychologistsRepository.featured(query.locale)
