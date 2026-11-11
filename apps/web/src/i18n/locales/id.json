@@ -502,6 +502,8 @@
       "languageSwitch": "Ganti bahasa ke {{language}}"
     },
     "hero": {
+      "kicker": "THE LATEST AT ATTENTIVE",
+      "kickerSub": "Tempat baru. Cara baru memahami dirimu.",
       "title": "Biro Psikologi Klinis & Konseling Profesional Berizin Resmi",
       "description": "Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat bersama psikolog berlisensi SIP resmi.",
       "primaryAction": "Jadwalkan Konsultasi",
@@ -511,6 +513,38 @@
       "imageAlt": "Psikolog Attentive yang siap mendengarkan",
       "imageCardTitle": "Dukungan yang mengikuti kebutuhanmu",
       "imageCardBody": "Mulai dari ceritamu, kenyamananmu, dan dukungan yang sedang kamu butuhkan.",
+      "tickerPillars": [
+        "Layanan psikologis beretika & berizin",
+        "Ruang aman untuk didengar",
+        "Konseling sesuai ritme kenyamananmu"
+      ],
+      "slides": {
+        "malang": {
+          "tag": "Lokasi Baru · Malang",
+          "headlineDark": "Hello, Malang.",
+          "headlineAccent": "Kami hadir untukmu.",
+          "description": "Ruang baru untuk didengar, dipahami, dan didukung. Attentive Malang kini menyambut Anda untuk layanan psikologi tatap muka langsung.",
+          "location": "Tunggulwulung, Kota Malang",
+          "primaryCta": "Jelajahi Attentive Malang",
+          "secondaryCta": "Jadwalkan Sesi",
+          "badge": "NOW OPEN +",
+          "cardEyebrow": "COME AS YOU ARE",
+          "cardTitle": "Ruang awal untuk bertumbuh."
+        },
+        "petFriendly": {
+          "tag": "Ruang Ramah Anabul · Malang",
+          "headlineDark": "Biro Psikologi",
+          "headlineAccent": "Pet Friendly.",
+          "headlineSub": "Konseling ditemani anabul tersayang.",
+          "description": "Di Attentive Malang, kamu boleh mengajak hewan peliharaan kesayanganmu ke sesi konseling tatap muka. Menghadirkan rasa tenang, grounded, dan bebas cemas.",
+          "location": "Ramah Kucing & Anjing · Ruang Konseling Tenang",
+          "primaryCta": "Konsultasi Ramah Anabul",
+          "secondaryCta": "Lihat Lokasi Malang",
+          "badge": "PAW FRIENDLY 🐾",
+          "cardEyebrow": "COMFORT FIRST",
+          "cardTitle": "Karena mereka juga bagian dari penyembuhanmu."
+        }
+      },
       "metrics": [
         { "value": "3.000+", "label": "Sesi terlaksana" },
         { "value": "18", "label": "Psikolog" },

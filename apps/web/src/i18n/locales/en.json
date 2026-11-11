@@ -502,6 +502,8 @@
       "languageSwitch": "Switch language to {{language}}"
     },
     "hero": {
+      "kicker": "THE LATEST AT ATTENTIVE",
+      "kickerSub": "New places. New ways to understand yourself.",
       "title": "Licensed Clinical Psychology Bureau & Professional Counseling",
       "description": "Private in-person consultations in Jakarta, BSD, and Malang, or online video counseling with licensed psychologists.",
       "primaryAction": "Book Consultation",
@@ -511,6 +513,38 @@
       "imageAlt": "Attentive psychologist ready to listen",
       "imageCardTitle": "Care shaped around you",
       "imageCardBody": "Start with your story, your comfort, and the kind of support you need.",
+      "tickerPillars": [
+        "Thoughtful psychological support",
+        "Space to feel understood",
+        "Care at your own pace"
+      ],
+      "slides": {
+        "malang": {
+          "tag": "New Location · Malang",
+          "headlineDark": "Hello, Malang.",
+          "headlineAccent": "We're here for you.",
+          "description": "A new space to feel heard, understood, and supported. Attentive Malang is now welcoming you for in-person psychological services.",
+          "location": "Tunggulwulung, Kota Malang",
+          "primaryCta": "Explore our Malang space",
+          "secondaryCta": "Book a session",
+          "badge": "NOW OPEN +",
+          "cardEyebrow": "COME AS YOU ARE",
+          "cardTitle": "A new place to begin."
+        },
+        "petFriendly": {
+          "tag": "Safe Space · Pet Friendly · Malang",
+          "headlineDark": "Pet Friendly",
+          "headlineAccent": "Psychology Bureau.",
+          "headlineSub": "Comfort with companions.",
+          "description": "At Attentive Malang, you are warmly welcomed to bring your pet companions to in-person sessions. Creating a grounded, comforting, and anxiety-free healing space.",
+          "location": "Cat & Dog Friendly · Calm Acoustic Suite",
+          "primaryCta": "Book Pet-Friendly Session",
+          "secondaryCta": "Explore Malang Clinic",
+          "badge": "PAW FRIENDLY 🐾",
+          "cardEyebrow": "COMFORT FIRST",
+          "cardTitle": "Because they are part of your healing journey."
+        }
+      },
       "metrics": [
         { "value": "3,000+", "label": "Sessions delivered" },
         { "value": "18", "label": "Psychologists" },

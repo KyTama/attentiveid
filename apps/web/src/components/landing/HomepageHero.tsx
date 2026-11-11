@@ -1,12 +1,23 @@
-import { animate, motion, useInView } from 'framer-motion'
-import { ArrowRight, ArrowUpRight, CalendarCheck2, ClipboardCheck, Gift, Sparkles } from 'lucide-react'
+import { animate, AnimatePresence, motion, useInView } from 'framer-motion'
+import {
+  ArrowRight,
+  ArrowUpRight,
+  CalendarCheck2,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Gift,
+  MapPin,
+  PawPrint,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
 import { useCampaignDock } from './use-campaign-dock'
-import { HeroCarousel, type HeroCarouselSlide } from './HeroCarousel'
 
 interface TrustMetric {
   label: string
@@ -55,11 +66,12 @@ function AnimatedMetricValue({ value }: { value: string }) {
           setDisplayValue(`${prefix}${formatted}${suffix}`)
         } else {
           const rounded = Math.round(latest)
-          const formatted = sep === ','
-            ? rounded.toLocaleString('en-US')
-            : sep === '.'
-            ? rounded.toLocaleString('id-ID')
-            : rounded.toString()
+          const formatted =
+            sep === ','
+              ? rounded.toLocaleString('en-US')
+              : sep === '.'
+              ? rounded.toLocaleString('id-ID')
+              : rounded.toString()
           setDisplayValue(`${prefix}${formatted}${suffix}`)
         }
       },
@@ -80,140 +92,356 @@ function AnimatedMetricValue({ value }: { value: string }) {
 
 export function HomepageHero() {
   const { i18n, t } = useTranslation()
-  const isId = i18n.resolvedLanguage === 'id'
+  const isId = i18n.resolvedLanguage === 'id' || i18n.language === 'id'
   const { isDismissed, restoreDock } = useCampaignDock()
+  const [activeSlide, setActiveSlide] = useState(0)
+
   const managed = useLandingSection('hero')
   const metrics = managed
     ? [...managed.section.items]
-      .sort((left, right) => left.position - right.position)
-      .map((item) => ({ label: item.title[managed.locale], value: item.description[managed.locale] }))
-    : t('homepage.hero.metrics', { returnObjects: true }) as TrustMetric[]
-  const copy = {
+        .sort((left, right) => left.position - right.position)
+        .map((item) => ({ label: item.title[managed.locale], value: item.description[managed.locale] }))
+    : (t('homepage.hero.metrics', { returnObjects: true }) as TrustMetric[])
+
+  const totalSlides = 2
+
+  const nextSlide = () => setActiveSlide((prev) => (prev + 1) % totalSlides)
+  const prevSlide = () => setActiveSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
+
+  // As-is Slide 1 data (from CMS / Database if available, or static fallback)
+  const slide1 = {
+    headline: managed?.section.headline[managed.locale] ?? t('homepage.hero.title'),
     description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
     primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),
     secondaryAction: managed?.section.secondaryCta[managed.locale] ?? t('homepage.hero.secondaryAction'),
-    title: managed?.section.headline[managed.locale] ?? t('homepage.hero.title'),
+    imageSrc: managed?.section.media?.reference
+      ? managed.section.media.reference.startsWith('/')
+        ? managed.section.media.reference
+        : `/${managed.section.media.reference}`
+      : '/media/landing/hero-slide-1.jpg',
   }
 
   return (
-    <section className="relative border-b border-secondary/10" id="home">
-      <div className="mx-auto grid min-h-[38rem] max-w-7xl items-stretch lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="min-w-0 flex flex-col justify-center px-5 py-16 sm:px-8 lg:px-8 lg:py-20">
-          <h1
-            className="max-w-3xl text-balance font-sans text-[clamp(2.5rem,4.3vw,3.75rem)] font-bold leading-[1.18] tracking-tight text-secondary outline-none"
-            data-route-heading
-            tabIndex={-1}
-          >
-            {copy.title}
-          </h1>
-          <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed sm:leading-8 font-[450] text-secondary sm:text-lg">
-            {copy.description}
-          </p>
-
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            {/* Primary Action on Left: Plan your session */}
-            <motion.a
-              href="https://booking.attentiveid.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center gap-3 rounded-md bg-secondary px-6 py-4 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer sm:w-auto"
-              transition={INTERACTIVE_SPRING}
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <CalendarCheck2 aria-hidden="true" size={18} className="text-primary" />
-              {copy.primaryAction}
-            </motion.a>
-
-            {/* Secondary Action on Right: Find your Psychologist */}
-            <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                className="inline-flex w-full items-center justify-center gap-3 rounded-md border border-secondary/20 bg-white/70 px-6 py-4 text-sm font-semibold text-secondary shadow-2xs outline-none hover:bg-white hover:border-secondary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
-                to="/psychologists"
-              >
-                {copy.secondaryAction}
-                <ArrowRight aria-hidden="true" size={18} />
-              </Link>
-            </motion.div>
+    <section className="relative border-b border-secondary/10 bg-[#FAF7F2]" id="home">
+      <div className="mx-auto max-w-7xl px-4 pt-6 pb-8 sm:px-6 sm:pt-8 sm:pb-12 lg:px-8">
+        {/* Top Kicker Bar */}
+        <div className="flex items-center justify-between border-b border-secondary/10 pb-3 text-xs tracking-wider">
+          <div className="flex items-center gap-2 font-bold uppercase text-secondary/70">
+            <span className="inline-block h-px w-4 bg-secondary/50" />
+            <span>{t('homepage.hero.kicker')}</span>
           </div>
-          <p className="mt-6 text-sm font-medium text-secondary/90">{t('homepage.hero.reassurance')}</p>
+          <span className="hidden font-medium text-secondary/60 sm:inline">
+            {t('homepage.hero.kickerSub')}
+          </span>
+        </div>
 
-          {/* Reopen quick bar button directly in Hero */}
-          {isDismissed && (
-            <div className="mt-4">
+        {/* Main Editorial Hero Highlight Card */}
+        <div className="relative mt-4 overflow-hidden rounded-[2rem] border border-secondary/15 bg-white p-6 shadow-sm sm:p-10 lg:p-12">
+          <AnimatePresence mode="wait">
+            {activeSlide === 0 ? (
+              <motion.div
+                key="slide-as-is"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={INTERACTIVE_SPRING}
+                className="grid min-h-[440px] grid-cols-1 items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12"
+              >
+                {/* Left Column: As-Is Headline & CTAs */}
+                <div className="flex flex-col justify-center">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold tracking-wider uppercase text-secondary shadow-2xs">
+                      <ShieldCheck size={13} className="text-[#C27803]" />
+                      {isId ? 'Biro Psikologi Klinis · Berizin SIP Resmi' : 'Licensed Clinical Psychology Bureau'}
+                    </span>
+                  </div>
+
+                  <h1
+                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
+                    data-route-heading
+                    tabIndex={-1}
+                  >
+                    {slide1.headline}
+                  </h1>
+
+                  <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-secondary/80 sm:text-base sm:leading-7">
+                    {slide1.description}
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-secondary/70">
+                    <MapPin size={15} className="text-[#C27803]" />
+                    <span>{isId ? 'Jakarta · BSD · Malang · Video Konseling Online' : 'Jakarta · BSD · Malang · Online Video Counseling'}</span>
+                  </div>
+
+                  <div className="mt-8 flex flex-wrap items-center gap-4">
+                    <motion.a
+                      href="https://booking.attentiveid.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <CalendarCheck2 size={16} className="text-primary" />
+                      <span>{slide1.primaryAction}</span>
+                      <ArrowUpRight size={16} />
+                    </motion.a>
+
+                    <motion.div transition={INTERACTIVE_SPRING} whileHover={{ x: 2 }}>
+                      <Link
+                        to="/psychologists"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
+                      >
+                        <span>{slide1.secondaryAction}</span>
+                        <ArrowRight size={15} />
+                      </Link>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Right Column: Architectural Arch Image with Floating Badges */}
+                <div className="relative min-h-[320px] w-full sm:min-h-[400px] lg:min-h-[440px]">
+                  {/* Outer arch window container */}
+                  <div className="relative h-full w-full overflow-hidden rounded-tl-[80px] rounded-tr-[28px] rounded-br-[28px] rounded-bl-[28px] border border-secondary/15 bg-[#E8E2D5] shadow-md sm:rounded-tl-[120px]">
+                    <img
+                      src={slide1.imageSrc}
+                      alt="Konsultasi Psikologi Attentive"
+                      className="h-full w-full object-cover object-center"
+                      loading="eager"
+                      width="1600"
+                      height="900"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+                  </div>
+
+                  {/* Floating Badge Top-Right: SIP RESMI */}
+                  <div className="absolute -top-3 -right-3 z-20 flex size-18 flex-col items-center justify-center rounded-full border-2 border-white bg-[#E5A824] text-secondary shadow-lg sm:size-20">
+                    <span className="text-[10px] font-bold tracking-tight uppercase sm:text-xs">SIP</span>
+                    <span className="text-xs font-extrabold tracking-tight uppercase sm:text-sm">RESMI</span>
+                    <span className="text-xs font-bold sm:text-sm">+</span>
+                  </div>
+
+                  {/* Floating Glass Card Bottom-Left */}
+                  <div className="absolute bottom-4 left-4 z-20 max-w-[260px] rounded-2xl border border-secondary/15 bg-white/95 p-4 shadow-lg backdrop-blur-md sm:max-w-[290px]">
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-secondary/60">
+                      {isId ? 'COME AS YOU ARE' : 'COME AS YOU ARE'}
+                    </span>
+                    <p className="mt-0.5 text-xs font-bold text-secondary sm:text-sm">
+                      {isId ? 'Ruang aman untuk didengar.' : 'A safe space to be heard.'}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="slide-pet-friendly"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={INTERACTIVE_SPRING}
+                className="grid min-h-[440px] grid-cols-1 items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12"
+              >
+                {/* Left Column: Typography & CTAs for Pet Friendly */}
+                <div className="flex flex-col justify-center">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold tracking-wider uppercase text-secondary shadow-2xs">
+                      <PawPrint size={13} className="text-[#C27803]" />
+                      {t('homepage.hero.slides.petFriendly.tag')}
+                    </span>
+                  </div>
+
+                  <h2
+                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
+                  >
+                    <span>{t('homepage.hero.slides.petFriendly.headlineDark')} </span>
+                    <span className="text-[#C27803]">{t('homepage.hero.slides.petFriendly.headlineAccent')} </span>
+                    <span className="block sm:inline">{t('homepage.hero.slides.petFriendly.headlineSub')}</span>
+                  </h2>
+
+                  <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-secondary/80 sm:text-base sm:leading-7">
+                    {t('homepage.hero.slides.petFriendly.description')}
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-secondary/70">
+                    <PawPrint size={15} className="text-[#C27803]" />
+                    <span>{t('homepage.hero.slides.petFriendly.location')}</span>
+                  </div>
+
+                  <div className="mt-8 flex flex-wrap items-center gap-4">
+                    <motion.a
+                      href="https://booking.attentiveid.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <PawPrint size={16} className="text-primary" />
+                      <span>{t('homepage.hero.slides.petFriendly.primaryCta')}</span>
+                      <ArrowUpRight size={16} />
+                    </motion.a>
+
+                    <motion.a
+                      href="#locations"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ x: 2 }}
+                    >
+                      <span>{t('homepage.hero.slides.petFriendly.secondaryCta')}</span>
+                      <ArrowUpRight size={15} />
+                    </motion.a>
+                  </div>
+                </div>
+
+                {/* Right Column: Pet-Friendly Asymmetric Collage with Floating Badges */}
+                <div className="relative min-h-[320px] w-full sm:min-h-[400px] lg:min-h-[440px]">
+                  <div className="relative h-full w-full overflow-hidden rounded-tl-[80px] rounded-tr-[28px] rounded-br-[28px] rounded-bl-[28px] border border-secondary/15 bg-[#E8E2D5] shadow-md sm:rounded-tl-[120px]">
+                    {/* Primary Feature Photo */}
+                    <img
+                      src="/media/landing/pet-friendly/pet-friendly-1.jpg"
+                      alt="Attentive Pet Friendly Counseling"
+                      className="h-full w-full object-cover object-center"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
+
+                    {/* Inset Photo Overlay 1 (Corner thumbnail) */}
+                    <div className="absolute top-4 left-4 z-10 hidden size-24 overflow-hidden rounded-xl border-2 border-white shadow-md sm:block lg:size-28">
+                      <img
+                        src="/media/landing/pet-friendly/pet-friendly-2.jpg"
+                        alt="Anabul di ruang konseling"
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    {/* Inset Photo Overlay 2 */}
+                    <div className="absolute top-20 right-4 z-10 hidden size-20 overflow-hidden rounded-xl border-2 border-white shadow-md sm:block">
+                      <img
+                        src="/media/landing/pet-friendly/pet-friendly-3.jpg"
+                        alt="Kenyamanan konseling bersama anabul"
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Floating Badge Top-Right: PAW FRIENDLY */}
+                  <div className="absolute -top-3 -right-3 z-20 flex size-18 flex-col items-center justify-center rounded-full border-2 border-white bg-[#E5A824] text-secondary shadow-lg sm:size-20">
+                    <span className="text-[10px] font-bold tracking-tight uppercase sm:text-xs">PAW</span>
+                    <span className="text-xs font-extrabold tracking-tight uppercase sm:text-sm">FRIENDLY</span>
+                    <span className="text-xs sm:text-sm">🐾</span>
+                  </div>
+
+                  {/* Floating Glass Card Bottom-Left */}
+                  <div className="absolute bottom-4 left-4 z-20 max-w-[260px] rounded-2xl border border-secondary/15 bg-white/95 p-4 shadow-lg backdrop-blur-md sm:max-w-[290px]">
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-secondary/60">
+                      {t('homepage.hero.slides.petFriendly.cardEyebrow')}
+                    </span>
+                    <p className="mt-0.5 text-xs font-bold text-secondary sm:text-sm">
+                      {t('homepage.hero.slides.petFriendly.cardTitle')}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Bottom Slide Controller (Pagination & Navigation) */}
+          <div className="mt-8 flex items-center justify-between border-t border-secondary/10 pt-5">
+            {/* Left: Numeric index & segmented progress pills */}
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs font-bold text-secondary">
+                {String(activeSlide + 1).padStart(2, '0')}&nbsp;/&nbsp;{String(totalSlides).padStart(2, '0')}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalSlides }).map((_, index) => (
+                  <button
+                    key={`hero-pill-${index}`}
+                    type="button"
+                    onClick={() => setActiveSlide(index)}
+                    aria-label={`Go to slide ${index + 1}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      activeSlide === index ? 'w-8 bg-[#C27803]' : 'w-4 bg-secondary/20 hover:bg-secondary/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Manual Arrow Controls */}
+            <div className="flex items-center gap-2">
               <motion.button
                 type="button"
-                onClick={restoreDock}
-                className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-secondary shadow-2xs hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                onClick={prevSlide}
+                aria-label="Previous slide"
+                className="grid size-10 place-items-center rounded-full border border-secondary/20 bg-white text-secondary shadow-2xs hover:border-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 transition={INTERACTIVE_SPRING}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Sparkles size={12} className="text-primary" />
-                <span>{isId ? 'Tampilkan bar layanan di bawah' : 'Show quick bar'}</span>
+                <ChevronLeft size={18} strokeWidth={2.2} />
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={nextSlide}
+                aria-label="Next slide"
+                className="grid size-10 place-items-center rounded-full border border-secondary/20 bg-white text-secondary shadow-2xs hover:border-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                transition={INTERACTIVE_SPRING}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ChevronRight size={18} strokeWidth={2.2} />
               </motion.button>
             </div>
-          )}
+          </div>
         </div>
 
-        <div className="relative min-w-0 min-h-[22rem] overflow-hidden rounded-tl-[6rem] bg-[#ded8cd] sm:min-h-[30rem] lg:my-8 lg:min-h-0 lg:rounded-tl-[10rem]">
-          {(() => {
-            const heroMedia = managed?.section.media
-            const heroImageSrc = heroMedia?.reference
-              ? (heroMedia.reference.startsWith('/') ? heroMedia.reference : `/${heroMedia.reference}`)
-              : '/images/figma/consultation-hero.webp'
-            const heroImageAlt = (heroMedia?.alt && managed?.locale && heroMedia.alt[managed.locale])
-              ? heroMedia.alt[managed.locale]
-              : t('homepage.hero.imageAlt')
-            const heroImageWidth = heroMedia?.width ?? 1600
-            const heroImageHeight = heroMedia?.height ?? 901
-
-            const heroSlides = (managed?.section.slides && managed.section.slides.length > 0)
-              ? managed.section.slides
-              : null
-
-            const slides: HeroCarouselSlide[] = heroSlides
-              ? heroSlides.map((slide, idx) => {
-                  const src = slide.reference.startsWith('/') ? slide.reference : `/${slide.reference}`
-                  const alt = (slide.alt && managed?.locale && slide.alt[managed.locale])
-                    ? slide.alt[managed.locale]
-                    : (slide.alt?.id || t('homepage.hero.imageAlt'))
-                  return {
-                    id: `hero-slide-${idx}-${slide.reference}`,
-                    imageSrc: src,
-                    alt,
-                    tag: idx === 0
-                      ? (isId ? 'Konseling Tatap Muka & Daring' : 'In-Person & Online Counseling')
-                      : (isId ? `Sorotan Layanan #${idx + 1}` : `Service Highlight #${idx + 1}`),
-                    caption: isId
-                      ? (slide.alt?.id || 'Sesi privat bersama psikolog berlisensi SIP resmi di ruang kedap suara.')
-                      : (slide.alt?.en || 'Private sessions with licensed clinical psychologists in quiet acoustic suites.'),
-                    width: slide.width ?? 1600,
-                    height: slide.height ?? 901,
-                  }
-                })
-              : [
-                  {
-                    id: 'consultation-primary',
-                    imageSrc: heroImageSrc,
-                    alt: heroImageAlt,
-                    tag: isId ? 'Konseling Tatap Muka & Daring' : 'In-Person & Online Counseling',
-                    caption: isId
-                      ? 'Sesi privat bersama psikolog berlisensi SIP resmi di ruang kedap suara.'
-                      : 'Private sessions with licensed clinical psychologists in quiet acoustic suites.',
-                    width: heroImageWidth,
-                    height: heroImageHeight,
-                  },
-                ]
-
-            return <HeroCarousel slides={slides} />
-          })()}
+        {/* Minimalist Trust Ticker Ribbon */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 border-y border-secondary/10 py-5 text-center text-xs font-bold tracking-wide text-secondary/75 sm:gap-8 sm:text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-[#C27803]">✻</span>
+            <span>{t('homepage.hero.tickerPillars.0')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#C27803]">✻</span>
+            <span>{t('homepage.hero.tickerPillars.1')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#C27803]">✻</span>
+            <span>{t('homepage.hero.tickerPillars.2')}</span>
+          </div>
         </div>
-      </div>
 
-      {/* Sub-Hero Command Strip (Option B) */}
-      <div className="border-t border-secondary/10 bg-[#faf6ee] px-5 py-8 sm:px-8 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+        {/* 4 Trust Counter Metrics (Moved Beneath the Hero Card) */}
+        <dl className="mt-4 grid grid-cols-2 rounded-2xl bg-white/70 py-8 text-center sm:grid-cols-4 sm:py-10 shadow-2xs border border-secondary/10">
+          {metrics.map((metric, metricIndex) => (
+            <div
+              className="flex min-w-0 flex-col items-center border-r border-secondary/10 px-4 py-3 last:border-r-0 sm:px-5 lg:px-8"
+              key={metric.label}
+            >
+              <dt className="order-2 mt-3 text-xs font-bold uppercase tracking-wider text-secondary">
+                {metric.label}
+              </dt>
+              <dd className="flex flex-col items-center text-3xl font-extrabold tracking-[-0.03em] text-secondary sm:text-4xl">
+                <img
+                  alt=""
+                  className="mb-3 size-8 object-contain"
+                  height="32"
+                  loading="lazy"
+                  src={`/images/figma/trust-${metricIndex + 1}.svg`}
+                  width="32"
+                />
+                <AnimatedMetricValue value={metric.value} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* Sub-Hero Command Strip (Featured Campaigns) */}
+        <div className="mt-8 rounded-2xl border border-secondary/10 bg-[#FAF7F2] p-6 sm:p-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <span className="grid size-6 place-items-center rounded-full bg-primary/20 text-[#8C6013]">
@@ -223,7 +451,7 @@ export function HomepageHero() {
                 {t('homepage.campaigns.eyebrow')}
               </span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-secondary/70">
                 {t('homepage.campaigns.description')}
@@ -245,7 +473,7 @@ export function HomepageHero() {
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {/* Card 1: First Free Session Consultation */}
+            {/* Card 1: First Free Session */}
             <motion.a
               href="https://free-session.attentiveid.com"
               target="_blank"
@@ -274,11 +502,15 @@ export function HomepageHero() {
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-[#E9B949]/20 pt-3 text-xs sm:text-sm font-semibold text-[#8C6013]">
                 <span>{t('homepage.campaigns.freeSession.cta')}</span>
-                <ArrowUpRight size={16} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight
+                  size={16}
+                  strokeWidth={2.5}
+                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
               </div>
             </motion.a>
 
-            {/* Card 2: Booking / Reserve Psychologist */}
+            {/* Card 2: Booking / Reserve */}
             <motion.a
               href="https://booking.attentiveid.com/"
               target="_blank"
@@ -307,7 +539,11 @@ export function HomepageHero() {
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-secondary/10 pt-3 text-xs sm:text-sm font-semibold text-secondary group-hover:text-primary">
                 <span>{t('homepage.campaigns.booking.cta')}</span>
-                <ArrowUpRight size={16} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight
+                  size={16}
+                  strokeWidth={2.5}
+                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
               </div>
             </motion.a>
 
@@ -340,24 +576,16 @@ export function HomepageHero() {
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-secondary/10 pt-3 text-xs sm:text-sm font-semibold text-[#1E568A]">
                 <span>{t('homepage.campaigns.testCentre.cta')}</span>
-                <ArrowUpRight size={16} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight
+                  size={16}
+                  strokeWidth={2.5}
+                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
               </div>
             </motion.a>
           </div>
         </div>
       </div>
-
-      <dl className="mx-auto grid max-w-7xl grid-cols-2 bg-white py-10 text-center sm:grid-cols-4">
-        {metrics.map((metric, metricIndex) => (
-          <div className="flex min-w-0 flex-col items-center border-r border-primary/30 px-4 py-6 last:border-r-0 sm:px-5 lg:px-8" key={metric.label}>
-            <dt className="order-2 mt-3 text-xs font-bold uppercase tracking-wider text-secondary">{metric.label}</dt>
-            <dd className="flex flex-col items-center text-4xl font-bold tracking-[-0.03em] text-secondary sm:text-5xl">
-              <img alt="" className="mb-4 size-9 object-contain" height="36" loading="lazy" src={`/images/figma/trust-${metricIndex + 1}.svg`} width="36" />
-              <AnimatedMetricValue value={metric.value} />
-            </dd>
-          </div>
-        ))}
-      </dl>
     </section>
   )
 }
