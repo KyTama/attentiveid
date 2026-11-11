@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Building2, CalendarCheck2, CalendarClock, Car, ExternalLink, MapPin, ShieldCheck } from 'lucide-react'
+import { Building2, CalendarCheck2, CalendarClock, Car, ExternalLink, MapPin, Navigation, ShieldCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { clinicBranches, type ClinicBranch } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
@@ -96,12 +96,37 @@ export function OurLocations() {
                     {branchDescription}
                   </p>
 
-                  {/* Address Section */}
-                  <div className="mt-6 flex items-start gap-3 rounded-xl border border-secondary/10 bg-white p-4">
-                    <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
-                    <p className="text-xs leading-relaxed font-medium text-secondary">
-                      {branchAddress}
-                    </p>
+                  {/* Address Section with Google Maps Link directly above */}
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between pb-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-secondary/70">
+                        {t('homepage.locations.addressLabel', 'Alamat Praktik')}
+                      </span>
+                      {branch.mapsUrl && (
+                        <a
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors group/link"
+                          href={branch.mapsUrl}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          <Navigation aria-hidden="true" className="size-3 text-primary" />
+                          <span className="underline underline-offset-2">{t('homepage.locations.openMaps', 'Buka di Google Maps')}</span>
+                          <ExternalLink aria-hidden="true" className="size-3 opacity-60 transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+                        </a>
+                      )}
+                    </div>
+
+                    <a
+                      className="group/address flex items-start gap-3 rounded-xl border border-secondary/10 bg-white p-4 transition-all hover:border-primary/40 hover:shadow-xs"
+                      href={branch.mapsUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary transition-transform group-hover/address:scale-110" />
+                      <p className="text-xs leading-relaxed font-medium text-secondary group-hover/address:text-secondary/90">
+                        {branchAddress}
+                      </p>
+                    </a>
                   </div>
 
                   {/* Feature Pills */}
@@ -118,70 +143,34 @@ export function OurLocations() {
                   </div>
                 </div>
 
-                {/* Card Action Buttons (Dual Buttons: Booking / Plan Session + Google Maps) */}
-                <div className="mt-8 grid gap-2.5 pt-5 border-t border-secondary/10">
+                {/* Card Action Button */}
+                <div className="mt-8 pt-5 border-t border-secondary/10">
                   {isOpeningSoon ? (
-                    <>
-                      <motion.a
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                        href="https://booking.attentiveid.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        transition={INTERACTIVE_SPRING}
-                        whileHover={{ y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
-                        <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
-                      </motion.a>
-
-                      {branch.mapsUrl && (
-                        <motion.a
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary/20 bg-white/70 px-4 py-2.5 text-xs font-semibold text-secondary shadow-2xs hover:bg-white hover:border-secondary/35 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                          href={branch.mapsUrl}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                          transition={INTERACTIVE_SPRING}
-                          whileHover={{ y: -1 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <MapPin aria-hidden="true" className="size-3.5 text-primary" />
-                          <span>{t('homepage.locations.openMaps', 'Buka di Google Maps')}</span>
-                          <ExternalLink aria-hidden="true" className="size-3 opacity-60" />
-                        </motion.a>
-                      )}
-                    </>
+                    <motion.a
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                      href="https://booking.attentiveid.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
+                      <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
+                    </motion.a>
                   ) : (
-                    <>
-                      {/* Button 1: Plan Offline Session */}
-                      <motion.a
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                        href="https://booking.attentiveid.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        transition={INTERACTIVE_SPRING}
-                        whileHover={{ y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
-                        <span>{t('homepage.locations.planOfflineSession', 'Jadwalkan Sesi Offline')}</span>
-                      </motion.a>
-
-                      {/* Button 2: Google Maps Link */}
-                      <motion.a
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary/20 bg-white/70 px-4 py-2.5 text-xs font-semibold text-secondary shadow-2xs hover:bg-white hover:border-secondary/35 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                        href={branch.mapsUrl}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                        transition={INTERACTIVE_SPRING}
-                        whileHover={{ y: -1 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <MapPin aria-hidden="true" className="size-3.5 text-primary" />
-                        <span>{t('homepage.locations.openMaps', 'Buka di Google Maps')}</span>
-                        <ExternalLink aria-hidden="true" className="size-3 opacity-60" />
-                      </motion.a>
-                    </>
+                    <motion.a
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                      href="https://booking.attentiveid.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
+                      <span>{t('homepage.locations.planOfflineSession', 'Jadwalkan Sesi Offline')}</span>
+                    </motion.a>
                   )}
                 </div>
               </motion.div>
