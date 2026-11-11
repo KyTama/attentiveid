@@ -143,3 +143,12 @@
   2. Define a shared Docker volume (`attentive_media`) mounted read-write to API at `/app/apps/api/uploads/media` and read-only to Web at `/srv/media:ro`.
   3. Copy seed media assets during Docker build into `/app/apps/api/uploads/media` with `bun:bun` ownership (UID 1000) so newly created volumes initialize with seed photos.
   4. Provide native high-performance Bun static file serving in the API (`/media/*` and `/api/media/*`) using `Bun.file()` with directory traversal guards so assets are accessible through both reverse proxy paths.
+
+## 20. Content Transitions Method Signatures & Atomic CMS Publish
+- **Problem**:
+  1. Method naming mismatch between routes and services: `landing-cms.ts` called `publishLandingRevision(adminCap, timestamp)` while `content-transitions.ts` only exposed `publishLandingDraft(adminCap, revisionId)`. This caused runtime `TypeError: publishLandingRevision is not a function`.
+  2. If the user clicked "Publish" without saving an active draft first, or if no active draft existed (`activeDraftRevisionId: null`), publishing failed.
+- **Solution**:
+  1. Align service methods: support both `publishLandingDraft(adminCap, revisionId?)` and alias `publishLandingRevision(adminCap, revisionId?)`. If `revisionId` is omitted, automatically target `aggregate.activeDraftRevisionId`.
+  2. Allow `POST /api/admin/landing/publish` to accept optional `body: LandingContentMutation`: if provided, create the draft and publish it atomically in one step so on-screen edits in the CMS are always published live immediately.
+  3. Ensure mock dependencies in unit tests provide full function signatures so API test suites catch missing transition methods before deployment.

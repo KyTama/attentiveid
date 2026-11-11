@@ -118,6 +118,65 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
     expect(adminRes.status).toBe(200)
   })
 
+  it('POST /api/admin/landing/publish invokes contentTransitions.publishLandingDraft or publishLandingRevision', async () => {
+    let publishCalled = false
+    let draftCreated = false
+
+    const appWithTransitions = new Elysia().use(
+      createLandingCmsRoutes({
+        tokenService,
+        userRepository,
+        db: mockDb,
+        contentTransitions: {
+          createLandingDraft: async () => {
+            draftCreated = true
+            return { id: 'draft-uuid-1' }
+          },
+          publishLandingDraft: async (_cap: any, revisionId?: string) => {
+            publishCalled = true
+            expect(revisionId).toBe('draft-uuid-1')
+          }
+        }
+      })
+    )
+
+    const localized = (value: string) => ({ id: `${value} ID`, en: `${value} EN` });
+    const repeater = (prefix: string) => Array.from({ length: 3 }, (_, position) => ({
+      id: `${prefix}-${position}`,
+      position,
+      title: localized(`${prefix} title ${position}`),
+      description: localized(`${prefix} description ${position}`)
+    }));
+    const validLandingContent = {
+      sections: [
+        { key: 'hero', visible: true, headline: localized('Hero'), description: localized('Hero description'), primaryCta: localized('Start'), secondaryCta: localized('Explore'), items: repeater('metric') },
+        { key: 'supportExplorer', visible: true, headline: localized('Support'), description: localized('Support description'), items: repeater('support') },
+        { key: 'carePromise', visible: true, headline: localized('Promise'), description: localized('Promise description'), items: repeater('promise') },
+        { key: 'featuredPsychologists', visible: true, headline: localized('Featured'), description: localized('Featured description') },
+        { key: 'careJourney', visible: true, headline: localized('Journey'), description: localized('Journey description'), items: repeater('journey') },
+        { key: 'clientStories', visible: true, headline: localized('Stories'), description: localized('Stories description'), items: repeater('stories') },
+        { key: 'consultationReassurance', visible: true, headline: localized('Reassurance'), description: localized('Reassurance description'), sessionLabel: localized('Session label'), price: localized('Price'), priceUnit: localized('Price unit'), primaryCta: localized('Ask about pricing') },
+        { key: 'frequentlyAskedQuestions', visible: true, headline: localized('FAQ'), description: localized('FAQ description'), items: repeater('faq') },
+        { key: 'closingInvitation', visible: true, headline: localized('Closing'), description: localized('Closing description'), primaryCta: localized('Contact'), contact: localized('WhatsApp') }
+      ]
+    };
+
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const res = await appWithTransitions.handle(
+      new Request('http://localhost/api/admin/landing/publish', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(validLandingContent)
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(draftCreated).toBe(true)
+    expect(publishCalled).toBe(true)
+  })
+
   it('POST /api/admin/landing/upload-image uploads image and returns media reference', async () => {
     const { accessToken } = tokenService.issueAccessToken(adminUser)
     const formData = new FormData()

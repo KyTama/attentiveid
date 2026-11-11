@@ -307,7 +307,11 @@ export function LandingCmsPage() {
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${baseUrl}/api/admin/landing/publish`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(content),
       })
       const data = await res.json()
       if (res.ok && data.status === 'success') {

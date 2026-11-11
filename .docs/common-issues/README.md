@@ -20,3 +20,4 @@ Run the engine: [`how-to-learn.md`](../principles/how-to-learn.md) (7 steps).
 | 9 | Account for updated practitioner seed fixtures in contract test assertions | [seed-fixture-coupling-in-contract-tests.md](./seed-fixture-coupling-in-contract-tests.md) |
 | 10 | Keep PII and secrets out of git for public lead forms; neutralize CSV formula cells | [public-form-pii-and-csv-export.md](./public-form-pii-and-csv-export.md) |
 | 11 | Containerized media uploads in read-only filesystems require shared volumes and configurable MEDIA_DIR | [readonly-filesystem-and-shared-media-volume.md](./readonly-filesystem-and-shared-media-volume.md) |
+| 12 | Service method signature alignment and atomic single-step CMS publish | [content-transition-method-signatures-and-atomic-publish.md](./content-transition-method-signatures-and-atomic-publish.md) |

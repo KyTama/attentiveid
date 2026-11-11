@@ -167,7 +167,7 @@ export const createContentTransitions = (database: ContentTransitionDatabase) =>
         }
         return database.transaction(async (transaction) => {
             const aggregate = await transaction.getLandingAggregate();
-            if (!aggregate || aggregate.activeDraftRevisionId !== null) {
+            if (!aggregate) {
                 throw new Error('Invalid landing content transition.');
             }
             if (basedOnRevisionId) {
@@ -180,14 +180,20 @@ export const createContentTransitions = (database: ContentTransitionDatabase) =>
         });
     },
 
-    async publishLandingDraft(capability: AdminCapability, revisionId: string) {
+    async publishLandingDraft(capability: AdminCapability, revisionId?: string) {
         assertAdmin(capability);
         return database.transaction(async (transaction) => {
             const aggregate = await transaction.getLandingAggregate();
-            const revision = await transaction.getLandingRevision(revisionId);
-            if (!aggregate
-                || aggregate.activeDraftRevisionId !== revisionId
-                || !revision
+            const targetRevisionId = (revisionId && revisionId.trim().length > 0)
+                ? revisionId.trim()
+                : aggregate?.activeDraftRevisionId;
+
+            if (!aggregate || !targetRevisionId) {
+                throw new Error('No active landing draft revision to publish.');
+            }
+
+            const revision = await transaction.getLandingRevision(targetRevisionId);
+            if (!revision
                 || revision.aggregateId !== aggregate.id
                 || revision.status !== 'draft'
                 || !validateLandingContentMutation(revision.content)) {
@@ -195,10 +201,20 @@ export const createContentTransitions = (database: ContentTransitionDatabase) =>
             }
             await transaction.publishLandingRevision({
                 aggregateId: aggregate.id,
-                revisionId,
+                revisionId: targetRevisionId,
                 publishedAt: timestamp()
             });
+            return {
+                aggregateId: aggregate.id,
+                publishedRevisionId: targetRevisionId,
+                status: 'published' as const
+            };
         });
+    },
+
+    async publishLandingRevision(capability: AdminCapability, revisionId?: string) {
+        const isUuid = revisionId && /^[0-9a-fA-F-]{36}$/.test(revisionId);
+        return this.publishLandingDraft(capability, isUuid ? revisionId : undefined);
     },
 
     async rollbackLanding(capability: AdminCapability, historicalRevisionId: string) {

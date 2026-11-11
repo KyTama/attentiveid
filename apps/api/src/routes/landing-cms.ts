@@ -90,14 +90,32 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
     )
     .post(
       '/api/admin/landing/publish',
-      async ({ currentUser, set }: any) => {
+      async ({ body, currentUser, set }: any) => {
         if (!dependencies.contentTransitions) {
           return { status: 'success' }
         }
 
         try {
           const adminCap = createAdminCapability(currentUser.id)
-          await dependencies.contentTransitions.publishLandingRevision(adminCap, new Date().toISOString())
+
+          // If content payload is provided in body, save as draft first then publish atomically
+          if (body && validateLandingContentMutation(body)) {
+            const draft = await dependencies.contentTransitions.createLandingDraft(adminCap, body)
+            const draftId = draft?.id
+            if (typeof dependencies.contentTransitions.publishLandingDraft === 'function') {
+              await dependencies.contentTransitions.publishLandingDraft(adminCap, draftId)
+            } else if (typeof dependencies.contentTransitions.publishLandingRevision === 'function') {
+              await dependencies.contentTransitions.publishLandingRevision(adminCap, draftId)
+            }
+            return { status: 'success', revisionId: draftId }
+          }
+
+          // Otherwise publish existing active draft
+          if (typeof dependencies.contentTransitions.publishLandingDraft === 'function') {
+            await dependencies.contentTransitions.publishLandingDraft(adminCap)
+          } else if (typeof dependencies.contentTransitions.publishLandingRevision === 'function') {
+            await dependencies.contentTransitions.publishLandingRevision(adminCap)
+          }
           return { status: 'success' }
         } catch (err: any) {
           set.status = 400
@@ -106,6 +124,7 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
       },
       {
         requireRole: ['admin'],
+        body: t.Optional(t.Any()),
         detail: {
           tags: ['Landing CMS'],
           summary: 'Publish active landing draft revision live',
