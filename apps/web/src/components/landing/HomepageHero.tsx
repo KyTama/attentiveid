@@ -180,14 +180,11 @@ export function HomepageHero() {
     description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
     primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),
     secondaryAction: managed?.section.secondaryCta[managed.locale] ?? t('homepage.hero.secondaryAction'),
-    imageSrc:
-      managed?.section.media?.reference &&
-      !managed.section.media.reference.includes('hero-slide-1') &&
-      !managed.section.media.reference.includes('malang')
-        ? managed.section.media.reference.startsWith('/')
-          ? managed.section.media.reference
-          : `/${managed.section.media.reference}`
-        : '/images/figma/consultation-hero.webp',
+    imageSrc: managed?.section.media?.reference
+      ? managed.section.media.reference.startsWith('/')
+        ? managed.section.media.reference
+        : `/${managed.section.media.reference}`
+      : '/media/landing/hero-slide-1.jpg',
   }
 
   // Slide 2 data (from CMS slideItems[1] if customized, otherwise default i18n)

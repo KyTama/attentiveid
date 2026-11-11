@@ -71,7 +71,7 @@ interface SectionImageInfo {
 
 const SECTION_IMAGE_META: Record<string, SectionImageInfo> = {
   hero: {
-    defaultImage: '/images/figma/consultation-hero.webp',
+    defaultImage: '/media/landing/hero-slide-1.jpg',
     title: 'Hero Consultation Picture',
     aspectRatio: '16:9 / 16:11 (1600 × 901 px)',
     description: 'Foto banner visual utama di sebelah kanan headline hero beranda.',
@@ -139,9 +139,9 @@ const defaultLandingData: LandingCmsData = {
       secondaryCta: { id: 'Lihat Layanan', en: 'Explore Services' },
       slides: [
         {
-          reference: '/images/figma/consultation-hero.webp',
-          width: 1600,
-          height: 901,
+          reference: 'media/landing/hero-slide-1.jpg',
+          width: 3072,
+          height: 4096,
           alt: { id: 'Konsultasi Psikologi Tatap Muka & Daring Attentive', en: 'Attentive In-Person & Online Psychological Consultation' },
         },
       ],
@@ -611,24 +611,18 @@ export function LandingCmsPage() {
   }
 
   const sectionImageMeta = SECTION_IMAGE_META[activeSection?.key]
-  const currentSectionImageSrc =
-    activeSection?.key === 'hero' &&
-    (!activeSection?.media?.reference ||
-      activeSection.media.reference.includes('hero-slide-1') ||
-      activeSection.media.reference.includes('malang'))
-      ? '/images/figma/consultation-hero.webp'
-      : activeSection?.media?.reference
-      ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
-      : sectionImageMeta?.defaultImage
+  const currentSectionImageSrc = activeSection?.media?.reference
+    ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
+    : (sectionImageMeta?.defaultImage || '/media/landing/hero-slide-1.jpg')
 
   const heroSlides: LandingMedia[] = (activeSection?.key === 'hero' && activeSection.slides && activeSection.slides.length > 0)
     ? activeSection.slides
     : (activeSection?.key === 'hero'
         ? [
             activeSection.media || {
-              reference: '/images/figma/consultation-hero.webp',
-              width: 1600,
-              height: 901,
+              reference: 'media/landing/hero-slide-1.jpg',
+              width: 3072,
+              height: 4096,
               alt: {
                 id: 'Konsultasi Psikologi Tatap Muka & Daring Attentive',
                 en: 'Attentive In-Person & Online Psychological Consultation',
@@ -1323,17 +1317,11 @@ export function LandingCmsPage() {
                         <div className="sm:col-span-4">
                           <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
                             <img
-                              src={
-                                slide.reference.includes('hero-slide-1') || slide.reference.includes('malang')
-                                  ? '/images/figma/consultation-hero.webp'
-                                  : slide.reference.startsWith('/')
-                                  ? slide.reference
-                                  : `/${slide.reference}`
-                              }
+                              src={slide.reference.startsWith('/') ? slide.reference : `/${slide.reference}`}
                               alt={slide.alt?.id || `Hero Slide ${sIdx + 1}`}
                               className="w-full h-full object-cover object-center"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/images/figma/consultation-hero.webp'
+                                (e.target as HTMLImageElement).src = '/media/landing/hero-slide-1.jpg'
                               }}
                             />
                             <label

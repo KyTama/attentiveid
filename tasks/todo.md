@@ -1,26 +1,28 @@
-# Task: Dynamic Hero Metrics & Testimonial Management System with Auto-Moving Carousel
+# Task: Hero Showcase, Pet-Friendly Neutralization & Live Production Sync
 
 > **Status:** COMPLETED  
-> **Directives:** DO NOT PUSH to remote yet (local commits are permitted).  
-> **Goals:**
-> 1. Make dynamic count of psychologists and sessions delivered easily updatable in dashboard by admin & superadmin (with 1-click DB sync button).
-> 2. Create new dashboard menu & page for Testimonials CRUD (`/dashboard/testimonials`).
-> 3. Display testimonials on the homepage with an auto-moving carousel (like bicarakan.id) with pause on hover and Emil Kowalski spring polish.
+> **Target:** `https://attentiveid.com`  
 
 ---
 
 ## Action Items
-- [x] **1. Dynamic Trust Metrics in Dashboard**:
-  - In `LandingCmsPage.tsx`: Enhance Hero trust metrics editor with 1-click DB sync button `[🔄 Sinkronkan Jumlah Psikolog Aktif dari DB]` and quick session milestone presets.
-  - In `DashboardOverviewPage.tsx`: Show live trust metrics with quick jump to update them.
-- [x] **2. Testimonial Management Dashboard (`/dashboard/testimonials`)**:
-  - Add `Testimonials` item to `DashboardLayout.tsx` navigation sidebar for admin/superadmin.
-  - Create `TestimonialsCmsPage.tsx` with full CRUD: Add, Edit, Delete, Reorder, and Preview testimonial cards.
-  - Register `/dashboard/testimonials` route in `App.tsx`.
-- [x] **3. Auto-Moving Testimonials Carousel on Homepage**:
-  - Redesign `ClientStories.tsx` into an elegant, infinite auto-moving marquee carousel (concept inspired by bicarakan.id).
-  - Include pause-on-hover, 5-star ratings, verified client badge, counseling format pill, and smooth Framer Motion spring physics.
-- [x] **4. Build, Test & Verify Locally**:
-  - Run `bun test apps/api` and `cd apps/web && bun run test --run`.
-  - Run `bun run build:web`.
-  - Commit locally (WITHOUT PUSHING).
+- [x] **1. Official Consultation Hero Image Parity**:
+  - Guard against legacy Docker volume reference (`hero-slide-1.jpg`) which had the old Malang clinic facade photo.
+  - Set default Slide 1 hero to `/images/figma/consultation-hero.webp`.
+  - Overwrite `og-attentive.jpg` and fallback assets with the official consultation picture.
+- [x] **2. Pet-Friendly Static Assets Packaging**:
+  - Relocate pet-friendly assets to `apps/web/public/images/pet-friendly/` so they are packaged into the static build instead of falling through to the backend volume.
+  - Neutralize copy: remove Malang lock, update button to `Lihat 3 Lokasi Praktik →` linking to `#locations`.
+- [x] **3. Layout & Section Re-ordering**:
+  - Position 1: Editorial Hero Highlight Card (2 Slides).
+  - Position 2: Minimalist Trust Ticker Ribbon (`✻ Thoughtful psychological support...`).
+  - Position 3: Sub-Hero Command Strip (**Program & Layanan Unggulan** moved UP).
+  - Position 4: **4 Trust Counter Metrics** moved DOWN directly below Program Unggulan.
+- [x] **4. CMS Hero Multi-Slide Editor Upgrade**:
+  - Added Slide 1 (Konseling Klinis) and Slide 2 (Ruang Ramah Anabul 🐾) tab controls.
+  - Dual-color heading support with `**text**` gold syntax.
+  - Live simulator preview reflects edits accurately.
+- [x] **5. Production Deployment & Live Verification**:
+  - Pushed commit `b5c78fc` to `origin/master`.
+  - GitHub Actions `Build Images` & `Deploy Staging` completed successfully.
+  - Verified live bundle (`index-BQSgIBz0.js`), consultation hero webp, and pet-friendly images returning HTTP 200 on `https://attentiveid.com`.
