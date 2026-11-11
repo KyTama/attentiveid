@@ -1,28 +1,26 @@
-# Task: Hero Showcase, Pet-Friendly Neutralization & Live Production Sync
+# Task: Dedicated CMS Hero Architecture & Command Strip / Trust Metrics Sub-Section Editors
 
-> **Status:** COMPLETED  
-> **Target:** `https://attentiveid.com`  
+> **Status:** COMPLETED (LOCAL-ONLY COMMIT)  
+> **Rule:** STRICTLY LOCAL FIRST. NEVER PUSH TO GITHUB BEFORE EXPLICIT INSTRUCTION.
 
 ---
 
 ## Action Items
-- [x] **1. Official Consultation Hero Image Parity**:
-  - Guard against legacy Docker volume reference (`hero-slide-1.jpg`) which had the old Malang clinic facade photo.
-  - Set default Slide 1 hero to `/images/figma/consultation-hero.webp`.
-  - Overwrite `og-attentive.jpg` and fallback assets with the official consultation picture.
-- [x] **2. Pet-Friendly Static Assets Packaging**:
-  - Relocate pet-friendly assets to `apps/web/public/images/pet-friendly/` so they are packaged into the static build instead of falling through to the backend volume.
-  - Neutralize copy: remove Malang lock, update button to `Lihat 3 Lokasi Praktik →` linking to `#locations`.
-- [x] **3. Layout & Section Re-ordering**:
-  - Position 1: Editorial Hero Highlight Card (2 Slides).
-  - Position 2: Minimalist Trust Ticker Ribbon (`✻ Thoughtful psychological support...`).
-  - Position 3: Sub-Hero Command Strip (**Program & Layanan Unggulan** moved UP).
-  - Position 4: **4 Trust Counter Metrics** moved DOWN directly below Program Unggulan.
-- [x] **4. CMS Hero Multi-Slide Editor Upgrade**:
-  - Added Slide 1 (Konseling Klinis) and Slide 2 (Ruang Ramah Anabul 🐾) tab controls.
-  - Dual-color heading support with `**text**` gold syntax.
-  - Live simulator preview reflects edits accurately.
-- [x] **5. Production Deployment & Live Verification**:
-  - Pushed commit `b5c78fc` to `origin/master`.
-  - GitHub Actions `Build Images` & `Deploy Staging` completed successfully.
-  - Verified live bundle (`index-BQSgIBz0.js`), consultation hero webp, and pet-friendly images returning HTTP 200 on `https://attentiveid.com`.
+- [x] **1. Schema & Type Extensions (`packages/shared/src/content.ts`)**:
+  - Add `HeroCampaignItemSchema` and `HeroCampaignsSchema` with `badge`, `title`, `description`, `cta`, and destination `url`.
+  - Add `primaryCtaUrl`, `secondaryCtaUrl`, and optional `campaigns` to `HeroSectionSchema`.
+- [x] **2. Frontend Dynamic Binding (`HomepageHero.tsx`)**:
+  - Bind Slide 1 and Slide 2 CTA buttons to `primaryCtaUrl` and `secondaryCtaUrl` (handles internal `#anchors`, `/routes`, and external URLs).
+  - Dynamically read `campaigns` from CMS draft/published content with i18n fallbacks.
+- [x] **3. Unified CMS 3-Sub-Section Editor (`LandingCmsPage.tsx`)**:
+  - Remove confusing legacy 10-slide generic carousel manager.
+  - Sub-Section 1: **Highlight Card (2 Slide)** — Photo upload/preview, kicker tag, dual-color headline (`**gold**`), description, Primary & Secondary CTA button labels AND target URLs.
+  - Sub-Section 2: **Program & Layanan Unggulan (Command Strip)** — Eyebrow, description, and 3 dedicated card editors (Promo Khusus, Jadwal Langsung, Tes Online) with badge, title, description, CTA text, and destination URL.
+  - Sub-Section 3: **Trust Metrics Counter Bar (4 Item)** — Live DB active psychologists sync button, 4 official metrics reset button, session milestone presets (`3.000+` .. `5.000+`), and 4 counter cards.
+- [x] **4. Live Simulator Reactive Highlighting**:
+  - Active sub-section is visually highlighted with amber ring in the live simulator preview.
+  - Command strip and Trust Metrics dynamically reflect edits in real time.
+- [x] **5. Verification & Tests**:
+  - All 14 test suites (73 tests) in `apps/web` pass.
+  - All 122 tests in `apps/api` pass.
+  - Production build `bun run build:web` succeeds with 0 errors.

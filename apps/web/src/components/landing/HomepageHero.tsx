@@ -179,7 +179,9 @@ export function HomepageHero() {
     headline: managed?.section.headline[managed.locale] ?? t('homepage.hero.title'),
     description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
     primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),
+    primaryActionUrl: (managed?.section as any)?.primaryCtaUrl || 'https://booking.attentiveid.com/',
     secondaryAction: managed?.section.secondaryCta[managed.locale] ?? t('homepage.hero.secondaryAction'),
+    secondaryActionUrl: (managed?.section as any)?.secondaryCtaUrl || '/psychologists',
     imageSrc: managed?.section.media?.reference
       ? managed.section.media.reference.startsWith('/')
         ? managed.section.media.reference
@@ -203,14 +205,50 @@ export function HomepageHero() {
     primaryAction:
       customSlide2?.primaryCta?.[managed?.locale || 'id'] ??
       t('homepage.hero.slides.petFriendly.primaryCta'),
+    primaryActionUrl:
+      customSlide2?.primaryCtaUrl ||
+      'https://wa.me/6281234567890?text=Halo%20Attentive,%20saya%20ingin%20konsultasi%20ramah%20anabul',
     secondaryAction:
       customSlide2?.secondaryCta?.[managed?.locale || 'id'] ??
       t('homepage.hero.slides.petFriendly.secondaryCta'),
+    secondaryActionUrl: customSlide2?.secondaryCtaUrl || '#locations',
     imageSrc: customSlide2?.media?.reference
       ? customSlide2.media.reference.startsWith('/')
         ? customSlide2.media.reference
         : `/${customSlide2.media.reference}`
       : '/images/pet-friendly/pet-friendly-1.jpg',
+  }
+
+  // Program & Layanan Unggulan (Command Strip campaigns)
+  const customCampaigns = (managed?.section as any)?.campaigns
+  const campaignEyebrow = customCampaigns?.eyebrow?.[managed?.locale || 'id'] ?? t('homepage.campaigns.eyebrow')
+  const campaignDescription = customCampaigns?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.description')
+
+  const card1Data = customCampaigns?.cards?.[0]
+  const card1 = {
+    badge: card1Data?.badge?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.badge'),
+    title: card1Data?.title?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.title'),
+    description: card1Data?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.description'),
+    cta: card1Data?.cta?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.cta'),
+    url: card1Data?.url || 'https://free-session.attentiveid.com',
+  }
+
+  const card2Data = customCampaigns?.cards?.[1]
+  const card2 = {
+    badge: card2Data?.badge?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.badge'),
+    title: card2Data?.title?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.title'),
+    description: card2Data?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.description'),
+    cta: card2Data?.cta?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.cta'),
+    url: card2Data?.url || 'https://booking.attentiveid.com/',
+  }
+
+  const card3Data = customCampaigns?.cards?.[2]
+  const card3 = {
+    badge: card3Data?.badge?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.badge'),
+    title: card3Data?.title?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.title'),
+    description: card3Data?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.description'),
+    cta: card3Data?.cta?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.cta'),
+    url: card3Data?.url || 'https://assessment.attentiveid.com/',
   }
 
   return (
@@ -266,28 +304,51 @@ export function HomepageHero() {
                   </div>
 
                   <div className="mt-8 flex flex-wrap items-center gap-4">
-                    <motion.a
-                      href="https://booking.attentiveid.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
-                      transition={INTERACTIVE_SPRING}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <CalendarCheck2 size={16} className="text-primary" />
-                      <span>{slide1.primaryAction}</span>
-                      <ArrowUpRight size={16} />
-                    </motion.a>
+                    {slide1.primaryActionUrl.startsWith('http') ? (
+                      <motion.a
+                        href={slide1.primaryActionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
+                        transition={INTERACTIVE_SPRING}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <CalendarCheck2 size={16} className="text-primary" />
+                        <span>{slide1.primaryAction}</span>
+                        <ArrowUpRight size={16} />
+                      </motion.a>
+                    ) : (
+                      <motion.div transition={INTERACTIVE_SPRING} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Link
+                          to={slide1.primaryActionUrl}
+                          className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
+                        >
+                          <CalendarCheck2 size={16} className="text-primary" />
+                          <span>{slide1.primaryAction}</span>
+                          <ArrowRight size={16} />
+                        </Link>
+                      </motion.div>
+                    )}
 
                     <motion.div transition={INTERACTIVE_SPRING} whileHover={{ x: 2 }}>
-                      <Link
-                        to="/psychologists"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
-                      >
-                        <span>{slide1.secondaryAction}</span>
-                        <ArrowRight size={15} />
-                      </Link>
+                      {slide1.secondaryActionUrl.startsWith('http') || slide1.secondaryActionUrl.startsWith('#') ? (
+                        <a
+                          href={slide1.secondaryActionUrl}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
+                        >
+                          <span>{slide1.secondaryAction}</span>
+                          <ArrowRight size={15} />
+                        </a>
+                      ) : (
+                        <Link
+                          to={slide1.secondaryActionUrl}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
+                        >
+                          <span>{slide1.secondaryAction}</span>
+                          <ArrowRight size={15} />
+                        </Link>
+                      )}
                     </motion.div>
                   </div>
                 </div>
@@ -359,29 +420,52 @@ export function HomepageHero() {
                   </div>
 
                   <div className="mt-8 flex flex-wrap items-center gap-4">
-                    <motion.a
-                      href="https://booking.attentiveid.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
-                      transition={INTERACTIVE_SPRING}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <PawPrint size={16} className="text-primary" />
-                      <span>{slide2.primaryAction}</span>
-                      <ArrowUpRight size={16} />
-                    </motion.a>
+                    {slide2.primaryActionUrl.startsWith('http') ? (
+                      <motion.a
+                        href={slide2.primaryActionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
+                        transition={INTERACTIVE_SPRING}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <PawPrint size={16} className="text-primary" />
+                        <span>{slide2.primaryAction}</span>
+                        <ArrowUpRight size={16} />
+                      </motion.a>
+                    ) : (
+                      <motion.div transition={INTERACTIVE_SPRING} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Link
+                          to={slide2.primaryActionUrl}
+                          className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
+                        >
+                          <PawPrint size={16} className="text-primary" />
+                          <span>{slide2.primaryAction}</span>
+                          <ArrowRight size={16} />
+                        </Link>
+                      </motion.div>
+                    )}
 
-                    <motion.a
-                      href="#locations"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
-                      transition={INTERACTIVE_SPRING}
-                      whileHover={{ x: 2 }}
-                    >
-                      <span>{slide2.secondaryAction}</span>
-                      <ArrowRight size={15} />
-                    </motion.a>
+                    <motion.div transition={INTERACTIVE_SPRING} whileHover={{ x: 2 }}>
+                      {slide2.secondaryActionUrl.startsWith('http') || slide2.secondaryActionUrl.startsWith('#') ? (
+                        <a
+                          href={slide2.secondaryActionUrl}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
+                        >
+                          <span>{slide2.secondaryAction}</span>
+                          <ArrowRight size={15} />
+                        </a>
+                      ) : (
+                        <Link
+                          to={slide2.secondaryActionUrl}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
+                        >
+                          <span>{slide2.secondaryAction}</span>
+                          <ArrowRight size={15} />
+                        </Link>
+                      )}
+                    </motion.div>
                   </div>
                 </div>
 
@@ -513,13 +597,13 @@ export function HomepageHero() {
                 <Sparkles size={14} />
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-secondary">
-                {t('homepage.campaigns.eyebrow')}
+                {campaignEyebrow}
               </span>
             </div>
 
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-secondary/70">
-                {t('homepage.campaigns.description')}
+                {campaignDescription}
               </span>
               {isDismissed && (
                 <motion.button
@@ -540,18 +624,18 @@ export function HomepageHero() {
           <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Card 1: First Free Session */}
             <motion.a
-              href="https://free-session.attentiveid.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${t('homepage.campaigns.freeSession.title')} - ${t('homepage.campaigns.freeSession.cta')}`}
-              className="group relative flex flex-col justify-between rounded-xl border border-primary/50 bg-gradient-to-b from-white to-[#FDF8EE] p-5 sm:p-6 shadow-xs transition-all hover:border-primary hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              href={card1.url}
+              target={card1.url.startsWith('http') ? '_blank' : undefined}
+              rel={card1.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+              aria-label={`${card1.title} - ${card1.cta}`}
+              className="group relative flex flex-col justify-between rounded-xl border border-primary/50 bg-gradient-to-b from-white to-[#FDF8EE] p-5 sm:p-6 shadow-xs transition-all hover:border-primary hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
               transition={INTERACTIVE_SPRING}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="inline-flex items-center rounded-md bg-[#FAF0D7] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#8C6013]">
-                  {t('homepage.campaigns.freeSession.badge')}
+                  {card1.badge}
                 </span>
                 <div className="grid size-9 place-items-center rounded-lg bg-[#FAF0D7] text-[#8C6013]">
                   <Gift size={18} strokeWidth={2.2} />
@@ -559,14 +643,14 @@ export function HomepageHero() {
               </div>
               <div className="mt-4">
                 <h3 className="text-base font-bold text-secondary group-hover:text-[#8C6013] transition-colors sm:text-lg">
-                  {t('homepage.campaigns.freeSession.title')}
+                  {card1.title}
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                  {t('homepage.campaigns.freeSession.description')}
+                  {card1.description}
                 </p>
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-[#E9B949]/20 pt-3 text-xs sm:text-sm font-semibold text-[#8C6013]">
-                <span>{t('homepage.campaigns.freeSession.cta')}</span>
+                <span>{card1.cta}</span>
                 <ArrowUpRight
                   size={16}
                   strokeWidth={2.5}
@@ -577,18 +661,18 @@ export function HomepageHero() {
 
             {/* Card 2: Booking / Reserve */}
             <motion.a
-              href="https://booking.attentiveid.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${t('homepage.campaigns.booking.title')} - ${t('homepage.campaigns.booking.cta')}`}
-              className="group relative flex flex-col justify-between rounded-xl border border-secondary/15 bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-secondary/35 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              href={card2.url}
+              target={card2.url.startsWith('http') ? '_blank' : undefined}
+              rel={card2.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+              aria-label={`${card2.title} - ${card2.cta}`}
+              className="group relative flex flex-col justify-between rounded-xl border border-secondary/15 bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-secondary/35 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
               transition={INTERACTIVE_SPRING}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="inline-flex items-center rounded-md bg-secondary/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-secondary">
-                  {t('homepage.campaigns.booking.badge')}
+                  {card2.badge}
                 </span>
                 <div className="grid size-9 place-items-center rounded-lg bg-secondary/10 text-secondary">
                   <CalendarCheck2 size={18} strokeWidth={2.2} />
@@ -596,14 +680,14 @@ export function HomepageHero() {
               </div>
               <div className="mt-4">
                 <h3 className="text-base font-bold text-secondary group-hover:text-primary transition-colors sm:text-lg">
-                  {t('homepage.campaigns.booking.title')}
+                  {card2.title}
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                  {t('homepage.campaigns.booking.description')}
+                  {card2.description}
                 </p>
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-secondary/10 pt-3 text-xs sm:text-sm font-semibold text-secondary group-hover:text-primary">
-                <span>{t('homepage.campaigns.booking.cta')}</span>
+                <span>{card2.cta}</span>
                 <ArrowUpRight
                   size={16}
                   strokeWidth={2.5}
@@ -614,18 +698,18 @@ export function HomepageHero() {
 
             {/* Card 3: Digital Test Centre */}
             <motion.a
-              href="https://assessment.attentiveid.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${t('homepage.campaigns.testCentre.title')} - ${t('homepage.campaigns.testCentre.cta')}`}
-              className="group relative flex flex-col justify-between rounded-xl border border-secondary/15 bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-secondary/35 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              href={card3.url}
+              target={card3.url.startsWith('http') ? '_blank' : undefined}
+              rel={card3.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+              aria-label={`${card3.title} - ${card3.cta}`}
+              className="group relative flex flex-col justify-between rounded-xl border border-secondary/15 bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-secondary/35 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
               transition={INTERACTIVE_SPRING}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="inline-flex items-center rounded-md bg-[#EBF3FB] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#1E568A]">
-                  {t('homepage.campaigns.testCentre.badge')}
+                  {card3.badge}
                 </span>
                 <div className="grid size-9 place-items-center rounded-lg bg-[#EBF3FB] text-[#1E568A]">
                   <ClipboardCheck size={18} strokeWidth={2.2} />
@@ -633,14 +717,14 @@ export function HomepageHero() {
               </div>
               <div className="mt-4">
                 <h3 className="text-base font-bold text-secondary group-hover:text-[#1E568A] transition-colors sm:text-lg">
-                  {t('homepage.campaigns.testCentre.title')}
+                  {card3.title}
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                  {t('homepage.campaigns.testCentre.description')}
+                  {card3.description}
                 </p>
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-secondary/10 pt-3 text-xs sm:text-sm font-semibold text-[#1E568A]">
-                <span>{t('homepage.campaigns.testCentre.cta')}</span>
+                <span>{card3.cta}</span>
                 <ArrowUpRight
                   size={16}
                   strokeWidth={2.5}

@@ -83,13 +83,31 @@ export const HeroSlideItemSchema = Type.Object({
   media: Type.Optional(LandingMediaSchema),
 }, { additionalProperties: false })
 
+export const HeroCampaignItemSchema = Type.Object({
+  id: IdentifierSchema,
+  badge: LocalizedTextSchema,
+  title: LocalizedTextSchema,
+  description: LocalizedTextSchema,
+  cta: LocalizedTextSchema,
+  url: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+}, { additionalProperties: false })
+
+export const HeroCampaignsSchema = Type.Object({
+  eyebrow: LocalizedTextSchema,
+  description: LocalizedTextSchema,
+  cards: Type.Array(HeroCampaignItemSchema, { minItems: 1, maxItems: 6 }),
+}, { additionalProperties: false })
+
 const HeroSectionSchema = Type.Object({
   key: Type.Literal('hero'),
   ...sectionCopyProperties,
   primaryCta: LocalizedTextSchema,
+  primaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
   secondaryCta: LocalizedTextSchema,
+  secondaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
   slides: Type.Optional(Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })),
   slideItems: Type.Optional(Type.Array(HeroSlideItemSchema, { minItems: 1, maxItems: 5 })),
+  campaigns: Type.Optional(HeroCampaignsSchema),
   items: Type.Array(LandingItemSchema, {
     minItems: LANDING_REPEATER_BOUNDS.hero.min,
     maxItems: LANDING_REPEATER_BOUNDS.hero.max,
@@ -672,6 +690,10 @@ export type UserStatus = typeof USER_STATUSES[number]
 export type UserDto = Static<typeof UserDtoSchema>
 export type CreateUserMutation = Static<typeof CreateUserMutationSchema>
 export type LoginCredentials = Static<typeof LoginCredentialsSchema>
+
+export type HeroSlideItem = Static<typeof HeroSlideItemSchema>
+export type HeroCampaignItem = Static<typeof HeroCampaignItemSchema>
+export type HeroCampaigns = Static<typeof HeroCampaignsSchema>
 
 export const validateCreateUserMutation = (value: unknown): value is CreateUserMutation => (
   Value.Check(CreateUserMutationSchema, value)

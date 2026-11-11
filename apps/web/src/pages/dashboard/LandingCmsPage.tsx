@@ -2,18 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  ArrowDown,
-  ArrowUp,
+  BarChart3,
+  CalendarCheck2,
   Camera,
   Check,
+  ClipboardCheck,
+  ExternalLink,
+  Gift,
   ImageIcon,
-  Images,
+  Layers,
+  Link as LinkIcon,
   Loader2,
   MapPin,
-  Plus,
+  PawPrint,
   RotateCcw,
   Sparkles,
-  Trash2,
   UploadCloud,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
@@ -242,13 +245,13 @@ export function LandingCmsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [heroSubSection, setHeroSubSection] = useState<'slides' | 'campaigns' | 'metrics'>('slides')
   const [heroPreviewSlide, setHeroPreviewSlide] = useState<0 | 1>(0)
 
   // Upload state
   const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
-  const [dragOverSection, setDragOverSection] = useState(false)
 
   const sectionFileInputRef = useRef<HTMLInputElement>(null)
   const itemFileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
@@ -346,7 +349,9 @@ export function LandingCmsPage() {
           en: 'Private in-person consultations in Jakarta, BSD, and Malang, or online video counseling with licensed psychologists.',
         },
         primaryCta: (activeSection as any)?.primaryCta || { id: 'Jadwalkan Konsultasi', en: 'Book Consultation' },
+        primaryCtaUrl: (activeSection as any)?.primaryCtaUrl || 'https://booking.attentiveid.com/',
         secondaryCta: (activeSection as any)?.secondaryCta || { id: 'Lihat Layanan', en: 'Explore Services' },
+        secondaryCtaUrl: (activeSection as any)?.secondaryCtaUrl || '/psychologists',
       }
     }
     return {
@@ -358,7 +363,9 @@ export function LandingCmsPage() {
         en: 'At Attentive, you are warmly welcomed to bring your pet companions to in-person sessions. Creating a grounded, comforting, and anxiety-free healing space.',
       },
       primaryCta: { id: 'Konsultasi Ramah Anabul', en: 'Book Pet-Friendly Session' },
+      primaryCtaUrl: 'https://wa.me/6281234567890?text=Halo%20Attentive,%20saya%20ingin%20konsultasi%20ramah%20anabul',
       secondaryCta: { id: 'Lihat 3 Lokasi Praktik', en: 'Explore 3 Practice Locations' },
+      secondaryCtaUrl: '#locations',
     }
   }
 
@@ -399,6 +406,135 @@ export function LandingCmsPage() {
     }
 
     newSections[activeSectionIndex] = updatedHero
+    setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroSlideUrl = (
+    slideIndex: number,
+    field: 'primaryCtaUrl' | 'secondaryCtaUrl',
+    value: string
+  ) => {
+    const slideItems = [...(((activeSection as any).slideItems as any[]) || [
+      getHeroSlideItem(0),
+      getHeroSlideItem(1),
+    ])]
+
+    if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
+    if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
+
+    slideItems[slideIndex] = {
+      ...slideItems[slideIndex],
+      [field]: value,
+    }
+
+    const newSections = [...content.sections]
+    const updatedHero: any = {
+      ...activeSection,
+      slideItems,
+    }
+
+    if (slideIndex === 0) {
+      if (field === 'primaryCtaUrl') updatedHero.primaryCtaUrl = value
+      if (field === 'secondaryCtaUrl') updatedHero.secondaryCtaUrl = value
+    }
+
+    newSections[activeSectionIndex] = updatedHero
+    setContent({ ...content, sections: newSections })
+  }
+
+  const getHeroCampaigns = () => {
+    const existing = (activeSection as any)?.campaigns
+    if (existing) return existing
+    return {
+      eyebrow: { id: 'Akses Cepat Menuju Dukungan', en: 'Quick Access to Care' },
+      description: {
+        id: 'Jelajahi inisiatif khusus dan portal layanan kami — mulai dari sesi konsultasi gratis, reservasi jadwal langsung, hingga asesmen psikologi digital.',
+        en: 'Explore our featured initiatives and care portals — from first free consultation, direct scheduling, to digital psychological assessments.',
+      },
+      cards: [
+        {
+          id: 'card-free-session',
+          badge: { id: 'Promo Khusus', en: 'Special Initiative' },
+          title: { id: 'First Free Session Consultation', en: 'First Free Session Consultation' },
+          description: {
+            id: 'Klaim sesi privat 1-on-1 tanpa biaya untuk langkah awalmu.',
+            en: 'Claim a complimentary 1-on-1 private session for your first step.',
+          },
+          cta: { id: 'Klaim Sesi Gratis →', en: 'Claim Free Session →' },
+          url: 'https://free-session.attentiveid.com',
+        },
+        {
+          id: 'card-booking',
+          badge: { id: 'Jadwal Langsung', en: 'Direct Scheduling' },
+          title: { id: 'Booking / Reservasi Psikolog', en: 'Book Psychologist Session' },
+          description: {
+            id: 'Pilih psikolog dan tentukan jadwal sesi online atau klinik.',
+            en: 'Choose a psychologist and schedule your online or in-person clinic visit.',
+          },
+          cta: { id: 'Reservasi Jadwal →', en: 'Book Appointment →' },
+          url: 'https://booking.attentiveid.com/',
+        },
+        {
+          id: 'card-test-centre',
+          badge: { id: 'Tes Online', en: 'Digital Assessment' },
+          title: { id: 'Digital Test Centre', en: 'Digital Test Centre' },
+          description: {
+            id: 'Asesmen psikologi terstandarisasi yang siap diakses 24/7.',
+            en: 'Standardized psychological assessments ready to access 24/7.',
+          },
+          cta: { id: 'Akses Tes Online →', en: 'Access Digital Tests →' },
+          url: 'https://assessment.attentiveid.com/',
+        },
+      ],
+    }
+  }
+
+  const updateHeroCampaignHeader = (field: 'eyebrow' | 'description', lang: 'id' | 'en', value: string) => {
+    const currentCampaigns = getHeroCampaigns()
+    const updated = {
+      ...currentCampaigns,
+      [field]: {
+        ...(currentCampaigns[field] || {}),
+        [lang]: value,
+      },
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: updated,
+    }
+    setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroCampaignCard = (
+    cardIdx: number,
+    field: 'badge' | 'title' | 'description' | 'cta' | 'url',
+    langOrVal: 'id' | 'en' | string,
+    value?: string
+  ) => {
+    const currentCampaigns = getHeroCampaigns()
+    const cards = [...(currentCampaigns.cards || [])]
+    const card = { ...(cards[cardIdx] || {}) }
+
+    if (field === 'url') {
+      card.url = langOrVal as string
+    } else {
+      card[field] = {
+        ...(card[field] || {}),
+        [langOrVal as 'id' | 'en']: value || '',
+      }
+    }
+
+    cards[cardIdx] = card
+    const updated = {
+      ...currentCampaigns,
+      cards,
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: updated,
+    }
     setContent({ ...content, sections: newSections })
   }
 
@@ -615,87 +751,7 @@ export function LandingCmsPage() {
     ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
     : (sectionImageMeta?.defaultImage || '/media/landing/hero-slide-1.jpg')
 
-  const heroSlides: LandingMedia[] = (activeSection?.key === 'hero' && activeSection.slides && activeSection.slides.length > 0)
-    ? activeSection.slides
-    : (activeSection?.key === 'hero'
-        ? [
-            activeSection.media || {
-              reference: 'media/landing/hero-slide-1.jpg',
-              width: 3072,
-              height: 4096,
-              alt: {
-                id: 'Konsultasi Psikologi Tatap Muka & Daring Attentive',
-                en: 'Attentive In-Person & Online Psychological Consultation',
-              },
-            },
-          ]
-        : [])
-
-  const updateHeroSlides = (newSlides: LandingMedia[]) => {
-    const newSections = [...content.sections]
-    const updatedHero: LandingSection = {
-      ...activeSection,
-      slides: newSlides,
-      media: newSlides[0] ? { ...newSlides[0] } : activeSection.media,
-    }
-    newSections[activeSectionIndex] = updatedHero
-    setContent({ ...content, sections: newSections })
-  }
-
-  const handleAddHeroSlide = () => {
-    if (heroSlides.length >= 10) {
-      setUploadError('Batas maksimal 10 foto carousel telah tercapai.')
-      return
-    }
-    const nextIdx = heroSlides.length + 1
-    const newSlide: LandingMedia = {
-      reference: '/images/figma/faq-room.webp',
-      width: 1600,
-      height: 901,
-      alt: {
-        id: `Foto Layanan #${nextIdx}`,
-        en: `Service Highlight #${nextIdx}`,
-      },
-    }
-    updateHeroSlides([...heroSlides, newSlide])
-    setUploadSuccess(`Slide #${nextIdx} berhasil ditambahkan ke carousel hero.`)
-  }
-
-  const handleRemoveHeroSlide = (indexToRemove: number) => {
-    if (heroSlides.length <= 1) {
-      setUploadError('Minimal 1 foto wajib ada pada carousel hero.')
-      return
-    }
-    const newSlides = heroSlides.filter((_, idx) => idx !== indexToRemove)
-    updateHeroSlides(newSlides)
-    setUploadSuccess(`Slide #${indexToRemove + 1} berhasil dihapus dari carousel.`)
-  }
-
-  const handleMoveHeroSlide = (fromIndex: number, direction: 'up' | 'down') => {
-    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
-    if (toIndex < 0 || toIndex >= heroSlides.length) return
-    const newSlides = [...heroSlides]
-    const temp = newSlides[fromIndex]
-    newSlides[fromIndex] = newSlides[toIndex]
-    newSlides[toIndex] = temp
-    updateHeroSlides(newSlides)
-  }
-
-  const handleHeroSlideAltChange = (slideIndex: number, lang: 'id' | 'en', text: string) => {
-    const newSlides = heroSlides.map((slide, idx) => {
-      if (idx !== slideIndex) return slide
-      return {
-        ...slide,
-        alt: {
-          id: lang === 'id' ? text : (slide.alt?.id || ''),
-          en: lang === 'en' ? text : (slide.alt?.en || ''),
-        },
-      }
-    })
-    updateHeroSlides(newSlides)
-  }
-
-  const handleHeroSlideUpload = async (slideIndex: number, file: File) => {
+  const handleSlidePhotoUpload = async (slideIndex: 0 | 1, file: File) => {
     if (!file.type.startsWith('image/')) {
       setUploadError('Hanya file gambar (WebP, PNG, JPG) yang diperbolehkan.')
       return
@@ -723,24 +779,39 @@ export function LandingCmsPage() {
           {
             sectionKey: 'hero',
             slug: `hero-slide-${slideIndex + 1}`,
-            altId: heroSlides[slideIndex]?.alt?.id || `Foto Slide ${slideIndex + 1}`,
-            altEn: heroSlides[slideIndex]?.alt?.en || `Hero Slide ${slideIndex + 1}`,
+            altId: `Foto Slide ${slideIndex + 1}`,
+            altEn: `Hero Slide ${slideIndex + 1}`,
             width,
             height,
           },
           { headers: getAuthHeaders() }
         )
 
-        const newSlides = heroSlides.map((slide, idx) => {
-          if (idx !== slideIndex) return slide
-          return {
-            reference: res.media.reference,
-            width: res.media.width,
-            height: res.media.height,
-            alt: res.media.alt,
-          }
-        })
-        updateHeroSlides(newSlides)
+        const slideItems = [...(((activeSection as any).slideItems as any[]) || [
+          getHeroSlideItem(0),
+          getHeroSlideItem(1),
+        ])]
+        if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
+        if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
+
+        slideItems[slideIndex] = {
+          ...slideItems[slideIndex],
+          media: res.media,
+        }
+
+        const newSections = [...content.sections]
+        const updatedHero: any = {
+          ...activeSection,
+          slideItems,
+        }
+
+        if (slideIndex === 0) {
+          updatedHero.media = res.media
+          updatedHero.slides = [res.media]
+        }
+
+        newSections[activeSectionIndex] = updatedHero
+        setContent({ ...content, sections: newSections })
         setUploadSuccess(`Foto untuk Slide #${slideIndex + 1} berhasil diperbarui!`)
       } catch (err: unknown) {
         setUploadError(err instanceof Error ? err.message : 'Gagal mengunggah foto slide.')
@@ -756,6 +827,50 @@ export function LandingCmsPage() {
     }
     img.src = objectUrl
   }
+
+  const handleResetSlidePhoto = (slideIndex: 0 | 1) => {
+    const slideItems = [...(((activeSection as any).slideItems as any[]) || [
+      getHeroSlideItem(0),
+      getHeroSlideItem(1),
+    ])]
+    if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
+    if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
+
+    const updatedSlide = { ...slideItems[slideIndex] }
+    delete updatedSlide.media
+    slideItems[slideIndex] = updatedSlide
+
+    const newSections = [...content.sections]
+    const updatedHero: any = {
+      ...activeSection,
+      slideItems,
+    }
+
+    if (slideIndex === 0) {
+      delete updatedHero.media
+      updatedHero.slides = [
+        {
+          reference: 'media/landing/hero-slide-1.jpg',
+          width: 3072,
+          height: 4096,
+          alt: { id: 'Konsultasi Psikologi Tatap Muka & Daring Attentive', en: 'Attentive In-Person & Online Psychological Consultation' },
+        },
+      ]
+    }
+
+    newSections[activeSectionIndex] = updatedHero
+    setContent({ ...content, sections: newSections })
+    setUploadSuccess(`Foto Slide #${slideIndex + 1} dikembalikan ke default bawaan.`)
+  }
+
+  const heroCampaigns = getHeroCampaigns()
+  const slide2Item = getHeroSlideItem(1)
+  const slide1ImageSrc = activeSection?.media?.reference
+    ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
+    : '/media/landing/hero-slide-1.jpg'
+  const slide2ImageSrc = slide2Item?.media?.reference
+    ? (slide2Item.media.reference.startsWith('/') ? slide2Item.media.reference : `/${slide2Item.media.reference}`)
+    : '/images/pet-friendly/pet-friendly-1.jpg'
 
   return (
     <div className="space-y-6 max-w-6xl relative pb-12">
@@ -901,49 +1016,102 @@ export function LandingCmsPage() {
             }
 
             return (
-              <button
-                key={sec.key}
-                onClick={() => {
-                  setActiveSectionIndex(idx)
-                  setUploadError(null)
-                  setUploadSuccess(null)
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
-                  activeSectionIndex === idx
-                    ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200/80 shadow-2xs'
-                    : 'text-slate-600 hover:bg-slate-50 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    className={`size-5 rounded-md text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${
-                      activeSectionIndex === idx
-                        ? 'bg-teal-600 text-white shadow-2xs'
-                        : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-800'
-                    }`}
-                  >
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate font-semibold text-slate-800 group-hover:text-teal-900">
-                      {displayMeta.label}
-                    </div>
-                    <div className="text-[10px] text-slate-400 truncate">
-                      {sec.key}
+              <div key={sec.key} className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSectionIndex(idx)
+                    setUploadError(null)
+                    setUploadSuccess(null)
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
+                    activeSectionIndex === idx
+                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200/80 shadow-2xs'
+                      : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span
+                      className={`size-5 rounded-md text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${
+                        activeSectionIndex === idx
+                          ? 'bg-teal-600 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-800'
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold text-slate-800 group-hover:text-teal-900">
+                        {displayMeta.label}
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate">
+                        {sec.key}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  {hasCustomMedia && (
-                    <span className="size-1.5 rounded-full bg-teal-500" title="Memiliki visual foto kustom" />
-                  )}
-                  <span
-                    className={`w-2 h-2 rounded-full ${sec.visible ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                    title={sec.visible ? 'Aktif' : 'Disembunyikan'}
-                  />
-                </div>
-              </button>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    {hasCustomMedia && (
+                      <span className="size-1.5 rounded-full bg-teal-500" title="Memiliki visual foto kustom" />
+                    )}
+                    <span
+                      className={`w-2 h-2 rounded-full ${sec.visible ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                      title={sec.visible ? 'Aktif' : 'Disembunyikan'}
+                    />
+                  </div>
+                </button>
+
+                {/* Hero Sub-Sections Navigation in Sidebar */}
+                {sec.key === 'hero' && activeSectionIndex === idx && (
+                  <div className="ml-5 pl-2.5 border-l-2 border-amber-300 space-y-1 py-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setHeroSubSection('slides')
+                      }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${
+                        heroSubSection === 'slides'
+                          ? 'bg-amber-100 text-amber-950 font-bold shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Sparkles className="size-3 text-amber-600 shrink-0" />
+                      <span className="truncate">1. Highlight Card (2 Slide)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setHeroSubSection('campaigns')
+                      }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${
+                        heroSubSection === 'campaigns'
+                          ? 'bg-amber-100 text-amber-950 font-bold shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Gift className="size-3 text-amber-600 shrink-0" />
+                      <span className="truncate">2. Program Unggulan (3 Kartu)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setHeroSubSection('metrics')
+                      }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${
+                        heroSubSection === 'metrics'
+                          ? 'bg-amber-100 text-amber-950 font-bold shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Layers className="size-3 text-amber-600 shrink-0" />
+                      <span className="truncate">3. Trust Metrics (4 Item)</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             )
           })}
 
@@ -1162,8 +1330,14 @@ export function LandingCmsPage() {
                   </div>
                 </div>
 
-                {/* Sub-Hero Command Strip (Program & Layanan Unggulan) in Simulator - NAIK KE SINI */}
-                <div className="mt-4 rounded-xl border border-secondary/10 bg-white/70 p-4">
+                {/* Sub-Hero Command Strip (Program & Layanan Unggulan) in Simulator */}
+                <div
+                  className={`mt-4 rounded-xl border p-4 transition-all ${
+                    heroSubSection === 'campaigns'
+                      ? 'border-amber-400/90 bg-amber-50/30 ring-2 ring-amber-400/50 shadow-md'
+                      : 'border-secondary/10 bg-white/70'
+                  }`}
+                >
                   <div className="flex items-center justify-between pb-2.5 border-b border-secondary/10">
                     <div className="flex items-center gap-1.5">
                       <span className="grid size-5 place-items-center rounded-full bg-amber-100 text-[#8C6013]">
@@ -1173,32 +1347,59 @@ export function LandingCmsPage() {
                         Program &amp; Layanan Unggulan
                       </span>
                     </div>
-                    <span className="text-[10px] text-secondary/60">Akses Cepat Menuju Dukungan</span>
+                    <span className="text-[10px] text-secondary/60">
+                      {(languageView === 'en' ? heroCampaigns.eyebrow?.en : heroCampaigns.eyebrow?.id) ||
+                        heroCampaigns.eyebrow?.id ||
+                        'Akses Cepat Menuju Dukungan'}
+                    </span>
                   </div>
                   <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="p-3 rounded-lg bg-gradient-to-b from-white to-[#FDF8EE] border border-amber-300/60 shadow-2xs">
-                      <span className="text-[9px] font-bold uppercase bg-amber-100 text-[#8C6013] px-1.5 py-0.5 rounded">Promo Khusus</span>
-                      <h4 className="mt-1 text-xs font-bold text-secondary">First Free Session Consultation</h4>
-                      <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">Klaim sesi privat 1-on-1 tanpa biaya untuk langkah awalmu.</p>
-                      <span className="mt-2 block text-[10px] font-bold text-[#8C6013]">Klaim Sesi Gratis →</span>
-                    </div>
-                    <div className="p-3 rounded-lg bg-white border border-secondary/15 shadow-2xs">
-                      <span className="text-[9px] font-bold uppercase bg-secondary/10 text-secondary px-1.5 py-0.5 rounded">Jadwal Langsung</span>
-                      <h4 className="mt-1 text-xs font-bold text-secondary">Booking / Reservasi Psikolog</h4>
-                      <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">Pilih psikolog dan tentukan jadwal sesi online atau klinik.</p>
-                      <span className="mt-2 block text-[10px] font-bold text-secondary">Reservasi Jadwal →</span>
-                    </div>
-                    <div className="p-3 rounded-lg bg-white border border-secondary/15 shadow-2xs">
-                      <span className="text-[9px] font-bold uppercase bg-[#EBF3FB] text-[#1E568A] px-1.5 py-0.5 rounded">Tes Online</span>
-                      <h4 className="mt-1 text-xs font-bold text-secondary">Digital Test Centre</h4>
-                      <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">Asesmen psikologi terstandarisasi yang siap diakses 24/7.</p>
-                      <span className="mt-2 block text-[10px] font-bold text-[#1E568A]">Akses Tes Online →</span>
-                    </div>
+                    {heroCampaigns.cards.map((c: any, cIdx: number) => (
+                      <div
+                        key={c.id || cIdx}
+                        className={`p-3 rounded-lg border shadow-2xs transition-all ${
+                          cIdx === 0
+                            ? 'bg-gradient-to-b from-white to-[#FDF8EE] border-amber-300/60'
+                            : 'bg-white border-secondary/15'
+                        }`}
+                      >
+                        <span
+                          className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                            cIdx === 0
+                              ? 'bg-amber-100 text-[#8C6013]'
+                              : cIdx === 1
+                              ? 'bg-secondary/10 text-secondary'
+                              : 'bg-[#EBF3FB] text-[#1E568A]'
+                          }`}
+                        >
+                          {(languageView === 'en' ? c.badge?.en : c.badge?.id) || c.badge?.id}
+                        </span>
+                        <h4 className="mt-1 text-xs font-bold text-secondary">
+                          {(languageView === 'en' ? c.title?.en : c.title?.id) || c.title?.id}
+                        </h4>
+                        <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">
+                          {(languageView === 'en' ? c.description?.en : c.description?.id) || c.description?.id}
+                        </p>
+                        <span
+                          className={`mt-2 block text-[10px] font-bold ${
+                            cIdx === 0 ? 'text-[#8C6013]' : cIdx === 1 ? 'text-secondary' : 'text-[#1E568A]'
+                          }`}
+                        >
+                          {(languageView === 'en' ? c.cta?.en : c.cta?.id) || c.cta?.id}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* 4 Trust Counter Metrics in Simulator - DI BAWAHNYA Program & Layanan Unggulan */}
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 rounded-xl bg-white/90 p-3 text-center border border-secondary/10 shadow-2xs">
+                {/* 4 Trust Counter Metrics in Simulator */}
+                <div
+                  className={`mt-4 grid grid-cols-2 sm:grid-cols-4 rounded-xl p-3 text-center border shadow-2xs transition-all ${
+                    heroSubSection === 'metrics'
+                      ? 'border-amber-400/90 bg-amber-50/30 ring-2 ring-amber-400/50 shadow-md'
+                      : 'border-secondary/10 bg-white/90'
+                  }`}
+                >
                   {(activeSection.items || []).map((item, idx) => (
                     <div key={idx} className="p-2 border-r border-secondary/10 last:border-r-0">
                       <div className="text-base sm:text-lg font-extrabold text-secondary">
@@ -1214,1088 +1415,1462 @@ export function LandingCmsPage() {
             </div>
           )}
 
-          {/* --- HERO ONLY: Dynamic Carousel Slides Manager --- */}
+          {/* ========================================================
+              SECTION EDITOR:
+              BRANCH 1: HERO (Dedicated 3-Sub-Section Editor)
+              BRANCH 2: OTHER SECTIONS (Standard Section Form)
+             ======================================================== */}
           {activeSection?.key === 'hero' ? (
-            <div className="space-y-4 p-5 bg-slate-50/90 rounded-2xl border border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-                <div className="flex items-center gap-2.5">
-                  <div className="size-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center shrink-0">
-                    <Images className="size-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                        Kelola Foto Carousel Hero
-                      </h3>
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-teal-100 text-teal-800 rounded-md">
-                        {heroSlides.length} Foto Aktif
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500">
-                      Atur foto yang tampil di hero beranda. Minimal 1 foto, maksimal 10 foto.
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-5">
+              {/* --- Hero Sub-Section Pill Navigation --- */}
+              <div className="p-1.5 bg-slate-100 rounded-2xl border border-slate-200/90 flex flex-wrap items-center gap-1.5 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setHeroSubSection('slides')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    heroSubSection === 'slides'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  <span>🌟</span>
+                  <span>1. Highlight Card ({slide2Item ? '2 Slide' : 'Slide'})</span>
+                </button>
 
                 <button
                   type="button"
-                  onClick={handleAddHeroSlide}
-                  disabled={heroSlides.length >= 10}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto shrink-0"
+                  onClick={() => setHeroSubSection('campaigns')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    heroSubSection === 'campaigns'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
                 >
-                  <Plus className="size-3.5" />
-                  <span>Tambah Foto Slide</span>
+                  <span>⚡</span>
+                  <span>2. Program &amp; Layanan Unggulan (3 Card)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setHeroSubSection('metrics')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    heroSubSection === 'metrics'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  <span>📊</span>
+                  <span>3. Trust Metrics Counter Bar (4 Item)</span>
                 </button>
               </div>
 
-              <div className="space-y-3">
-                {heroSlides.map((slide, sIdx) => {
-                  const isFirst = sIdx === 0
-                  const isLast = sIdx === heroSlides.length - 1
-                  const isUploading = uploadingTarget === `hero-slide-${sIdx}`
-                  const slideInputId = `hero-slide-file-input-${sIdx}`
+              {/* ====================================================
+                  SUB-SECTION 1: HERO HIGHLIGHT CARD (SLIDES)
+                 ==================================================== */}
+              {heroSubSection === 'slides' && (
+                <div className="space-y-4">
+                  {/* Slide Selector Tabs */}
+                  <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
+                          🌟
+                        </span>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                          Pilih Slide Hero untuk Diedit
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5">
+                        Slide 1 adalah layanan klinis utama. Slide 2 adalah fasilitas ruang ramah anabul (pet-friendly).
+                      </p>
+                    </div>
 
-                  return (
-                    <div
-                      key={`hero-slide-card-${sIdx}`}
-                      className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-3 transition-all hover:border-slate-300"
-                    >
-                      {/* Slide Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center justify-center size-5 rounded-md bg-slate-900 text-white text-[11px] font-bold">
-                            {sIdx + 1}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setHeroPreviewSlide(0)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          heroPreviewSlide === 0
+                            ? 'bg-[#132B3A] text-white shadow-xs ring-2 ring-amber-400'
+                            : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
+                        }`}
+                      >
+                        Slide 1: Konseling Klinis
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHeroPreviewSlide(1)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          heroPreviewSlide === 1
+                            ? 'bg-[#C27803] text-white shadow-xs ring-2 ring-amber-400'
+                            : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
+                        }`}
+                      >
+                        Slide 2: Ruang Ramah Anabul 🐾
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SLIDE 1 FORM */}
+                  {heroPreviewSlide === 0 && (
+                    <div className="space-y-4">
+                      {/* Photo Manager Card */}
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <Camera className="size-4 text-teal-600" />
+                            <span>Foto Resmi Hero Slide 1</span>
                           </span>
-                          <span className="text-xs font-bold text-slate-800">
-                            Slide #{sIdx + 1}
+                          <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                            Foto Beranda Utama
                           </span>
-                          {isFirst && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-md">
-                              Foto Utama
-                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                          <div className="sm:col-span-4">
+                            <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-2xs">
+                              <img
+                                src={slide1ImageSrc}
+                                alt="Slide 1 Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="sm:col-span-8 space-y-2">
+                            <input
+                              id="hero-slide-1-input"
+                              type="file"
+                              accept="image/webp,image/png,image/jpeg"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleSlidePhotoUpload(0, e.target.files[0])
+                                }
+                              }}
+                            />
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <label
+                                htmlFor="hero-slide-1-input"
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border shadow-2xs transition-colors ${
+                                  uploadingTarget === 'hero-slide-0'
+                                    ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
+                                    : 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600'
+                                }`}
+                              >
+                                {uploadingTarget === 'hero-slide-0' ? (
+                                  <>
+                                    <Loader2 className="size-3.5 animate-spin" />
+                                    <span>Mengunggah Foto...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <UploadCloud className="size-3.5" />
+                                    <span>Unggah Foto Pengganti</span>
+                                  </>
+                                )}
+                              </label>
+
+                              {activeSection.media && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetSlidePhoto(0)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
+                                  title="Kembalikan ke foto resmi bawaan"
+                                >
+                                  <RotateCcw className="size-3.5 text-slate-400" />
+                                  <span>Reset ke Foto Resmi</span>
+                                </button>
+                              )}
+                            </div>
+
+                            <p className="text-[10px] text-slate-400">
+                              Format: WebP, PNG, JPG (Maks 5 MB) • Rasio disarankan 16:10 atau 4:3
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Copy Inputs for Slide 1 */}
+                      <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">
+                        {/* Headline */}
+                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                          {(languageView === 'both' || languageView === 'id') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Headline Slide 1 (ID)</label>
+                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={activeSection.headline?.id || ''}
+                                onChange={(e) => {
+                                  updateSectionCopy('headline', 'id', e.target.value)
+                                  updateHeroSlideField(0, 'headline', 'id', e.target.value)
+                                }}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                          {(languageView === 'both' || languageView === 'en') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Headline Slide 1 (EN)</label>
+                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={activeSection.headline?.en || ''}
+                                onChange={(e) => {
+                                  updateSectionCopy('headline', 'en', e.target.value)
+                                  updateHeroSlideField(0, 'headline', 'en', e.target.value)
+                                }}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleMoveHeroSlide(sIdx, 'up')}
-                            disabled={isFirst}
-                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:hover:text-slate-400 rounded transition-colors cursor-pointer"
-                            title="Pindah ke atas"
-                          >
-                            <ArrowUp className="size-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveHeroSlide(sIdx, 'down')}
-                            disabled={isLast}
-                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:hover:text-slate-400 rounded transition-colors cursor-pointer"
-                            title="Pindah ke bawah"
-                          >
-                            <ArrowDown className="size-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveHeroSlide(sIdx)}
-                            disabled={heroSlides.length <= 1}
-                            className={`p-1 rounded transition-colors cursor-pointer ${
-                              heroSlides.length <= 1
-                                ? 'text-slate-300 cursor-not-allowed'
-                                : 'text-rose-500 hover:text-rose-700 hover:bg-rose-50'
-                            }`}
-                            title={heroSlides.length <= 1 ? 'Minimal 1 foto wajib ada' : 'Hapus slide ini'}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Slide Content Grid: Preview on left, Upload & Alt text on right */}
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                        {/* Visual Thumbnail */}
-                        <div className="sm:col-span-4">
-                          <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
-                            <img
-                              src={slide.reference.startsWith('/') ? slide.reference : `/${slide.reference}`}
-                              alt={slide.alt?.id || `Hero Slide ${sIdx + 1}`}
-                              className="w-full h-full object-cover object-center"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/media/landing/hero-slide-1.jpg'
-                              }}
-                            />
-                            <label
-                              htmlFor={slideInputId}
-                              className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 text-white cursor-pointer p-2 text-center"
-                            >
-                              <Camera className="size-4" />
-                              <span className="text-[10px] font-semibold">Ganti Foto</span>
-                            </label>
-                            <div className="absolute bottom-1.5 left-1.5 pointer-events-none">
-                              <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-slate-950/70 text-white rounded backdrop-blur-xs">
-                                {slide.width && slide.height ? `${slide.width} × ${slide.height}` : '16:9'}
-                              </span>
-                            </div>
+                        {/* Tip 2 Warna Trademark */}
+                        <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
+                          <Sparkles className="size-4 text-[#C27803] shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <span className="font-bold text-[#C27803]">Tip Gaya Tipografi 2 Warna (Trademark):</span>
+                            <p className="text-slate-700 leading-relaxed">
+                              Gunakan tanda <code className="font-bold bg-amber-100 text-amber-900 px-1 py-0.5 rounded border border-amber-300/60">**kata emas**</code> pada kata yang ingin berwarna emas Attentive (<span className="font-bold text-[#C27803]">#C27803</span>). Kata lainnya berwarna Navy Blue (<span className="font-bold text-[#132B3A]">#132B3A</span>).
+                            </p>
                           </div>
                         </div>
 
-                        {/* Upload & Alt Text Inputs */}
-                        <div className="sm:col-span-8 space-y-2">
-                          <input
-                            id={slideInputId}
-                            type="file"
-                            accept="image/webp,image/png,image/jpeg"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleHeroSlideUpload(sIdx, e.target.files[0])
-                              }
-                            }}
-                          />
+                        {/* Description */}
+                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                          {(languageView === 'both' || languageView === 'id') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 1 (ID)</label>
+                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              </div>
+                              <textarea
+                                rows={3}
+                                value={activeSection.description?.id || ''}
+                                onChange={(e) => {
+                                  updateSectionCopy('description', 'id', e.target.value)
+                                  updateHeroSlideField(0, 'description', 'id', e.target.value)
+                                }}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                          {(languageView === 'both' || languageView === 'en') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 1 (EN)</label>
+                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              </div>
+                              <textarea
+                                rows={3}
+                                value={activeSection.description?.en || ''}
+                                onChange={(e) => {
+                                  updateSectionCopy('description', 'en', e.target.value)
+                                  updateHeroSlideField(0, 'description', 'en', e.target.value)
+                                }}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                        </div>
 
-                          <div className="flex items-center gap-2">
-                            <label
-                              htmlFor={slideInputId}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer border transition-colors ${
-                                isUploading
-                                  ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
-                                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 hover:border-slate-400'
-                              }`}
-                            >
-                              {isUploading ? (
-                                <>
-                                  <Loader2 className="size-3 animate-spin text-teal-600" />
-                                  <span>Mengunggah...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <UploadCloud className="size-3 text-teal-600" />
-                                  <span>Unggah Foto Pengganti</span>
-                                </>
+                        {/* CTA Buttons & Target URLs for Slide 1 */}
+                        <div className="pt-3 border-t border-slate-200 space-y-3">
+                          <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                            Tombol CTA &amp; Target URL Slide 1
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Primary Button */}
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                              <label className="block text-xs font-bold text-slate-800">
+                                Tombol Utama (Primary CTA)
+                              </label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Label (ID)"
+                                  value={activeSection.primaryCta?.id || ''}
+                                  onChange={(e) => updateSectionCustomField('primaryCta', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Label (EN)"
+                                  value={activeSection.primaryCta?.en || ''}
+                                  onChange={(e) => updateSectionCustomField('primaryCta', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                                  Target Link / URL
+                                </label>
+                                <div className="relative">
+                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                  <input
+                                    type="text"
+                                    placeholder="/reservasi atau https://wa.me/..."
+                                    value={(activeSection as any).primaryCtaUrl || '/reservasi'}
+                                    onChange={(e) => updateHeroSlideUrl(0, 'primaryCtaUrl', e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Secondary Button */}
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                              <label className="block text-xs font-bold text-slate-800">
+                                Tombol Sekunder (Secondary CTA)
+                              </label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Label (ID)"
+                                  value={activeSection.secondaryCta?.id || ''}
+                                  onChange={(e) => updateSectionCustomField('secondaryCta', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Label (EN)"
+                                  value={activeSection.secondaryCta?.en || ''}
+                                  onChange={(e) => updateSectionCustomField('secondaryCta', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                                  Target Link / URL
+                                </label>
+                                <div className="relative">
+                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                  <input
+                                    type="text"
+                                    placeholder="#services atau /layanan"
+                                    value={(activeSection as any).secondaryCtaUrl || '#services'}
+                                    onChange={(e) => updateHeroSlideUrl(0, 'secondaryCtaUrl', e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SLIDE 2 FORM */}
+                  {heroPreviewSlide === 1 && (
+                    <div className="space-y-4">
+                      {/* Photo Manager Card for Slide 2 */}
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <PawPrint className="size-4 text-amber-600" />
+                            <span>Foto Resmi Hero Slide 2 (Ruang Ramah Anabul)</span>
+                          </span>
+                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            Pet-Friendly Space
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                          <div className="sm:col-span-4">
+                            <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-2xs">
+                              <img
+                                src={slide2ImageSrc}
+                                alt="Slide 2 Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="sm:col-span-8 space-y-2">
+                            <input
+                              id="hero-slide-2-input"
+                              type="file"
+                              accept="image/webp,image/png,image/jpeg"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleSlidePhotoUpload(1, e.target.files[0])
+                                }
+                              }}
+                            />
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <label
+                                htmlFor="hero-slide-2-input"
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border shadow-2xs transition-colors ${
+                                  uploadingTarget === 'hero-slide-1'
+                                    ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
+                                    : 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600'
+                                }`}
+                              >
+                                {uploadingTarget === 'hero-slide-1' ? (
+                                  <>
+                                    <Loader2 className="size-3.5 animate-spin" />
+                                    <span>Mengunggah Foto...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <UploadCloud className="size-3.5" />
+                                    <span>Unggah Foto Pengganti</span>
+                                  </>
+                                )}
+                              </label>
+
+                              {slide2Item?.media && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetSlidePhoto(1)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
+                                  title="Kembalikan ke foto bawaan"
+                                >
+                                  <RotateCcw className="size-3.5 text-slate-400" />
+                                  <span>Reset ke Foto Bawaan</span>
+                                </button>
                               )}
-                            </label>
-                            <span className="text-[10px] text-slate-400">
-                              WebP, PNG, JPG (Maks 5 MB)
+                            </div>
+
+                            <p className="text-[10px] text-slate-400">
+                              Format: WebP, PNG, JPG (Maks 5 MB)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Copy Inputs for Slide 2 */}
+                      <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">
+                        {/* Kicker Badge */}
+                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                          {(languageView === 'both' || languageView === 'id') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (ID)</label>
+                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={slide2Item?.tag?.id || ''}
+                                onChange={(e) => updateHeroSlideField(1, 'tag', 'id', e.target.value)}
+                                placeholder="Cth: Ruang Ramah Anabul"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                          {(languageView === 'both' || languageView === 'en') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (EN)</label>
+                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={slide2Item?.tag?.en || ''}
+                                onChange={(e) => updateHeroSlideField(1, 'tag', 'en', e.target.value)}
+                                placeholder="E.g: Pet Friendly Space"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Headline */}
+                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                          {(languageView === 'both' || languageView === 'id') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (ID)</label>
+                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={slide2Item?.headline?.id || ''}
+                                onChange={(e) => updateHeroSlideField(1, 'headline', 'id', e.target.value)}
+                                placeholder="Cth: Biro Psikologi **Pet Friendly.**"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                          {(languageView === 'both' || languageView === 'en') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (EN)</label>
+                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={slide2Item?.headline?.en || ''}
+                                onChange={(e) => updateHeroSlideField(1, 'headline', 'en', e.target.value)}
+                                placeholder="E.g: Pet Friendly **Psychology Bureau.**"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Description */}
+                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                          {(languageView === 'both' || languageView === 'id') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 2 (ID)</label>
+                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              </div>
+                              <textarea
+                                rows={3}
+                                value={slide2Item?.description?.id || ''}
+                                onChange={(e) => updateHeroSlideField(1, 'description', 'id', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                          {(languageView === 'both' || languageView === 'en') && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 2 (EN)</label>
+                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              </div>
+                              <textarea
+                                rows={3}
+                                value={slide2Item?.description?.en || ''}
+                                onChange={(e) => updateHeroSlideField(1, 'description', 'en', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* CTA Buttons & Target URLs for Slide 2 */}
+                        <div className="pt-3 border-t border-slate-200 space-y-3">
+                          <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                            Tombol CTA &amp; Target URL Slide 2
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Primary Button */}
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                              <label className="block text-xs font-bold text-slate-800">
+                                Tombol Utama Slide 2
+                              </label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Label (ID)"
+                                  value={slide2Item?.primaryCta?.id || ''}
+                                  onChange={(e) => updateHeroSlideField(1, 'primaryCta', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Label (EN)"
+                                  value={slide2Item?.primaryCta?.en || ''}
+                                  onChange={(e) => updateHeroSlideField(1, 'primaryCta', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                                  Target Link / URL
+                                </label>
+                                <div className="relative">
+                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                  <input
+                                    type="text"
+                                    placeholder="/reservasi?service=pet-friendly"
+                                    value={slide2Item?.primaryCtaUrl || '/reservasi?service=pet-friendly'}
+                                    onChange={(e) => updateHeroSlideUrl(1, 'primaryCtaUrl', e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Secondary Button */}
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                              <label className="block text-xs font-bold text-slate-800">
+                                Tombol Sekunder (Hyperlink Lokasi)
+                              </label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Label (ID)"
+                                  value={slide2Item?.secondaryCta?.id || ''}
+                                  onChange={(e) => updateHeroSlideField(1, 'secondaryCta', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Label (EN)"
+                                  value={slide2Item?.secondaryCta?.en || ''}
+                                  onChange={(e) => updateHeroSlideField(1, 'secondaryCta', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                                  Target Link / URL
+                                </label>
+                                <div className="relative">
+                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                  <input
+                                    type="text"
+                                    placeholder="#locations atau /lokasi"
+                                    value={slide2Item?.secondaryCtaUrl || '#locations'}
+                                    onChange={(e) => updateHeroSlideUrl(1, 'secondaryCtaUrl', e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ====================================================
+                  SUB-SECTION 2: PROGRAM & LAYANAN UNGGULAN
+                 ==================================================== */}
+              {heroSubSection === 'campaigns' && (
+                <div className="space-y-4">
+                  {/* Info Banner */}
+                  <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="size-4 text-[#8C6013]" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                        Editor Program &amp; Layanan Unggulan (Command Strip)
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Bagian ini mengatur 3 kartu aksi cepat tepat di bawah Hero banner utama untuk mempermudah calon klien memilih sesi gratis, booking psikolog, atau tes online.
+                    </p>
+                  </div>
+
+                  {/* Header & Sub-headline */}
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">
+                    <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                      Judul &amp; Penjelasan Strip Layanan
+                    </h5>
+
+                    <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                      {(languageView === 'both' || languageView === 'id') && (
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Eyebrow / Sub-Judul (ID)
+                          </label>
+                          <input
+                            type="text"
+                            value={heroCampaigns.eyebrow?.id || ''}
+                            onChange={(e) => updateHeroCampaignHeader('eyebrow', 'id', e.target.value)}
+                            placeholder="Cth: Akses Cepat Menuju Dukungan"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          />
+                        </div>
+                      )}
+                      {(languageView === 'both' || languageView === 'en') && (
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Eyebrow / Sub-Judul (EN)
+                          </label>
+                          <input
+                            type="text"
+                            value={heroCampaigns.eyebrow?.en || ''}
+                            onChange={(e) => updateHeroCampaignHeader('eyebrow', 'en', e.target.value)}
+                            placeholder="E.g: Quick Access to Care"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                      {(languageView === 'both' || languageView === 'id') && (
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Deskripsi Pengantar (ID)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={heroCampaigns.description?.id || ''}
+                            onChange={(e) => updateHeroCampaignHeader('description', 'id', e.target.value)}
+                            placeholder="Deskripsi singkat layanan unggulan..."
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          />
+                        </div>
+                      )}
+                      {(languageView === 'both' || languageView === 'en') && (
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Deskripsi Pengantar (EN)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={heroCampaigns.description?.en || ''}
+                            onChange={(e) => updateHeroCampaignHeader('description', 'en', e.target.value)}
+                            placeholder="Brief description of featured programs..."
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3 Dedicated Campaign Cards */}
+                  <div className="space-y-4">
+                    {heroCampaigns.cards.map((card: any, cIdx: number) => {
+                      const icons = [
+                        <Gift key="gift" className="size-4 text-amber-600" />,
+                        <CalendarCheck2 key="cal" className="size-4 text-teal-600" />,
+                        <ClipboardCheck key="test" className="size-4 text-blue-600" />,
+                      ]
+
+                      return (
+                        <div
+                          key={card.id || cIdx}
+                          className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-3"
+                        >
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div className="flex items-center gap-2">
+                              {icons[cIdx] || <Sparkles className="size-4 text-slate-600" />}
+                              <span className="text-xs font-bold text-slate-900">
+                                Kartu #{cIdx + 1}: {card.title?.id || `Program ${cIdx + 1}`}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                              {card.badge?.id || 'Program'}
                             </span>
                           </div>
 
-                          {/* Bilingual Alt Inputs */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                          {/* Badge & Title */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Alt Text (ID)
+                                Badge / Kategori Tag (ID / EN)
                               </label>
-                              <input
-                                type="text"
-                                value={slide.alt?.id || ''}
-                                onChange={(e) => handleHeroSlideAltChange(sIdx, 'id', e.target.value)}
-                                placeholder="Deskripsi foto untuk pembaca layar (ID)"
-                                className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:bg-white"
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Badge ID"
+                                  value={card.badge?.id || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Badge EN"
+                                  value={card.badge?.en || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                Judul Kartu (ID / EN)
+                              </label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Judul ID"
+                                  value={card.title?.id || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Judul EN"
+                                  value={card.title?.en || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                Deskripsi Kartu (ID)
+                              </label>
+                              <textarea
+                                rows={2}
+                                value={card.description?.id || ''}
+                                onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'id', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
                               />
                             </div>
                             <div>
                               <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Alt Text (EN)
+                                Deskripsi Kartu (EN)
                               </label>
+                              <textarea
+                                rows={2}
+                                value={card.description?.en || ''}
+                                onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'en', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                            </div>
+                          </div>
+
+                          {/* CTA Text & Target URL */}
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100 items-center">
+                            <div className="sm:col-span-6">
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                Label Tombol CTA (ID / EN)
+                              </label>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="CTA ID"
+                                  value={card.cta?.id || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'id', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="CTA EN"
+                                  value={card.cta?.en || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'en', e.target.value)}
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="sm:col-span-6">
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                Target Link URL Kartu
+                              </label>
+                              <div className="relative">
+                                <ExternalLink className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                  type="text"
+                                  placeholder="https://..."
+                                  value={card.url || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'url', e.target.value)}
+                                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ====================================================
+                  SUB-SECTION 3: TRUST METRICS COUNTER BAR
+                 ==================================================== */}
+              {heroSubSection === 'metrics' && (
+                <div className="space-y-4">
+                  {/* Toolbar & Sync Controls */}
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="size-4 text-teal-600" />
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                            Trust Metrics Counter Bar (4 Item)
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Atur 4 kartu counter bukti kredibilitas: Label (Judul) dan Nilai/Angka besar (Deskripsi).
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+                              const headers = getAuthHeaders()
+                              const res = await fetch(`${baseUrl}/api/admin/overview/stats`, { headers })
+                              if (res.ok) {
+                                const json = await res.json()
+                                const activeCount = json?.data?.psychologists?.active ?? 18
+                                const newSections = [...content.sections]
+                                const heroSec = newSections[activeSectionIndex]
+                                if (Array.isArray(heroSec.items)) {
+                                  heroSec.items = heroSec.items.map((item, idx) => {
+                                    if (idx === 1 || item.id === 'psychologist-count' || item.title.id.toLowerCase().includes('psikolog')) {
+                                      return {
+                                        ...item,
+                                        description: { id: String(activeCount), en: String(activeCount) },
+                                      }
+                                    }
+                                    return item
+                                  })
+                                }
+                                setContent({ ...content, sections: newSections })
+                                setMessage({ type: 'success', text: `Berhasil sinkronkan jumlah psikolog aktif dari database: ${activeCount} psikolog!` })
+                              }
+                            } catch (err) {
+                              console.error(err)
+                              setMessage({ type: 'error', text: 'Gagal menghubungi server untuk sinkronisasi jumlah psikolog.' })
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-teal-300 rounded-lg text-xs font-semibold text-teal-800 hover:bg-teal-50 transition-colors shadow-2xs cursor-pointer"
+                        >
+                          <span>🔄 Sync DB Psikolog</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSections = [...content.sections]
+                            newSections[activeSectionIndex] = {
+                              ...activeSection,
+                              items: [
+                                { id: 'sessions-delivered', position: 0, title: { id: 'Sesi terlaksana', en: 'Sessions delivered' }, description: { id: '3.000+', en: '3,000+' } },
+                                { id: 'psychologist-count', position: 1, title: { id: 'Psikolog', en: 'Psychologists' }, description: { id: '18', en: '18' } },
+                                { id: 'google-rating', position: 2, title: { id: 'Rating Google', en: 'Google rating' }, description: { id: '5,0', en: '5.0' } },
+                                { id: 'google-reviews', position: 3, title: { id: 'Ulasan Google', en: 'Google reviews' }, description: { id: '53', en: '53' } },
+                              ],
+                            }
+                            setContent({ ...content, sections: newSections })
+                            setMessage({ type: 'success', text: '4 Angka Trust Metrics resmi (3.000+, 18, 5,0, 53) berhasil dipulihkan!' })
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors shadow-2xs cursor-pointer"
+                        >
+                          <span>⚡ Reset Metrik Resmi</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Milestone Presets */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 text-xs">
+                      <span className="font-semibold text-slate-600 mr-1 text-[11px]">Preset Cepat Sesi:</span>
+                      {['3.000+', '3.500+', '4.000+', '5.000+'].map((milestone) => (
+                        <button
+                          key={milestone}
+                          type="button"
+                          onClick={() => {
+                            const newSections = [...content.sections]
+                            const heroSec = newSections[activeSectionIndex]
+                            if (Array.isArray(heroSec.items)) {
+                              heroSec.items = heroSec.items.map((item, idx) => {
+                                if (idx === 0 || item.id === 'sessions-delivered' || item.title.id.toLowerCase().includes('sesi')) {
+                                  return {
+                                    ...item,
+                                    description: { id: milestone, en: milestone.replace('.', ',') },
+                                  }
+                                }
+                                return item
+                              })
+                            }
+                            setContent({ ...content, sections: newSections })
+                            setMessage({ type: 'success', text: `Sesi terlaksana diubah menjadi: ${milestone}` })
+                          }}
+                          className="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-medium text-slate-700 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 transition-colors cursor-pointer text-[11px]"
+                        >
+                          {milestone}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 4 Metric Item Cards */}
+                  <div className="space-y-3">
+                    {(activeSection.items || []).map((item: LandingItem, itemIdx: number) => (
+                      <div
+                        key={item.id || itemIdx}
+                        className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center gap-3"
+                      >
+                        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                          <span className="flex size-6 items-center justify-center rounded-md bg-slate-900 text-white text-xs font-bold">
+                            {itemIdx + 1}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 w-full">
+                          {/* Label Metrik */}
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                              Label Metrik (ID / EN)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
                               <input
                                 type="text"
-                                value={slide.alt?.en || ''}
-                                onChange={(e) => handleHeroSlideAltChange(sIdx, 'en', e.target.value)}
-                                placeholder="Accessible description for screen readers (EN)"
-                                className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:bg-white"
+                                placeholder="Cth: Sesi terlaksana"
+                                value={item.title?.id || ''}
+                                onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'id', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Cth: Sessions delivered"
+                                value={item.title?.en || ''}
+                                onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'en', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Nilai / Angka */}
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                              Nilai / Angka Besar (ID / EN)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Cth: 3.000+"
+                                value={item.description?.id || ''}
+                                onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'id', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Cth: 3,000+"
+                                value={item.description?.en || ''}
+                                onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'en', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
                               />
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
-
-                {heroSlides.length < 10 && (
-                  <button
-                    type="button"
-                    onClick={handleAddHeroSlide}
-                    className="w-full py-2.5 border-2 border-dashed border-slate-300 hover:border-teal-500 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 hover:text-teal-700 bg-white hover:bg-teal-50/50 transition-colors cursor-pointer"
-                  >
-                    <Plus className="size-3.5" />
-                    <span>Tambah Foto Slide ke-{heroSlides.length + 1}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* --- OTHER SECTIONS: Section-Level Picture Upload Card --- */
-            (sectionImageMeta || activeSection?.media) && (
-              <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center">
-                      <ImageIcon className="size-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                        {sectionImageMeta?.title || 'Visual Gambar Section'}
-                      </h3>
-                      <p className="text-[11px] text-slate-500">
-                        {sectionImageMeta?.description || 'Unggah foto resmi untuk section ini.'} (Rasio target: {sectionImageMeta?.aspectRatio || 'Bebas'})
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {activeSection.media ? (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-md flex items-center gap-1">
-                        <Check className="size-3" />
-                        Visual Kustom
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-200 text-slate-700 rounded-md">
-                        Bawaan Sistem
-                      </span>
-                    )}
+                    ))}
                   </div>
                 </div>
+              )}
+            </div>
+          ) : (
+            /* ====================================================
+                BRANCH 2: OTHER 8 SECTIONS (Standard Section Form)
+               ==================================================== */
+            <div className="space-y-6">
+              {/* Picture Upload Card */}
+              {(sectionImageMeta || activeSection?.media) && (
+                <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="size-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center">
+                        <ImageIcon className="size-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                          {sectionImageMeta?.title || 'Visual Gambar Section'}
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          {sectionImageMeta?.description || 'Unggah foto resmi untuk section ini.'} (Rasio target: {sectionImageMeta?.aspectRatio || 'Bebas'})
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Grid: Preview Box + Upload Controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-                  {/* Visual Preview */}
-                  <div className="sm:col-span-5">
-                    <div className={`relative ${sectionImageMeta?.aspectClass || 'aspect-video'} w-full rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shadow-xs group`}>
-                      <img
-                        src={currentSectionImageSrc}
-                        alt={activeSection.media?.alt?.id || activeSection.headline?.id || 'Preview Visual Section'}
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                          if (sectionImageMeta?.defaultImage) {
-                            (e.target as HTMLImageElement).src = sectionImageMeta.defaultImage
+                    <div className="flex items-center gap-2">
+                      {activeSection.media ? (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-md flex items-center gap-1">
+                          <Check className="size-3" />
+                          Visual Kustom
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-200 text-slate-700 rounded-md">
+                          Bawaan Sistem
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                    <div className="sm:col-span-5">
+                      <div className={`relative ${sectionImageMeta?.aspectClass || 'aspect-video'} w-full rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shadow-xs group`}>
+                        <img
+                          src={currentSectionImageSrc}
+                          alt={activeSection.media?.alt?.id || activeSection.headline?.id || 'Preview Visual Section'}
+                          className="w-full h-full object-cover object-center"
+                          onError={(e) => {
+                            if (sectionImageMeta?.defaultImage) {
+                              (e.target as HTMLImageElement).src = sectionImageMeta.defaultImage
+                            }
+                          }}
+                        />
+
+                        <div
+                          onClick={() => sectionFileInputRef.current?.click()}
+                          className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white cursor-pointer p-3 text-center"
+                        >
+                          <Camera className="w-6 h-6 text-white" />
+                          <span className="text-xs font-semibold">Klik untuk Ganti Gambar</span>
+                          <span className="text-[10px] text-slate-300">WebP, PNG, JPG (Maks 5 MB)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-7 space-y-3">
+                      <input
+                        ref={sectionFileInputRef}
+                        type="file"
+                        accept="image/webp,image/png,image/jpeg"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleSectionImageUpload(e.target.files[0])
                           }
                         }}
                       />
 
-                      {/* Hover Overlay */}
-                      <div
-                        onClick={() => sectionFileInputRef.current?.click()}
-                        className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white cursor-pointer p-3 text-center"
-                      >
-                        <Camera className="w-6 h-6 text-white" />
-                        <span className="text-xs font-semibold">Klik untuk Ganti Gambar</span>
-                        <span className="text-[10px] text-slate-300">WebP, PNG, JPG (Maks 5 MB)</span>
-                      </div>
-
-                      {/* Dimension Tag */}
-                      <div className="absolute bottom-2 left-2 pointer-events-none">
-                        <span className="px-2 py-0.5 text-[9px] font-semibold bg-slate-950/70 text-white rounded-md backdrop-blur-xs">
-                          {activeSection.media?.width && activeSection.media?.height
-                            ? `${activeSection.media.width} × ${activeSection.media.height} px`
-                            : (sectionImageMeta?.aspectRatio || 'Default')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dropzone & Action Controls */}
-                  <div className="sm:col-span-7 space-y-3">
-                    <input
-                      ref={sectionFileInputRef}
-                      type="file"
-                      accept="image/webp,image/png,image/jpeg"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          handleSectionImageUpload(e.target.files[0])
-                        }
-                      }}
-                    />
-
-                    {/* Drag-and-drop zone */}
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault()
-                        setDragOverSection(true)
-                      }}
-                      onDragLeave={() => setDragOverSection(false)}
-                      onDrop={(e) => {
-                        e.preventDefault()
-                        setDragOverSection(false)
-                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                          handleSectionImageUpload(e.dataTransfer.files[0])
-                        }
-                      }}
-                      onClick={() => sectionFileInputRef.current?.click()}
-                      className={`p-4 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${
-                        dragOverSection
-                          ? 'border-teal-500 bg-teal-50/60'
-                          : 'border-slate-300 hover:border-teal-500 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      <UploadCloud className="w-6 h-6 text-teal-600" />
-                      <div className="text-xs font-semibold text-slate-700 text-center">
-                        Tarik file gambar ke sini atau klik untuk memilih
-                      </div>
-                      <div className="text-[10px] text-slate-400 text-center">
-                        Format WebP, PNG, JPG • Ukuran maksimal 5 MB
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => sectionFileInputRef.current?.click()}
-                        disabled={uploadingTarget === activeSection.key}
-                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        {uploadingTarget === activeSection.key ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Mengunggah Gambar...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Camera className="w-3.5 h-3.5" />
-                            <span>Pilih & Unggah Gambar</span>
-                          </>
-                        )}
-                      </button>
-
-                      {activeSection.media && (
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={handleResetSectionImage}
-                          className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                          title="Kembalikan ke gambar default bawaan sistem"
+                          onClick={() => sectionFileInputRef.current?.click()}
+                          disabled={uploadingTarget === activeSection.key}
+                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
                         >
-                          <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Kembalikan ke Default</span>
+                          {uploadingTarget === activeSection.key ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Mengunggah Gambar...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>Pilih & Unggah Gambar</span>
+                            </>
+                          )}
                         </button>
+
+                        {activeSection.media && (
+                          <button
+                            type="button"
+                            onClick={handleResetSectionImage}
+                            className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                            title="Kembalikan ke gambar default bawaan sistem"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Kembalikan ke Default</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Alt text inputs for section image */}
+                      {activeSection.media && (
+                        <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-slate-200">
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Alt Text Gambar (ID)</label>
+                            <input
+                              type="text"
+                              value={activeSection.media.alt?.id || ''}
+                              onChange={(e) => handleSectionMediaAltChange('id', e.target.value)}
+                              placeholder="Deskripsi visual untuk aksesibilitas (ID)"
+                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Alt Text Image (EN)</label>
+                            <input
+                              type="text"
+                              value={activeSection.media.alt?.en || ''}
+                              onChange={(e) => handleSectionMediaAltChange('en', e.target.value)}
+                              placeholder="Visual description for screen reader (EN)"
+                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
-
-                    {/* Alt Text Accessibility inputs for section image */}
-                    {activeSection.media && (
-                      <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-slate-200">
-                        <div>
-                          <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Alt Text Gambar (ID)</label>
-                          <input
-                            type="text"
-                            value={activeSection.media.alt?.id || ''}
-                            onChange={(e) => handleSectionMediaAltChange('id', e.target.value)}
-                            placeholder="Deskripsi visual untuk aksesibilitas (ID)"
-                            className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Alt Text Image (EN)</label>
-                          <input
-                            type="text"
-                            value={activeSection.media.alt?.en || ''}
-                            onChange={(e) => handleSectionMediaAltChange('en', e.target.value)}
-                            placeholder="Visual description for screen reader (EN)"
-                            className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            )
-          )}
+              )}
 
-          {/* Section Copy (Headline, Description & Slide Selector for Hero) */}
-          <div className="space-y-4">
-            {activeSection?.key === 'hero' ? (
-              <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl shadow-xs space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="flex size-6 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
-                        ⚡
-                      </span>
-                      <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
-                        Editor Konten Slide Hero Beranda
-                      </h3>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      Beranda memiliki 2 slide interaktif. Pilih tab di samping untuk mengedit teks &amp; tombol masing-masing slide:
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setHeroPreviewSlide(0)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        heroPreviewSlide === 0
-                          ? 'bg-[#132B3A] text-white shadow-md ring-2 ring-amber-400'
-                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
-                      }`}
-                    >
-                      Slide 1: Konseling Klinis
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroPreviewSlide(1)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        heroPreviewSlide === 1
-                          ? 'bg-[#C27803] text-white shadow-md ring-2 ring-amber-400'
-                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
-                      }`}
-                    >
-                      Slide 2: Ruang Ramah Anabul 🐾
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Judul &amp; Deskripsi Section</h3>
-                <span className="text-[10px] text-slate-500 font-medium">
-                  {languageView === 'both' ? 'Mode Dual View (ID + EN)' : languageView === 'id' ? 'Mode Bahasa Indonesia' : 'Mode English'}
-                </span>
-              </div>
-            )}
-
-            {activeSection?.key === 'hero' && heroPreviewSlide === 1 ? (
-              /* --- SLIDE 2 EDITOR --- */
+              {/* Section Copy (Headline & Description) */}
               <div className="space-y-4 p-4 bg-white rounded-xl border border-slate-200">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="text-xs font-bold text-slate-800">
-                    Mengedit: <span className="text-[#C27803]">Slide 2 (Ruang Ramah Anabul 🐾)</span>
-                  </span>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Judul &amp; Deskripsi Section</h3>
                   <span className="text-[10px] text-slate-500 font-medium">
-                    {languageView === 'both' ? 'Mode Dual View (ID + EN)' : languageView === 'id' ? 'Bahasa Indonesia' : 'English'}
+                    {languageView === 'both' ? 'Mode Dual View (ID + EN)' : languageView === 'id' ? 'Mode Bahasa Indonesia' : 'Mode English'}
                   </span>
                 </div>
 
-                {/* Tag / Badge */}
                 <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
                   {(languageView === 'both' || languageView === 'id') && (
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={getHeroSlideItem(1)?.tag?.id || ''}
-                        onChange={(e) => updateHeroSlideField(1, 'tag', 'id', e.target.value)}
-                        placeholder="Cth: Ruang Ramah Anabul"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={getHeroSlideItem(1)?.tag?.en || ''}
-                        onChange={(e) => updateHeroSlideField(1, 'tag', 'en', e.target.value)}
-                        placeholder="E.g: Pet Friendly Space"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Headline Slide 2 */}
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={getHeroSlideItem(1)?.headline?.id || ''}
-                        onChange={(e) => updateHeroSlideField(1, 'headline', 'id', e.target.value)}
-                        placeholder="Cth: Biro Psikologi **Pet Friendly.**"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={getHeroSlideItem(1)?.headline?.en || ''}
-                        onChange={(e) => updateHeroSlideField(1, 'headline', 'en', e.target.value)}
-                        placeholder="E.g: Pet Friendly **Psychology Bureau.**"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Description Slide 2 */}
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Description Slide 2 (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                      </div>
-                      <textarea
-                        rows={3}
-                        value={getHeroSlideItem(1)?.description?.id || ''}
-                        onChange={(e) => updateHeroSlideField(1, 'description', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Description Slide 2 (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                      </div>
-                      <textarea
-                        rows={3}
-                        value={getHeroSlideItem(1)?.description?.en || ''}
-                        onChange={(e) => updateHeroSlideField(1, 'description', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Primary & Secondary CTA Buttons for Slide 2 */}
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2' : 'space-y-4 pt-2'}>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tombol Utama Slide 2 (ID / EN)</label>
-                    <input
-                      type="text"
-                      value={getHeroSlideItem(1)?.primaryCta?.id || ''}
-                      onChange={(e) => updateHeroSlideField(1, 'primaryCta', 'id', e.target.value)}
-                      placeholder="Label Tombol Reservasi (ID)"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tombol Sekunder (Hyperlink Lokasi)</label>
-                    <input
-                      type="text"
-                      value={getHeroSlideItem(1)?.secondaryCta?.id || ''}
-                      onChange={(e) => updateHeroSlideField(1, 'secondaryCta', 'id', e.target.value)}
-                      placeholder="Label Tombol Lokasi (ID, cth: Lihat 3 Lokasi Praktik)"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* --- SLIDE 1 (Or Standard Section) EDITOR --- */
-              <div className="space-y-4">
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Headline {activeSection?.key === 'hero' ? 'Slide 1 (Indonesian)' : '(Indonesian)'}</label>
+                        <label className="text-xs font-semibold text-slate-700">Headline (Indonesian)</label>
                         <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
                       </div>
                       <input
                         type="text"
                         value={activeSection?.headline?.id || ''}
-                        onChange={(e) => {
-                          updateSectionCopy('headline', 'id', e.target.value)
-                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'headline', 'id', e.target.value)
-                        }}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        onChange={(e) => updateSectionCopy('headline', 'id', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   )}
                   {(languageView === 'both' || languageView === 'en') && (
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Headline {activeSection?.key === 'hero' ? 'Slide 1 (English)' : '(English)'}</label>
+                        <label className="text-xs font-semibold text-slate-700">Headline (English)</label>
                         <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
                       </div>
                       <input
                         type="text"
                         value={activeSection?.headline?.en || ''}
-                        onChange={(e) => {
-                          updateSectionCopy('headline', 'en', e.target.value)
-                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'headline', 'en', e.target.value)
-                        }}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        onChange={(e) => updateSectionCopy('headline', 'en', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   )}
                 </div>
 
-                {/* 2-Color Trademark Headline Tip for Hero Section */}
-                {activeSection?.key === 'hero' && (
-                  <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl text-xs text-amber-950 flex items-start gap-2.5 shadow-2xs">
-                    <Sparkles className="size-4 text-[#C27803] shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <div className="font-bold text-[#C27803] flex items-center gap-1.5">
-                        <span>Tip Gaya Tipografi 2 Warna (Trademark):</span>
-                      </div>
-                      <p className="text-slate-700 leading-relaxed">
-                        Gunakan tanda <code className="font-bold bg-amber-100 text-amber-900 px-1 py-0.5 rounded border border-amber-300/60">**kata emas**</code> pada kata/frasa yang ingin diberi warna aksen emas Attentive (Gold <span className="font-bold text-[#C27803]">#C27803</span>). Kalimat lainnya otomatis berwarna Deep Blue (<span className="font-bold text-[#132B3A]">#132B3A</span>).
-                      </p>
-                      <p className="text-[11px] text-slate-500 italic">
-                        Contoh: &quot;Biro Psikologi Klinis &amp; Konseling <strong className="text-[#C27803] font-bold">**Profesional Berizin Resmi.**</strong>&quot;
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
                   {(languageView === 'both' || languageView === 'id') && (
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Description {activeSection?.key === 'hero' ? 'Slide 1 (Indonesian)' : '(Indonesian)'}</label>
+                        <label className="text-xs font-semibold text-slate-700">Description (Indonesian)</label>
                         <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
                       </div>
                       <textarea
                         rows={3}
                         value={activeSection?.description?.id || ''}
-                        onChange={(e) => {
-                          updateSectionCopy('description', 'id', e.target.value)
-                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'description', 'id', e.target.value)
-                        }}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        onChange={(e) => updateSectionCopy('description', 'id', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   )}
                   {(languageView === 'both' || languageView === 'en') && (
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Description {activeSection?.key === 'hero' ? 'Slide 1 (English)' : '(English)'}</label>
+                        <label className="text-xs font-semibold text-slate-700">Description (English)</label>
                         <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
                       </div>
                       <textarea
                         rows={3}
                         value={activeSection?.description?.en || ''}
-                        onChange={(e) => {
-                          updateSectionCopy('description', 'en', e.target.value)
-                          if (activeSection?.key === 'hero') updateHeroSlideField(0, 'description', 'en', e.target.value)
-                        }}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        onChange={(e) => updateSectionCopy('description', 'en', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   )}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Section Specific Action & CTA Fields */}
-          {(activeSection?.primaryCta || activeSection?.secondaryCta || activeSection?.contact || activeSection?.price) && (
-            <div className="space-y-4 pt-4 border-t border-slate-200">
-              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Tombol & Informasi Khusus</h3>
+              {/* Action Fields (CTA, Price, Contact) */}
+              {(activeSection?.primaryCta || activeSection?.secondaryCta || activeSection?.contact || activeSection?.price) && (
+                <div className="space-y-4 p-4 bg-white rounded-xl border border-slate-200">
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Tombol &amp; Informasi Khusus</h3>
 
-              {activeSection?.primaryCta && (
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Primary CTA Button (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                  {activeSection?.primaryCta && (
+                    <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Primary CTA Button (ID)</label>
+                        <input
+                          type="text"
+                          value={activeSection.primaryCta.id || ''}
+                          onChange={(e) => updateSectionCustomField('primaryCta', 'id', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        value={activeSection.primaryCta.id || ''}
-                        onChange={(e) => updateSectionCustomField('primaryCta', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Primary CTA Button (EN)</label>
+                        <input
+                          type="text"
+                          value={activeSection.primaryCta.en || ''}
+                          onChange={(e) => updateSectionCustomField('primaryCta', 'en', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
                     </div>
                   )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Primary CTA Button (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={activeSection.primaryCta.en || ''}
-                        onChange={(e) => updateSectionCustomField('primaryCta', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
 
-              {activeSection?.secondaryCta && (
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Secondary CTA Button (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                  {activeSection?.secondaryCta && (
+                    <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Secondary CTA Button (ID)</label>
+                        <input
+                          type="text"
+                          value={activeSection.secondaryCta.id || ''}
+                          onChange={(e) => updateSectionCustomField('secondaryCta', 'id', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        value={activeSection.secondaryCta.id || ''}
-                        onChange={(e) => updateSectionCustomField('secondaryCta', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Secondary CTA Button (EN)</label>
+                        <input
+                          type="text"
+                          value={activeSection.secondaryCta.en || ''}
+                          onChange={(e) => updateSectionCustomField('secondaryCta', 'en', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
                     </div>
                   )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Secondary CTA Button (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={activeSection.secondaryCta.en || ''}
-                        onChange={(e) => updateSectionCustomField('secondaryCta', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
 
-              {activeSection?.price && (
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Label Biaya (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                  {activeSection?.price && (
+                    <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Label Biaya (ID)</label>
+                        <input
+                          type="text"
+                          value={activeSection.price.id || ''}
+                          onChange={(e) => updateSectionCustomField('price', 'id', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        value={activeSection.price.id || ''}
-                        onChange={(e) => updateSectionCustomField('price', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Label Biaya (EN)</label>
+                        <input
+                          type="text"
+                          value={activeSection.price.en || ''}
+                          onChange={(e) => updateSectionCustomField('price', 'en', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
                     </div>
                   )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Label Biaya (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+
+                  {activeSection?.contact && (
+                    <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Informasi Kontak &amp; Hotline (ID)</label>
+                        <input
+                          type="text"
+                          value={activeSection.contact.id || ''}
+                          onChange={(e) => updateSectionCustomField('contact', 'id', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        value={activeSection.price.en || ''}
-                        onChange={(e) => updateSectionCustomField('price', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Contact &amp; Hotline Info (EN)</label>
+                        <input
+                          type="text"
+                          value={activeSection.contact.en || ''}
+                          onChange={(e) => updateSectionCustomField('contact', 'en', e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {activeSection?.contact && (
-                <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                  {(languageView === 'both' || languageView === 'id') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Informasi Kontak & Hotline (ID)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={activeSection.contact.id || ''}
-                        onChange={(e) => updateSectionCustomField('contact', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                  {(languageView === 'both' || languageView === 'en') && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">Contact & Hotline Info (EN)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={activeSection.contact.en || ''}
-                        onChange={(e) => updateSectionCustomField('contact', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Repeater Items Section if section contains items */}
-          {Array.isArray(activeSection?.items) && (
-            <div className="space-y-4 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
-                  {activeSection.key === 'hero' ? 'Trust Metrics Counter Bar (4 Item)' : `Item Repeater List (${activeSection.items.length} item)`}
-                </h3>
-                {ITEM_DEFAULT_IMAGES[activeSection.key] && (
-                  <span className="text-[11px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md font-semibold">
-                    Item Photo Upload Supported
-                  </span>
-                )}
-              </div>
-
-              {activeSection.key === 'hero' && (
-                <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900">
-                    <div>
-                      <p className="font-bold">4 Kolom Trust Metrics Counter di Bawah Banner</p>
-                      <p className="text-[11px] text-amber-700">
-                        Bagian ini mengatur 4 kartu counter: Judul = Label teks (cth: Sesi terlaksana), Deskripsi = Nilai/Angka besar (cth: 3.000+).
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-                            const headers = getAuthHeaders()
-                            const res = await fetch(`${baseUrl}/api/admin/overview/stats`, { headers })
-                            if (res.ok) {
-                              const json = await res.json()
-                              const activeCount = json?.data?.psychologists?.active ?? 18
-                              const newSections = [...content.sections]
-                              const heroSec = newSections[activeSectionIndex]
-                              if (Array.isArray(heroSec.items)) {
-                                heroSec.items = heroSec.items.map((item, idx) => {
-                                  if (idx === 1 || item.id === 'psychologist-count' || item.title.id.toLowerCase().includes('psikolog')) {
-                                    return {
-                                      ...item,
-                                      description: { id: String(activeCount), en: String(activeCount) },
-                                    }
-                                  }
-                                  return item
-                                })
-                              }
-                              setContent({ ...content, sections: newSections })
-                              setMessage({ type: 'success', text: `Berhasil sinkronkan jumlah psikolog aktif dari database: ${activeCount} psikolog!` })
-                            }
-                          } catch (err) {
-                            console.error(err)
-                            setMessage({ type: 'error', text: 'Gagal menghubungi server untuk sinkronisasi jumlah psikolog.' })
-                          }
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-teal-300 rounded-lg text-xs font-semibold text-teal-800 hover:bg-teal-50 transition-colors shadow-2xs cursor-pointer"
-                      >
-                        <span>🔄 Sync DB Psikolog</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newSections = [...content.sections]
-                          newSections[activeSectionIndex] = {
-                            ...activeSection,
-                            items: [
-                              { id: 'sessions-delivered', position: 0, title: { id: 'Sesi terlaksana', en: 'Sessions delivered' }, description: { id: '3.000+', en: '3,000+' } },
-                              { id: 'psychologist-count', position: 1, title: { id: 'Psikolog', en: 'Psychologists' }, description: { id: '18', en: '18' } },
-                              { id: 'google-rating', position: 2, title: { id: 'Rating Google', en: 'Google rating' }, description: { id: '5,0', en: '5.0' } },
-                              { id: 'google-reviews', position: 3, title: { id: 'Ulasan Google', en: 'Google reviews' }, description: { id: '53', en: '53' } },
-                            ],
-                          }
-                          setContent({ ...content, sections: newSections })
-                          setMessage({ type: 'success', text: '4 Angka Trust Metrics resmi (3.000+, 18, 5,0, 53) berhasil dipulihkan!' })
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors shadow-2xs cursor-pointer"
-                      >
-                        <span>⚡ Reset ke 4 Metrik Resmi</span>
-                      </button>
-                    </div>
+              {/* Repeater Items Section */}
+              {Array.isArray(activeSection?.items) && (
+                <div className="space-y-4 p-4 bg-white rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                      Item Repeater List ({activeSection.items.length} item)
+                    </h3>
                   </div>
 
-                  {/* Quick Milestone Presets for Sesi Terlaksana */}
-                  <div className="flex flex-wrap items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                    <span className="font-semibold text-slate-600 mr-1">Preset Cepat Sesi Terlaksana:</span>
-                    {['3.000+', '3.500+', '4.000+', '5.000+'].map((milestone) => (
-                      <button
-                        key={milestone}
-                        type="button"
-                        onClick={() => {
-                          const newSections = [...content.sections]
-                          const heroSec = newSections[activeSectionIndex]
-                          if (Array.isArray(heroSec.items)) {
-                            heroSec.items = heroSec.items.map((item, idx) => {
-                              if (idx === 0 || item.id === 'sessions-delivered' || item.title.id.toLowerCase().includes('sesi')) {
-                                return {
-                                  ...item,
-                                  description: { id: milestone, en: milestone.replace('.', ',') },
-                                }
-                              }
-                              return item
-                            })
-                          }
-                          setContent({ ...content, sections: newSections })
-                          setMessage({ type: 'success', text: `Sesi terlaksana diubah menjadi: ${milestone}` })
-                        }}
-                        className="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-medium text-slate-700 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 transition-colors cursor-pointer"
-                      >
-                        {milestone}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                  <div className="space-y-3">
+                    {activeSection.items.map((item: LandingItem, itemIdx: number) => {
+                      const itemTargetKey = `${activeSection.key}-item-${itemIdx}`
+                      const defaultItemImg = ITEM_DEFAULT_IMAGES[activeSection.key]?.[itemIdx]
+                      const currentItemImg = item.media?.reference
+                        ? (item.media.reference.startsWith('/') ? item.media.reference : `/${item.media.reference}`)
+                        : defaultItemImg
 
-              <div className="space-y-4">
-                {activeSection.items.map((item: LandingItem, itemIdx: number) => {
-                  const itemTargetKey = `${activeSection.key}-item-${itemIdx}`
-                  const defaultItemImg = ITEM_DEFAULT_IMAGES[activeSection.key]?.[itemIdx]
-                  const currentItemImg = item.media?.reference
-                    ? (item.media.reference.startsWith('/') ? item.media.reference : `/${item.media.reference}`)
-                    : defaultItemImg
+                      return (
+                        <div key={item.id || itemIdx} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                            <span>Item #{itemIdx + 1}</span>
+                          </div>
 
-                  const isHero = activeSection.key === 'hero'
-                  const titlePlaceholderId = isHero ? 'Label Metrik (ID, cth: Sesi terlaksana)' : 'Title (ID)'
-                  const titlePlaceholderEn = isHero ? 'Label Metrik (EN, cth: Sessions delivered)' : 'Title (EN)'
-                  const descPlaceholderId = isHero ? 'Nilai / Angka (ID, cth: 3.000+)' : 'Description (ID)'
-                  const descPlaceholderEn = isHero ? 'Nilai / Angka (EN, cth: 3,000+)' : 'Description (EN)'
-
-                  return (
-                    <div key={item.id || itemIdx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                        <span>Item #{itemIdx + 1}</span>
-                        {item.media && (
-                          <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded">
-                            Foto Kustom Terunggah
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-2'}>
-                        {(languageView === 'both' || languageView === 'id') && (
-                          <div className="relative">
+                          <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-2'}>
                             <input
                               type="text"
-                              placeholder={titlePlaceholderId}
+                              placeholder="Title (ID)"
                               value={item.title?.id || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'id', e.target.value)}
-                              className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.2 rounded border border-teal-200 pointer-events-none">ID</span>
-                          </div>
-                        )}
-                        {(languageView === 'both' || languageView === 'en') && (
-                          <div className="relative">
                             <input
                               type="text"
-                              placeholder={titlePlaceholderEn}
+                              placeholder="Title (EN)"
                               value={item.title?.en || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'en', e.target.value)}
-                              className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-sky-700 bg-sky-50 px-1 py-0.2 rounded border border-sky-200 pointer-events-none">EN</span>
                           </div>
-                        )}
-                      </div>
 
-                      <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-2'}>
-                        {(languageView === 'both' || languageView === 'id') && (
-                          <div className="relative">
+                          <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-2'}>
                             <textarea
                               rows={2}
-                              placeholder={descPlaceholderId}
+                              placeholder="Description (ID)"
                               value={item.description?.id || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'id', e.target.value)}
-                              className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
-                            <span className="absolute right-2 top-2 text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.2 rounded border border-teal-200 pointer-events-none">ID</span>
-                          </div>
-                        )}
-                        {(languageView === 'both' || languageView === 'en') && (
-                          <div className="relative">
                             <textarea
                               rows={2}
-                              placeholder={descPlaceholderEn}
+                              placeholder="Description (EN)"
                               value={item.description?.en || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'en', e.target.value)}
-                              className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                            />
-                            <span className="absolute right-2 top-2 text-[9px] font-bold text-sky-700 bg-sky-50 px-1 py-0.2 rounded border border-sky-200 pointer-events-none">EN</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Repeater Item Photo Uploader if section supports it */}
-                      {(defaultItemImg || item.media) && (
-                        <div className="pt-2 border-t border-slate-200/80 flex flex-col sm:flex-row items-center gap-3">
-                          <input
-                            ref={(el) => {
-                              itemFileInputRefs.current[itemIdx] = el
-                            }}
-                            type="file"
-                            accept="image/webp,image/png,image/jpeg"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleItemImageUpload(itemIdx, e.target.files[0])
-                              }
-                            }}
-                          />
-
-                          <div className="size-16 rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
-                            <img
-                              src={currentItemImg}
-                              alt={item.title?.id || `Item ${itemIdx + 1}`}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                if (defaultItemImg) (e.target as HTMLImageElement).src = defaultItemImg
-                              }}
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
                           </div>
 
-                          <div className="flex-1 flex flex-wrap items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => itemFileInputRefs.current[itemIdx]?.click()}
-                              disabled={uploadingTarget === itemTargetKey}
-                              className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                              {uploadingTarget === itemTargetKey ? (
-                                <>
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-teal-600" />
-                                  <span>Mengunggah...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Camera className="w-3.5 h-3.5 text-teal-600" />
-                                  <span>Unggah Gambar Item</span>
-                                </>
-                              )}
-                            </button>
+                          {(defaultItemImg || item.media) && (
+                            <div className="pt-2 border-t border-slate-200 flex items-center gap-3">
+                              <input
+                                ref={(el) => {
+                                  itemFileInputRefs.current[itemIdx] = el
+                                }}
+                                type="file"
+                                accept="image/webp,image/png,image/jpeg"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleItemImageUpload(itemIdx, e.target.files[0])
+                                  }
+                                }}
+                              />
 
-                            {item.media && (
-                              <button
-                                type="button"
-                                onClick={() => handleResetItemImage(itemIdx)}
-                                className="px-2.5 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                                title="Hapus gambar kustom item"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                <span>Reset Default</span>
-                              </button>
-                            )}
+                              <div className="size-12 rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+                                <img
+                                  src={currentItemImg}
+                                  alt={item.title?.id || `Item ${itemIdx + 1}`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    if (defaultItemImg) (e.target as HTMLImageElement).src = defaultItemImg
+                                  }}
+                                />
+                              </div>
 
-                            <span className="text-[10px] text-slate-400">
-                              {item.media?.width && item.media?.height
-                                ? `${item.media.width} × ${item.media.height} px`
-                                : 'WebP, JPG, PNG'}
-                            </span>
-                          </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => itemFileInputRefs.current[itemIdx]?.click()}
+                                  disabled={uploadingTarget === itemTargetKey}
+                                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                >
+                                  {uploadingTarget === itemTargetKey ? 'Mengunggah...' : 'Ganti Gambar Item'}
+                                </button>
+                                {item.media && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleResetItemImage(itemIdx)}
+                                    className="px-2.5 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                  >
+                                    Reset
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
