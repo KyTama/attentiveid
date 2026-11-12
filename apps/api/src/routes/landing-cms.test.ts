@@ -177,6 +177,79 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
     expect(publishCalled).toBe(true)
   })
 
+  it('PUT /api/admin/landing/draft saves draft revision and handles consecutive saves', async () => {
+    let draftCallCount = 0
+    const appWithDraft = new Elysia().use(
+      createLandingCmsRoutes({
+        tokenService,
+        userRepository,
+        db: mockDb,
+        contentTransitions: {
+          createLandingDraft: async (_cap: any, content: any) => {
+            draftCallCount++
+            return { id: `draft-rev-${draftCallCount}`, revisionNumber: draftCallCount + 1 }
+          }
+        }
+      })
+    )
+
+    const localized = (value: string) => ({ id: `${value} ID`, en: `${value} EN` });
+    const repeater = (prefix: string) => Array.from({ length: 3 }, (_, position) => ({
+      id: `${prefix}-${position}`,
+      position,
+      title: localized(`${prefix} title ${position}`),
+      description: localized(`${prefix} description ${position}`)
+    }));
+    const payload = {
+      sections: [
+        { key: 'hero', visible: true, headline: localized('Hero'), description: localized('Hero description'), primaryCta: localized('Start'), secondaryCta: localized('Explore'), items: repeater('metric') },
+        { key: 'supportExplorer', visible: true, headline: localized('Support'), description: localized('Support description'), items: repeater('support') },
+        { key: 'carePromise', visible: true, headline: localized('Promise'), description: localized('Promise description'), items: repeater('promise') },
+        { key: 'featuredPsychologists', visible: true, headline: localized('Featured'), description: localized('Featured description') },
+        { key: 'careJourney', visible: true, headline: localized('Journey'), description: localized('Journey description'), items: repeater('journey') },
+        { key: 'clientStories', visible: true, headline: localized('Stories'), description: localized('Stories description'), items: repeater('stories') },
+        { key: 'consultationReassurance', visible: true, headline: localized('Reassurance'), description: localized('Reassurance description'), sessionLabel: localized('Session label'), price: localized('Price'), priceUnit: localized('Price unit'), primaryCta: localized('Ask about pricing') },
+        { key: 'frequentlyAskedQuestions', visible: true, headline: localized('FAQ'), description: localized('FAQ description'), items: repeater('faq') },
+        { key: 'closingInvitation', visible: true, headline: localized('Closing'), description: localized('Closing description'), primaryCta: localized('Contact'), contact: localized('WhatsApp') }
+      ]
+    };
+
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+
+    // First save
+    const res1 = await appWithDraft.handle(
+      new Request('http://localhost/api/admin/landing/draft', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+    )
+    expect(res1.status).toBe(200)
+    const json1 = await res1.json()
+    expect(json1.status).toBe('success')
+    expect(json1.revision.id).toBe('draft-rev-1')
+
+    // Second save (simulates consecutive edit without publishing)
+    const res2 = await appWithDraft.handle(
+      new Request('http://localhost/api/admin/landing/draft', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+    )
+    expect(res2.status).toBe(200)
+    const json2 = await res2.json()
+    expect(json2.status).toBe('success')
+    expect(json2.revision.id).toBe('draft-rev-2')
+    expect(draftCallCount).toBe(2)
+  })
+
   it('POST /api/admin/landing/upload-image uploads image and returns media reference', async () => {
     const { accessToken } = tokenService.issueAccessToken(adminUser)
     const formData = new FormData()

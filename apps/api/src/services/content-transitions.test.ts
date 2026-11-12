@@ -110,6 +110,12 @@ const createMemoryDatabase = () => {
                 getLandingRevision: async (id) => structuredClone(staged.landingRevisions.get(id) ?? null),
                 createLandingDraft: async (input) => {
                     const id = `landing-revision-${++staged.sequence.landing}`;
+                    if (staged.landingAggregate.activeDraftRevisionId) {
+                        const existingDraft = staged.landingRevisions.get(staged.landingAggregate.activeDraftRevisionId);
+                        if (existingDraft && existingDraft.status === 'draft') {
+                            existingDraft.status = 'superseded';
+                        }
+                    }
                     staged.landingRevisions.set(id, {
                         id,
                         aggregateId: staged.landingAggregate.id,
@@ -218,6 +224,27 @@ describe('content transitions', () => {
         expect(snapshot.landingRevisions.get(rollback.id)?.basedOnRevisionId).toBe('landing-revision-1');
         expect(snapshot.landingAggregate.publishedRevisionId).toBe(rollback.id);
         expect(snapshot.landingRevisions.get('landing-revision-1')?.content).toEqual(landingContent);
+    });
+
+    test('supersedes previous active draft when saving consecutive drafts before publishing', async () => {
+        const memory = createMemoryDatabase();
+        const transitions = createContentTransitions(memory.database);
+        const admin = createAdminCapability('admin-1');
+
+        const draft1 = await transitions.createLandingDraft(admin, landingContent);
+        expect(memory.snapshot().landingAggregate.activeDraftRevisionId).toBe(draft1.id);
+        expect(memory.snapshot().landingRevisions.get(draft1.id)?.status).toBe('draft');
+
+        const modified = structuredClone(landingContent) as LandingContentMutation;
+        modified.sections[0].headline.id = 'Headline Baru Hero Draft 2';
+        const draft2 = await transitions.createLandingDraft(admin, modified);
+
+        const snapshot = memory.snapshot();
+        expect(draft2.id).not.toBe(draft1.id);
+        expect(snapshot.landingAggregate.activeDraftRevisionId).toBe(draft2.id);
+        expect(snapshot.landingRevisions.get(draft1.id)?.status).toBe('superseded');
+        expect(snapshot.landingRevisions.get(draft2.id)?.status).toBe('draft');
+        expect(snapshot.landingRevisions.get(draft2.id)?.content.sections[0].headline.id).toBe('Headline Baru Hero Draft 2');
     });
 
     test('rejects incomplete landing content and leaves persisted state unchanged', async () => {

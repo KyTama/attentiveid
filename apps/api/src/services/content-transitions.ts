@@ -165,18 +165,21 @@ export const createContentTransitions = (database: ContentTransitionDatabase) =>
         if (!validateLandingContentMutation(content)) {
             throw new Error('Invalid landing content transition.');
         }
+        const safeBasedOnRevisionId = (basedOnRevisionId && typeof basedOnRevisionId === 'string' && basedOnRevisionId.trim().length > 0)
+            ? basedOnRevisionId.trim()
+            : null;
         return database.transaction(async (transaction) => {
             const aggregate = await transaction.getLandingAggregate();
             if (!aggregate) {
                 throw new Error('Invalid landing content transition.');
             }
-            if (basedOnRevisionId) {
-                const basedOn = await transaction.getLandingRevision(basedOnRevisionId);
+            if (safeBasedOnRevisionId) {
+                const basedOn = await transaction.getLandingRevision(safeBasedOnRevisionId);
                 if (!basedOn || basedOn.aggregateId !== aggregate.id) {
                     throw new Error('Invalid landing content transition.');
                 }
             }
-            return transaction.createLandingDraft({ content, basedOnRevisionId });
+            return transaction.createLandingDraft({ content, basedOnRevisionId: safeBasedOnRevisionId });
         });
     },
 
@@ -516,13 +519,26 @@ export const createDrizzleContentTransitionDatabase = (
                     .where(eq(schema.landingAggregates.singletonKey, true))
                     .limit(1);
                 if (!aggregate) throw new Error('Landing aggregate missing.');
+
+                // Supersede any existing active draft for this aggregate so that the
+                // partial unique index `landing_revisions_one_draft_per_aggregate` is satisfied.
+                await transaction.update(schema.landingRevisions)
+                    .set({ status: 'superseded' })
+                    .where(and(
+                        eq(schema.landingRevisions.aggregateId, aggregate.id),
+                        eq(schema.landingRevisions.status, 'draft')
+                    ));
+
                 const [sequence] = await transaction.select({ value: max(schema.landingRevisions.revisionNumber) })
                     .from(schema.landingRevisions)
                     .where(eq(schema.landingRevisions.aggregateId, aggregate.id));
                 const revisionNumber = (sequence?.value ?? 0) + 1;
+                const safeBasedOnRevisionId = (input.basedOnRevisionId && typeof input.basedOnRevisionId === 'string' && input.basedOnRevisionId.trim().length > 0)
+                    ? input.basedOnRevisionId.trim()
+                    : null;
                 const [revision] = await transaction.insert(schema.landingRevisions).values({
                     aggregateId: aggregate.id,
-                    basedOnRevisionId: input.basedOnRevisionId,
+                    basedOnRevisionId: safeBasedOnRevisionId,
                     revisionNumber,
                     status: 'draft'
                 }).returning({ id: schema.landingRevisions.id });
