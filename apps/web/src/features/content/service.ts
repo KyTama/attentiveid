@@ -36,29 +36,40 @@ export const loadPublishedLandingContent: LandingContentLoader = async () => {
   }
 }
 
-export const loadPreviewLandingContent: LandingContentLoader = async () => {
-  let capability = consumePreviewCapability()
-  try {
-    if (capability !== null) {
-      const exchange = await fetch('/api/preview/landing/session', {
-        ...requestDefaults,
-        body: JSON.stringify({ capability }),
-        headers: { 'content-type': 'application/json' },
-        method: 'POST',
-      })
-      capability = null
-      if (!exchange.ok) return { status: 'unavailable' }
-    }
+let inFlightPreviewLoad: Promise<LandingContentResult> | null = null
 
-    return await readContent(await fetch('/api/preview/landing', {
-      ...requestDefaults,
-      method: 'GET',
-    }))
-  } catch {
-    return { status: 'unavailable' }
-  } finally {
-    capability = null
+export const loadPreviewLandingContent: LandingContentLoader = () => {
+  if (inFlightPreviewLoad) {
+    return inFlightPreviewLoad
   }
+
+  inFlightPreviewLoad = (async () => {
+    let capability = consumePreviewCapability()
+    try {
+      if (capability !== null) {
+        const exchange = await fetch('/api/preview/landing/session', {
+          ...requestDefaults,
+          body: JSON.stringify({ capability }),
+          headers: { 'content-type': 'application/json' },
+          method: 'POST',
+        })
+        capability = null
+        if (!exchange.ok) return { status: 'unavailable' }
+      }
+
+      return await readContent(await fetch('/api/preview/landing', {
+        ...requestDefaults,
+        method: 'GET',
+      }))
+    } catch {
+      return { status: 'unavailable' }
+    } finally {
+      capability = null
+      inFlightPreviewLoad = null
+    }
+  })()
+
+  return inFlightPreviewLoad
 }
 
 export const uploadLandingImage = async (

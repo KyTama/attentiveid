@@ -127,6 +127,21 @@ describe('shared landing preview', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/preview/landing', expect.objectContaining({ method: 'GET' }))
   })
 
+  it('coalesces concurrent preview loads (e.g. React StrictMode double mount) without losing the one-shot capability', async () => {
+    const capability = 'strict-mode-preview-secret'
+    window.history.replaceState(null, '', `/preview/landing#capability=${capability}`)
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(previewEnvelope), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { loadPreviewLandingContent } = await import('../src/features/content/service')
+    const [first, second] = await Promise.all([loadPreviewLandingContent(), loadPreviewLandingContent()])
+    expect(first).toEqual({ status: 'success', content: draftContent })
+    expect(second).toEqual({ status: 'success', content: draftContent })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
   it('renders a valid draft through the same PublicLayout and Homepage tree', async () => {
     const { AppRoutes } = await import('../src/App')
     render(

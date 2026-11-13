@@ -29,6 +29,10 @@ interface PsychologistsRepository {
 }
 
 interface PreviewCapabilities {
+    issue?: (capability: any, landingRevisionId: string, ttlSeconds?: number) => Promise<{
+        token: string;
+        expiresAt: string;
+    }>;
     verify(token: string): Promise<{
         landingRevisionId: string;
         expiresAt: string;
@@ -164,7 +168,9 @@ export const createPublicContentRoutes = (dependencies: PublicContentDependencie
             if (!draft || draft.revision.status !== 'draft') throw new Error('Invalid preview exchange.');
             const session = await dependencies.previewSessions.issue(capability, 300);
             const maxAge = Math.max(0, Math.floor((Date.parse(session.expiresAt) - Date.now()) / 1_000));
-            set.headers['set-cookie'] = `${previewCookieName}=${session.token}; Max-Age=${maxAge}; Path=/api/preview/landing; HttpOnly; Secure; SameSite=Strict`;
+            const isHttps = requestUrl.protocol === 'https:' || request.headers.get('x-forwarded-proto') === 'https';
+            const secureDirective = isHttps ? '; Secure' : '';
+            set.headers['set-cookie'] = `${previewCookieName}=${session.token}; Max-Age=${maxAge}; Path=/api/preview/landing; HttpOnly${secureDirective}; SameSite=Strict`;
             set.headers['cache-control'] = 'private, no-store';
             set.headers['referrer-policy'] = 'no-referrer';
             return { status: 'ready' as const, expiresAt: session.expiresAt };

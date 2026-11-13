@@ -141,6 +141,20 @@ describe('landing preview capability', () => {
         expect(rendered).not.toContain(sensitiveToken);
     });
 
+    test('verifies PostgreSQL-formatted timestamptz strings matching the signed ISO expiry timestamp', async () => {
+        const store = new MemoryPreviewCapabilityStore();
+        const service = createPreviewCapabilityService({
+            secret,
+            store,
+            now: () => new Date('2026-09-09T00:00:00.000Z')
+        });
+        const issued = await service.issue(admin, 'landing-revision-2', 300);
+        const [record] = store.records.values();
+        if (!record) throw new Error('Expected stored capability.');
+        record.expiresAt = '2026-09-09 07:05:00+07';
+        expect((await service.verify(issued.token)).landingRevisionId).toBe('landing-revision-2');
+    });
+
     test('environment validation names invalid keys without reflecting secret values', () => {
         const sensitiveValue = 'postgresql://secret-user:secret-password@private-db/attentive';
         let rendered = '';

@@ -63,6 +63,12 @@ const decode = (value: string) => Buffer.from(value, 'base64url');
 const digestToken = (token: string) => createHash('sha256').update(token).digest('hex');
 const sign = (secret: string, input: string) => createHmac('sha256', secret).update(input).digest();
 
+const sameTimestamp = (left: string, right: string) => {
+    const leftMs = Date.parse(left);
+    const rightMs = Date.parse(right);
+    return Number.isFinite(leftMs) && Number.isFinite(rightMs) && leftMs === rightMs;
+};
+
 const isPayload = (value: unknown): value is PreviewCapabilityPayload => {
     if (!value || typeof value !== 'object') return false;
     const payload = value as Partial<PreviewCapabilityPayload>;
@@ -153,7 +159,7 @@ export const createPreviewCapabilityService = (options: PreviewCapabilityService
                 if (!record
                     || record.revokedAt !== null
                     || record.landingRevisionId !== payload.landingRevisionId
-                    || record.expiresAt !== payload.expiresAt
+                    || !sameTimestamp(record.expiresAt, payload.expiresAt)
                     || Date.parse(payload.issuedAt) > currentTime
                     || Date.parse(payload.expiresAt) <= currentTime
                     || Date.parse(record.expiresAt) <= currentTime) {
@@ -281,7 +287,7 @@ export const createPreviewSessionService = (options: PreviewCapabilityServiceOpt
                     || capabilityRecord.revokedAt !== null
                     || sessionRecord.landingRevisionId !== payload.landingRevisionId
                     || capabilityRecord.landingRevisionId !== payload.landingRevisionId
-                    || sessionRecord.expiresAt !== payload.expiresAt
+                    || !sameTimestamp(sessionRecord.expiresAt, payload.expiresAt)
                     || Date.parse(payload.issuedAt) > currentTime
                     || Date.parse(payload.expiresAt) <= currentTime
                     || Date.parse(capabilityRecord.expiresAt) <= currentTime) {

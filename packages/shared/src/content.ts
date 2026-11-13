@@ -123,7 +123,7 @@ export const HeroCampaignItemSchema = Type.Object({
   title: LocalizedTextSchema,
   description: LocalizedTextSchema,
   cta: LocalizedTextSchema,
-  url: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  url: Type.Optional(Type.String({ maxLength: 2_048 })),
 }, { additionalProperties: false })
 
 export const HeroCampaignsSchema = Type.Object({
@@ -475,6 +475,36 @@ export const validateLandingContentMutation = (value: unknown): value is Landing
   return value.sections.every((section) => (
     'items' in section ? hasSafeItemOrdering(section.items) : true
   ))
+}
+
+export const getLandingContentMutationErrors = (value: unknown): string[] => {
+  const errors: string[] = []
+  const seen = new Set<string>()
+  const pushError = (msg: string) => {
+    if (!seen.has(msg)) {
+      seen.add(msg)
+      errors.push(msg)
+    }
+  }
+
+  if (!Value.Check(LandingContentMutationSchema, value)) {
+    for (const err of Value.Errors(LandingContentMutationSchema, value)) {
+      const field = err.path.replace(/^\//, '').replace(/\//g, '.')
+      pushError(`${field ? `Field '${field}': ` : ''}${err.message}`)
+      if (errors.length >= 10) break
+    }
+  }
+
+  const obj = value as { sections?: Array<{ key?: string; items?: Static<typeof LandingItemSchema>[] }> } | null
+  if (obj && Array.isArray(obj.sections)) {
+    for (const section of obj.sections) {
+      if (section && Array.isArray(section.items) && !hasSafeItemOrdering(section.items)) {
+        pushError(`Section '${section.key || 'unknown'}': urutan item atau ID item tidak valid.`)
+      }
+    }
+  }
+
+  return errors
 }
 
 export const validatePsychologistMutation = (value: unknown): value is PsychologistMutation => {

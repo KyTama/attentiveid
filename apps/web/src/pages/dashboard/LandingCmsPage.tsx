@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
 import {
   ArrowDown,
   ArrowUp,
@@ -251,6 +250,46 @@ const defaultLandingData: LandingCmsData = {
   ],
 }
 
+const OPTIONAL_HERO_SLIDE_LOCALIZED_FIELDS = ['tabLabel', 'location', 'note'] as const
+
+const hasBlankLocalizedText = (val: unknown): boolean => {
+  if (!val || typeof val !== 'object') return false
+  const text = val as { id?: unknown; en?: unknown }
+  const idStr = typeof text.id === 'string' ? text.id.trim() : ''
+  const enStr = typeof text.en === 'string' ? text.en.trim() : ''
+  return idStr === '' && enStr === ''
+}
+
+const normalizeLandingContentForSave = (raw: LandingCmsData): LandingCmsData => {
+  const cloned = structuredClone(raw)
+  cloned.sections = cloned.sections.map((section) => {
+    if (section.key === 'hero' && Array.isArray((section as any).slideItems)) {
+      const normalizedSlides = (section as any).slideItems.map((slide: Record<string, any>) => {
+        const nextSlide = { ...slide }
+        for (const field of OPTIONAL_HERO_SLIDE_LOCALIZED_FIELDS) {
+          if (field in nextSlide && hasBlankLocalizedText(nextSlide[field])) {
+            delete nextSlide[field]
+          }
+        }
+        return nextSlide
+      })
+      return { ...section, slideItems: normalizedSlides }
+    }
+    return section
+  })
+  return cloned
+}
+
+const extractApiErrorMessage = (data: any, fallback: string): string => {
+  if (Array.isArray(data?.errors) && data.errors.length > 0 && typeof data.errors[0] === 'string') {
+    return data.errors[0]
+  }
+  if (typeof data?.message === 'string' && data.message.trim().length > 0) {
+    return data.message
+  }
+  return fallback
+}
+
 export function LandingCmsPage() {
   const { getAuthHeaders } = useAuth()
   const [content, setContent] = useState<LandingCmsData>(defaultLandingData)
@@ -258,6 +297,7 @@ export function LandingCmsPage() {
   const [languageView, setLanguageView] = useState<'both' | 'id' | 'en'>('both')
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [isPreviewing, setIsPreviewing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [heroSubSection, setHeroSubSection] = useState<'slides' | 'campaigns' | 'metrics'>('slides')
   const [heroPreviewSlide, setHeroPreviewSlide] = useState<number>(0)
@@ -294,6 +334,7 @@ export function LandingCmsPage() {
     setMessage(null)
     setIsSaving(true)
     try {
+      const payload = normalizeLandingContentForSave(content)
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${baseUrl}/api/admin/landing/draft`, {
         method: 'PUT',
@@ -301,13 +342,16 @@ export function LandingCmsPage() {
           ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(content),
+        body: JSON.stringify(payload),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (res.ok && data.status === 'success') {
+        if (data.revision?.content) {
+          setContent(data.revision.content)
+        }
         setMessage({ type: 'success', text: 'Draft landing page berhasil disimpan!' })
       } else {
-        setMessage({ type: 'error', text: data.message || 'Gagal menyimpan draft.' })
+        setMessage({ type: 'error', text: extractApiErrorMessage(data, `Gagal menyimpan draft (${res.status}).`) })
       }
     } catch {
       setMessage({ type: 'error', text: 'Gagal terhubung ke server.' })
@@ -323,6 +367,7 @@ export function LandingCmsPage() {
     setMessage(null)
     setIsPublishing(true)
     try {
+      const payload = normalizeLandingContentForSave(content)
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${baseUrl}/api/admin/landing/publish`, {
         method: 'POST',
@@ -330,18 +375,65 @@ export function LandingCmsPage() {
           ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(content),
+        body: JSON.stringify(payload),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (res.ok && data.status === 'success') {
+        if (data.content) {
+          setContent(data.content)
+        }
         setMessage({ type: 'success', text: 'Content landing page LIVE berhasil diperbarui!' })
       } else {
-        setMessage({ type: 'error', text: data.message || 'Gagal menerbitkan konten.' })
+        setMessage({ type: 'error', text: extractApiErrorMessage(data, `Gagal menerbitkan konten (${res.status}).`) })
       }
     } catch {
       setMessage({ type: 'error', text: 'Gagal terhubung ke server.' })
     } finally {
       setIsPublishing(false)
+    }
+  }
+
+  const handlePreviewDraft = async () => {
+    setMessage(null)
+    setIsPreviewing(true)
+    const previewWindow = typeof window !== 'undefined' && typeof window.open === 'function'
+      ? window.open('', '_blank')
+      : null
+    if (previewWindow) {
+      try {
+        previewWindow.opener = null
+      } catch {
+        // Ignore cross-context property assignment restriction
+      }
+    }
+    try {
+      const payload = normalizeLandingContentForSave(content)
+      const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+      const res = await fetch(`${baseUrl}/api/admin/landing/preview`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.status === 'success' && typeof data.capability === 'string') {
+        const previewUrl = `/preview/landing#capability=${encodeURIComponent(data.capability)}`
+        if (previewWindow) {
+          previewWindow.location.href = previewUrl
+        } else if (typeof window !== 'undefined') {
+          window.location.assign(previewUrl)
+        }
+      } else {
+        previewWindow?.close()
+        setMessage({ type: 'error', text: extractApiErrorMessage(data, `Gagal membuka pratinjau draft (${res.status}).`) })
+      }
+    } catch {
+      previewWindow?.close()
+      setMessage({ type: 'error', text: 'Gagal terhubung ke server saat menyiapkan pratinjau.' })
+    } finally {
+      setIsPreviewing(false)
     }
   }
 
@@ -975,6 +1067,14 @@ export function LandingCmsPage() {
 
     if (slideIndex === 0) {
       delete updatedHero.media
+      updatedHero.slides = [
+        {
+          reference: 'media/landing/hero-slide-1.jpg',
+          width: 3072,
+          height: 4096,
+          alt: { id: 'Konsultasi Psikologi Tatap Muka & Daring Attentive', en: 'Attentive In-Person & Online Psychological Consultation' },
+        },
+      ]
     }
 
     newSections[activeSectionIndex] = updatedHero
@@ -1060,13 +1160,14 @@ export function LandingCmsPage() {
 
             <div className="h-4 w-px bg-slate-200 hidden sm:block" />
 
-            <Link
-              to="/preview/landing"
-              target="_blank"
-              className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors"
+            <button
+              type="button"
+              onClick={handlePreviewDraft}
+              disabled={isPreviewing}
+              className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors cursor-pointer disabled:opacity-60"
             >
-              Preview Draft ↗
-            </Link>
+              {isPreviewing ? 'Membuka...' : 'Preview Draft ↗'}
+            </button>
             <button
               onClick={handleSaveDraft}
               disabled={isSaving}

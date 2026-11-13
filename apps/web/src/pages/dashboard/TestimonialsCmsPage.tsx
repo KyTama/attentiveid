@@ -16,7 +16,7 @@ import {
   Quote,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
-import { type LandingContentMutation } from '@attentiveid/shared'
+import { LANDING_REPEATER_BOUNDS, type LandingContentMutation } from '@attentiveid/shared'
 
 interface TestimonialData {
   id: string
@@ -102,10 +102,17 @@ export function TestimonialsCmsPage() {
     }
 
     fetchLanding()
-  }, [])
+  }, [getAuthHeaders])
 
   // Open modal for new item
   const handleAddNew = () => {
+    if (testimonials.length >= LANDING_REPEATER_BOUNDS.clientStories.max) {
+      setMessage({
+        type: 'error',
+        text: `Maksimal ${LANDING_REPEATER_BOUNDS.clientStories.max} testimoni diperbolehkan untuk menjaga performa carousel.`,
+      })
+      return
+    }
     setEditingIndex(null)
     setModalForm({
       nameId: 'Klien - Konseling Online, 28 th',
@@ -205,15 +212,85 @@ export function TestimonialsCmsPage() {
     setHasUnsavedChanges(true)
   }
 
+  const buildUpdatedLandingContent = (): LandingContentMutation | null => {
+    if (!landingContent) return null
+    const updatedSections = landingContent.sections.map((section: any) => {
+      if (section.key === 'clientStories') {
+        return {
+          ...section,
+          headline,
+          description,
+          items: testimonials.map((item, idx) => ({
+            id: item.id,
+            position: idx,
+            title: item.title,
+            description: item.description,
+          })),
+        }
+      }
+      return section
+    })
+    return {
+      ...landingContent,
+      sections: updatedSections as LandingContentMutation['sections'],
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    const payload = buildUpdatedLandingContent()
+    if (!payload) {
+      setMessage({ type: 'error', text: 'Data landing content belum siap.' })
+      return
+    }
+    if (testimonials.length < LANDING_REPEATER_BOUNDS.clientStories.min) {
+      setMessage({ type: 'error', text: `Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni aktif.` })
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+      const res = await fetch(`${baseUrl}/api/admin/landing/draft`, {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (res.ok && json.status === 'success') {
+        setLandingContent(json.revision?.content ?? payload)
+        setHasUnsavedChanges(false)
+        setMessage({
+          type: 'success',
+          text: `Draft ${testimonials.length} testimoni berhasil disimpan!`,
+        })
+      } else {
+        const detail = Array.isArray(json.errors) && json.errors.length > 0 ? json.errors[0] : json.message
+        setMessage({
+          type: 'error',
+          text: `Gagal menyimpan draft testimoni: ${detail || res.statusText}`,
+        })
+      }
+    } catch (err) {
+      console.error('Save draft error', err)
+      setMessage({ type: 'error', text: 'Terjadi kesalahan jaringan saat menyimpan draft testimoni.' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   // Publish to Live Homepage
   const handlePublish = async () => {
-    if (!landingContent) {
+    const payload = buildUpdatedLandingContent()
+    if (!payload) {
       setMessage({ type: 'error', text: 'Data landing content belum siap.' })
       return
     }
 
-    if (testimonials.length < 3) {
-      setMessage({ type: 'error', text: 'Minimal dibutuhkan 3 testimoni agar carousel dapat berjalan optimal.' })
+    if (testimonials.length < LANDING_REPEATER_BOUNDS.clientStories.min) {
+      setMessage({ type: 'error', text: `Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni agar carousel dapat berjalan optimal.` })
       return
     }
 
@@ -221,31 +298,6 @@ export function TestimonialsCmsPage() {
       setIsSaving(true)
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const headers = getAuthHeaders()
-
-      // Clone sections and update clientStories
-      const updatedSections = landingContent.sections.map((section: any) => {
-        if (section.key === 'clientStories') {
-          return {
-            ...section,
-            headline,
-            description,
-            items: testimonials.map((item, idx) => ({
-              id: item.id,
-              position: idx,
-              title: item.title,
-              description: item.description,
-            })),
-          }
-        }
-        return section
-      })
-
-      const payload = {
-        content: {
-          ...landingContent,
-          sections: updatedSections,
-        },
-      }
 
       const res = await fetch(`${baseUrl}/api/admin/landing/publish`, {
         method: 'POST',
@@ -256,17 +308,19 @@ export function TestimonialsCmsPage() {
         body: JSON.stringify(payload),
       })
 
-      if (res.ok) {
+      const resJson = await res.json().catch(() => ({}))
+      if (res.ok && resJson.status === 'success') {
+        setLandingContent(resJson.content ?? payload)
         setHasUnsavedChanges(false)
         setMessage({
           type: 'success',
           text: `🎉 Sukses! ${testimonials.length} testimoni berhasil diterbitkan ke auto-moving carousel di homepage!`,
         })
       } else {
-        const errJson = await res.json().catch(() => ({}))
+        const detail = Array.isArray(resJson.errors) && resJson.errors.length > 0 ? resJson.errors[0] : resJson.message
         setMessage({
           type: 'error',
-          text: `Gagal menerbitkan testimoni: ${errJson.message || res.statusText}`,
+          text: `Gagal menerbitkan testimoni: ${detail || res.statusText}`,
         })
       }
     } catch (err) {
@@ -309,6 +363,15 @@ export function TestimonialsCmsPage() {
           >
             <Plus className="size-4" />
             <span>Tambah Testimoni</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            disabled={isSaving || isLoading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 text-teal-800 border border-teal-200 font-semibold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
+          >
+            <span>Simpan Draft</span>
           </button>
 
           <button

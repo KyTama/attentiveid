@@ -124,6 +124,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 landingContentRepository: dependencies.landingContentRepository || dependencies.landingRepository,
                 contentTransitions: dependencies.contentTransitions,
+                previewCapabilities: dependencies.previewCapabilities,
                 db: dependencies.db,
             }))
             .use(createPsychologistsCmsRoutes({

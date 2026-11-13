@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia'
 import { eq } from 'drizzle-orm'
 import {
+  getLandingContentMutationErrors,
   type LandingContentMutation,
-  LandingContentMutationSchema,
   validateLandingContentMutation,
 } from '@attentiveid/shared'
 import { createRoleGuardPlugin } from '../security/role-guard'
@@ -23,8 +23,33 @@ export interface LandingCmsRoutesDependencies {
   landingContentRepository?: {
     getDraftOrPublished?: () => Promise<LandingContentMutation | null>
   }
+  previewCapabilities?: {
+    issue?: (capability: any, landingRevisionId: string, ttlSeconds?: number) => Promise<{ token: string; expiresAt: string }>
+  }
   contentTransitions?: any
   db?: any
+}
+
+const hasNonEmptyPayload = (body: unknown): boolean => (
+  body !== undefined
+  && body !== null
+  && !(typeof body === 'object' && !Array.isArray(body) && Object.keys(body).length === 0)
+)
+
+const collectLandingValidationErrors = (body: unknown): string[] => {
+  const errors = getLandingContentMutationErrors(body)
+  if (errors.length === 0 && !validateLandingContentMutation(body)) {
+    return ['Payload konten landing page tidak valid atau urutan item tidak konsisten.']
+  }
+  return errors
+}
+
+const publishRevisionTransition = async (contentTransitions: any, adminCap: any, revisionId?: string) => {
+  if (typeof contentTransitions.publishLandingDraft === 'function') {
+    await contentTransitions.publishLandingDraft(adminCap, revisionId)
+  } else if (typeof contentTransitions.publishLandingRevision === 'function') {
+    await contentTransitions.publishLandingRevision(adminCap, revisionId)
+  }
 }
 
 export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencies) => {
@@ -59,12 +84,17 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
     .put(
       '/api/admin/landing/draft',
       async ({ body, currentUser, set }: any) => {
-        const input: LandingContentMutation = body
-        if (!validateLandingContentMutation(input)) {
+        const validationErrors = collectLandingValidationErrors(body)
+        if (validationErrors.length > 0) {
           set.status = 400
-          return { status: 'badRequest', message: 'Invalid landing content mutation payload or item bounds.' }
+          return {
+            status: 'badRequest',
+            message: `Validasi gagal: ${validationErrors[0]}`,
+            errors: validationErrors,
+          }
         }
 
+        const input: LandingContentMutation = body
         if (!dependencies.contentTransitions) {
           return { status: 'success' }
         }
@@ -80,7 +110,7 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
       },
       {
         requireRole: ['admin'],
-        body: LandingContentMutationSchema,
+        body: t.Optional(t.Any()),
         detail: {
           tags: ['Landing CMS'],
           summary: 'Save active landing draft revision',
@@ -91,6 +121,19 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
     .post(
       '/api/admin/landing/publish',
       async ({ body, currentUser, set }: any) => {
+        const payloadProvided = hasNonEmptyPayload(body)
+        if (payloadProvided) {
+          const validationErrors = collectLandingValidationErrors(body)
+          if (validationErrors.length > 0) {
+            set.status = 400
+            return {
+              status: 'badRequest',
+              message: `Validasi gagal: ${validationErrors[0]}`,
+              errors: validationErrors,
+            }
+          }
+        }
+
         if (!dependencies.contentTransitions) {
           return { status: 'success' }
         }
@@ -98,24 +141,14 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
         try {
           const adminCap = createAdminCapability(currentUser.id)
 
-          // If content payload is provided in body, save as draft first then publish atomically
-          if (body && validateLandingContentMutation(body)) {
+          if (payloadProvided) {
             const draft = await dependencies.contentTransitions.createLandingDraft(adminCap, body)
             const draftId = draft?.id
-            if (typeof dependencies.contentTransitions.publishLandingDraft === 'function') {
-              await dependencies.contentTransitions.publishLandingDraft(adminCap, draftId)
-            } else if (typeof dependencies.contentTransitions.publishLandingRevision === 'function') {
-              await dependencies.contentTransitions.publishLandingRevision(adminCap, draftId)
-            }
-            return { status: 'success', revisionId: draftId }
+            await publishRevisionTransition(dependencies.contentTransitions, adminCap, draftId)
+            return { status: 'success', revisionId: draftId, content: draft?.content }
           }
 
-          // Otherwise publish existing active draft
-          if (typeof dependencies.contentTransitions.publishLandingDraft === 'function') {
-            await dependencies.contentTransitions.publishLandingDraft(adminCap)
-          } else if (typeof dependencies.contentTransitions.publishLandingRevision === 'function') {
-            await dependencies.contentTransitions.publishLandingRevision(adminCap)
-          }
+          await publishRevisionTransition(dependencies.contentTransitions, adminCap)
           return { status: 'success' }
         } catch (err: any) {
           set.status = 400
@@ -129,6 +162,73 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
           tags: ['Landing CMS'],
           summary: 'Publish active landing draft revision live',
           description: 'Atomically updates published pointer to active draft revision.',
+        },
+      }
+    )
+    .post(
+      '/api/admin/landing/preview',
+      async ({ body, currentUser, set }: any) => {
+        if (!dependencies.previewCapabilities?.issue) {
+          set.status = 500
+          return { status: 'error', message: 'Preview capability service tidak tersedia.' }
+        }
+
+        const payloadProvided = hasNonEmptyPayload(body)
+        if (payloadProvided) {
+          const validationErrors = collectLandingValidationErrors(body)
+          if (validationErrors.length > 0) {
+            set.status = 400
+            return {
+              status: 'badRequest',
+              message: `Validasi gagal sebelum pratinjau: ${validationErrors[0]}`,
+              errors: validationErrors,
+            }
+          }
+        }
+
+        try {
+          const adminCap = createAdminCapability(currentUser.id)
+          let targetRevisionId: string | undefined
+
+          if (payloadProvided && dependencies.contentTransitions?.createLandingDraft) {
+            const draft = await dependencies.contentTransitions.createLandingDraft(adminCap, body)
+            targetRevisionId = draft?.id
+          } else {
+            const [aggregate] = await db
+              .select({ activeDraftRevisionId: schema.landingAggregates.activeDraftRevisionId })
+              .from(schema.landingAggregates)
+              .where(eq(schema.landingAggregates.singletonKey, true))
+              .limit(1)
+            targetRevisionId = aggregate?.activeDraftRevisionId ?? undefined
+          }
+
+          if (!targetRevisionId) {
+            set.status = 400
+            return {
+              status: 'badRequest',
+              message: 'Belum ada revisi draft aktif untuk dipratinjau. Simpan draft terlebih dahulu.',
+            }
+          }
+
+          const issued = await dependencies.previewCapabilities.issue(adminCap, targetRevisionId, 300)
+          return {
+            status: 'success',
+            capability: issued.token,
+            expiresAt: issued.expiresAt,
+            revisionId: targetRevisionId,
+          }
+        } catch (err: any) {
+          set.status = 400
+          return { status: 'error', message: err?.message || 'Gagal membuat tautan pratinjau draft.' }
+        }
+      },
+      {
+        requireRole: ['admin'],
+        body: t.Optional(t.Any()),
+        detail: {
+          tags: ['Landing CMS'],
+          summary: 'Issue one-time landing draft preview capability',
+          description: 'Optionally saves the current draft payload and issues a short-lived preview capability token.',
         },
       }
     )
