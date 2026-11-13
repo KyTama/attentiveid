@@ -35,6 +35,11 @@ import {
 } from '../../features/content/hero-slides'
 import { renderDualColorHeading } from '../../components/landing/HomepageHero'
 import { HeroSlideVisual } from '../../components/landing/HeroSlideVisual'
+import {
+  generateSafeCmsId,
+  getLandingContentMutationErrors,
+  normalizeLandingContentMutation,
+} from '@attentiveid/shared'
 
 interface LocalizedText {
   id: string
@@ -250,34 +255,13 @@ const defaultLandingData: LandingCmsData = {
   ],
 }
 
-const OPTIONAL_HERO_SLIDE_LOCALIZED_FIELDS = ['tabLabel', 'location', 'note'] as const
-
-const hasBlankLocalizedText = (val: unknown): boolean => {
-  if (!val || typeof val !== 'object') return false
-  const text = val as { id?: unknown; en?: unknown }
-  const idStr = typeof text.id === 'string' ? text.id.trim() : ''
-  const enStr = typeof text.en === 'string' ? text.en.trim() : ''
-  return idStr === '' && enStr === ''
-}
-
-const normalizeLandingContentForSave = (raw: LandingCmsData): LandingCmsData => {
-  const cloned = structuredClone(raw)
-  cloned.sections = cloned.sections.map((section) => {
-    if (section.key === 'hero' && Array.isArray((section as any).slideItems)) {
-      const normalizedSlides = (section as any).slideItems.map((slide: Record<string, any>) => {
-        const nextSlide = { ...slide }
-        for (const field of OPTIONAL_HERO_SLIDE_LOCALIZED_FIELDS) {
-          if (field in nextSlide && hasBlankLocalizedText(nextSlide[field])) {
-            delete nextSlide[field]
-          }
-        }
-        return nextSlide
-      })
-      return { ...section, slideItems: normalizedSlides }
-    }
-    return section
-  })
-  return cloned
+const prepareLandingPayload = (raw: LandingCmsData): { payload: LandingCmsData; error: string | null } => {
+  const payload = normalizeLandingContentMutation(structuredClone(raw))
+  const validationErrors = getLandingContentMutationErrors(payload)
+  return {
+    payload,
+    error: validationErrors[0] ?? null,
+  }
 }
 
 const extractApiErrorMessage = (data: any, fallback: string): string => {
@@ -330,11 +314,17 @@ export function LandingCmsPage() {
     loadLandingDraft()
   }, [getAuthHeaders])
 
+  const isMutating = isSaving || isPublishing || isPreviewing
+
   const handleSaveDraft = async () => {
+    const { payload, error: validationError } = prepareLandingPayload(content)
+    if (validationError) {
+      setMessage({ type: 'error', text: `Validasi gagal: ${validationError}` })
+      return
+    }
     setMessage(null)
     setIsSaving(true)
     try {
-      const payload = normalizeLandingContentForSave(content)
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${baseUrl}/api/admin/landing/draft`, {
         method: 'PUT',
@@ -361,13 +351,17 @@ export function LandingCmsPage() {
   }
 
   const handlePublish = async () => {
+    const { payload, error: validationError } = prepareLandingPayload(content)
+    if (validationError) {
+      setMessage({ type: 'error', text: `Validasi gagal sebelum terbit: ${validationError}` })
+      return
+    }
     if (!window.confirm('Apakah Anda yakin ingin menerbitkan draft ini ke website publik live?')) {
       return
     }
     setMessage(null)
     setIsPublishing(true)
     try {
-      const payload = normalizeLandingContentForSave(content)
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${baseUrl}/api/admin/landing/publish`, {
         method: 'POST',
@@ -394,6 +388,11 @@ export function LandingCmsPage() {
   }
 
   const handlePreviewDraft = async () => {
+    const { payload, error: validationError } = prepareLandingPayload(content)
+    if (validationError) {
+      setMessage({ type: 'error', text: `Validasi gagal sebelum pratinjau: ${validationError}` })
+      return
+    }
     setMessage(null)
     setIsPreviewing(true)
     const previewWindow = typeof window !== 'undefined' && typeof window.open === 'function'
@@ -407,7 +406,6 @@ export function LandingCmsPage() {
       }
     }
     try {
-      const payload = normalizeLandingContentForSave(content)
       const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${baseUrl}/api/admin/landing/preview`, {
         method: 'POST',
@@ -697,7 +695,7 @@ export function LandingCmsPage() {
     const defaultThemes = ['gold', 'navy', 'blue', 'emerald']
     const defaultIcons = ['gift', 'calendar', 'clipboard', 'sparkles']
     cards.push({
-      id: `campaign-card-${Date.now()}`,
+      id: generateSafeCmsId('campaign-card'),
       visible: true,
       theme: defaultThemes[(nextNum - 1) % defaultThemes.length],
       icon: defaultIcons[(nextNum - 1) % defaultIcons.length],
@@ -1163,15 +1161,15 @@ export function LandingCmsPage() {
             <button
               type="button"
               onClick={handlePreviewDraft}
-              disabled={isPreviewing}
+              disabled={isMutating}
               className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors cursor-pointer disabled:opacity-60"
             >
               {isPreviewing ? 'Membuka...' : 'Preview Draft ↗'}
             </button>
             <button
               onClick={handleSaveDraft}
-              disabled={isSaving}
-              className="px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors cursor-pointer"
+              disabled={isMutating}
+              className="px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors cursor-pointer disabled:opacity-60"
             >
               {isSaving ? 'Menyimpan...' : 'Simpan Draft'}
             </button>
@@ -1179,8 +1177,8 @@ export function LandingCmsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handlePublish}
-              disabled={isPublishing}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+              disabled={isMutating}
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-60"
             >
               {isPublishing ? 'Menerbitkan...' : 'Terbitkan ke Publik'}
             </motion.button>

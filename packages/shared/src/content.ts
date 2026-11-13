@@ -507,6 +507,253 @@ export const getLandingContentMutationErrors = (value: unknown): string[] => {
   return errors
 }
 
+function normalizeLocalizedPair(value: unknown, required: true): LocalizedText
+function normalizeLocalizedPair(value: unknown, required: false): LocalizedText | undefined
+function normalizeLocalizedPair(value: unknown, required: boolean): LocalizedText | undefined {
+  const obj = (value && typeof value === 'object') ? value as { id?: unknown; en?: unknown } : {}
+  const id = typeof obj.id === 'string' ? obj.id.trim() : ''
+  const en = typeof obj.en === 'string' ? obj.en.trim() : ''
+
+  if (id === '' && en === '') {
+    return required ? { id: '', en: '' } : undefined
+  }
+  return {
+    id: id || en,
+    en: en || id,
+  }
+}
+
+const sanitizeCmsIdentifier = (rawId: unknown, fallbackPrefix: string, index: number, usedIds: Set<string>): string => {
+  const safePrefix = fallbackPrefix.replace(/[^A-Za-z0-9._-]/g, '-').replace(/^[^A-Za-z0-9]+/, '') || 'item'
+  const candidateBase = typeof rawId === 'string'
+    ? rawId.trim().replace(/[^A-Za-z0-9._-]/g, '-').replace(/^[^A-Za-z0-9]+/, '').slice(0, 100)
+    : ''
+  const base = candidateBase || `${safePrefix}-${index + 1}`
+
+  let candidate = base.slice(0, 128)
+  let suffix = 2
+  while (usedIds.has(candidate)) {
+    const suffixTag = `-${suffix}`
+    candidate = `${base.slice(0, 128 - suffixTag.length)}${suffixTag}`
+    suffix += 1
+  }
+  usedIds.add(candidate)
+  return candidate
+}
+
+const normalizeLandingMediaValue = (rawMedia: unknown): LandingMedia | undefined => {
+  if (!rawMedia || typeof rawMedia !== 'object') return undefined
+  const media = rawMedia as Record<string, unknown>
+  const reference = typeof media.reference === 'string' ? media.reference.trim() : ''
+  if (!reference) return undefined
+
+  const width = typeof media.width === 'number' && Number.isInteger(media.width) && media.width >= 1
+    ? media.width
+    : undefined
+  const height = typeof media.height === 'number' && Number.isInteger(media.height) && media.height >= 1
+    ? media.height
+    : undefined
+  const alt = normalizeLocalizedPair(media.alt, false)
+
+  return {
+    reference,
+    ...(width !== undefined ? { width } : {}),
+    ...(height !== undefined ? { height } : {}),
+    ...(alt !== undefined ? { alt } : {}),
+  }
+}
+
+const normalizeRepeaterItems = (rawItems: unknown, sectionKey: string): Static<typeof LandingItemSchema>[] => {
+  if (!Array.isArray(rawItems)) return []
+  const usedIds = new Set<string>()
+  return rawItems.map((rawItem, index) => {
+    const item = (rawItem && typeof rawItem === 'object') ? rawItem as Record<string, unknown> : {}
+    const media = normalizeLandingMediaValue(item.media)
+    return {
+      id: sanitizeCmsIdentifier(item.id, `${sectionKey}-item`, index, usedIds),
+      position: index,
+      title: normalizeLocalizedPair(item.title, true),
+      description: normalizeLocalizedPair(item.description, true),
+      ...(media !== undefined ? { media } : {}),
+    }
+  })
+}
+
+const normalizeHeroSlideItems = (slideList: unknown): HeroSlideItem[] | undefined => {
+  if (!Array.isArray(slideList)) return undefined
+  const usedIds = new Set<string>()
+  return slideList.map((inputSlide, index) => {
+    const slide = (inputSlide && typeof inputSlide === 'object') ? inputSlide as Record<string, unknown> : {}
+    const tabLabel = normalizeLocalizedPair(slide.tabLabel, false)
+    const location = normalizeLocalizedPair(slide.location, false)
+    const note = normalizeLocalizedPair(slide.note, false)
+    const media = normalizeLandingMediaValue(slide.media)
+    const steps = Array.isArray(slide.steps)
+      ? slide.steps
+        .map((step) => normalizeLocalizedPair(step, false))
+        .filter((step): step is LocalizedText => step !== undefined)
+      : undefined
+    const chips = Array.isArray(slide.chips)
+      ? slide.chips
+        .map((chip) => (typeof chip === 'string' ? chip.trim() : ''))
+        .filter((chip) => chip.length > 0)
+      : undefined
+
+    return {
+      id: sanitizeCmsIdentifier(slide.id, 'hero-slide', index, usedIds),
+      ...(typeof slide.visible === 'boolean' ? { visible: slide.visible } : {}),
+      ...(typeof slide.layout === 'string' ? { layout: slide.layout as HeroSlideLayout } : {}),
+      ...(tabLabel !== undefined ? { tabLabel } : {}),
+      tag: normalizeLocalizedPair(slide.tag, true),
+      headline: normalizeLocalizedPair(slide.headline, true),
+      description: normalizeLocalizedPair(slide.description, true),
+      ...(location !== undefined ? { location } : {}),
+      ...(note !== undefined ? { note } : {}),
+      ...(steps !== undefined ? { steps } : {}),
+      ...(chips !== undefined ? { chips } : {}),
+      primaryCta: normalizeLocalizedPair(slide.primaryCta, true),
+      ...(typeof slide.primaryCtaUrl === 'string' ? { primaryCtaUrl: slide.primaryCtaUrl.trim() } : {}),
+      secondaryCta: normalizeLocalizedPair(slide.secondaryCta, true),
+      ...(typeof slide.secondaryCtaUrl === 'string' ? { secondaryCtaUrl: slide.secondaryCtaUrl.trim() } : {}),
+      ...(media !== undefined ? { media } : {}),
+    }
+  })
+}
+
+const normalizeHeroCampaignsValue = (rawCampaigns: unknown): HeroCampaigns | undefined => {
+  if (!rawCampaigns || typeof rawCampaigns !== 'object') return undefined
+  const campaigns = rawCampaigns as Record<string, unknown>
+  const usedIds = new Set<string>()
+  const cards: HeroCampaignItem[] = Array.isArray(campaigns.cards)
+    ? campaigns.cards.map((rawCard, index) => {
+      const card = (rawCard && typeof rawCard === 'object') ? rawCard as Record<string, unknown> : {}
+      return {
+        id: sanitizeCmsIdentifier(card.id, 'campaign-card', index, usedIds),
+        ...(typeof card.visible === 'boolean' ? { visible: card.visible } : {}),
+        ...(typeof card.theme === 'string' ? { theme: card.theme as HeroCampaignTheme } : {}),
+        ...(typeof card.icon === 'string' ? { icon: card.icon as HeroCampaignIcon } : {}),
+        badge: normalizeLocalizedPair(card.badge, true),
+        title: normalizeLocalizedPair(card.title, true),
+        description: normalizeLocalizedPair(card.description, true),
+        cta: normalizeLocalizedPair(card.cta, true),
+        ...(typeof card.url === 'string' ? { url: card.url.trim() } : {}),
+      }
+    })
+    : []
+
+  return {
+    ...(typeof campaigns.visible === 'boolean' ? { visible: campaigns.visible } : {}),
+    ...(typeof campaigns.showFloatingDock === 'boolean' ? { showFloatingDock: campaigns.showFloatingDock } : {}),
+    eyebrow: normalizeLocalizedPair(campaigns.eyebrow, true),
+    description: normalizeLocalizedPair(campaigns.description, true),
+    cards,
+  }
+}
+
+export const generateSafeCmsId = (prefix = 'item'): string => {
+  const safePrefix = prefix.replace(/[^A-Za-z0-9._-]/g, '-').replace(/^[^A-Za-z0-9]+/, '') || 'item'
+  const randomSuffix = typeof globalThis.crypto?.randomUUID === 'function'
+    ? globalThis.crypto.randomUUID().slice(0, 8)
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  return `${safePrefix}-${randomSuffix}`.slice(0, 128)
+}
+
+/**
+ * Normalizes a landing CMS editor payload before saving or publishing:
+ * re-indexes repeater positions, repairs duplicate/invalid identifiers,
+ * fills single-language localized fallbacks, and strips extra properties.
+ */
+export const normalizeLandingContentMutation = <T extends { sections?: unknown }>(raw: T): T => {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.sections)) {
+    return raw
+  }
+
+  const inputSections = raw.sections.filter((section): section is Record<string, unknown> => (
+    Boolean(section && typeof section === 'object')
+  ))
+
+  const byKey = new Map<string, Record<string, unknown>>()
+  for (const section of inputSections) {
+    if (typeof section.key === 'string' && !byKey.has(section.key)) {
+      byKey.set(section.key, section)
+    }
+  }
+
+  const orderedSections = LANDING_SECTION_ORDER.every((key) => byKey.has(key))
+    ? LANDING_SECTION_ORDER.map((key) => byKey.get(key)!)
+    : inputSections
+
+  const normalizedSections = orderedSections.map((section) => {
+    const key = typeof section.key === 'string' ? section.key : ''
+    const media = normalizeLandingMediaValue(section.media)
+    const baseSection = {
+      key,
+      visible: typeof section.visible === 'boolean' ? section.visible : true,
+      headline: normalizeLocalizedPair(section.headline, true),
+      description: normalizeLocalizedPair(section.description, true),
+      ...(media !== undefined ? { media } : {}),
+    }
+
+    if (key === 'hero') {
+      const slides = Array.isArray(section.slides)
+        ? section.slides
+          .map((slide) => normalizeLandingMediaValue(slide))
+          .filter((slide): slide is LandingMedia => slide !== undefined)
+        : undefined
+      const slideItems = normalizeHeroSlideItems(section.slideItems)
+      const campaigns = normalizeHeroCampaignsValue(section.campaigns)
+      return {
+        ...baseSection,
+        primaryCta: normalizeLocalizedPair(section.primaryCta, true),
+        ...(typeof section.primaryCtaUrl === 'string' ? { primaryCtaUrl: section.primaryCtaUrl.trim() } : {}),
+        secondaryCta: normalizeLocalizedPair(section.secondaryCta, true),
+        ...(typeof section.secondaryCtaUrl === 'string' ? { secondaryCtaUrl: section.secondaryCtaUrl.trim() } : {}),
+        ...(slides && slides.length > 0 ? { slides } : {}),
+        ...(slideItems && slideItems.length > 0 ? { slideItems } : {}),
+        ...(campaigns !== undefined ? { campaigns } : {}),
+        items: normalizeRepeaterItems(section.items, key),
+      }
+    }
+
+    if (
+      key === 'supportExplorer'
+      || key === 'carePromise'
+      || key === 'careJourney'
+      || key === 'clientStories'
+      || key === 'frequentlyAskedQuestions'
+    ) {
+      return {
+        ...baseSection,
+        items: normalizeRepeaterItems(section.items, key),
+      }
+    }
+
+    if (key === 'consultationReassurance') {
+      return {
+        ...baseSection,
+        sessionLabel: normalizeLocalizedPair(section.sessionLabel, true),
+        price: normalizeLocalizedPair(section.price, true),
+        priceUnit: normalizeLocalizedPair(section.priceUnit, true),
+        primaryCta: normalizeLocalizedPair(section.primaryCta, true),
+      }
+    }
+
+    if (key === 'closingInvitation') {
+      return {
+        ...baseSection,
+        primaryCta: normalizeLocalizedPair(section.primaryCta, true),
+        contact: normalizeLocalizedPair(section.contact, true),
+      }
+    }
+
+    return baseSection
+  })
+
+  return {
+    sections: normalizedSections,
+  } as T
+}
+
 export const validatePsychologistMutation = (value: unknown): value is PsychologistMutation => {
   if (!Value.Check(PsychologistMutationSchema, value)) {
     return false

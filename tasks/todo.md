@@ -18,3 +18,11 @@
 - [x] **4. Add automated API & Web regression tests for the real failure modes**:
   - Added tests in `apps/api/src/routes/landing-cms.test.ts`, `apps/api/src/security/preview-capability.test.ts`, `apps/web/tests/landing-cms.test.tsx`, `apps/web/tests/shared-content-preview.test.tsx`.
 - [x] **5. Full verification (`bun test`, `build:web`, `lint`), knowledge graph sync, harvest `.docs/` lesson, and local-only `git commit` (NO `git push`)**.
+
+---
+
+## Hardening Follow-up: Prevent Draft/Key/ID Errors on Publish (Local Commit Only)
+- [x] **H1. Lock `landing_aggregates` row (`FOR UPDATE`) in `createLandingDraft` & `publishLandingRevision` (`content-transitions.ts`)** to eliminate concurrent `duplicate key` races on `landing_revisions_one_draft_per_aggregate`.
+- [x] **H2. Export shared `normalizeLandingContentMutation` in `packages/shared/src/content.ts`** (position re-indexing, unique/valid identifier repair, bilingual 1-side fallback + optional blank removal, clean schema whitelisting).
+- [x] **H3. Wire shared normalizer + pre-flight `getLandingContentMutationErrors` + unified busy lock** into `LandingCmsPage.tsx` and `TestimonialsCmsPage.tsx` (plus `crypto.randomUUID` / unique ID generation on add).
+- [x] **H4. Add regression tests (shared/API/web), run full checks (`bun test`, `build:web`, `lint`), update knowledge graph & local-only commit (NO `git push`)**.

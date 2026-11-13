@@ -425,6 +425,87 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
     expect(json.message).toContain('5 MB')
   })
 
+  it('POST /api/admin/landing/publish uses atomic saveAndPublishLandingContent and maps Postgres 23505 to 409', async () => {
+    let atomicCalled = false
+    const localized = (value: string) => ({ id: `${value} ID`, en: `${value} EN` })
+    const repeater = (prefix: string) => Array.from({ length: 3 }, (_, position) => ({
+      id: `${prefix}-${position}`,
+      position,
+      title: localized(`${prefix} title ${position}`),
+      description: localized(`${prefix} description ${position}`),
+    }))
+    const validLandingContent = {
+      sections: [
+        { key: 'hero', visible: true, headline: localized('Hero'), description: localized('Hero desc'), primaryCta: localized('Start'), secondaryCta: localized('Explore'), items: repeater('metric') },
+        { key: 'supportExplorer', visible: true, headline: localized('Support'), description: localized('Support desc'), items: repeater('support') },
+        { key: 'carePromise', visible: true, headline: localized('Promise'), description: localized('Promise desc'), items: repeater('promise') },
+        { key: 'featuredPsychologists', visible: true, headline: localized('Featured'), description: localized('Featured desc') },
+        { key: 'careJourney', visible: true, headline: localized('Journey'), description: localized('Journey desc'), items: repeater('journey') },
+        { key: 'clientStories', visible: true, headline: localized('Stories'), description: localized('Stories desc'), items: repeater('stories') },
+        { key: 'consultationReassurance', visible: true, headline: localized('Reassurance'), description: localized('Reassurance desc'), sessionLabel: localized('Session'), price: localized('Price'), priceUnit: localized('Unit'), primaryCta: localized('Book') },
+        { key: 'frequentlyAskedQuestions', visible: true, headline: localized('FAQ'), description: localized('FAQ desc'), items: repeater('faq') },
+        { key: 'closingInvitation', visible: true, headline: localized('Closing'), description: localized('Closing desc'), primaryCta: localized('Contact'), contact: localized('WhatsApp') },
+      ],
+    }
+
+    const appAtomic = new Elysia().use(
+      createLandingCmsRoutes({
+        tokenService,
+        userRepository,
+        db: mockDb,
+        contentTransitions: {
+          saveAndPublishLandingContent: async (_cap: any, content: any) => {
+            atomicCalled = true
+            return { id: 'atomic-rev-1', content }
+          },
+        },
+      })
+    )
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const okRes = await appAtomic.handle(
+      new Request('http://localhost/api/admin/landing/publish', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(validLandingContent),
+      })
+    )
+    expect(okRes.status).toBe(200)
+    expect(atomicCalled).toBe(true)
+    const okJson = await okRes.json()
+    expect(okJson.revisionId).toBe('atomic-rev-1')
+
+    const appConflict = new Elysia().use(
+      createLandingCmsRoutes({
+        tokenService,
+        userRepository,
+        db: mockDb,
+        contentTransitions: {
+          saveAndPublishLandingContent: async () => {
+            const err: any = new Error('duplicate key value violates unique constraint "landing_revisions_one_draft_per_aggregate"')
+            err.code = '23505'
+            throw err
+          },
+        },
+      })
+    )
+    const conflictRes = await appConflict.handle(
+      new Request('http://localhost/api/admin/landing/publish', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(validLandingContent),
+      })
+    )
+    expect(conflictRes.status).toBe(409)
+    const conflictJson = await conflictRes.json()
+    expect(conflictJson.message).toContain('konflik')
+  })
+
   afterAll(() => {
     for (const rootCandidate of [process.cwd(), path.resolve(import.meta.dir, '../../../..')]) {
       const testFile = path.resolve(rootCandidate, 'apps/web/public/media/landing/consultation-hero.webp')

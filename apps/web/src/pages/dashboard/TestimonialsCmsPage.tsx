@@ -16,7 +16,13 @@ import {
   Quote,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
-import { LANDING_REPEATER_BOUNDS, type LandingContentMutation } from '@attentiveid/shared'
+import {
+  generateSafeCmsId,
+  getLandingContentMutationErrors,
+  LANDING_REPEATER_BOUNDS,
+  normalizeLandingContentMutation,
+  type LandingContentMutation,
+} from '@attentiveid/shared'
 
 interface TestimonialData {
   id: string
@@ -146,7 +152,7 @@ export function TestimonialsCmsPage() {
 
     const updated = [...testimonials]
     const itemData: TestimonialData = {
-      id: editingIndex !== null ? testimonials[editingIndex].id : `story-${Date.now()}`,
+      id: editingIndex !== null ? testimonials[editingIndex].id : generateSafeCmsId('story'),
       position: editingIndex !== null ? testimonials[editingIndex].position : testimonials.length,
       title: {
         id: modalForm.nameId.trim(),
@@ -230,10 +236,10 @@ export function TestimonialsCmsPage() {
       }
       return section
     })
-    return {
+    return normalizeLandingContentMutation({
       ...landingContent,
       sections: updatedSections as LandingContentMutation['sections'],
-    }
+    })
   }
 
   const handleSaveDraft = async () => {
@@ -244,6 +250,11 @@ export function TestimonialsCmsPage() {
     }
     if (testimonials.length < LANDING_REPEATER_BOUNDS.clientStories.min) {
       setMessage({ type: 'error', text: `Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni aktif.` })
+      return
+    }
+    const validationErrors = getLandingContentMutationErrors(payload)
+    if (validationErrors.length > 0) {
+      setMessage({ type: 'error', text: `Validasi gagal: ${validationErrors[0]}` })
       return
     }
 
@@ -291,6 +302,12 @@ export function TestimonialsCmsPage() {
 
     if (testimonials.length < LANDING_REPEATER_BOUNDS.clientStories.min) {
       setMessage({ type: 'error', text: `Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni agar carousel dapat berjalan optimal.` })
+      return
+    }
+
+    const validationErrors = getLandingContentMutationErrors(payload)
+    if (validationErrors.length > 0) {
+      setMessage({ type: 'error', text: `Validasi gagal sebelum terbit: ${validationErrors[0]}` })
       return
     }
 

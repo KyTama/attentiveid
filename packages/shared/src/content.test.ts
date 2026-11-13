@@ -2,9 +2,12 @@ import { describe, expect, it } from 'bun:test'
 import {
   ARTICLE_LIFECYCLE_STATES,
   ARTICLE_REVISION_STATES,
+  generateSafeCmsId,
+  getLandingContentMutationErrors,
   LANDING_REPEATER_BOUNDS,
   LANDING_SECTION_ORDER,
   MEDIA_LIFECYCLE_STATES,
+  normalizeLandingContentMutation,
   PSYCHOLOGIST_LIFECYCLE_STATES,
   validateArticleDraftMutation,
   validateLandingContentMutation,
@@ -281,6 +284,52 @@ describe('shared content contracts', () => {
     for (const reference of unsafeReferences) {
       expect(validateMediaReference(reference, policy), reference).toBe(false)
     }
+  })
+
+  it('normalizes duplicate or invalid IDs, gaps in positions, 1-sided bilingual text, and extra properties', () => {
+    const dirty: any = validLandingMutation()
+    dirty.sections.reverse()
+    dirty.extraUnknownField = 'should-strip'
+    dirty.sections.find((s: any) => s.key === 'hero').slideItems = [
+      {
+        id: '   ',
+        tabLabel: { id: '', en: '' },
+        location: { id: 'Jakarta', en: '' },
+        tag: { id: 'Tag ID', en: '' },
+        headline: { id: 'Headline ID', en: 'Headline EN' },
+        description: { id: 'Desc ID', en: 'Desc EN' },
+        primaryCta: { id: 'CTA 1', en: '' },
+        secondaryCta: { id: '', en: 'CTA 2 EN' },
+      },
+    ]
+    const stories = dirty.sections.find((s: any) => s.key === 'clientStories')
+    stories.items = [
+      { id: 'dup-id', position: 5, title: { id: 'Klien A', en: '' }, description: { id: 'Bagus', en: '' }, extraKey: 123 },
+      { id: 'dup-id', position: 9, title: { id: '', en: 'Client B' }, description: { id: 'Nyaman', en: 'Comfortable' } },
+      { id: ' invalid id!! ', position: 0, title: { id: 'Klien C', en: 'Client C' }, description: { id: 'Sangat baik', en: 'Very good' } },
+    ]
+
+    const normalized: any = normalizeLandingContentMutation(dirty)
+    expect(normalized.extraUnknownField).toBeUndefined()
+    expect(normalized.sections.map((s: any) => s.key)).toEqual([...LANDING_SECTION_ORDER])
+    const normStories = normalized.sections.find((s: any) => s.key === 'clientStories')
+    expect(normStories.items.map((i: any) => i.position)).toEqual([0, 1, 2])
+    expect(normStories.items.map((i: any) => i.id)).toEqual(['dup-id', 'dup-id-2', 'invalid-id--'])
+    expect(normStories.items[0].title).toEqual({ id: 'Klien A', en: 'Klien A' })
+    expect(normStories.items[1].title).toEqual({ id: 'Client B', en: 'Client B' })
+    expect(normStories.items[0].extraKey).toBeUndefined()
+
+    const normHero = normalized.sections.find((s: any) => s.key === 'hero')
+    expect(normHero.slideItems[0].id).toBe('hero-slide-1')
+    expect(normHero.slideItems[0].tabLabel).toBeUndefined()
+    expect(normHero.slideItems[0].location).toEqual({ id: 'Jakarta', en: 'Jakarta' })
+    expect(validateLandingContentMutation(normalized)).toBe(true)
+
+    // Still catches genuinely empty required copy on both languages
+    normStories.items[0].title = { id: '', en: '' }
+    const stillInvalid: any = normalizeLandingContentMutation(normalized)
+    expect(getLandingContentMutationErrors(stillInvalid).length).toBeGreaterThan(0)
+    expect(generateSafeCmsId('story')).toMatch(/^story-[A-Za-z0-9._-]+$/)
   })
 
   it('keeps the shared contract runtime neutral and provider neutral', async () => {

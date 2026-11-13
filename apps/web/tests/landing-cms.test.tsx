@@ -155,4 +155,52 @@ describe('Landing & Testimonials CMS Page Components', () => {
       expect(publishBody.content).toBeUndefined()
     })
   })
+
+  it('LandingCmsPage auto-repairs duplicate item IDs and out-of-sequence positions before Save Draft', async () => {
+    let savedDraftBody: any = null
+    const dirtyContent = structuredClone(validLandingContent) as any
+    dirtyContent.sections[5].items[1].id = dirtyContent.sections[5].items[0].id
+    dirtyContent.sections[5].items[2].position = 99
+
+    const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      if (url.endsWith('/api/auth/refresh')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success', accessToken: 'valid.jwt.token', user: adminUser }),
+        })
+      }
+      if (url.endsWith('/api/admin/landing/draft') && init?.method === 'PUT') {
+        savedDraftBody = JSON.parse(String(init.body))
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success', revision: { content: savedDraftBody } }),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ status: 'success', content: dirtyContent }),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard/landing']}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Landing Content Editor')).toBeDefined()
+    })
+
+    fireEvent.click(screen.getByText('Simpan Draft'))
+    await waitFor(() => {
+      expect(savedDraftBody).not.toBeNull()
+      const stories = savedDraftBody.sections.find((s: any) => s.key === 'clientStories')
+      expect(new Set(stories.items.map((i: any) => i.id)).size).toBe(stories.items.length)
+      expect(stories.items.map((i: any) => i.position)).toEqual([0, 1, 2])
+    })
+  })
 })

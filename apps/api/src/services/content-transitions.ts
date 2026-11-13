@@ -220,6 +220,48 @@ export const createContentTransitions = (database: ContentTransitionDatabase) =>
         return this.publishLandingDraft(capability, isUuid ? revisionId : undefined);
     },
 
+    async saveAndPublishLandingContent(
+        capability: AdminCapability,
+        content: LandingContentMutation,
+        basedOnRevisionId: string | null = null
+    ) {
+        assertAdmin(capability);
+        if (!validateLandingContentMutation(content)) {
+            throw new Error('Invalid landing content transition.');
+        }
+        const safeBasedOnRevisionId = (basedOnRevisionId && typeof basedOnRevisionId === 'string' && basedOnRevisionId.trim().length > 0)
+            ? basedOnRevisionId.trim()
+            : null;
+        return database.transaction(async (transaction) => {
+            const aggregate = await transaction.getLandingAggregate();
+            if (!aggregate) {
+                throw new Error('Invalid landing content transition.');
+            }
+            if (safeBasedOnRevisionId) {
+                const basedOn = await transaction.getLandingRevision(safeBasedOnRevisionId);
+                if (!basedOn || basedOn.aggregateId !== aggregate.id) {
+                    throw new Error('Invalid landing content transition.');
+                }
+            }
+            const draft = await transaction.createLandingDraft({
+                content,
+                basedOnRevisionId: safeBasedOnRevisionId
+            });
+            await transaction.publishLandingRevision({
+                aggregateId: aggregate.id,
+                revisionId: draft.id,
+                publishedAt: timestamp()
+            });
+            return {
+                id: draft.id,
+                aggregateId: aggregate.id,
+                publishedRevisionId: draft.id,
+                status: 'published' as const,
+                content: draft.content
+            };
+        });
+    },
+
     async rollbackLanding(capability: AdminCapability, historicalRevisionId: string) {
         assertAdmin(capability);
         return database.transaction(async (transaction) => {
@@ -497,7 +539,8 @@ export const createDrizzleContentTransitionDatabase = (
                     publishedRevisionId: schema.landingAggregates.publishedRevisionId
                 }).from(schema.landingAggregates)
                     .where(eq(schema.landingAggregates.singletonKey, true))
-                    .limit(1);
+                    .limit(1)
+                    .for('update');
                 return aggregate ?? null;
             },
             async getLandingRevision(id) {
@@ -517,7 +560,8 @@ export const createDrizzleContentTransitionDatabase = (
                 const [aggregate] = await transaction.select({ id: schema.landingAggregates.id })
                     .from(schema.landingAggregates)
                     .where(eq(schema.landingAggregates.singletonKey, true))
-                    .limit(1);
+                    .limit(1)
+                    .for('update');
                 if (!aggregate) throw new Error('Landing aggregate missing.');
 
                 // Supersede any existing active draft for this aggregate so that the
@@ -684,7 +728,8 @@ export const createDrizzleContentTransitionDatabase = (
                     publishedRevisionId: schema.landingAggregates.publishedRevisionId
                 }).from(schema.landingAggregates)
                     .where(eq(schema.landingAggregates.id, input.aggregateId))
-                    .limit(1);
+                    .limit(1)
+                    .for('update');
                 if (aggregate?.publishedRevisionId) {
                     await transaction.update(schema.landingRevisions).set({ status: 'superseded' })
                         .where(eq(schema.landingRevisions.id, aggregate.publishedRevisionId));

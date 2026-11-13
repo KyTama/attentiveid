@@ -104,6 +104,11 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
           const revision = await dependencies.contentTransitions.createLandingDraft(adminCap, input)
           return { status: 'success', revision }
         } catch (err: any) {
+          const msg = String(err?.message || '')
+          if (err?.code === '23505' || msg.includes('duplicate key') || msg.includes('unique constraint')) {
+            set.status = 409
+            return { status: 'error', message: 'Terjadi konflik pembaruan draft bersamaan. Silakan coba simpan draft kembali.' }
+          }
           set.status = 400
           return { status: 'error', message: err.message || 'Failed to save landing draft.' }
         }
@@ -142,6 +147,10 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
           const adminCap = createAdminCapability(currentUser.id)
 
           if (payloadProvided) {
+            if (typeof dependencies.contentTransitions.saveAndPublishLandingContent === 'function') {
+              const published = await dependencies.contentTransitions.saveAndPublishLandingContent(adminCap, body)
+              return { status: 'success', revisionId: published?.id, content: published?.content }
+            }
             const draft = await dependencies.contentTransitions.createLandingDraft(adminCap, body)
             const draftId = draft?.id
             await publishRevisionTransition(dependencies.contentTransitions, adminCap, draftId)
@@ -151,6 +160,11 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
           await publishRevisionTransition(dependencies.contentTransitions, adminCap)
           return { status: 'success' }
         } catch (err: any) {
+          const msg = String(err?.message || '')
+          if (err?.code === '23505' || msg.includes('duplicate key') || msg.includes('unique constraint')) {
+            set.status = 409
+            return { status: 'error', message: 'Terjadi konflik pembaruan draft bersamaan. Silakan coba terbitkan kembali.' }
+          }
           set.status = 400
           return { status: 'error', message: err.message || 'Failed to publish landing content.' }
         }
