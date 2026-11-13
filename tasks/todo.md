@@ -1,21 +1,29 @@
-# Task: Editable/Hideable/Deletable Featured Campaigns, Assessment Removal & VPS DB Sync
+# Task: Hero Carousel v3 (5-Slide Editorial Architecture) — Local First
 
-> **Status:** COMPLETED
-> **Goal:** Make Featured Campaigns & Portals editable, adjustable, hideable, and deletable; remove `assessment.attentiveid.com` links from the landing page; sync local Postgres & repo seed data with live VPS DB (`attentive_staging`) before committing and pushing.
+> **Status:** DONE (LOCAL ONLY — READY FOR PREVIEW)
+> **Rule:** STRICTLY LOCAL ONLY. DO NOT PUSH TO GITHUB OR DEPLOY.
+> **Reference:** `/Users/kytama/Projects/Neo-Attentive/attentiveid-updates/Mid Nov 2026/attentive_hero_v3`
 
 ---
 
 ## Action Items
-- [x] **1. Extend shared schema & hero persistence (`packages/shared`, `apps/api`)**:
-  - Extended `HeroCampaignItemSchema` (`visible`, `theme`, `icon`), `HeroCampaignsSchema` (`visible`, `showFloatingDock`, `minItems: 0`, `maxItems: 6`), and `HeroSlideItemSchema` (`location`).
-  - Exported and wired `encodeHeroExtraPayload` / `decodeHeroExtraPayload` in `apps/api/src/repositories/landing-content.repository.ts`.
-- [x] **2. Update landing UI & remove `assessment.attentiveid.com` portals (`apps/web`)**:
-  - Updated `HomepageHero.tsx`, `CampaignFloatingDock.tsx`, `CampaignSection.tsx`, and `en.json` / `id.json` so portals are dynamic, toggleable/hideable/deletable, and exclude `assessment.attentiveid.com`.
-- [x] **3. Add full CMS portal controls (`apps/web/src/pages/dashboard/LandingCmsPage.tsx`)**:
-  - Added section/dock toggles, `+ Tambah Kartu`, `Reset Default`, Move Up/Down, Theme & Icon pickers, Hide/Show card, Delete card, and live Hero Simulator preview.
-- [x] **4. Sync local Postgres DB & repo seed with VPS `attentive_staging` (non-PII only)**:
-  - Restored 17 public content/media tables from `attentive_staging` into local `attentiveid` DB, re-seeded local dev users (`db:seed:users`), and aligned `apps/api/src/db/seed-landing.ts` + `seed-landing.test.ts` + `shared-content.integration.test.ts` with published Revision 2.
-- [x] **5. Harvest lesson learned & verify tests/build/graph**:
-  - Added `.docs/common-issues/hero-campaigns-envelope-persistence-and-vps-seed-sync.md` + updated `.docs/common-issues/README.md`.
-  - Run `apps/api` tests, `apps/web` Vitest + TypeScript/Vite build, and sync `code-review-graph`.
-- [x] **6. Commit & push clean changes to `origin/master`**.
+- [x] **1. Extract static hero-v3 media assets & update shared `HeroSlideItemSchema` (`packages/shared/src/content.ts`)**:
+  - Store all 15 optimized media images under `apps/web/public/images/hero-v3/`.
+  - Extend `HeroSlideItemSchema` to support `visible`, `layout` (`practice` | `pet-garden` | `big10` | `scientific-brief` | `wisdom-ella`), `tabLabel`, `note`, `steps`, `chips`, and empty URLs (`maxLength: 2048` without `minLength: 1`) so Slide 03 `"Take the Big 10"` can start unlinked and be filled in CMS later.
+- [x] **2. Extract & share canonical 5-slide default configuration + bilingual copy (`apps/web/src/features/content/hero-slides.ts`, `en.json`, `id.json`)**:
+  - Define the 5 bilingual (`en` & `id`) slides matching `attentive_hero_v3`:
+    - Slide 01: `Our practice` — Clinical Psychology Bureau & Professional Counseling (`https://booking.attentiveid.com/`, `/psychologists`).
+    - Slide 02: `Pet garden` — Home · Pet garden (`#locations`, `https://booking.attentiveid.com/`).
+    - Slide 03: `Free Big 10 + session` — Big 10 + First Session (Primary URL `""` unlinked for now, Secondary URL `https://free-session.attentiveid.com`).
+    - Slide 04: `Scientific brief` — Monthly Scientific Brief (`/articles`, `/articles`).
+    - Slide 05: `Meet Ella` — Wisdom · Principal Psychologist (`/psychologists/gisella`, `https://booking.attentiveid.com/`).
+- [x] **3. Redesign `HomepageHero.tsx` to match `attentive_hero_v3`**:
+  - Warm `#F5EFE5` editorial stage (`role="region" aria-roledescription="carousel"`), top eyebar (`THE LATEST AT ATTENTIVE`), 45%/55% desktop split layout with arched right visual column, mobile visual-first stack.
+  - Render custom visual showcase compositions per slide layout (`practice` arch photo + `SIP RESMI` sticker + `COME AS YOU ARE` card; `pet-garden` 3-photo cat collage + round cat overlay + `MEET THE RESIDENTS`; `big10` gradient showcase + norm & 4-letter type excerpts + matched psychologist avatar card; `scientific-brief` 3 brief sheets + dark `1 in 5` stat card + `New every month` pill; `wisdom-ella` portrait + quote card + `SHE OFTEN WORKS WITH` card + `Practicing since 2010` pill).
+  - Autoplay 7s progress bar tabs (`01 Our practice` .. `05 Meet Ella`) with pause on hover/focus/reduced-motion, previous/next circular controls, keyboard ArrowLeft/Right, pointer swipe, and polite screen-reader announcement.
+  - Graceful CTA rendering when URL is empty (`""`): muted non-navigating pill ("Soon" / "Segera") with zero links to `assessment.attentiveid.com`.
+- [x] **4. Upgrade `LandingCmsPage.tsx` Highlight Card Editor & Live Simulator**:
+  - Expand `getHeroSlideItem` / `handleSlidePhotoUpload` / `handleResetSlidePhoto` / Hero Simulator & Form to support all 5 slides dynamically (per-slide hide/show toggle, tab label, tag, headline with `**gold**`, body, note/meta, CTA labels + destination URLs including blank URL support, and photo upload/reset).
+- [x] **5. Verify locally & sync knowledge graph (no git push!)**:
+  - Updated tests in `apps/web/tests/homepage.test.tsx` and `apps/api/src/repositories/repositories.test.ts`.
+  - Verified shared tests (30 pass), API tests (126 pass, 5 live-PG skipped), web tests (75 pass), web production build (`tsc -b && vite build`), lint (`0 errors`), and `build_or_update_graph_tool`.

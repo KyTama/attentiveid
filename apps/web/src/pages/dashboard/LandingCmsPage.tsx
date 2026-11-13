@@ -19,7 +19,6 @@ import {
   Loader2,
   MapPin,
   MessageCircle,
-  PawPrint,
   Plus,
   RotateCcw,
   ShieldCheck,
@@ -29,7 +28,14 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { uploadLandingImage } from '../../features/content/service'
+import {
+  buildMergedHeroSlideItems,
+  getDefaultHeroSlideItems,
+  HERO_SLIDE_LAYOUT_LABELS,
+  resolveHeroSlides,
+} from '../../features/content/hero-slides'
 import { renderDualColorHeading } from '../../components/landing/HomepageHero'
+import { HeroSlideVisual } from '../../components/landing/HeroSlideVisual'
 
 interface LocalizedText {
   id: string
@@ -254,7 +260,7 @@ export function LandingCmsPage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [heroSubSection, setHeroSubSection] = useState<'slides' | 'campaigns' | 'metrics'>('slides')
-  const [heroPreviewSlide, setHeroPreviewSlide] = useState<0 | 1>(0)
+  const [heroPreviewSlide, setHeroPreviewSlide] = useState<number>(0)
 
   // Upload state
   const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
@@ -341,60 +347,25 @@ export function LandingCmsPage() {
 
   const activeSection = content.sections[activeSectionIndex]
 
+  const getMergedHeroSlideItems = () => {
+    return buildMergedHeroSlideItems(activeSection?.key === 'hero' ? (activeSection as any) : null)
+  }
+
   const getHeroSlideItem = (index: number) => {
-    const existing = (activeSection as any)?.slideItems?.[index]
-    if (existing) return existing
-    if (index === 0) {
-      return {
-        id: 'hero-slide-1',
-        tag: { id: 'Biro Psikologi Klinis · Berizin SIP Resmi', en: 'Licensed Clinical Psychology Bureau' },
-        headline: activeSection?.headline || {
-          id: 'Biro Psikologi Klinis & Konseling **Profesional Berizin Resmi.**',
-          en: 'Licensed Clinical Psychology Bureau & **Professional Counseling.**',
-        },
-        description: activeSection?.description || {
-          id: 'Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat bersama psikolog berlisensi SIP resmi.',
-          en: 'Private in-person consultations in Jakarta, BSD, and Malang, or online video counseling with licensed psychologists.',
-        },
-        primaryCta: (activeSection as any)?.primaryCta || { id: 'Jadwalkan Konsultasi', en: 'Book Consultation' },
-        primaryCtaUrl: (activeSection as any)?.primaryCtaUrl || 'https://booking.attentiveid.com/',
-        secondaryCta: (activeSection as any)?.secondaryCta || { id: 'Lihat Layanan', en: 'Explore Services' },
-        secondaryCtaUrl: (activeSection as any)?.secondaryCtaUrl || '/psychologists',
-      }
-    }
-    return {
-      id: 'hero-slide-2',
-      tag: { id: 'Ruang Ramah Anabul', en: 'Pet Friendly Space' },
-      headline: { id: 'Biro Psikologi **Pet Friendly.**', en: 'Pet Friendly **Psychology Bureau.**' },
-      description: {
-        id: 'Di Attentive, kamu boleh mengajak hewan peliharaan kesayanganmu ke sesi konseling tatap muka. Menghadirkan rasa tenang, grounded, dan bebas cemas.',
-        en: 'At Attentive, you are warmly welcomed to bring your pet companions to in-person sessions. Creating a grounded, comforting, and anxiety-free healing space.',
-      },
-      primaryCta: { id: 'Konsultasi Ramah Anabul', en: 'Book Pet-Friendly Session' },
-      primaryCtaUrl: 'https://wa.me/6281234567890?text=Halo%20Attentive,%20saya%20ingin%20konsultasi%20ramah%20anabul',
-      secondaryCta: { id: 'Lihat 3 Lokasi Praktik', en: 'Explore 3 Practice Locations' },
-      secondaryCtaUrl: '#locations',
-    }
+    return getMergedHeroSlideItems()[index] || getMergedHeroSlideItems()[0]
   }
 
   const updateHeroSlideField = (
     slideIndex: number,
-    field: 'tag' | 'headline' | 'description' | 'primaryCta' | 'secondaryCta',
+    field: 'tag' | 'tabLabel' | 'headline' | 'description' | 'location' | 'note' | 'primaryCta' | 'secondaryCta',
     lang: 'id' | 'en',
     value: string
   ) => {
-    const slideItems = [...(((activeSection as any).slideItems as any[]) || [
-      getHeroSlideItem(0),
-      getHeroSlideItem(1),
-    ])]
-
-    if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
-    if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
-
+    const slideItems = getMergedHeroSlideItems()
     slideItems[slideIndex] = {
       ...slideItems[slideIndex],
       [field]: {
-        ...(slideItems[slideIndex][field] || {}),
+        ...((slideItems[slideIndex] as any)[field] || { id: '', en: '' }),
         [lang]: value,
       },
     }
@@ -422,14 +393,7 @@ export function LandingCmsPage() {
     field: 'primaryCtaUrl' | 'secondaryCtaUrl',
     value: string
   ) => {
-    const slideItems = [...(((activeSection as any).slideItems as any[]) || [
-      getHeroSlideItem(0),
-      getHeroSlideItem(1),
-    ])]
-
-    if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
-    if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
-
+    const slideItems = getMergedHeroSlideItems()
     slideItems[slideIndex] = {
       ...slideItems[slideIndex],
       [field]: value,
@@ -448,6 +412,44 @@ export function LandingCmsPage() {
 
     newSections[activeSectionIndex] = updatedHero
     setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroSlideVisible = (slideIndex: number, nextVisible: boolean) => {
+    const slideItems = getMergedHeroSlideItems()
+    const visibleCount = slideItems.filter((item) => item.visible !== false).length
+    if (!nextVisible && visibleCount <= 1 && slideItems[slideIndex]?.visible !== false) {
+      setMessage({ type: 'error', text: 'Minimal harus ada 1 slide hero yang aktif.' })
+      return
+    }
+    slideItems[slideIndex] = {
+      ...slideItems[slideIndex],
+      visible: nextVisible,
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      slideItems,
+    } as any
+    setContent({ ...content, sections: newSections })
+  }
+
+  const resetHeroSlidesToDefault = () => {
+    const defaults = getDefaultHeroSlideItems()
+    const newSections = [...content.sections]
+    const updatedHero: any = {
+      ...activeSection,
+      headline: defaults[0].headline,
+      description: defaults[0].description,
+      primaryCta: defaults[0].primaryCta,
+      primaryCtaUrl: defaults[0].primaryCtaUrl,
+      secondaryCta: defaults[0].secondaryCta,
+      secondaryCtaUrl: defaults[0].secondaryCtaUrl,
+      slideItems: defaults,
+    }
+    delete updatedHero.media
+    newSections[activeSectionIndex] = updatedHero
+    setContent({ ...content, sections: newSections })
+    setMessage({ type: 'success', text: '5 Slide Hero berhasil dikembalikan ke preset attentive_hero_v3!' })
   }
 
   const getDefaultHeroCampaigns = () => ({
@@ -887,7 +889,7 @@ export function LandingCmsPage() {
     ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
     : (sectionImageMeta?.defaultImage || '/media/landing/hero-slide-1.jpg')
 
-  const handleSlidePhotoUpload = async (slideIndex: 0 | 1, file: File) => {
+  const handleSlidePhotoUpload = async (slideIndex: number, file: File) => {
     if (!file.type.startsWith('image/')) {
       setUploadError('Hanya file gambar (WebP, PNG, JPG) yang diperbolehkan.')
       return
@@ -923,12 +925,7 @@ export function LandingCmsPage() {
           { headers: getAuthHeaders() }
         )
 
-        const slideItems = [...(((activeSection as any).slideItems as any[]) || [
-          getHeroSlideItem(0),
-          getHeroSlideItem(1),
-        ])]
-        if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
-        if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
+        const slideItems = getMergedHeroSlideItems()
 
         slideItems[slideIndex] = {
           ...slideItems[slideIndex],
@@ -964,14 +961,8 @@ export function LandingCmsPage() {
     img.src = objectUrl
   }
 
-  const handleResetSlidePhoto = (slideIndex: 0 | 1) => {
-    const slideItems = [...(((activeSection as any).slideItems as any[]) || [
-      getHeroSlideItem(0),
-      getHeroSlideItem(1),
-    ])]
-    if (!slideItems[0]) slideItems[0] = getHeroSlideItem(0)
-    if (!slideItems[1]) slideItems[1] = getHeroSlideItem(1)
-
+  const handleResetSlidePhoto = (slideIndex: number) => {
+    const slideItems = getMergedHeroSlideItems()
     const updatedSlide = { ...slideItems[slideIndex] }
     delete updatedSlide.media
     slideItems[slideIndex] = updatedSlide
@@ -984,14 +975,6 @@ export function LandingCmsPage() {
 
     if (slideIndex === 0) {
       delete updatedHero.media
-      updatedHero.slides = [
-        {
-          reference: 'media/landing/hero-slide-1.jpg',
-          width: 3072,
-          height: 4096,
-          alt: { id: 'Konsultasi Psikologi Tatap Muka & Daring Attentive', en: 'Attentive In-Person & Online Psychological Consultation' },
-        },
-      ]
     }
 
     newSections[activeSectionIndex] = updatedHero
@@ -1000,13 +983,15 @@ export function LandingCmsPage() {
   }
 
   const heroCampaigns = getHeroCampaigns()
-  const slide2Item = getHeroSlideItem(1)
-  const slide1ImageSrc = activeSection?.media?.reference
-    ? (activeSection.media.reference.startsWith('/') ? activeSection.media.reference : `/${activeSection.media.reference}`)
-    : '/media/landing/hero-slide-1.jpg'
-  const slide2ImageSrc = slide2Item?.media?.reference
-    ? (slide2Item.media.reference.startsWith('/') ? slide2Item.media.reference : `/${slide2Item.media.reference}`)
-    : '/images/pet-friendly/pet-friendly-1.jpg'
+  const heroSlides = getMergedHeroSlideItems()
+  const visibleHeroSlideCount = heroSlides.filter((s) => s.visible !== false).length
+  const safeHeroSlideIndex = Math.min(heroPreviewSlide, Math.max(heroSlides.length - 1, 0))
+  const activeHeroSlideItem = getHeroSlideItem(safeHeroSlideIndex)
+  const simulatorSlides = resolveHeroSlides(
+    activeSection?.key === 'hero' ? (activeSection as any) : null,
+    languageView === 'en' ? 'en' : 'id'
+  )
+  const activeSimSlide = simulatorSlides[safeHeroSlideIndex] || simulatorSlides[0]
 
   return (
     <div className="space-y-6 max-w-6xl relative pb-12">
@@ -1213,7 +1198,7 @@ export function LandingCmsPage() {
                       }`}
                     >
                       <Sparkles className="size-3 text-amber-600 shrink-0" />
-                      <span className="truncate">1. Highlight Card (2 Slide)</span>
+                      <span className="truncate">1. Highlight Card ({visibleHeroSlideCount}/{heroSlides.length} Slide)</span>
                     </button>
                     <button
                       type="button"
@@ -1310,151 +1295,133 @@ export function LandingCmsPage() {
                     <Sparkles className="size-4" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold tracking-tight text-white">Hero Highlight Card (Live Simulator)</h3>
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full">
-                        Editorial Format · 2 Slides
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold tracking-tight text-white">Hero Highlight Card (Live Simulator)</h3>
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full">
+                          Editorial Format · {visibleHeroSlideCount}/{heroSlides.length} Slides
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        Format carousel editorial v3 (01 Our practice .. 05 Meet Ella) dengan visual arsitektural, tab progress 7s, &amp; mode bilingual.
+                      </p>
                     </div>
-                    <p className="text-[11px] text-slate-300">
-                      Format highlight card beranda dengan tipografi 2-warna trademark, architectural arch frame, dan navigasi slide.
-                    </p>
+                  </div>
+
+                  {/* Slide Toggle Controls (5 Slides) */}
+                  <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-auto">
+                    {simulatorSlides.map((simSlide, sIdx) => (
+                      <button
+                        key={simSlide.id}
+                        type="button"
+                        onClick={() => setHeroPreviewSlide(sIdx)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          safeHeroSlideIndex === sIdx
+                            ? 'bg-amber-400 text-slate-950 shadow-xs'
+                            : simSlide.visible
+                            ? 'bg-white/10 text-slate-200 hover:bg-white/20'
+                            : 'bg-white/5 text-slate-400 line-through hover:bg-white/15'
+                        }`}
+                      >
+                        <span>0{sIdx + 1}</span>
+                        <span className="hidden xl:inline">{simSlide.tabLabel}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Slide Toggle Controls */}
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => setHeroPreviewSlide(0)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      heroPreviewSlide === 0
-                        ? 'bg-amber-400 text-slate-950 shadow-xs'
-                        : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                {/* Embedded Editorial Card Simulator */}
+                <div className="rounded-2xl border border-secondary/20 bg-[#FAF8F3] p-4 text-slate-900 sm:p-5">
+                  <div
+                    className={`relative overflow-hidden rounded-2xl border bg-[#F5EFE5] shadow-sm transition-all ${
+                      heroSubSection === 'slides'
+                        ? 'border-amber-400/90 ring-2 ring-amber-400/50'
+                        : 'border-secondary/15'
                     }`}
                   >
-                    Slide 1: Konseling
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setHeroPreviewSlide(1)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      heroPreviewSlide === 1
-                        ? 'bg-amber-400 text-slate-950 shadow-xs'
-                        : 'bg-white/10 text-slate-300 hover:bg-white/20'
-                    }`}
-                  >
-                    Slide 2: Pet Friendly 🐾
-                  </button>
-                </div>
-              </div>
-
-              {/* Embedded Editorial Card Simulator */}
-              <div className="rounded-2xl border border-secondary/20 bg-[#FAF7F2] p-4 text-slate-900 sm:p-6">
-                <div className="relative overflow-hidden rounded-2xl border border-secondary/15 bg-white p-5 shadow-sm sm:p-6">
-                  {heroPreviewSlide === 0 ? (
-                    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                      <div>
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase text-secondary">
-                          <span className="size-1.5 rounded-full bg-[#C27803]" />
-                          {languageView === 'en' ? 'Licensed Clinical Psychology Bureau' : 'Biro Psikologi Klinis · Berizin SIP'}
+                    {!activeSimSlide.visible && (
+                      <div className="bg-slate-900/90 text-amber-300 text-[10px] font-bold px-3 py-1.5 flex items-center justify-between">
+                        <span>SLIDE INI SEDANG DISEMBUNYIKAN DI HALAMAN PUBLIK</span>
+                        <span>(Hanya tampil di simulator)</span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 items-stretch lg:grid-cols-[46%_54%]">
+                      <div className="p-5 sm:p-6 flex flex-col justify-center">
+                        <span className="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.16em] uppercase text-[#C08A2C]">
+                          <span className="size-1.5 rounded-full bg-[#E2AE52]" />
+                          {activeSimSlide.tag}
                         </span>
 
-                        <h2 className="mt-3 text-xl font-extrabold tracking-tight sm:text-2xl lg:text-3xl lg:leading-tight">
-                          {renderDualColorHeading(
-                            (languageView === 'en' ? activeSection.headline?.en : activeSection.headline?.id) ||
-                              activeSection.headline?.id ||
-                              'Biro Psikologi Klinis & Konseling Profesional Berizin Resmi'
-                          )}
+                        <h2 className="mt-3 text-xl font-bold tracking-tight sm:text-2xl lg:leading-[1.1]">
+                          {renderDualColorHeading(activeSimSlide.headline)}
                         </h2>
 
-                        <p className="mt-2 text-xs text-secondary/80 line-clamp-3">
-                          {(languageView === 'en' ? activeSection.description?.en : activeSection.description?.id) ||
-                            activeSection.description?.id ||
-                            'Konsultasi tatap muka langsung di Jakarta, BSD, dan Malang, atau sesi daring privat.'}
+                        <p className="mt-2.5 text-xs leading-relaxed text-[#4A566B] line-clamp-3">
+                          {activeSimSlide.description}
                         </p>
 
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-4 py-2 text-[11px] font-bold text-white shadow-xs">
-                            {(languageView === 'en' ? activeSection.primaryCta?.en : activeSection.primaryCta?.id) || 'Jadwalkan Konsultasi'}
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[11px] font-bold shadow-xs ${
+                              activeSimSlide.primaryCtaUrl.trim()
+                                ? 'bg-[#14284B] text-white'
+                                : 'bg-[#14284B]/60 text-white/80'
+                            }`}
+                          >
+                            <span>{activeSimSlide.primaryCta}</span>
+                            {!activeSimSlide.primaryCtaUrl.trim() && (
+                              <span className="rounded bg-white/15 px-1 text-[9px] text-amber-300">Soon</span>
+                            )}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary">
-                            {(languageView === 'en' ? activeSection.secondaryCta?.en : activeSection.secondaryCta?.id) || 'Lihat Layanan →'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Right: Arch image */}
-                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-tl-[60px] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-secondary/15 bg-[#E8E2D5] shadow-sm">
-                        <img
-                          src={currentSectionImageSrc}
-                          alt="Hero Live Preview"
-                          className="h-full w-full object-cover object-center"
-                        />
-                        <div className="absolute -top-2 -right-2 z-10 flex size-14 flex-col items-center justify-center rounded-full border-2 border-white bg-[#E5A824] text-secondary shadow-md">
-                          <span className="text-[8px] font-bold uppercase">SIP</span>
-                          <span className="text-[9px] font-extrabold uppercase">RESMI+</span>
-                        </div>
-                        <div className="absolute bottom-3 left-3 z-10 rounded-xl border border-secondary/15 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-md">
-                          <span className="block text-[8px] font-bold uppercase text-secondary/60">COME AS YOU ARE</span>
-                          <span className="text-[10px] font-bold text-secondary">Ruang aman untuk didengar.</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                      <div>
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase text-secondary">
-                          <span className="size-1.5 rounded-full bg-[#C27803]" />
-                          {(languageView === 'en' ? getHeroSlideItem(1)?.tag?.en : getHeroSlideItem(1)?.tag?.id) || getHeroSlideItem(1)?.tag?.id || 'Ruang Ramah Anabul'}
-                        </span>
-
-                        <h2 className="mt-3 text-xl font-extrabold tracking-tight sm:text-2xl lg:text-3xl lg:leading-tight">
-                          {renderDualColorHeading(
-                            (languageView === 'en' ? getHeroSlideItem(1)?.headline?.en : getHeroSlideItem(1)?.headline?.id) ||
-                              getHeroSlideItem(1)?.headline?.id ||
-                              'Biro Psikologi **Pet Friendly.**'
-                          )}
-                        </h2>
-
-                        <p className="mt-2 text-xs text-secondary/80 line-clamp-3">
-                          {(languageView === 'en' ? getHeroSlideItem(1)?.description?.en : getHeroSlideItem(1)?.description?.id) ||
-                            getHeroSlideItem(1)?.description?.id ||
-                            'Di Attentive, kamu boleh mengajak hewan peliharaan kesayanganmu ke sesi konseling tatap muka.'}
-                        </p>
-
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-4 py-2 text-[11px] font-bold text-white shadow-xs">
-                            {(languageView === 'en' ? getHeroSlideItem(1)?.primaryCta?.en : getHeroSlideItem(1)?.primaryCta?.id) || 'Konsultasi Ramah Anabul'}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary">
-                            {(languageView === 'en' ? getHeroSlideItem(1)?.secondaryCta?.en : getHeroSlideItem(1)?.secondaryCta?.id) || 'Lihat 3 Lokasi Praktik →'}
+                          <span
+                            className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
+                              activeSimSlide.secondaryCtaUrl.trim() ? 'text-[#1D3560]' : 'text-slate-400'
+                            }`}
+                          >
+                            {activeSimSlide.secondaryCta} →
                           </span>
                         </div>
                       </div>
 
-                      {/* Right: Collage 4 pet photos */}
-                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-tl-[60px] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-secondary/15 bg-[#E8E2D5] p-2 shadow-sm grid grid-cols-2 grid-rows-2 gap-2">
-                        <img src="/images/pet-friendly/pet-friendly-1.jpg" alt="Pet 1" className="h-full w-full object-cover rounded-tl-[45px] rounded-lg" />
-                        <img src="/images/pet-friendly/pet-friendly-2.jpg" alt="Pet 2" className="h-full w-full object-cover rounded-lg" />
-                        <img src="/images/pet-friendly/pet-friendly-3.jpg" alt="Pet 3" className="h-full w-full object-cover rounded-lg" />
-                        <img src="/images/pet-friendly/pet-friendly-4.jpg" alt="Pet 4" className="h-full w-full object-cover rounded-br-xl rounded-lg" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Simulator Slide Pagination Dots */}
-                  <div className="mt-4 flex items-center justify-between border-t border-secondary/10 pt-3 text-[11px] text-secondary/70">
-                    <div className="flex items-center gap-2 font-mono font-bold">
-                      <span className="text-[#C27803]">0{heroPreviewSlide + 1}</span>
-                      <span>/ 02</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className={`h-1.5 rounded-full transition-all ${heroPreviewSlide === 0 ? 'w-6 bg-[#C27803]' : 'w-3 bg-secondary/20'}`} />
-                      <div className={`h-1.5 rounded-full transition-all ${heroPreviewSlide === 1 ? 'w-6 bg-[#C27803]' : 'w-3 bg-secondary/20'}`} />
+                      <HeroSlideVisual
+                        slide={activeSimSlide}
+                        isId={languageView !== 'en'}
+                        isActive
+                        compact
+                      />
                     </div>
                   </div>
-                </div>
+
+                  {/* Simulator 5-Tab Progress Strip */}
+                  <div className="mt-3 grid grid-cols-5 gap-2.5 pt-1">
+                    {simulatorSlides.map((simSlide, sIdx) => (
+                      <button
+                        key={simSlide.id}
+                        type="button"
+                        onClick={() => setHeroPreviewSlide(sIdx)}
+                        className="text-left cursor-pointer"
+                      >
+                        <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold truncate">
+                          <span className={safeHeroSlideIndex === sIdx ? 'text-[#C08A2C]' : 'text-slate-400'}>
+                            0{sIdx + 1}
+                          </span>
+                          <span className={safeHeroSlideIndex === sIdx ? 'text-[#14284B]' : 'text-slate-500'}>
+                            {simSlide.tabLabel}
+                          </span>
+                        </div>
+                        <div className="h-[2.5px] rounded-full bg-[#E1DDD5] overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              safeHeroSlideIndex === sIdx
+                                ? 'w-1/2 bg-[#C08A2C]'
+                                : sIdx < safeHeroSlideIndex
+                                ? 'w-full bg-[#D6C7A8]'
+                                : 'w-0'
+                            }`}
+                          />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
 
                 {/* Minimalist Trust Ticker Ribbon in simulator */}
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-4 border-y border-secondary/10 py-2.5 text-center text-[10px] font-bold tracking-wide text-secondary/70">
@@ -1606,7 +1573,9 @@ export function LandingCmsPage() {
                   }`}
                 >
                   <span>🌟</span>
-                  <span>1. Highlight Card ({slide2Item ? '2 Slide' : 'Slide'})</span>
+                  <span>
+                    1. Highlight Card ({visibleHeroSlideCount}/{heroSlides.length} Slide)
+                  </span>
                 </button>
 
                 <button
@@ -1643,578 +1612,490 @@ export function LandingCmsPage() {
               </div>
 
               {/* ====================================================
-                  SUB-SECTION 1: HERO HIGHLIGHT CARD (SLIDES)
+                  SUB-SECTION 1: HERO HIGHLIGHT CARD (5 SLIDES)
                  ==================================================== */}
               {heroSubSection === 'slides' && (
                 <div className="space-y-4">
                   {/* Slide Selector Tabs */}
-                  <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="flex size-5 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
-                          🌟
-                        </span>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                          Pilih Slide Hero untuk Diedit
-                        </h4>
+                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-5 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
+                            🌟
+                          </span>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                            Pilih Slide Hero untuk Diedit ({visibleHeroSlideCount}/{heroSlides.length} Aktif)
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-slate-600 mt-0.5">
+                          Setiap slide bisa diedit teks, tombol CTA, foto utama, maupun disembunyikan dari beranda.
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5">
-                        Slide 1 adalah layanan klinis utama. Slide 2 adalah fasilitas ruang ramah anabul (pet-friendly).
-                      </p>
+
+                      <button
+                        type="button"
+                        onClick={resetHeroSlidesToDefault}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-700 hover:text-slate-900 bg-white border border-amber-200 hover:bg-amber-50 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                        title="Kembalikan seluruh 5 slide hero ke preset default attentive_hero_v3"
+                      >
+                        <RotateCcw className="size-3.5 text-[#C27803]" />
+                        <span>Reset 5 Slide Default</span>
+                      </button>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setHeroPreviewSlide(0)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          heroPreviewSlide === 0
-                            ? 'bg-[#132B3A] text-white shadow-xs ring-2 ring-amber-400'
-                            : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
-                        }`}
-                      >
-                        Slide 1: Konseling Klinis
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setHeroPreviewSlide(1)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          heroPreviewSlide === 1
-                            ? 'bg-[#C27803] text-white shadow-xs ring-2 ring-amber-400'
-                            : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
-                        }`}
-                      >
-                        Slide 2: Ruang Ramah Anabul 🐾
-                      </button>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {heroSlides.map((slideItem, slideIdx) => {
+                        const isActiveSlide = safeHeroSlideIndex === slideIdx
+                        const isVisibleSlide = slideItem.visible !== false
+                        const shortLabel =
+                          slideItem.tabLabel?.[languageView === 'en' ? 'en' : 'id'] ||
+                          slideItem.tag?.[languageView === 'en' ? 'en' : 'id'] ||
+                          `Slide ${slideIdx + 1}`
+
+                        return (
+                          <button
+                            key={slideItem.id || `hero-slide-tab-${slideIdx}`}
+                            type="button"
+                            onClick={() => setHeroPreviewSlide(slideIdx)}
+                            className={`px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer border ${
+                              isActiveSlide
+                                ? 'bg-[#132B3A] text-white border-[#132B3A] shadow-xs ring-2 ring-amber-400'
+                                : isVisibleSlide
+                                  ? 'bg-white text-slate-700 hover:bg-slate-50 border-slate-300'
+                                  : 'bg-slate-100/80 text-slate-400 hover:bg-slate-100 border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 text-[10px] font-bold uppercase tracking-wider">
+                              <span>{String(slideIdx + 1).padStart(2, '0')}</span>
+                              <span
+                                className={`inline-block size-1.5 rounded-full ${
+                                  isVisibleSlide ? 'bg-emerald-400' : 'bg-slate-400'
+                                }`}
+                                title={isVisibleSlide ? 'Tampil di Beranda' : 'Disembunyikan'}
+                              />
+                            </div>
+                            <div className="text-[11px] font-semibold truncate mt-0.5">
+                              {shortLabel}
+                            </div>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
 
-                  {/* SLIDE 1 FORM */}
-                  {heroPreviewSlide === 0 && (
-                    <div className="space-y-4">
-                      {/* Photo Manager Card */}
-                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                            <Camera className="size-4 text-teal-600" />
-                            <span>Foto Resmi Hero Slide 1</span>
-                          </span>
-                          <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                            Foto Beranda Utama
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                          <div className="sm:col-span-4">
-                            <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-2xs">
-                              <img
-                                src={slide1ImageSrc}
-                                alt="Slide 1 Preview"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                  {/* Unified Slide Editor Form */}
+                  <div className="space-y-4">
+                    {/* Visibility & Layout Header */}
+                    <div className="p-3.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="inline-flex items-center justify-center px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[11px] font-extrabold text-[#9A5D02]">
+                          SLIDE {String(safeHeroSlideIndex + 1).padStart(2, '0')}
+                        </span>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">
+                            {HERO_SLIDE_LAYOUT_LABELS[activeHeroSlideItem.layout || 'practice']}
                           </div>
-
-                          <div className="sm:col-span-8 space-y-2">
-                            <input
-                              id="hero-slide-1-input"
-                              type="file"
-                              accept="image/webp,image/png,image/jpeg"
-                              className="hidden"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  handleSlidePhotoUpload(0, e.target.files[0])
-                                }
-                              }}
-                            />
-
-                            <div className="flex flex-wrap items-center gap-2">
-                              <label
-                                htmlFor="hero-slide-1-input"
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border shadow-2xs transition-colors ${
-                                  uploadingTarget === 'hero-slide-0'
-                                    ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
-                                    : 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600'
-                                }`}
-                              >
-                                {uploadingTarget === 'hero-slide-0' ? (
-                                  <>
-                                    <Loader2 className="size-3.5 animate-spin" />
-                                    <span>Mengunggah Foto...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <UploadCloud className="size-3.5" />
-                                    <span>Unggah Foto Pengganti</span>
-                                  </>
-                                )}
-                              </label>
-
-                              {activeSection.media && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleResetSlidePhoto(0)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
-                                  title="Kembalikan ke foto resmi bawaan"
-                                >
-                                  <RotateCcw className="size-3.5 text-slate-400" />
-                                  <span>Reset ke Foto Resmi</span>
-                                </button>
-                              )}
-                            </div>
-
-                            <p className="text-[10px] text-slate-400">
-                              Format: WebP, PNG, JPG (Maks 5 MB) • Rasio disarankan 16:10 atau 4:3
-                            </p>
+                          <div className="text-[11px] text-slate-500">
+                            Tab: {activeHeroSlideItem.tabLabel?.id || activeHeroSlideItem.tag?.id}
                           </div>
                         </div>
                       </div>
 
-                      {/* Copy Inputs for Slide 1 */}
-                      <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">
-                        {/* Headline */}
-                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                          {(languageView === 'both' || languageView === 'id') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Headline Slide 1 (ID)</label>
-                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                              </div>
-                              <input
-                                type="text"
-                                value={activeSection.headline?.id || ''}
-                                onChange={(e) => {
-                                  updateSectionCopy('headline', 'id', e.target.value)
-                                  updateHeroSlideField(0, 'headline', 'id', e.target.value)
-                                }}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                          {(languageView === 'both' || languageView === 'en') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Headline Slide 1 (EN)</label>
-                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                              </div>
-                              <input
-                                type="text"
-                                value={activeSection.headline?.en || ''}
-                                onChange={(e) => {
-                                  updateSectionCopy('headline', 'en', e.target.value)
-                                  updateHeroSlideField(0, 'headline', 'en', e.target.value)
-                                }}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                        </div>
+                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={activeHeroSlideItem.visible !== false}
+                          onChange={(e) => updateHeroSlideVisible(safeHeroSlideIndex, e.target.checked)}
+                          className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>
+                          {activeHeroSlideItem.visible !== false ? 'Tampilkan di Beranda' : 'Disembunyikan'}
+                        </span>
+                      </label>
+                    </div>
 
-                        {/* Tip 2 Warna Trademark */}
-                        <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
-                          <Sparkles className="size-4 text-[#C27803] shrink-0 mt-0.5" />
-                          <div className="space-y-1">
-                            <span className="font-bold text-[#C27803]">Tip Gaya Tipografi 2 Warna (Trademark):</span>
-                            <p className="text-slate-700 leading-relaxed">
-                              Gunakan tanda <code className="font-bold bg-amber-100 text-amber-900 px-1 py-0.5 rounded border border-amber-300/60">**kata emas**</code> pada kata yang ingin berwarna emas Attentive (<span className="font-bold text-[#C27803]">#C27803</span>). Kata lainnya berwarna Navy Blue (<span className="font-bold text-[#132B3A]">#132B3A</span>).
-                            </p>
+                    {/* Photo Manager Card */}
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <Camera className="size-4 text-teal-600" />
+                          <span>Foto Utama Slide {safeHeroSlideIndex + 1}</span>
+                        </span>
+                        <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                          {HERO_SLIDE_LAYOUT_LABELS[activeHeroSlideItem.layout || 'practice']}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                        <div className="sm:col-span-4">
+                          <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-2xs">
+                            <img
+                              src={activeSimSlide?.imageSrc || '/media/landing/hero-slide-1.jpg'}
+                              alt={`Slide ${safeHeroSlideIndex + 1} Preview`}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         </div>
 
-                        {/* Description */}
+                        <div className="sm:col-span-8 space-y-2">
+                          <input
+                            id={`hero-slide-${safeHeroSlideIndex}-input`}
+                            type="file"
+                            accept="image/webp,image/png,image/jpeg"
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                handleSlidePhotoUpload(safeHeroSlideIndex, e.target.files[0])
+                              }
+                            }}
+                          />
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <label
+                              htmlFor={`hero-slide-${safeHeroSlideIndex}-input`}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border shadow-2xs transition-colors ${
+                                uploadingTarget === `hero-slide-${safeHeroSlideIndex}`
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
+                                  : 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600'
+                              }`}
+                            >
+                              {uploadingTarget === `hero-slide-${safeHeroSlideIndex}` ? (
+                                <>
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span>Mengunggah Foto...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <UploadCloud className="size-3.5" />
+                                  <span>Unggah Foto Pengganti</span>
+                                </>
+                              )}
+                            </label>
+
+                            {(activeHeroSlideItem.media || (safeHeroSlideIndex === 0 && activeSection.media)) && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetSlidePhoto(safeHeroSlideIndex)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
+                                title="Kembalikan ke foto bawaan preset v3"
+                              >
+                                <RotateCcw className="size-3.5 text-slate-400" />
+                                <span>Reset ke Foto Bawaan</span>
+                              </button>
+                            )}
+                          </div>
+
+                          <p className="text-[10px] text-slate-400">
+                            Format: WebP, PNG, JPG (Maks 5 MB) • Rasio disarankan 4:3 atau 16:10
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Copy Inputs for Active Slide */}
+                    <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">
+                      {/* Tab Label */}
+                      <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                        {(languageView === 'both' || languageView === 'id') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">Label Tab Progress Bawah (ID)</label>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={activeHeroSlideItem.tabLabel?.id || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tabLabel', 'id', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                        {(languageView === 'both' || languageView === 'en') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">Bottom Tab Label (EN)</label>
+                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={activeHeroSlideItem.tabLabel?.en || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tabLabel', 'en', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tag / Eyebrow */}
+                      <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                        {(languageView === 'both' || languageView === 'id') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">Eyebrow / Tag Slide (ID)</label>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={activeHeroSlideItem.tag?.id || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tag', 'id', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                        {(languageView === 'both' || languageView === 'en') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">Eyebrow / Tag Slide (EN)</label>
+                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={activeHeroSlideItem.tag?.en || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tag', 'en', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Headline */}
+                      <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                        {(languageView === 'both' || languageView === 'id') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">
+                                Headline Slide {safeHeroSlideIndex + 1} (ID)
+                              </label>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={activeHeroSlideItem.headline?.id || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'headline', 'id', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                        {(languageView === 'both' || languageView === 'en') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">
+                                Headline Slide {safeHeroSlideIndex + 1} (EN)
+                              </label>
+                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={activeHeroSlideItem.headline?.en || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'headline', 'en', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tip 2 Warna Trademark */}
+                      <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
+                        <Sparkles className="size-4 text-[#C27803] shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <span className="font-bold text-[#C27803]">Tip Gaya Tipografi 2 Warna (Trademark):</span>
+                          <p className="text-slate-700 leading-relaxed">
+                            Gunakan tanda <code className="font-bold bg-amber-100 text-amber-900 px-1 py-0.5 rounded border border-amber-300/60">**kata emas**</code> pada kata yang ingin berwarna emas Attentive (<span className="font-bold text-[#C27803]">#C27803</span>). Kata lainnya berwarna Navy Blue (<span className="font-bold text-[#132B3A]">#132B3A</span>).
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                        {(languageView === 'both' || languageView === 'id') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">
+                                Deskripsi Slide {safeHeroSlideIndex + 1} (ID)
+                              </label>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                            </div>
+                            <textarea
+                              rows={3}
+                              value={activeHeroSlideItem.description?.id || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'description', 'id', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                        {(languageView === 'both' || languageView === 'en') && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-semibold text-slate-700">
+                                Deskripsi Slide {safeHeroSlideIndex + 1} (EN)
+                              </label>
+                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                            </div>
+                            <textarea
+                              rows={3}
+                              value={activeHeroSlideItem.description?.en || ''}
+                              onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'description', 'en', e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Optional Location (Slide 01) or Allergy Note (Slide 02) */}
+                      {(activeHeroSlideItem.layout === 'practice' || activeHeroSlideItem.location) && (
                         <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
                           {(languageView === 'both' || languageView === 'id') && (
                             <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 1 (ID)</label>
-                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                              </div>
-                              <textarea
-                                rows={3}
-                                value={activeSection.description?.id || ''}
-                                onChange={(e) => {
-                                  updateSectionCopy('description', 'id', e.target.value)
-                                  updateHeroSlideField(0, 'description', 'id', e.target.value)
-                                }}
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Info Lokasi / Jam Layanan (ID)
+                              </label>
+                              <input
+                                type="text"
+                                value={activeHeroSlideItem.location?.id || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'location', 'id', e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                               />
                             </div>
                           )}
                           {(languageView === 'both' || languageView === 'en') && (
                             <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 1 (EN)</label>
-                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                              </div>
-                              <textarea
-                                rows={3}
-                                value={activeSection.description?.en || ''}
-                                onChange={(e) => {
-                                  updateSectionCopy('description', 'en', e.target.value)
-                                  updateHeroSlideField(0, 'description', 'en', e.target.value)
-                                }}
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Location / Hours Note (EN)
+                              </label>
+                              <input
+                                type="text"
+                                value={activeHeroSlideItem.location?.en || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'location', 'en', e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                               />
                             </div>
                           )}
                         </div>
+                      )}
 
-                        {/* CTA Buttons & Target URLs for Slide 1 */}
-                        <div className="pt-3 border-t border-slate-200 space-y-3">
-                          <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
-                            Tombol CTA &amp; Target URL Slide 1
-                          </h5>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Primary Button */}
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                              <label className="block text-xs font-bold text-slate-800">
-                                Tombol Utama (Primary CTA)
+                      {(activeHeroSlideItem.layout === 'pet-garden' || activeHeroSlideItem.note) && (
+                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                          {(languageView === 'both' || languageView === 'id') && (
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Catatan Kenyamanan / Alergi (ID)
                               </label>
-                              <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                value={activeHeroSlideItem.note?.id || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'note', 'id', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                          {(languageView === 'both' || languageView === 'en') && (
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Pet Policy / Comfort Note (EN)
+                              </label>
+                              <input
+                                type="text"
+                                value={activeHeroSlideItem.note?.en || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'note', 'en', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* CTA Buttons & Target URLs */}
+                      <div className="pt-3 border-t border-slate-200 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                          <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                            Tombol CTA &amp; Target URL Slide {safeHeroSlideIndex + 1}
+                          </h5>
+                          <span className="text-[11px] text-slate-500">
+                            Kosongkan URL untuk menampilkan tombol sebagai &ldquo;Soon / Segera&rdquo; (tidak bisa diklik).
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Primary Button */}
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                            <label className="block text-xs font-bold text-slate-800">
+                              Tombol Utama (Primary CTA)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Label (ID)"
+                                value={activeHeroSlideItem.primaryCta?.id || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'primaryCta', 'id', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Label (EN)"
+                                value={activeHeroSlideItem.primaryCta?.en || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'primaryCta', 'en', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                                Target Link / URL
+                              </label>
+                              <div className="relative">
+                                <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                   type="text"
-                                  placeholder="Label (ID)"
-                                  value={activeSection.primaryCta?.id || ''}
-                                  onChange={(e) => updateSectionCustomField('primaryCta', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  placeholder="Kosongkan untuk badge Soon, atau /path / https://..."
+                                  value={activeHeroSlideItem.primaryCtaUrl ?? ''}
+                                  onChange={(e) => updateHeroSlideUrl(safeHeroSlideIndex, 'primaryCtaUrl', e.target.value)}
+                                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
                                 />
-                                <input
-                                  type="text"
-                                  placeholder="Label (EN)"
-                                  value={activeSection.primaryCta?.en || ''}
-                                  onChange={(e) => updateSectionCustomField('primaryCta', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
-                                  Target Link / URL
-                                </label>
-                                <div className="relative">
-                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="/reservasi atau https://wa.me/..."
-                                    value={(activeSection as any).primaryCtaUrl || '/reservasi'}
-                                    onChange={(e) => updateHeroSlideUrl(0, 'primaryCtaUrl', e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  />
-                                </div>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Secondary Button */}
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                              <label className="block text-xs font-bold text-slate-800">
-                                Tombol Sekunder (Secondary CTA)
+                          {/* Secondary Button */}
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                            <label className="block text-xs font-bold text-slate-800">
+                              Tombol Sekunder (Secondary CTA)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Label (ID)"
+                                value={activeHeroSlideItem.secondaryCta?.id || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'secondaryCta', 'id', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Label (EN)"
+                                value={activeHeroSlideItem.secondaryCta?.en || ''}
+                                onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'secondaryCta', 'en', e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                                Target Link / URL
                               </label>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="relative">
+                                <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                   type="text"
-                                  placeholder="Label (ID)"
-                                  value={activeSection.secondaryCta?.id || ''}
-                                  onChange={(e) => updateSectionCustomField('secondaryCta', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  placeholder="#locations, /articles, atau https://..."
+                                  value={activeHeroSlideItem.secondaryCtaUrl ?? ''}
+                                  onChange={(e) => updateHeroSlideUrl(safeHeroSlideIndex, 'secondaryCtaUrl', e.target.value)}
+                                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
                                 />
-                                <input
-                                  type="text"
-                                  placeholder="Label (EN)"
-                                  value={activeSection.secondaryCta?.en || ''}
-                                  onChange={(e) => updateSectionCustomField('secondaryCta', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
-                                  Target Link / URL
-                                </label>
-                                <div className="relative">
-                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="#services atau /layanan"
-                                    value={(activeSection as any).secondaryCtaUrl || '#services'}
-                                    onChange={(e) => updateHeroSlideUrl(0, 'secondaryCtaUrl', e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  />
-                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  )}
-
-                  {/* SLIDE 2 FORM */}
-                  {heroPreviewSlide === 1 && (
-                    <div className="space-y-4">
-                      {/* Photo Manager Card for Slide 2 */}
-                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                            <PawPrint className="size-4 text-amber-600" />
-                            <span>Foto Resmi Hero Slide 2 (Ruang Ramah Anabul)</span>
-                          </span>
-                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Pet-Friendly Space
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                          <div className="sm:col-span-4">
-                            <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-2xs">
-                              <img
-                                src={slide2ImageSrc}
-                                alt="Slide 2 Preview"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="sm:col-span-8 space-y-2">
-                            <input
-                              id="hero-slide-2-input"
-                              type="file"
-                              accept="image/webp,image/png,image/jpeg"
-                              className="hidden"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  handleSlidePhotoUpload(1, e.target.files[0])
-                                }
-                              }}
-                            />
-
-                            <div className="flex flex-wrap items-center gap-2">
-                              <label
-                                htmlFor="hero-slide-2-input"
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border shadow-2xs transition-colors ${
-                                  uploadingTarget === 'hero-slide-1'
-                                    ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
-                                    : 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600'
-                                }`}
-                              >
-                                {uploadingTarget === 'hero-slide-1' ? (
-                                  <>
-                                    <Loader2 className="size-3.5 animate-spin" />
-                                    <span>Mengunggah Foto...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <UploadCloud className="size-3.5" />
-                                    <span>Unggah Foto Pengganti</span>
-                                  </>
-                                )}
-                              </label>
-
-                              {slide2Item?.media && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleResetSlidePhoto(1)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
-                                  title="Kembalikan ke foto bawaan"
-                                >
-                                  <RotateCcw className="size-3.5 text-slate-400" />
-                                  <span>Reset ke Foto Bawaan</span>
-                                </button>
-                              )}
-                            </div>
-
-                            <p className="text-[10px] text-slate-400">
-                              Format: WebP, PNG, JPG (Maks 5 MB)
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Copy Inputs for Slide 2 */}
-                      <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">
-                        {/* Kicker Badge */}
-                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                          {(languageView === 'both' || languageView === 'id') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (ID)</label>
-                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                              </div>
-                              <input
-                                type="text"
-                                value={slide2Item?.tag?.id || ''}
-                                onChange={(e) => updateHeroSlideField(1, 'tag', 'id', e.target.value)}
-                                placeholder="Cth: Ruang Ramah Anabul"
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                          {(languageView === 'both' || languageView === 'en') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Tag / Kicker Badge (EN)</label>
-                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                              </div>
-                              <input
-                                type="text"
-                                value={slide2Item?.tag?.en || ''}
-                                onChange={(e) => updateHeroSlideField(1, 'tag', 'en', e.target.value)}
-                                placeholder="E.g: Pet Friendly Space"
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Headline */}
-                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                          {(languageView === 'both' || languageView === 'id') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (ID)</label>
-                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                              </div>
-                              <input
-                                type="text"
-                                value={slide2Item?.headline?.id || ''}
-                                onChange={(e) => updateHeroSlideField(1, 'headline', 'id', e.target.value)}
-                                placeholder="Cth: Biro Psikologi **Pet Friendly.**"
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                          {(languageView === 'both' || languageView === 'en') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Headline Slide 2 (EN)</label>
-                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                              </div>
-                              <input
-                                type="text"
-                                value={slide2Item?.headline?.en || ''}
-                                onChange={(e) => updateHeroSlideField(1, 'headline', 'en', e.target.value)}
-                                placeholder="E.g: Pet Friendly **Psychology Bureau.**"
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Description */}
-                        <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
-                          {(languageView === 'both' || languageView === 'id') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 2 (ID)</label>
-                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
-                              </div>
-                              <textarea
-                                rows={3}
-                                value={slide2Item?.description?.id || ''}
-                                onChange={(e) => updateHeroSlideField(1, 'description', 'id', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                          {(languageView === 'both' || languageView === 'en') && (
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-semibold text-slate-700">Deskripsi Slide 2 (EN)</label>
-                                <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
-                              </div>
-                              <textarea
-                                rows={3}
-                                value={slide2Item?.description?.en || ''}
-                                onChange={(e) => updateHeroSlideField(1, 'description', 'en', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* CTA Buttons & Target URLs for Slide 2 */}
-                        <div className="pt-3 border-t border-slate-200 space-y-3">
-                          <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
-                            Tombol CTA &amp; Target URL Slide 2
-                          </h5>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Primary Button */}
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                              <label className="block text-xs font-bold text-slate-800">
-                                Tombol Utama Slide 2
-                              </label>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Label (ID)"
-                                  value={slide2Item?.primaryCta?.id || ''}
-                                  onChange={(e) => updateHeroSlideField(1, 'primaryCta', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="Label (EN)"
-                                  value={slide2Item?.primaryCta?.en || ''}
-                                  onChange={(e) => updateHeroSlideField(1, 'primaryCta', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
-                                  Target Link / URL
-                                </label>
-                                <div className="relative">
-                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="/reservasi?service=pet-friendly"
-                                    value={slide2Item?.primaryCtaUrl || '/reservasi?service=pet-friendly'}
-                                    onChange={(e) => updateHeroSlideUrl(1, 'primaryCtaUrl', e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Secondary Button */}
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                              <label className="block text-xs font-bold text-slate-800">
-                                Tombol Sekunder (Hyperlink Lokasi)
-                              </label>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Label (ID)"
-                                  value={slide2Item?.secondaryCta?.id || ''}
-                                  onChange={(e) => updateHeroSlideField(1, 'secondaryCta', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="Label (EN)"
-                                  value={slide2Item?.secondaryCta?.en || ''}
-                                  onChange={(e) => updateHeroSlideField(1, 'secondaryCta', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
-                                  Target Link / URL
-                                </label>
-                                <div className="relative">
-                                  <LinkIcon className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="#locations atau /lokasi"
-                                    value={slide2Item?.secondaryCtaUrl || '#locations'}
-                                    onChange={(e) => updateHeroSlideUrl(1, 'secondaryCtaUrl', e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
 

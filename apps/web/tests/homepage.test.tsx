@@ -268,4 +268,110 @@ describe('homepage', () => {
     expect(screen.queryByText('Custom Initiatives & Portals')).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Enterprise Care Portal' })).not.toBeInTheDocument()
   })
+
+  it('renders all 5 attentive_hero_v3 slides, supports tab switching, and enforces safe coming-soon CTA & visibility toggling', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderHomepage()
+
+    // All 5 v3 carousel tabs are rendered
+    const practiceTab = screen.getByRole('tab', { name: /our practice/i })
+    const petTab = screen.getByRole('tab', { name: /pet garden/i })
+    const big10Tab = screen.getByRole('tab', { name: /free big 10 \+ session/i })
+    const briefTab = screen.getByRole('tab', { name: /scientific brief/i })
+    const ellaTab = screen.getByRole('tab', { name: /meet ella/i })
+
+    expect(practiceTab).toHaveAttribute('aria-selected', 'true')
+    expect(petTab).toBeInTheDocument()
+    expect(big10Tab).toBeInTheDocument()
+    expect(briefTab).toBeInTheDocument()
+    expect(ellaTab).toBeInTheDocument()
+
+    // Switch to Slide 02 (Pet garden)
+    await user.click(petTab)
+    expect(screen.getByRole('heading', { name: /come in\. make yourself at home/i })).toBeInTheDocument()
+
+    // Switch to Slide 03 (Free Big 10 + session): Big 10 links to big10.attentiveid.com safely
+    await user.click(big10Tab)
+    expect(screen.getByRole('heading', { name: /see your personality/i })).toBeInTheDocument()
+    const big10Link = screen.getByRole('link', { name: /take the big 10/i })
+    expect(big10Link).toHaveAttribute('href', 'https://big10.attentiveid.com/')
+    expect(big10Link).toHaveAttribute('target', '_blank')
+    expect(big10Link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+    expect(screen.getByRole('link', { name: /claim your first session/i })).toHaveAttribute(
+      'href',
+      'https://free-session.attentiveid.com',
+    )
+
+    // Switch to Slide 04 (Scientific brief): both buttons route to /articles
+    await user.click(briefTab)
+    expect(screen.getByRole('heading', { name: /research, made readable/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /read the latest brief/i })).toHaveAttribute('href', '/articles')
+    expect(screen.getByRole('link', { name: /all briefs/i })).toHaveAttribute('href', '/articles')
+
+    // Switch to Slide 05 (Meet Ella): links to Ella's detail profile
+    await user.click(ellaTab)
+    expect(screen.getByRole('heading', { name: /steady hands for hard stories/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /get to know ella/i })).toHaveAttribute('href', '/psychologists/gisella')
+
+    unmount()
+
+    // Verify per-slide visibility filtering from CMS hides disabled slides
+    const localized = (id: string, en: string) => ({ id, en })
+    const heroWithHiddenSlide = {
+      key: 'hero',
+      visible: true,
+      headline: localized('Ruang tenang.', 'Come in. **Make yourself comfortable.**'),
+      description: localized('Deskripsi.', 'Description.'),
+      primaryCta: localized('Mulai', 'Find your psychologist'),
+      primaryCtaUrl: '/psychologists',
+      secondaryCta: localized('Lokasi', 'Visit our Kemang studio'),
+      secondaryCtaUrl: '#locations',
+      slideItems: [
+        {
+          id: 'practice',
+          visible: true,
+          layout: 'practice',
+          tabLabel: localized('Ruang kami', 'Our practice'),
+          tag: localized('Layanan', 'Welcome in'),
+          headline: localized('Masuklah.', 'Come in.'),
+          description: localized('Deskripsi 1.', 'Desc 1.'),
+          primaryCta: localized('Cari psikolog', 'Find your psychologist'),
+          primaryCtaUrl: '',
+        },
+        {
+          id: 'big10-offer',
+          visible: false,
+          layout: 'big10',
+          tabLabel: localized('Big 10 tersembunyi', 'Hidden Big 10 Slide'),
+          tag: localized('Tersembunyi', 'Hidden'),
+          headline: localized('Tersembunyi', 'Hidden Slide Heading'),
+          description: localized('Tidak tampil', 'Not rendered'),
+          primaryCta: localized('Mulai', 'Take the Big 10'),
+          primaryCtaUrl: '',
+        },
+      ],
+      items: [
+        { id: 'metric-1', position: 0, title: localized('Sesi', 'Sessions'), description: localized('3,000+', '3,000+') },
+        { id: 'metric-2', position: 1, title: localized('Psikolog', 'Psychologists'), description: localized('18', '18') },
+        { id: 'metric-3', position: 2, title: localized('Rating', 'Rating'), description: localized('5.0', '5.0') },
+      ],
+    }
+
+    render(
+      <MemoryRouter>
+        <LandingContentContext.Provider
+          value={{
+            locale: 'en',
+            content: { sections: [heroWithHiddenSlide] as unknown as LandingContentMutation['sections'] },
+          }}
+        >
+          <Homepage />
+        </LandingContentContext.Provider>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('tab', { name: /our practice/i })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /hidden big 10 slide/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /find your psychologist.*soon/i })).toBeDisabled()
+  })
 })

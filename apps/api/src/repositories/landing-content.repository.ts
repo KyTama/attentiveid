@@ -38,8 +38,8 @@ type LandingSectionInput = LandingContentMutation['sections'][number];
 const encodeHeroExtraPayload = (section: LandingSectionInput): string | null => {
     if (section.key !== 'hero') return null;
     const extra: Record<string, unknown> = {};
-    if (section.primaryCtaUrl) extra.primaryCtaUrl = section.primaryCtaUrl;
-    if (section.secondaryCtaUrl) extra.secondaryCtaUrl = section.secondaryCtaUrl;
+    if (section.primaryCtaUrl !== undefined) extra.primaryCtaUrl = section.primaryCtaUrl;
+    if (section.secondaryCtaUrl !== undefined) extra.secondaryCtaUrl = section.secondaryCtaUrl;
     if (section.slideItems) extra.slideItems = section.slideItems;
     if (section.campaigns) extra.campaigns = section.campaigns;
     return Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
@@ -51,10 +51,10 @@ export const decodeHeroExtraPayload = (raw: string | null | undefined): Record<s
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object') return {};
         const extra: Record<string, unknown> = {};
-        if (typeof parsed.primaryCtaUrl === 'string' && parsed.primaryCtaUrl.length > 0) {
+        if (typeof parsed.primaryCtaUrl === 'string') {
             extra.primaryCtaUrl = parsed.primaryCtaUrl;
         }
-        if (typeof parsed.secondaryCtaUrl === 'string' && parsed.secondaryCtaUrl.length > 0) {
+        if (typeof parsed.secondaryCtaUrl === 'string') {
             extra.secondaryCtaUrl = parsed.secondaryCtaUrl;
         }
         if (Array.isArray(parsed.slideItems)) {

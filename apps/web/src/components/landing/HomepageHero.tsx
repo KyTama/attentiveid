@@ -1,10 +1,9 @@
-import { animate, AnimatePresence, motion, useInView } from 'framer-motion'
+import { animate, motion, useInView, useReducedMotion } from 'framer-motion'
 import {
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   CalendarCheck2,
-  ChevronLeft,
-  ChevronRight,
   ClipboardCheck,
   Gift,
   MapPin,
@@ -13,11 +12,13 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
+import { resolveHeroSlides, type ResolvedHeroSlide } from '@/features/content/hero-slides'
+import { HeroSlideVisual } from './HeroSlideVisual'
 import { useCampaignDock } from './use-campaign-dock'
 
 export interface TrustMetric {
@@ -25,44 +26,51 @@ export interface TrustMetric {
   value: string
 }
 
+const SLIDE_AUTOPLAY_MS = 7000
+const SLIDE_EASE = [0.2, 0.7, 0.2, 1] as const
+
 export function renderDualColorHeading(text: string) {
   if (!text) return null
 
-  // 1. Explicit markdown bold syntax: **highlighted gold text**
   if (text.includes('**')) {
     const parts = text.split(/(\*\*[^*]+\*\*)/g)
     return (
       <>
         {parts.map((part, index) => {
+          if (!part) return null
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <span key={index} className="text-[#C27803]">
+              <span key={index} className="text-[#C08A2C]">
                 {part.slice(2, -2)}
               </span>
             )
           }
+          const hasLeadingSpace = /^\s/.test(part)
+          const hasTrailingSpace = /\s$/.test(part)
+          const trimmed = part.trim()
+          if (!trimmed) return part
           return (
-            <span key={index} className="text-secondary">
-              {part}
-            </span>
+            <Fragment key={index}>
+              {hasLeadingSpace ? ' ' : null}
+              <span className="text-[#14284B]">{trimmed}</span>
+              {hasTrailingSpace ? ' ' : null}
+            </Fragment>
           )
         })}
       </>
     )
   }
 
-  // 2. Default Indonesian pattern: split anchor & action
   if (text.includes('Biro Psikologi Klinis & Konseling')) {
     const remainder = text.replace('Biro Psikologi Klinis & Konseling', '').trim()
     return (
       <>
-        <span className="text-secondary">Biro Psikologi Klinis & Konseling</span>{' '}
-        <span className="text-[#C27803] block sm:inline">{remainder}</span>
+        <span className="text-[#14284B]">Biro Psikologi Klinis &amp; Konseling</span>{' '}
+        <span className="text-[#C08A2C]">{remainder}</span>
       </>
     )
   }
 
-  // 3. Default English pattern: split anchor & action
   if (text.includes('Licensed Clinical Psychology Bureau')) {
     const remainder = text
       .replace('Licensed Clinical Psychology Bureau &', '')
@@ -70,25 +78,23 @@ export function renderDualColorHeading(text: string) {
       .trim()
     return (
       <>
-        <span className="text-secondary">Licensed Clinical Psychology Bureau &</span>{' '}
-        <span className="text-[#C27803] block sm:inline">{remainder}</span>
+        <span className="text-[#14284B]">Licensed Clinical Psychology Bureau &amp;</span>{' '}
+        <span className="text-[#C08A2C]">{remainder}</span>
       </>
     )
   }
 
-  // 4. Default ampersand split fallback
   if (text.includes('&')) {
     const [first, ...rest] = text.split('&')
     return (
       <>
-        <span className="text-secondary">{first?.trim()} &</span>{' '}
-        <span className="text-[#C27803] block sm:inline">{rest.join('&').trim()}</span>
+        <span className="text-[#14284B]">{first?.trim()} &amp;</span>{' '}
+        <span className="text-[#C08A2C]">{rest.join('&').trim()}</span>
       </>
     )
   }
 
-  // 5. Fallback: single color
-  return <span className="text-secondary">{text}</span>
+  return <span className="text-[#14284B]">{text}</span>
 }
 
 function parseMetricValue(raw: string) {
@@ -126,7 +132,7 @@ function AnimatedMetricValue({ value }: { value: string }) {
     const { prefix, target, suffix, isDecimal, sep } = parsed
     const controls = animate(0, target, {
       duration: 1.5,
-      ease: [0.16, 1, 0.3, 1], // Emil Kowalski quintic ease-out
+      ease: [0.16, 1, 0.3, 1],
       onUpdate: (latest) => {
         if (isDecimal) {
           const formatted = latest.toFixed(1).replace('.', sep)
@@ -157,11 +163,199 @@ function AnimatedMetricValue({ value }: { value: string }) {
   )
 }
 
+function HeroActionButton({
+  label,
+  url,
+  variant,
+  isId,
+}: {
+  label: string
+  url: string
+  variant: 'primary' | 'secondary'
+  isId: boolean
+}) {
+  const trimmedUrl = url.trim()
+  const isPrimary = variant === 'primary'
+
+  if (!trimmedUrl) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={isId ? 'Tautan akan segera tersedia' : 'Link coming soon'}
+        className={
+          isPrimary
+            ? 'inline-flex items-center gap-2.5 rounded-[10px] bg-[#14284B]/80 px-5 py-3.5 text-sm font-bold text-white/85 shadow-[0_8px_20px_-8px_rgba(20,40,75,0.4)] cursor-not-allowed'
+            : 'inline-flex items-center gap-2 text-sm font-semibold text-[#1D3560]/60 cursor-not-allowed'
+        }
+      >
+        <span>{label}</span>
+        <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase text-[#E2AE52]">
+          {isId ? 'Segera' : 'Soon'}
+        </span>
+      </button>
+    )
+  }
+
+  const className = isPrimary
+    ? 'inline-flex items-center gap-2.5 rounded-[10px] bg-[#14284B] px-5 py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(20,40,75,0.5)] outline-none hover:bg-[#1D3560] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer'
+    : 'inline-flex items-center gap-2 border-b-[1.5px] border-transparent pb-0.5 text-sm font-semibold text-[#1D3560] outline-none hover:border-[#E2AE52] focus-visible:ring-2 focus-visible:ring-primary cursor-pointer'
+
+  const icon =
+    trimmedUrl.startsWith('http') || isPrimary ? (
+      <ArrowUpRight size={15} strokeWidth={2.2} />
+    ) : (
+      <ArrowRight size={15} strokeWidth={2.2} />
+    )
+
+  if (trimmedUrl.startsWith('http')) {
+    return (
+      <motion.a
+        href={trimmedUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        transition={INTERACTIVE_SPRING}
+        whileHover={isPrimary ? { y: -2 } : { x: 2 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <span>{label}</span>
+        {icon}
+      </motion.a>
+    )
+  }
+
+  if (trimmedUrl.startsWith('#')) {
+    return (
+      <motion.a
+        href={trimmedUrl}
+        className={className}
+        transition={INTERACTIVE_SPRING}
+        whileHover={isPrimary ? { y: -2 } : { x: 2 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <span>{label}</span>
+        {icon}
+      </motion.a>
+    )
+  }
+
+  return (
+    <motion.div
+      transition={INTERACTIVE_SPRING}
+      whileHover={isPrimary ? { y: -2 } : { x: 2 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <Link to={trimmedUrl} className={className}>
+        <span>{label}</span>
+        {icon}
+      </Link>
+    </motion.div>
+  )
+}
+
+function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: boolean }) {
+  if (slide.layout === 'practice' && slide.location) {
+    return (
+      <div className="mt-4 flex items-center gap-2 text-[13.5px] text-[#7B8496]">
+        <MapPin size={15} className="shrink-0 text-[#C08A2C]" />
+        <span>{slide.location}</span>
+      </div>
+    )
+  }
+
+  if (slide.layout === 'pet-garden' && slide.note) {
+    return (
+      <div className="mt-4 flex w-fit max-w-[470px] items-center gap-2.5 rounded-xl border border-[#E8E1D5] bg-white px-3.5 py-2.5 text-[13.5px] text-[#7B8496]">
+        <PawPrint size={16} className="shrink-0 text-[#C08A2C]" />
+        <span>{slide.note}</span>
+      </div>
+    )
+  }
+
+  if (slide.layout === 'big10' && slide.steps && slide.steps.length > 0) {
+    return (
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 overflow-hidden rounded-[14px] border border-[#E8E1D5] bg-white">
+        {slide.steps.map((step, idx) => (
+          <div
+            key={`${slide.id}-step-${idx}`}
+            className="border-t sm:border-t-0 sm:border-l border-[#E8E1D5] first:border-t-0 first:border-l-0 px-3.5 py-3 text-[12.5px] leading-[1.35] font-semibold text-[#14284B]"
+          >
+            <small className="mb-1 block text-[11.5px] font-bold text-[#C08A2C]">
+              {String(idx + 1).padStart(2, '0')}
+            </small>
+            <span>{step}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (slide.layout === 'scientific-brief' && slide.chips && slide.chips.length > 0) {
+    return (
+      <div className="mt-5 flex flex-wrap gap-2">
+        {slide.chips.map((chip, idx) => {
+          const isFeaturedChip = idx === 1 || slide.chips?.length === 1
+          return (
+            <span
+              key={chip}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                isFeaturedChip
+                  ? 'border border-[#14284B] bg-[#14284B] text-white'
+                  : 'border border-[#DCD3C3] bg-white text-[#35435C]'
+              }`}
+            >
+              {chip}
+            </span>
+          )
+        })}
+      </div>
+    )
+  }
+
+  if (slide.layout === 'wisdom-ella') {
+    const facts = isId
+      ? [
+          { title: '15+ thn', sub: 'berpraktik sejak 2010' },
+          { title: 'UN · IOM', sub: 'dukungan psikososial Asia-Pasifik' },
+          { title: 'Trauma-informed', sub: 'Brainspotting · DBT Art therapy' },
+        ]
+      : [
+          { title: '15+ yrs', sub: 'practicing since 2010' },
+          { title: 'UN · IOM', sub: 'psychosocial support across Asia-Pacific' },
+          { title: 'Trauma-informed', sub: 'Brainspotting · DBT Art therapy' },
+        ]
+
+    return (
+      <div className="mt-5 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-0 border-t border-[#E0D8CA] pt-4">
+        {facts.map((fact) => (
+          <div
+            key={fact.title}
+            className="sm:pr-5 sm:mr-5 sm:border-r sm:border-[#E0D8CA] last:border-0 last:mr-0 last:pr-0"
+          >
+            <b className="block text-[19px] sm:text-[21px] font-bold tracking-[-0.02em] text-[#14284B]">
+              {fact.title}
+            </b>
+            <span className="mt-0.5 block text-xs leading-[1.35] text-[#7B8496]">{fact.sub}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return null
+}
+
 export function HomepageHero() {
   const { i18n, t } = useTranslation()
   const isId = i18n.resolvedLanguage === 'id' || i18n.language === 'id'
+  const localeKey = isId ? 'id' : 'en'
+  const shouldReduceMotion = useReducedMotion()
   const { isDismissed, restoreDock } = useCampaignDock()
   const [activeSlide, setActiveSlide] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [announcement, setAnnouncement] = useState('')
+  const pointerStartX = useRef<number | null>(null)
 
   const managed = useLandingSection('hero')
   const metrics = managed
@@ -170,58 +364,47 @@ export function HomepageHero() {
         .map((item) => ({ label: item.title[managed.locale], value: item.description[managed.locale] }))
     : (t('homepage.hero.metrics', { returnObjects: true }) as TrustMetric[])
 
-  const totalSlides = 2
+  const slidesToRender = useMemo(() => {
+    const allSlides = resolveHeroSlides(
+      managed?.section as Extract<NonNullable<typeof managed>['section'], { key: 'hero' }> | undefined,
+      managed?.locale || localeKey
+    )
+    const visibleSlides = allSlides.filter((slide) => slide.visible)
+    return visibleSlides.length > 0 ? visibleSlides : [allSlides[0]]
+  }, [managed?.section, managed?.locale, localeKey])
 
-  const nextSlide = () => setActiveSlide((prev) => (prev + 1) % totalSlides)
-  const prevSlide = () => setActiveSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
+  const safeActiveIndex = Math.min(activeSlide, slidesToRender.length - 1)
+  const currentSlide = slidesToRender[safeActiveIndex]
 
-  // As-is Slide 1 data (from CMS / Database if available, or static fallback)
-  const slide1 = {
-    headline: managed?.section.headline[managed.locale] ?? t('homepage.hero.title'),
-    description: managed?.section.description[managed.locale] ?? t('homepage.hero.description'),
-    primaryAction: managed?.section.primaryCta[managed.locale] ?? t('homepage.hero.primaryAction'),
-    primaryActionUrl: (managed?.section as any)?.primaryCtaUrl || 'https://booking.attentiveid.com/',
-    secondaryAction: managed?.section.secondaryCta[managed.locale] ?? t('homepage.hero.secondaryAction'),
-    secondaryActionUrl: (managed?.section as any)?.secondaryCtaUrl || '/psychologists',
-    imageSrc: managed?.section.media?.reference
-      ? managed.section.media.reference.startsWith('/')
-        ? managed.section.media.reference
-        : `/${managed.section.media.reference}`
-      : '/media/landing/hero-slide-1.jpg',
-  }
+  const goToSlide = useCallback(
+    (nextIndex: number, announce = true) => {
+      if (slidesToRender.length <= 1) return
+      const wrapped = ((nextIndex % slidesToRender.length) + slidesToRender.length) % slidesToRender.length
+      setActiveSlide(wrapped)
+      if (announce) {
+        const targetSlide = slidesToRender[wrapped]
+        setAnnouncement(
+          isId
+            ? `Slide ${wrapped + 1} dari ${slidesToRender.length}: ${targetSlide.tabLabel}`
+            : `Slide ${wrapped + 1} of ${slidesToRender.length}: ${targetSlide.tabLabel}`
+        )
+      }
+    },
+    [slidesToRender, isId]
+  )
 
-  // Slide 2 data (from CMS slideItems[1] if customized, otherwise default i18n)
-  const customSlide2 = (managed?.section as any)?.slideItems?.[1]
-  const slide2 = {
-    tag: customSlide2?.tag?.[managed?.locale || 'id'] ?? t('homepage.hero.slides.petFriendly.tag'),
-    headline:
-      customSlide2?.headline?.[managed?.locale || 'id'] ??
-      `${t('homepage.hero.slides.petFriendly.headlineDark')} **${t('homepage.hero.slides.petFriendly.headlineAccent')}** ${t('homepage.hero.slides.petFriendly.headlineSub')}`,
-    description:
-      customSlide2?.description?.[managed?.locale || 'id'] ??
-      t('homepage.hero.slides.petFriendly.description'),
-    location:
-      customSlide2?.location?.[managed?.locale || 'id'] ??
-      t('homepage.hero.slides.petFriendly.location'),
-    primaryAction:
-      customSlide2?.primaryCta?.[managed?.locale || 'id'] ??
-      t('homepage.hero.slides.petFriendly.primaryCta'),
-    primaryActionUrl:
-      customSlide2?.primaryCtaUrl ||
-      'https://wa.me/6281234567890?text=Halo%20Attentive,%20saya%20ingin%20konsultasi%20ramah%20anabul',
-    secondaryAction:
-      customSlide2?.secondaryCta?.[managed?.locale || 'id'] ??
-      t('homepage.hero.slides.petFriendly.secondaryCta'),
-    secondaryActionUrl: customSlide2?.secondaryCtaUrl || '#locations',
-    imageSrc: customSlide2?.media?.reference
-      ? customSlide2.media.reference.startsWith('/')
-        ? customSlide2.media.reference
-        : `/${customSlide2.media.reference}`
-      : '/images/pet-friendly/pet-friendly-1.jpg',
-  }
+  const nextSlide = useCallback(() => goToSlide(safeActiveIndex + 1), [goToSlide, safeActiveIndex])
+  const prevSlide = useCallback(() => goToSlide(safeActiveIndex - 1), [goToSlide, safeActiveIndex])
 
-  // Program & Layanan Unggulan (Command Strip campaigns)
-  const localeKey = managed?.locale || (isId ? 'id' : 'en')
+  useEffect(() => {
+    if (shouldReduceMotion || isPaused || slidesToRender.length <= 1) return
+    const timer = window.setTimeout(() => {
+      goToSlide(safeActiveIndex + 1, false)
+    }, SLIDE_AUTOPLAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [safeActiveIndex, isPaused, shouldReduceMotion, slidesToRender.length, goToSlide])
+
+  // Featured Campaigns & Portals
   const customCampaigns = (managed?.section as any)?.campaigns
   const campaignEyebrow = customCampaigns?.eyebrow?.[localeKey] || t('homepage.campaigns.eyebrow')
   const campaignDescription = customCampaigns?.description?.[localeKey] || t('homepage.campaigns.description')
@@ -303,347 +486,237 @@ export function HomepageHero() {
       ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
       : 'grid-cols-1 md:grid-cols-3'
 
+  const tabGridStyle =
+    slidesToRender.length > 0
+      ? { gridTemplateColumns: `repeat(${slidesToRender.length}, minmax(0, 1fr))` }
+      : undefined
+
   return (
-    <section className="relative border-b border-secondary/10 bg-[#FAF7F2]" id="home">
-      <div className="mx-auto max-w-7xl px-4 pt-6 pb-8 sm:px-6 sm:pt-8 sm:pb-12 lg:px-8">
-        {/* Top Kicker Bar */}
-        <div className="flex items-center justify-between border-b border-secondary/10 pb-3 text-xs tracking-wider">
-          <div className="flex items-center gap-2 font-bold uppercase text-secondary/70">
-            <span className="inline-block h-px w-4 bg-secondary/50" />
+    <section className="relative border-b border-[#E8E1D5] bg-[#FAF8F3]" id="home">
+      <div className="mx-auto max-w-[1440px] px-4 pt-5 pb-8 sm:px-8 lg:px-[60px] lg:pt-7 lg:pb-12">
+        {/* Top Eyebar */}
+        <div className="flex items-center justify-between pb-5 text-xs">
+          <div className="flex items-center gap-3 font-bold tracking-[0.22em] uppercase text-[#C08A2C]">
+            <span className="inline-block h-[1.5px] w-[22px] bg-[#C08A2C]" aria-hidden="true" />
             <span>{t('homepage.hero.kicker')}</span>
           </div>
-          <span className="hidden font-medium text-secondary/60 sm:inline">
+          <span className="hidden text-[13px] font-medium text-[#7B8496] sm:inline">
             {t('homepage.hero.kickerSub')}
           </span>
         </div>
 
-        {/* Main Editorial Hero Highlight Card */}
-        <div className="relative mt-4 overflow-hidden rounded-[2rem] border border-secondary/15 bg-white p-6 shadow-sm sm:p-10 lg:p-12">
-          <AnimatePresence mode="wait">
-            {activeSlide === 0 ? (
-              <motion.div
-                key="slide-as-is"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={INTERACTIVE_SPRING}
-                className="grid min-h-[440px] grid-cols-1 items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12"
-              >
-                {/* Left Column: As-Is Headline & CTAs */}
-                <div className="flex flex-col justify-center">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold tracking-wider uppercase text-secondary shadow-2xs">
-                      <ShieldCheck size={13} className="text-[#C27803]" />
-                      {isId ? 'Biro Psikologi Klinis · Berizin SIP Resmi' : 'Licensed Clinical Psychology Bureau'}
-                    </span>
-                  </div>
-
-                  <h1
-                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
-                    data-route-heading
-                    tabIndex={-1}
-                  >
-                    {renderDualColorHeading(slide1.headline)}
-                  </h1>
-
-                  <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-secondary/80 sm:text-base sm:leading-7">
-                    {slide1.description}
-                  </p>
-
-                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-secondary/70">
-                    <MapPin size={15} className="text-[#C27803]" />
-                    <span>{isId ? 'Jakarta · BSD · Malang · Video Konseling Online' : 'Jakarta · BSD · Malang · Online Video Counseling'}</span>
-                  </div>
-
-                  <div className="mt-8 flex flex-wrap items-center gap-4">
-                    {slide1.primaryActionUrl.startsWith('http') ? (
-                      <motion.a
-                        href={slide1.primaryActionUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
-                        transition={INTERACTIVE_SPRING}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <CalendarCheck2 size={16} className="text-primary" />
-                        <span>{slide1.primaryAction}</span>
-                        <ArrowUpRight size={16} />
-                      </motion.a>
-                    ) : (
-                      <motion.div transition={INTERACTIVE_SPRING} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Link
-                          to={slide1.primaryActionUrl}
-                          className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
-                        >
-                          <CalendarCheck2 size={16} className="text-primary" />
-                          <span>{slide1.primaryAction}</span>
-                          <ArrowRight size={16} />
-                        </Link>
-                      </motion.div>
-                    )}
-
-                    <motion.div transition={INTERACTIVE_SPRING} whileHover={{ x: 2 }}>
-                      {slide1.secondaryActionUrl.startsWith('http') || slide1.secondaryActionUrl.startsWith('#') ? (
-                        <a
-                          href={slide1.secondaryActionUrl}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
-                        >
-                          <span>{slide1.secondaryAction}</span>
-                          <ArrowRight size={15} />
-                        </a>
-                      ) : (
-                        <Link
-                          to={slide1.secondaryActionUrl}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
-                        >
-                          <span>{slide1.secondaryAction}</span>
-                          <ArrowRight size={15} />
-                        </Link>
-                      )}
-                    </motion.div>
-                  </div>
-                </div>
-
-                {/* Right Column: Architectural Arch Image with Floating Badges */}
-                <div className="relative min-h-[320px] w-full sm:min-h-[400px] lg:min-h-[440px]">
-                  {/* Outer arch window container */}
-                  <div className="relative h-full w-full overflow-hidden rounded-tl-[80px] rounded-tr-[28px] rounded-br-[28px] rounded-bl-[28px] border border-secondary/15 bg-[#E8E2D5] shadow-md sm:rounded-tl-[120px]">
-                    <img
-                      src={slide1.imageSrc}
-                      alt="Konsultasi Psikologi Attentive"
-                      className="h-full w-full object-cover object-center"
-                      loading="eager"
-                      width="1600"
-                      height="900"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
-                  </div>
-
-                  {/* Floating Badge Top-Right: SIP RESMI */}
-                  <div className="absolute -top-3 -right-3 z-20 flex size-18 flex-col items-center justify-center rounded-full border-2 border-white bg-[#E5A824] text-secondary shadow-lg sm:size-20">
-                    <span className="text-[10px] font-bold tracking-tight uppercase sm:text-xs">SIP</span>
-                    <span className="text-xs font-extrabold tracking-tight uppercase sm:text-sm">RESMI</span>
-                    <span className="text-xs font-bold sm:text-sm">+</span>
-                  </div>
-
-                  {/* Floating Glass Card Bottom-Left */}
-                  <div className="absolute bottom-4 left-4 z-20 max-w-[260px] rounded-2xl border border-secondary/15 bg-white/95 p-4 shadow-lg backdrop-blur-md sm:max-w-[290px]">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-secondary/60">
-                      {isId ? 'COME AS YOU ARE' : 'COME AS YOU ARE'}
-                    </span>
-                    <p className="mt-0.5 text-xs font-bold text-secondary sm:text-sm">
-                      {isId ? 'Ruang aman untuk didengar.' : 'A safe space to be heard.'}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="slide-pet-friendly"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={INTERACTIVE_SPRING}
-                className="grid min-h-[440px] grid-cols-1 items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12"
-              >
-                {/* Left Column: Typography & CTAs for Pet Friendly */}
-                <div className="flex flex-col justify-center">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-secondary/15 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold tracking-wider uppercase text-secondary shadow-2xs">
-                      <PawPrint size={13} className="text-[#C27803]" />
-                      {slide2.tag}
-                    </span>
-                  </div>
-
-                  <h2
-                    className="mt-6 text-balance font-sans text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
-                  >
-                    {renderDualColorHeading(slide2.headline)}
-                  </h2>
-
-                  <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-secondary/80 sm:text-base sm:leading-7">
-                    {slide2.description}
-                  </p>
-
-                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-secondary/70">
-                    <PawPrint size={15} className="text-[#C27803]" />
-                    <span>{slide2.location}</span>
-                  </div>
-
-                  <div className="mt-8 flex flex-wrap items-center gap-4">
-                    {slide2.primaryActionUrl.startsWith('http') ? (
-                      <motion.a
-                        href={slide2.primaryActionUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
-                        transition={INTERACTIVE_SPRING}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <PawPrint size={16} className="text-primary" />
-                        <span>{slide2.primaryAction}</span>
-                        <ArrowUpRight size={16} />
-                      </motion.a>
-                    ) : (
-                      <motion.div transition={INTERACTIVE_SPRING} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Link
-                          to={slide2.primaryActionUrl}
-                          className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3.5 text-xs font-bold text-white shadow-xs outline-none hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:text-sm cursor-pointer"
-                        >
-                          <PawPrint size={16} className="text-primary" />
-                          <span>{slide2.primaryAction}</span>
-                          <ArrowRight size={16} />
-                        </Link>
-                      </motion.div>
-                    )}
-
-                    <motion.div transition={INTERACTIVE_SPRING} whileHover={{ x: 2 }}>
-                      {slide2.secondaryActionUrl.startsWith('http') || slide2.secondaryActionUrl.startsWith('#') ? (
-                        <a
-                          href={slide2.secondaryActionUrl}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
-                        >
-                          <span>{slide2.secondaryAction}</span>
-                          <ArrowRight size={15} />
-                        </a>
-                      ) : (
-                        <Link
-                          to={slide2.secondaryActionUrl}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary outline-none hover:text-[#C27803] focus-visible:ring-2 focus-visible:ring-primary sm:text-sm cursor-pointer"
-                        >
-                          <span>{slide2.secondaryAction}</span>
-                          <ArrowRight size={15} />
-                        </Link>
-                      )}
-                    </motion.div>
-                  </div>
-                </div>
-
-                {/* Right Column: Pet-Friendly Asymmetric Collage with Floating Badges */}
-                <div className="relative min-h-[320px] w-full sm:min-h-[400px] lg:min-h-[440px]">
-                  <div className="relative h-full w-full overflow-hidden rounded-tl-[80px] rounded-tr-[28px] rounded-br-[28px] rounded-bl-[28px] border border-secondary/15 bg-[#E8E2D5] shadow-md sm:rounded-tl-[120px]">
-                    {/* Primary Feature Photo */}
-                    <img
-                      src="/images/pet-friendly/pet-friendly-1.jpg"
-                      alt="Attentive Pet Friendly Counseling"
-                      className="h-full w-full object-cover object-center"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
-
-                    {/* Inset Photo Overlay 1 (Corner thumbnail) */}
-                    <div className="absolute top-4 left-4 z-10 hidden size-24 overflow-hidden rounded-xl border-2 border-white shadow-md sm:block lg:size-28">
-                      <img
-                        src="/images/pet-friendly/pet-friendly-2.jpg"
-                        alt="Anabul di ruang konseling"
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-
-                    {/* Inset Photo Overlay 2 */}
-                    <div className="absolute top-20 right-4 z-10 hidden size-20 overflow-hidden rounded-xl border-2 border-white shadow-md sm:block">
-                      <img
-                        src="/images/pet-friendly/pet-friendly-3.jpg"
-                        alt="Kenyamanan konseling bersama anabul"
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Floating Badge Top-Right: PAW FRIENDLY */}
-                  <div className="absolute -top-3 -right-3 z-20 flex size-18 flex-col items-center justify-center rounded-full border-2 border-white bg-[#E5A824] text-secondary shadow-lg sm:size-20">
-                    <span className="text-[10px] font-bold tracking-tight uppercase sm:text-xs">PAW</span>
-                    <span className="text-xs font-extrabold tracking-tight uppercase sm:text-sm">FRIENDLY</span>
-                    <span className="text-xs sm:text-sm">🐾</span>
-                  </div>
-
-                  {/* Floating Glass Card Bottom-Left */}
-                  <div className="absolute bottom-4 left-4 z-20 max-w-[260px] rounded-2xl border border-secondary/15 bg-white/95 p-4 shadow-lg backdrop-blur-md sm:max-w-[290px]">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-secondary/60">
-                      {t('homepage.hero.slides.petFriendly.cardEyebrow')}
-                    </span>
-                    <p className="mt-0.5 text-xs font-bold text-secondary sm:text-sm">
-                      {t('homepage.hero.slides.petFriendly.cardTitle')}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Bottom Slide Controller (Pagination & Navigation) */}
-          <div className="mt-8 flex items-center justify-between border-t border-secondary/10 pt-5">
-            {/* Left: Numeric index & segmented progress pills */}
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-xs font-bold text-secondary">
-                {String(activeSlide + 1).padStart(2, '0')}&nbsp;/&nbsp;{String(totalSlides).padStart(2, '0')}
-              </span>
-              <div className="flex items-center gap-1.5">
-                {Array.from({ length: totalSlides }).map((_, index) => (
-                  <button
-                    key={`hero-pill-${index}`}
-                    type="button"
-                    onClick={() => setActiveSlide(index)}
-                    aria-label={`Go to slide ${index + 1}`}
-                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      activeSlide === index ? 'w-8 bg-[#C27803]' : 'w-4 bg-secondary/20 hover:bg-secondary/40'
-                    }`}
+        {/* Hero Carousel Region */}
+        <div
+          role="region"
+          aria-roledescription="carousel"
+          aria-label={t('homepage.hero.kicker')}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onFocusCapture={() => setIsPaused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setIsPaused(false)
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowRight') {
+              event.preventDefault()
+              nextSlide()
+            } else if (event.key === 'ArrowLeft') {
+              event.preventDefault()
+              prevSlide()
+            }
+          }}
+          onPointerDown={(event) => {
+            pointerStartX.current = event.clientX
+          }}
+          onPointerUp={(event) => {
+            if (pointerStartX.current === null) return
+            const deltaX = event.clientX - pointerStartX.current
+            if (Math.abs(deltaX) > 50) {
+              if (deltaX < 0) nextSlide()
+              else prevSlide()
+            }
+            pointerStartX.current = null
+          }}
+        >
+          {/* Main Split Stage */}
+          <div className="touch-pan-y select-none overflow-hidden rounded-[24px] bg-[#F5EFE5] shadow-[0_1px_0_#e8e1d5,0_30px_60px_-40px_rgba(20,40,75,0.25)] lg:h-[640px]">
+            <motion.div
+              key={currentSlide.id}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${safeActiveIndex + 1} of ${slidesToRender.length}`}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: SLIDE_EASE }}
+              className="grid h-full grid-cols-1 lg:h-[640px] lg:grid-cols-[45%_55%]"
+            >
+              {/* Left Column: Editorial Copy */}
+              <div className="flex min-h-[440px] sm:min-h-[410px] lg:min-h-0 lg:h-full flex-col justify-center px-6 py-7 sm:px-10 sm:py-9 lg:py-10 lg:pr-8 lg:pl-14">
+                <div className="mb-4 lg:mb-5 inline-flex items-center gap-2.5 text-[11.5px] font-bold tracking-[0.17em] uppercase text-[#C08A2C]">
+                  <span
+                    className="inline-block size-2 shrink-0 rounded-full bg-[#E2AE52] shadow-[0_0_0_5px_rgba(226,174,82,0.2)]"
+                    aria-hidden="true"
                   />
-                ))}
+                  <span>{currentSlide.tag}</span>
+                </div>
+
+                <h1
+                  className={`text-balance font-sans font-bold tracking-[-0.035em] text-[#14284B] ${
+                    currentSlide.layout === 'practice'
+                      ? 'text-[34px] leading-[1.08] sm:text-[42px] lg:text-[44px] xl:text-[48px] lg:leading-[1.05]'
+                      : 'text-[34px] leading-[1.06] sm:text-[44px] lg:text-[48px] xl:text-[52px] lg:leading-[1.04]'
+                  }`}
+                  data-route-heading
+                  tabIndex={-1}
+                >
+                  {renderDualColorHeading(currentSlide.headline)}
+                </h1>
+
+                <p className="mt-5 max-w-[480px] text-[15px] leading-[1.65] text-[#4A566B] sm:text-[16.5px]">
+                  {currentSlide.description}
+                </p>
+
+                <SlideMiddleDetails slide={currentSlide} isId={isId} />
+
+                <div className="mt-7 flex flex-wrap items-center gap-5 sm:gap-6">
+                  <HeroActionButton
+                    label={currentSlide.primaryCta}
+                    url={currentSlide.primaryCtaUrl}
+                    variant="primary"
+                    isId={isId}
+                  />
+                  <HeroActionButton
+                    label={currentSlide.secondaryCta}
+                    url={currentSlide.secondaryCtaUrl}
+                    variant="secondary"
+                    isId={isId}
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Arch Visual Composition (first on mobile) */}
+              <div className="order-first lg:order-last">
+                <HeroSlideVisual slide={currentSlide} isId={isId} isActive />
+              </div>
+            </motion.div>
+          </div>
+
+          <p className="sr-only" role="status" aria-live="polite">
+            {announcement}
+          </p>
+
+          {/* Bottom Tab Navigation & Prev/Next Arrows */}
+          {slidesToRender.length > 1 && (
+            <div className="flex flex-col gap-4 py-6 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+              <div
+                className="grid flex-1 gap-3 sm:gap-4"
+                style={tabGridStyle}
+                role="tablist"
+                aria-label={isId ? 'Pilih slide hero' : 'Select hero slide'}
+              >
+                {slidesToRender.map((slide, idx) => {
+                  const isActiveTab = idx === safeActiveIndex
+                  const isCompletedTab = idx < safeActiveIndex
+                  const displayIndex = String(idx + 1).padStart(2, '0')
+                  return (
+                    <button
+                      key={slide.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActiveTab}
+                      aria-current={isActiveTab ? 'true' : undefined}
+                      aria-label={`${displayIndex} ${slide.tabLabel}`}
+                      onClick={() => goToSlide(idx)}
+                      className={`group text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm ${
+                        isActiveTab ? 'text-[#14284B]' : 'text-[#7B8496] hover:text-[#14284B]'
+                      }`}
+                    >
+                      <div className="mb-2.5 flex items-baseline gap-2 text-[13px] font-semibold">
+                        <b className={`text-xs ${isActiveTab ? 'text-[#C08A2C]' : 'text-[#B3B8C2]'}`}>
+                          {displayIndex}
+                        </b>
+                        <span className="hidden truncate lg:inline">{slide.tabLabel}</span>
+                      </div>
+                      <div className="h-[3px] overflow-hidden rounded-[3px] bg-[#E1DDD5]">
+                        {isActiveTab ? (
+                          <motion.div
+                            key={`${slide.id}-${safeActiveIndex}-${isPaused ? 'paused' : 'run'}`}
+                            initial={{ width: shouldReduceMotion || isPaused ? '45%' : '0%' }}
+                            animate={{ width: shouldReduceMotion || isPaused ? '45%' : '100%' }}
+                            transition={{
+                              duration: shouldReduceMotion || isPaused ? 0 : SLIDE_AUTOPLAY_MS / 1000,
+                              ease: 'linear',
+                            }}
+                            className="h-full bg-[#C08A2C]"
+                          />
+                        ) : (
+                          <div
+                            className={`h-full transition-colors ${
+                              isCompletedTab ? 'w-full bg-[#D6C7A8]' : 'w-0 bg-transparent'
+                            }`}
+                          />
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Circular Arrows */}
+              <div className="hidden lg:flex items-center gap-2.5 shrink-0">
+                <motion.button
+                  type="button"
+                  onClick={prevSlide}
+                  aria-label="Previous slide"
+                  className="grid size-[42px] place-items-center rounded-full border border-[#D9D5CC] bg-white text-[#14284B] shadow-2xs hover:border-[#14284B] hover:bg-[#14284B] hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  transition={INTERACTIVE_SPRING}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ArrowLeft size={16} strokeWidth={2.2} />
+                </motion.button>
+                <motion.button
+                  type="button"
+                  onClick={nextSlide}
+                  aria-label="Next slide"
+                  className="grid size-[42px] place-items-center rounded-full border border-[#D9D5CC] bg-white text-[#14284B] shadow-2xs hover:border-[#14284B] hover:bg-[#14284B] hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  transition={INTERACTIVE_SPRING}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ArrowRight size={16} strokeWidth={2.2} />
+                </motion.button>
               </div>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Right: Manual Arrow Controls */}
-            <div className="flex items-center gap-2">
-              <motion.button
-                type="button"
-                onClick={prevSlide}
-                aria-label="Previous slide"
-                className="grid size-10 place-items-center rounded-full border border-secondary/20 bg-white text-secondary shadow-2xs hover:border-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                transition={INTERACTIVE_SPRING}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ChevronLeft size={18} strokeWidth={2.2} />
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={nextSlide}
-                aria-label="Next slide"
-                className="grid size-10 place-items-center rounded-full border border-secondary/20 bg-white text-secondary shadow-2xs hover:border-secondary hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                transition={INTERACTIVE_SPRING}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ChevronRight size={18} strokeWidth={2.2} />
-              </motion.button>
+      {/* Full-Bleed Ticker Ribbon */}
+      <div className="border-y border-[#E8E1D5] bg-white py-5">
+        <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-center gap-3 px-4 text-center text-[13.5px] font-semibold text-[#35435C] sm:flex-row sm:gap-0">
+          {(t('homepage.hero.tickerPillars', { returnObjects: true }) as string[]).map((pillar, idx) => (
+            <div
+              key={pillar}
+              className={`flex items-center gap-2.5 sm:px-8 ${
+                idx > 0 ? 'sm:border-l sm:border-[#E8E1D5]' : ''
+              }`}
+            >
+              <span className="text-[#E2AE52]" aria-hidden="true">
+                ✳
+              </span>
+              <span>{pillar}</span>
             </div>
-          </div>
+          ))}
         </div>
+      </div>
 
-        {/* Minimalist Trust Ticker Ribbon */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 border-y border-secondary/10 py-5 text-center text-xs font-bold tracking-wide text-secondary/75 sm:gap-8 sm:text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-[#C27803]">✻</span>
-            <span>{t('homepage.hero.tickerPillars.0')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[#C27803]">✻</span>
-            <span>{t('homepage.hero.tickerPillars.1')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[#C27803]">✻</span>
-            <span>{t('homepage.hero.tickerPillars.2')}</span>
-          </div>
-        </div>
-
-        {/* Sub-Hero Command Strip (Featured Campaigns: Program & Layanan Unggulan) - NAIK KE SINI */}
+      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 lg:px-[60px]">
+        {/* Sub-Hero Command Strip (Featured Campaigns & Portals) */}
         {isCampaignsStripVisible && (
-          <div className="mt-8 rounded-2xl border border-secondary/10 bg-[#FAF7F2] p-6 sm:p-8">
+          <div className="rounded-2xl border border-secondary/10 bg-[#FAF7F2] p-6 sm:p-8">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <span className="grid size-6 place-items-center rounded-full bg-primary/20 text-[#8C6013]">
@@ -771,8 +844,8 @@ export function HomepageHero() {
           </div>
         )}
 
-        {/* 4 Trust Counter Metrics (DI BAWAHNYA Program & Layanan Unggulan) */}
-        <dl className="mt-6 grid grid-cols-2 rounded-2xl bg-white/70 py-8 text-center sm:grid-cols-4 sm:py-10 shadow-2xs border border-secondary/10">
+        {/* 4 Trust Counter Metrics */}
+        <dl className="mt-6 grid grid-cols-2 rounded-2xl border border-secondary/10 bg-white/80 py-8 text-center shadow-2xs sm:grid-cols-4 sm:py-10">
           {metrics.map((metric, metricIndex) => (
             <div
               className="flex min-w-0 flex-col items-center border-r border-secondary/10 px-4 py-3 last:border-r-0 sm:px-5 lg:px-8"

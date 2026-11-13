@@ -71,16 +71,30 @@ const sectionCopyProperties = {
   media: Type.Optional(LandingMediaSchema),
 }
 
+export const HeroSlideLayoutSchema = Type.Union([
+  Type.Literal('practice'),
+  Type.Literal('pet-garden'),
+  Type.Literal('big10'),
+  Type.Literal('scientific-brief'),
+  Type.Literal('wisdom-ella'),
+])
+
 export const HeroSlideItemSchema = Type.Object({
   id: IdentifierSchema,
+  visible: Type.Optional(Type.Boolean()),
+  layout: Type.Optional(HeroSlideLayoutSchema),
+  tabLabel: Type.Optional(LocalizedTextSchema),
   tag: LocalizedTextSchema,
   headline: LocalizedTextSchema,
   description: LocalizedTextSchema,
   location: Type.Optional(LocalizedTextSchema),
+  note: Type.Optional(LocalizedTextSchema),
+  steps: Type.Optional(Type.Array(LocalizedTextSchema, { minItems: 0, maxItems: 5 })),
+  chips: Type.Optional(Type.Array(Type.String({ minLength: 1, maxLength: 80 }), { minItems: 0, maxItems: 6 })),
   primaryCta: LocalizedTextSchema,
-  primaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  primaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   secondaryCta: LocalizedTextSchema,
-  secondaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  secondaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   media: Type.Optional(LandingMediaSchema),
 }, { additionalProperties: false })
 
@@ -124,9 +138,9 @@ const HeroSectionSchema = Type.Object({
   key: Type.Literal('hero'),
   ...sectionCopyProperties,
   primaryCta: LocalizedTextSchema,
-  primaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  primaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   secondaryCta: LocalizedTextSchema,
-  secondaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
+  secondaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   slides: Type.Optional(Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })),
   slideItems: Type.Optional(Type.Array(HeroSlideItemSchema, { minItems: 1, maxItems: 5 })),
   campaigns: Type.Optional(HeroCampaignsSchema),
@@ -713,6 +727,7 @@ export type UserDto = Static<typeof UserDtoSchema>
 export type CreateUserMutation = Static<typeof CreateUserMutationSchema>
 export type LoginCredentials = Static<typeof LoginCredentialsSchema>
 
+export type HeroSlideLayout = Static<typeof HeroSlideLayoutSchema>
 export type HeroSlideItem = Static<typeof HeroSlideItemSchema>
 export type HeroCampaignTheme = Static<typeof HeroCampaignThemeSchema>
 export type HeroCampaignIcon = Static<typeof HeroCampaignIconSchema>

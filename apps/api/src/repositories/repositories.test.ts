@@ -378,4 +378,46 @@ describe('content repositories', () => {
             expect(source).not.toMatch(/\.values\(\s*input\s*\)/);
         }
     });
+
+    test('validates and preserves 5-slide hero v3 metadata including visibility and blank coming-soon CTA URLs', () => {
+        const mutation: LandingContentMutation = {
+            ...landingContent,
+            sections: landingContent.sections.map((section) =>
+                section.key === 'hero'
+                    ? {
+                          ...section,
+                          primaryCtaUrl: '',
+                          secondaryCtaUrl: '#locations',
+                          slideItems: [
+                              {
+                                  id: 'big10-offer',
+                                  visible: false,
+                                  layout: 'big10',
+                                  tabLabel: localized('Big 10 + sesi gratis'),
+                                  tag: localized('Mulai dari mana saja'),
+                                  headline: localized('Lihat kepribadian Anda'),
+                                  description: localized('Tiga langkah sederhana.'),
+                                  steps: [localized('Kenali profil')],
+                                  chips: ['Kepribadian'],
+                                  primaryCta: localized('Ikuti Big 10'),
+                                  primaryCtaUrl: '',
+                                  secondaryCta: localized('Klaim sesi pertama'),
+                                  secondaryCtaUrl: 'https://free-session.attentiveid.com',
+                              },
+                          ],
+                      }
+                    : section
+            ),
+        };
+
+        expect(validateLandingContentMutation(mutation)).toBe(true);
+        const mappedHero = mapLandingSectionMutation(mutation.sections[0]!, 0);
+        const decodedExtra = decodeHeroExtraPayload(mappedHero.translations[0]?.contact);
+
+        expect(decodedExtra.primaryCtaUrl).toBe('');
+        expect(decodedExtra.secondaryCtaUrl).toBe('#locations');
+        expect(decodedExtra.slideItems).toHaveLength(1);
+        expect((decodedExtra.slideItems as Array<Record<string, unknown>>)[0]?.visible).toBe(false);
+        expect((decodedExtra.slideItems as Array<Record<string, unknown>>)[0]?.primaryCtaUrl).toBe('');
+    });
 });
