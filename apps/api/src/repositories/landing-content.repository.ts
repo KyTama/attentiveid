@@ -35,38 +35,77 @@ export interface LandingContentRead {
 
 type LandingSectionInput = LandingContentMutation['sections'][number];
 
-export const mapLandingSectionMutation = (section: LandingSectionInput, position: number) => ({
-    section: {
-        key: section.key,
-        position,
-        visible: section.visible
-    },
-    media: 'media' in section ? section.media : undefined,
-    slides: 'slides' in section ? section.slides : undefined,
-    translations: CONTENT_LOCALES.map((locale) => ({
-        locale,
-        headline: section.headline[locale],
-        description: section.description[locale],
-        primaryCta: 'primaryCta' in section ? section.primaryCta[locale] : null,
-        secondaryCta: 'secondaryCta' in section ? section.secondaryCta[locale] : null,
-        contact: 'contact' in section ? section.contact[locale] : null,
-        sessionLabel: 'sessionLabel' in section ? section.sessionLabel[locale] : null,
-        price: 'price' in section ? section.price[locale] : null,
-        priceUnit: 'priceUnit' in section ? section.priceUnit[locale] : null
-    })),
-    items: 'items' in section
-        ? section.items.map((item) => ({
-            id: item.id,
-            position: item.position,
-            media: 'media' in item ? item.media : undefined,
-            translations: CONTENT_LOCALES.map((locale) => ({
-                locale,
-                title: item.title[locale],
-                description: item.description[locale]
+const encodeHeroExtraPayload = (section: LandingSectionInput): string | null => {
+    if (section.key !== 'hero') return null;
+    const extra: Record<string, unknown> = {};
+    if (section.primaryCtaUrl) extra.primaryCtaUrl = section.primaryCtaUrl;
+    if (section.secondaryCtaUrl) extra.secondaryCtaUrl = section.secondaryCtaUrl;
+    if (section.slideItems) extra.slideItems = section.slideItems;
+    if (section.campaigns) extra.campaigns = section.campaigns;
+    return Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
+};
+
+export const decodeHeroExtraPayload = (raw: string | null | undefined): Record<string, unknown> => {
+    if (!raw || !raw.trim().startsWith('{')) return {};
+    try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return {};
+        const extra: Record<string, unknown> = {};
+        if (typeof parsed.primaryCtaUrl === 'string' && parsed.primaryCtaUrl.length > 0) {
+            extra.primaryCtaUrl = parsed.primaryCtaUrl;
+        }
+        if (typeof parsed.secondaryCtaUrl === 'string' && parsed.secondaryCtaUrl.length > 0) {
+            extra.secondaryCtaUrl = parsed.secondaryCtaUrl;
+        }
+        if (Array.isArray(parsed.slideItems)) {
+            extra.slideItems = parsed.slideItems;
+        }
+        if (parsed.campaigns && typeof parsed.campaigns === 'object') {
+            extra.campaigns = parsed.campaigns;
+        }
+        return extra;
+    } catch {
+        return {};
+    }
+};
+
+export const mapLandingSectionMutation = (section: LandingSectionInput, position: number) => {
+    const heroExtraJson = encodeHeroExtraPayload(section);
+    return {
+        section: {
+            key: section.key,
+            position,
+            visible: section.visible
+        },
+        media: 'media' in section ? section.media : undefined,
+        slides: 'slides' in section ? section.slides : undefined,
+        translations: CONTENT_LOCALES.map((locale) => ({
+            locale,
+            headline: section.headline[locale],
+            description: section.description[locale],
+            primaryCta: 'primaryCta' in section ? section.primaryCta[locale] : null,
+            secondaryCta: 'secondaryCta' in section ? section.secondaryCta[locale] : null,
+            contact: section.key === 'hero'
+                ? heroExtraJson
+                : ('contact' in section ? section.contact[locale] : null),
+            sessionLabel: 'sessionLabel' in section ? section.sessionLabel[locale] : null,
+            price: 'price' in section ? section.price[locale] : null,
+            priceUnit: 'priceUnit' in section ? section.priceUnit[locale] : null
+        })),
+        items: 'items' in section
+            ? section.items.map((item) => ({
+                id: item.id,
+                position: item.position,
+                media: 'media' in item ? item.media : undefined,
+                translations: CONTENT_LOCALES.map((locale) => ({
+                    locale,
+                    title: item.title[locale],
+                    description: item.description[locale]
+                }))
             }))
-        }))
-        : []
-});
+            : []
+    };
+};
 
 const identifierPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
@@ -232,6 +271,8 @@ const mapSectionRow = (section: DrizzleLandingSectionRow, mediaAttachments?: Dri
     if (section.key === 'hero') {
         const primaryCta = localizedFromRows(section.translations, (row) => row.primaryCta);
         const secondaryCta = localizedFromRows(section.translations, (row) => row.secondaryCta);
+        const rawHeroExtra = section.translations.find((row) => row.contact)?.contact;
+        const heroExtra = decodeHeroExtraPayload(rawHeroExtra);
         const heroSlideAtts = activeMedia
             .filter((att) => att.role === 'hero_slide')
             .sort((a, b) => a.position - b.position);
@@ -254,6 +295,7 @@ const mapSectionRow = (section: DrizzleLandingSectionRow, mediaAttachments?: Dri
                 key: section.key,
                 primaryCta,
                 secondaryCta,
+                ...heroExtra,
                 ...(slides ? { slides } : {}),
                 items: items.filter((item) => item !== null)
             }

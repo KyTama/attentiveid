@@ -76,6 +76,7 @@ export const HeroSlideItemSchema = Type.Object({
   tag: LocalizedTextSchema,
   headline: LocalizedTextSchema,
   description: LocalizedTextSchema,
+  location: Type.Optional(LocalizedTextSchema),
   primaryCta: LocalizedTextSchema,
   primaryCtaUrl: Type.Optional(Type.String({ minLength: 1, maxLength: 2_048 })),
   secondaryCta: LocalizedTextSchema,
@@ -83,8 +84,27 @@ export const HeroSlideItemSchema = Type.Object({
   media: Type.Optional(LandingMediaSchema),
 }, { additionalProperties: false })
 
+export const HeroCampaignThemeSchema = Type.Union([
+  Type.Literal('gold'),
+  Type.Literal('navy'),
+  Type.Literal('blue'),
+  Type.Literal('emerald'),
+])
+
+export const HeroCampaignIconSchema = Type.Union([
+  Type.Literal('gift'),
+  Type.Literal('calendar'),
+  Type.Literal('clipboard'),
+  Type.Literal('sparkles'),
+  Type.Literal('shield'),
+  Type.Literal('message'),
+])
+
 export const HeroCampaignItemSchema = Type.Object({
   id: IdentifierSchema,
+  visible: Type.Optional(Type.Boolean()),
+  theme: Type.Optional(HeroCampaignThemeSchema),
+  icon: Type.Optional(HeroCampaignIconSchema),
   badge: LocalizedTextSchema,
   title: LocalizedTextSchema,
   description: LocalizedTextSchema,
@@ -93,9 +113,11 @@ export const HeroCampaignItemSchema = Type.Object({
 }, { additionalProperties: false })
 
 export const HeroCampaignsSchema = Type.Object({
+  visible: Type.Optional(Type.Boolean()),
+  showFloatingDock: Type.Optional(Type.Boolean()),
   eyebrow: LocalizedTextSchema,
   description: LocalizedTextSchema,
-  cards: Type.Array(HeroCampaignItemSchema, { minItems: 1, maxItems: 6 }),
+  cards: Type.Array(HeroCampaignItemSchema, { minItems: 0, maxItems: 6 }),
 }, { additionalProperties: false })
 
 const HeroSectionSchema = Type.Object({
@@ -692,6 +714,8 @@ export type CreateUserMutation = Static<typeof CreateUserMutationSchema>
 export type LoginCredentials = Static<typeof LoginCredentialsSchema>
 
 export type HeroSlideItem = Static<typeof HeroSlideItemSchema>
+export type HeroCampaignTheme = Static<typeof HeroCampaignThemeSchema>
+export type HeroCampaignIcon = Static<typeof HeroCampaignIconSchema>
 export type HeroCampaignItem = Static<typeof HeroCampaignItemSchema>
 export type HeroCampaigns = Static<typeof HeroCampaignsSchema>
 

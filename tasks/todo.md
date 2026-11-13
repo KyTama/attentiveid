@@ -1,26 +1,21 @@
-# Task: Dedicated CMS Hero Architecture & Command Strip / Trust Metrics Sub-Section Editors
+# Task: Editable/Hideable/Deletable Featured Campaigns, Assessment Removal & VPS DB Sync
 
-> **Status:** COMPLETED (LOCAL-ONLY COMMIT)  
-> **Rule:** STRICTLY LOCAL FIRST. NEVER PUSH TO GITHUB BEFORE EXPLICIT INSTRUCTION.
+> **Status:** COMPLETED
+> **Goal:** Make Featured Campaigns & Portals editable, adjustable, hideable, and deletable; remove `assessment.attentiveid.com` links from the landing page; sync local Postgres & repo seed data with live VPS DB (`attentive_staging`) before committing and pushing.
 
 ---
 
 ## Action Items
-- [x] **1. Schema & Type Extensions (`packages/shared/src/content.ts`)**:
-  - Add `HeroCampaignItemSchema` and `HeroCampaignsSchema` with `badge`, `title`, `description`, `cta`, and destination `url`.
-  - Add `primaryCtaUrl`, `secondaryCtaUrl`, and optional `campaigns` to `HeroSectionSchema`.
-- [x] **2. Frontend Dynamic Binding (`HomepageHero.tsx`)**:
-  - Bind Slide 1 and Slide 2 CTA buttons to `primaryCtaUrl` and `secondaryCtaUrl` (handles internal `#anchors`, `/routes`, and external URLs).
-  - Dynamically read `campaigns` from CMS draft/published content with i18n fallbacks.
-- [x] **3. Unified CMS 3-Sub-Section Editor (`LandingCmsPage.tsx`)**:
-  - Remove confusing legacy 10-slide generic carousel manager.
-  - Sub-Section 1: **Highlight Card (2 Slide)** — Photo upload/preview, kicker tag, dual-color headline (`**gold**`), description, Primary & Secondary CTA button labels AND target URLs.
-  - Sub-Section 2: **Program & Layanan Unggulan (Command Strip)** — Eyebrow, description, and 3 dedicated card editors (Promo Khusus, Jadwal Langsung, Tes Online) with badge, title, description, CTA text, and destination URL.
-  - Sub-Section 3: **Trust Metrics Counter Bar (4 Item)** — Live DB active psychologists sync button, 4 official metrics reset button, session milestone presets (`3.000+` .. `5.000+`), and 4 counter cards.
-- [x] **4. Live Simulator Reactive Highlighting**:
-  - Active sub-section is visually highlighted with amber ring in the live simulator preview.
-  - Command strip and Trust Metrics dynamically reflect edits in real time.
-- [x] **5. Verification & Tests**:
-  - All 14 test suites (73 tests) in `apps/web` pass.
-  - All 122 tests in `apps/api` pass.
-  - Production build `bun run build:web` succeeds with 0 errors.
+- [x] **1. Extend shared schema & hero persistence (`packages/shared`, `apps/api`)**:
+  - Extended `HeroCampaignItemSchema` (`visible`, `theme`, `icon`), `HeroCampaignsSchema` (`visible`, `showFloatingDock`, `minItems: 0`, `maxItems: 6`), and `HeroSlideItemSchema` (`location`).
+  - Exported and wired `encodeHeroExtraPayload` / `decodeHeroExtraPayload` in `apps/api/src/repositories/landing-content.repository.ts`.
+- [x] **2. Update landing UI & remove `assessment.attentiveid.com` portals (`apps/web`)**:
+  - Updated `HomepageHero.tsx`, `CampaignFloatingDock.tsx`, `CampaignSection.tsx`, and `en.json` / `id.json` so portals are dynamic, toggleable/hideable/deletable, and exclude `assessment.attentiveid.com`.
+- [x] **3. Add full CMS portal controls (`apps/web/src/pages/dashboard/LandingCmsPage.tsx`)**:
+  - Added section/dock toggles, `+ Tambah Kartu`, `Reset Default`, Move Up/Down, Theme & Icon pickers, Hide/Show card, Delete card, and live Hero Simulator preview.
+- [x] **4. Sync local Postgres DB & repo seed with VPS `attentive_staging` (non-PII only)**:
+  - Restored 17 public content/media tables from `attentive_staging` into local `attentiveid` DB, re-seeded local dev users (`db:seed:users`), and aligned `apps/api/src/db/seed-landing.ts` + `seed-landing.test.ts` + `shared-content.integration.test.ts` with published Revision 2.
+- [x] **5. Harvest lesson learned & verify tests/build/graph**:
+  - Added `.docs/common-issues/hero-campaigns-envelope-persistence-and-vps-seed-sync.md` + updated `.docs/common-issues/README.md`.
+  - Run `apps/api` tests, `apps/web` Vitest + TypeScript/Vite build, and sync `code-review-graph`.
+- [x] **6. Commit & push clean changes to `origin/master`**.

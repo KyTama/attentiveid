@@ -32,7 +32,7 @@ describe('landing seed bootstrap', () => {
         expect(database.publishedContent).toEqual(landingSeedContent);
         expect(validateLandingContentMutation(database.publishedContent)).toBe(true);
         expect(landingSeedContent.sections[0].items).toHaveLength(4);
-        expect(landingSeedContent.sections[6].price).toEqual({ id: 'Rp475.000', en: 'IDR 475,000' });
+        expect(landingSeedContent.sections[6].price).toEqual({ id: 'Rp 250.000', en: 'IDR 250,000' });
     });
 
     test('is repeatable and preserves an existing published revision or active draft', async () => {

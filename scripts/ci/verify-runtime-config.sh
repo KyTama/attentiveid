@@ -81,8 +81,10 @@ grep -Fq 'COPY --from=build --chown=bun:bun /app/apps/api/drizzle ./drizzle' "$r
 grep -Fq 'ENV MIGRATIONS_DIR=/app/apps/api/drizzle' "$root_dir/apps/api/Dockerfile"
 grep -Fq -- '--profile maintenance' "$root_dir/scripts/deploy/deploy.sh"
 grep -Fq 'run --rm --no-deps migrate' "$root_dir/scripts/deploy/deploy.sh"
-grep -Fq 'run --rm --no-deps seed-landing' "$root_dir/scripts/deploy/deploy.sh"
-grep -Fq 'run --rm --no-deps seed-psychologists' "$root_dir/scripts/deploy/deploy.sh"
+if grep -Eq 'seed-landing|seed-psychologists|--upsert|--force' "$root_dir/scripts/deploy/deploy.sh"; then
+    printf 'Deployment script must not automatically seed or reseed VPS databases\n' >&2
+    exit 1
+fi
 grep -Fq 'dist/migrate.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'dist/seed-landing.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'dist/seed-psychologists.js' "$root_dir/scripts/ci/smoke-images.sh"

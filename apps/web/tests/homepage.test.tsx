@@ -2,8 +2,10 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
+import type { LandingContentMutation } from '@attentiveid/shared'
 import i18n from '../src/i18n'
 import { Homepage } from '../src/components/landing/Homepage'
+import { LandingContentContext } from '../src/features/content/landing-content-context'
 import { psychologists } from '../src/data/psychologists'
 
 function renderHomepage() {
@@ -167,13 +169,103 @@ describe('homepage', () => {
       expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
     }
 
-    const testCentreLinks = screen.getAllByRole('link', { name: /digital test centre/i })
-    expect(testCentreLinks.length).toBeGreaterThanOrEqual(1)
-    for (const link of testCentreLinks) {
-      expect(link).toHaveAttribute('href', 'https://assessment.attentiveid.com/')
-      expect(link).toHaveAttribute('target', '_blank')
-      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
-      expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
+    const assessmentLinks = screen
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('href')?.includes('assessment.attentiveid.com'))
+    expect(assessmentLinks).toHaveLength(0)
+  })
+
+  it('supports editable, adjustable, hideable, and deletable featured campaigns & portals', () => {
+    const localized = (id: string, en: string) => ({ id, en })
+    const customHeroSection: LandingContentMutation['sections'][0] = {
+      key: 'hero',
+      visible: true,
+      headline: localized('Headline ID', 'Headline EN'),
+      description: localized('Desc ID', 'Desc EN'),
+      primaryCta: localized('Mulai', 'Start'),
+      secondaryCta: localized('Eksplor', 'Explore'),
+      items: [
+        { id: 'm1', position: 0, title: localized('Sesi', 'Sessions'), description: localized('3,000+', '3,000+') },
+        { id: 'm2', position: 1, title: localized('Psikolog', 'Psychologists'), description: localized('18', '18') },
+        { id: 'm3', position: 2, title: localized('Rating', 'Rating'), description: localized('5.0', '5.0') },
+      ],
+      campaigns: {
+        visible: true,
+        showFloatingDock: false,
+        eyebrow: localized('Portal Kustom', 'Custom Initiatives & Portals'),
+        description: localized('Subjudul Kustom', 'Custom portal subtitle'),
+        cards: [
+          {
+            id: 'custom-1',
+            visible: true,
+            theme: 'emerald',
+            icon: 'shield',
+            badge: localized('EKSKLUSIF', 'EXCLUSIVE'),
+            title: localized('Layanan Korporat', 'Enterprise Care Portal'),
+            description: localized('Solusi B2B', 'Dedicated B2B wellness portal'),
+            cta: localized('Buka Portal', 'Launch Portal'),
+            url: 'https://booking.attentiveid.com/enterprise',
+          },
+          {
+            id: 'hidden-2',
+            visible: false,
+            theme: 'gold',
+            icon: 'gift',
+            badge: localized('HIDDEN', 'HIDDEN'),
+            title: localized('Kartu Tersembunyi', 'Hidden Campaign Card'),
+            description: localized('Disembunyikan', 'Should not render'),
+            cta: localized('Klaim', 'Claim'),
+            url: 'https://free-session.attentiveid.com',
+          },
+        ],
+      },
     }
+
+    const { unmount } = render(
+      <MemoryRouter>
+        <LandingContentContext.Provider
+          value={{
+            locale: 'en',
+            content: { sections: [customHeroSection] as unknown as LandingContentMutation['sections'] },
+          }}
+        >
+          <Homepage />
+        </LandingContentContext.Provider>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Custom Initiatives & Portals')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Enterprise Care Portal' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Hidden Campaign Card' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: /featured campaigns/i })).not.toBeInTheDocument()
+
+    unmount()
+
+    // Now test hiding the entire Featured Campaigns & Portals section
+    render(
+      <MemoryRouter>
+        <LandingContentContext.Provider
+          value={{
+            locale: 'en',
+            content: {
+              sections: [
+                {
+                  ...customHeroSection,
+                  campaigns: {
+                    ...customHeroSection.campaigns!,
+                    visible: false,
+                  },
+                },
+              ] as unknown as LandingContentMutation['sections'],
+            },
+          }}
+        >
+          <Homepage />
+        </LandingContentContext.Provider>
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByText('Custom Initiatives & Portals')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Enterprise Care Portal' })).not.toBeInTheDocument()
   })
 })

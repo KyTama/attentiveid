@@ -2,21 +2,29 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   CalendarCheck2,
   Camera,
   Check,
   ClipboardCheck,
   ExternalLink,
+  Eye,
+  EyeOff,
   Gift,
   ImageIcon,
   Layers,
   Link as LinkIcon,
   Loader2,
   MapPin,
+  MessageCircle,
   PawPrint,
+  Plus,
   RotateCcw,
+  ShieldCheck,
   Sparkles,
+  Trash2,
   UploadCloud,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
@@ -442,51 +450,77 @@ export function LandingCmsPage() {
     setContent({ ...content, sections: newSections })
   }
 
+  const getDefaultHeroCampaigns = () => ({
+    visible: true,
+    showFloatingDock: true,
+    eyebrow: { id: 'Program & Layanan Unggulan', en: 'Featured Campaigns & Portals' },
+    description: {
+      id: 'Jelajahi inisiatif khusus dan portal layanan kami — mulai dari sesi konsultasi gratis hingga reservasi jadwal psikolog langsung.',
+      en: 'Explore our dedicated initiatives and specialized portals — from a free first session to direct psychologist scheduling.',
+    },
+    cards: [
+      {
+        id: 'card-free-session',
+        visible: true,
+        theme: 'gold',
+        icon: 'gift',
+        badge: { id: 'Promo Khusus', en: 'Limited Offer' },
+        title: { id: 'First Free Session Consultation', en: 'First Free Session Consultation' },
+        description: {
+          id: 'Klaim sesi privat 1-on-1 tanpa biaya untuk langkah awalmu.',
+          en: 'Claim a private 1-on-1 session at no cost to begin your journey.',
+        },
+        cta: { id: 'Klaim Sesi Gratis', en: 'Claim Free Session' },
+        url: 'https://free-session.attentiveid.com',
+      },
+      {
+        id: 'card-booking',
+        visible: true,
+        theme: 'navy',
+        icon: 'calendar',
+        badge: { id: 'Jadwal Langsung', en: 'Direct Booking' },
+        title: { id: 'Booking / Reservasi Psikolog', en: 'Booking / Reserve Psychologist' },
+        description: {
+          id: 'Pilih psikolog dan tentukan jadwal sesi online atau klinik.',
+          en: 'Select your psychologist and choose an online or in-person slot.',
+        },
+        cta: { id: 'Reservasi Jadwal', en: 'Book a Session' },
+        url: 'https://booking.attentiveid.com/',
+      },
+    ],
+  })
+
   const getHeroCampaigns = () => {
     const existing = (activeSection as any)?.campaigns
-    if (existing) return existing
-    return {
-      eyebrow: { id: 'Akses Cepat Menuju Dukungan', en: 'Quick Access to Care' },
-      description: {
-        id: 'Jelajahi inisiatif khusus dan portal layanan kami — mulai dari sesi konsultasi gratis, reservasi jadwal langsung, hingga asesmen psikologi digital.',
-        en: 'Explore our featured initiatives and care portals — from first free consultation, direct scheduling, to digital psychological assessments.',
-      },
-      cards: [
-        {
-          id: 'card-free-session',
-          badge: { id: 'Promo Khusus', en: 'Special Initiative' },
-          title: { id: 'First Free Session Consultation', en: 'First Free Session Consultation' },
-          description: {
-            id: 'Klaim sesi privat 1-on-1 tanpa biaya untuk langkah awalmu.',
-            en: 'Claim a complimentary 1-on-1 private session for your first step.',
-          },
-          cta: { id: 'Klaim Sesi Gratis →', en: 'Claim Free Session →' },
-          url: 'https://free-session.attentiveid.com',
+    if (existing) {
+      return {
+        visible: existing.visible !== false,
+        showFloatingDock: existing.showFloatingDock !== false,
+        eyebrow: existing.eyebrow || { id: 'Program & Layanan Unggulan', en: 'Featured Campaigns & Portals' },
+        description: existing.description || {
+          id: 'Jelajahi inisiatif khusus dan portal layanan kami — mulai dari sesi konsultasi gratis hingga reservasi jadwal psikolog langsung.',
+          en: 'Explore our dedicated initiatives and specialized portals — from a free first session to direct psychologist scheduling.',
         },
-        {
-          id: 'card-booking',
-          badge: { id: 'Jadwal Langsung', en: 'Direct Scheduling' },
-          title: { id: 'Booking / Reservasi Psikolog', en: 'Book Psychologist Session' },
-          description: {
-            id: 'Pilih psikolog dan tentukan jadwal sesi online atau klinik.',
-            en: 'Choose a psychologist and schedule your online or in-person clinic visit.',
-          },
-          cta: { id: 'Reservasi Jadwal →', en: 'Book Appointment →' },
-          url: 'https://booking.attentiveid.com/',
-        },
-        {
-          id: 'card-test-centre',
-          badge: { id: 'Tes Online', en: 'Digital Assessment' },
-          title: { id: 'Digital Test Centre', en: 'Digital Test Centre' },
-          description: {
-            id: 'Asesmen psikologi terstandarisasi yang siap diakses 24/7.',
-            en: 'Standardized psychological assessments ready to access 24/7.',
-          },
-          cta: { id: 'Akses Tes Online →', en: 'Access Digital Tests →' },
-          url: 'https://assessment.attentiveid.com/',
-        },
-      ],
+        cards: Array.isArray(existing.cards)
+          ? existing.cards.filter((c: any) => !String(c?.url || '').includes('assessment.attentiveid.com'))
+          : [],
+      }
     }
+    return getDefaultHeroCampaigns()
+  }
+
+  const updateHeroCampaignToggle = (field: 'visible' | 'showFloatingDock', value: boolean) => {
+    const currentCampaigns = getHeroCampaigns()
+    const updated = {
+      ...currentCampaigns,
+      [field]: value,
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: updated,
+    }
+    setContent({ ...content, sections: newSections })
   }
 
   const updateHeroCampaignHeader = (field: 'eyebrow' | 'description', lang: 'id' | 'en', value: string) => {
@@ -536,6 +570,108 @@ export function LandingCmsPage() {
       campaigns: updated,
     }
     setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroCampaignCardMeta = (
+    cardIdx: number,
+    field: 'visible' | 'theme' | 'icon',
+    value: boolean | string
+  ) => {
+    const currentCampaigns = getHeroCampaigns()
+    const cards = [...(currentCampaigns.cards || [])]
+    cards[cardIdx] = {
+      ...(cards[cardIdx] || {}),
+      [field]: value,
+    }
+    const updated = {
+      ...currentCampaigns,
+      cards,
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: updated,
+    }
+    setContent({ ...content, sections: newSections })
+  }
+
+  const addHeroCampaignCard = () => {
+    const currentCampaigns = getHeroCampaigns()
+    const cards = [...(currentCampaigns.cards || [])]
+    if (cards.length >= 6) return
+    const nextNum = cards.length + 1
+    const defaultThemes = ['gold', 'navy', 'blue', 'emerald']
+    const defaultIcons = ['gift', 'calendar', 'clipboard', 'sparkles']
+    cards.push({
+      id: `campaign-card-${Date.now()}`,
+      visible: true,
+      theme: defaultThemes[(nextNum - 1) % defaultThemes.length],
+      icon: defaultIcons[(nextNum - 1) % defaultIcons.length],
+      badge: { id: `Program #${nextNum}`, en: `Initiative #${nextNum}` },
+      title: { id: `Judul Portal / Campaign #${nextNum}`, en: `Portal / Campaign Title #${nextNum}` },
+      description: {
+        id: 'Deskripsi singkat program atau portal layanan baru.',
+        en: 'Short description for this featured campaign or care portal.',
+      },
+      cta: { id: 'Pelajari Selengkapnya', en: 'Learn More' },
+      url: 'https://booking.attentiveid.com/',
+    })
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: {
+        ...currentCampaigns,
+        visible: true,
+        cards,
+      },
+    }
+    setContent({ ...content, sections: newSections })
+  }
+
+  const deleteHeroCampaignCard = (cardIdx: number) => {
+    const currentCampaigns = getHeroCampaigns()
+    const cards = (currentCampaigns.cards || []).filter((_: any, idx: number) => idx !== cardIdx)
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: {
+        ...currentCampaigns,
+        cards,
+      },
+    }
+    setContent({ ...content, sections: newSections })
+  }
+
+  const moveHeroCampaignCard = (cardIdx: number, direction: 'up' | 'down') => {
+    const currentCampaigns = getHeroCampaigns()
+    const cards = [...(currentCampaigns.cards || [])]
+    const targetIdx = direction === 'up' ? cardIdx - 1 : cardIdx + 1
+    if (targetIdx < 0 || targetIdx >= cards.length) return
+    const temp = cards[cardIdx]
+    cards[cardIdx] = cards[targetIdx]
+    cards[targetIdx] = temp
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: {
+        ...currentCampaigns,
+        cards,
+      },
+    }
+    setContent({ ...content, sections: newSections })
+  }
+
+  const resetHeroCampaignsToDefault = () => {
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      campaigns: getDefaultHeroCampaigns(),
+    }
+    setContent({ ...content, sections: newSections })
+    setMessage({
+      type: 'success',
+      text: '3 Kartu Featured Campaigns & Portals resmi berhasil dipulihkan!',
+    })
   }
 
   const updateSectionCopy = (field: 'headline' | 'description', lang: 'id' | 'en', value: string) => {
@@ -1092,7 +1228,13 @@ export function LandingCmsPage() {
                       }`}
                     >
                       <Gift className="size-3 text-amber-600 shrink-0" />
-                      <span className="truncate">2. Program Unggulan (3 Kartu)</span>
+                      <span className="truncate">
+                        2. Program Unggulan (
+                        {heroCampaigns.visible === false
+                          ? 'Hidden'
+                          : `${heroCampaigns.cards.filter((c: any) => c.visible !== false).length}/${heroCampaigns.cards.length} Kartu`}
+                        )
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -1344,52 +1486,82 @@ export function LandingCmsPage() {
                         <Sparkles size={11} />
                       </span>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
-                        Program &amp; Layanan Unggulan
+                        {(languageView === 'en' ? heroCampaigns.eyebrow?.en : heroCampaigns.eyebrow?.id) ||
+                          heroCampaigns.eyebrow?.id ||
+                          'Featured Campaigns & Portals'}
                       </span>
                     </div>
                     <span className="text-[10px] text-secondary/60">
-                      {(languageView === 'en' ? heroCampaigns.eyebrow?.en : heroCampaigns.eyebrow?.id) ||
-                        heroCampaigns.eyebrow?.id ||
-                        'Akses Cepat Menuju Dukungan'}
+                      {heroCampaigns.visible === false
+                        ? 'Section Disembunyikan'
+                        : `${heroCampaigns.cards.filter((c: any) => c.visible !== false).length} Aktif / ${heroCampaigns.cards.length} Total`}
                     </span>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {heroCampaigns.cards.map((c: any, cIdx: number) => (
-                      <div
-                        key={c.id || cIdx}
-                        className={`p-3 rounded-lg border shadow-2xs transition-all ${
-                          cIdx === 0
-                            ? 'bg-gradient-to-b from-white to-[#FDF8EE] border-amber-300/60'
-                            : 'bg-white border-secondary/15'
-                        }`}
-                      >
-                        <span
-                          className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                            cIdx === 0
-                              ? 'bg-amber-100 text-[#8C6013]'
-                              : cIdx === 1
-                              ? 'bg-secondary/10 text-secondary'
-                              : 'bg-[#EBF3FB] text-[#1E568A]'
-                          }`}
-                        >
-                          {(languageView === 'en' ? c.badge?.en : c.badge?.id) || c.badge?.id}
-                        </span>
-                        <h4 className="mt-1 text-xs font-bold text-secondary">
-                          {(languageView === 'en' ? c.title?.en : c.title?.id) || c.title?.id}
-                        </h4>
-                        <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">
-                          {(languageView === 'en' ? c.description?.en : c.description?.id) || c.description?.id}
-                        </p>
-                        <span
-                          className={`mt-2 block text-[10px] font-bold ${
-                            cIdx === 0 ? 'text-[#8C6013]' : cIdx === 1 ? 'text-secondary' : 'text-[#1E568A]'
-                          }`}
-                        >
-                          {(languageView === 'en' ? c.cta?.en : c.cta?.id) || c.cta?.id}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {heroCampaigns.visible === false ||
+                  heroCampaigns.cards.filter((c: any) => c.visible !== false).length === 0 ? (
+                    <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50/80 p-3 text-center text-[11px] font-medium text-slate-500">
+                      Featured Campaigns &amp; Portals saat ini disembunyikan dari halaman publik (0 kartu aktif atau toggle nonaktif).
+                    </div>
+                  ) : (
+                    <div
+                      className={`mt-3 grid grid-cols-1 gap-2.5 ${
+                        heroCampaigns.cards.filter((c: any) => c.visible !== false).length === 1
+                          ? 'sm:grid-cols-1'
+                          : heroCampaigns.cards.filter((c: any) => c.visible !== false).length === 2
+                          ? 'sm:grid-cols-2'
+                          : 'sm:grid-cols-3'
+                      }`}
+                    >
+                      {heroCampaigns.cards
+                        .filter((c: any) => c.visible !== false)
+                        .map((c: any, cIdx: number) => {
+                          const theme = c.theme || (cIdx === 0 ? 'gold' : cIdx === 1 ? 'navy' : 'blue')
+                          return (
+                            <div
+                              key={c.id || cIdx}
+                              className={`p-3 rounded-lg border shadow-2xs transition-all ${
+                                theme === 'gold'
+                                  ? 'bg-gradient-to-b from-white to-[#FDF8EE] border-amber-300/60'
+                                  : 'bg-white border-secondary/15'
+                              }`}
+                            >
+                              <span
+                                className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                                  theme === 'gold'
+                                    ? 'bg-amber-100 text-[#8C6013]'
+                                    : theme === 'navy'
+                                    ? 'bg-secondary/10 text-secondary'
+                                    : theme === 'emerald'
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : 'bg-[#EBF3FB] text-[#1E568A]'
+                                }`}
+                              >
+                                {(languageView === 'en' ? c.badge?.en : c.badge?.id) || c.badge?.id}
+                              </span>
+                              <h4 className="mt-1 text-xs font-bold text-secondary">
+                                {(languageView === 'en' ? c.title?.en : c.title?.id) || c.title?.id}
+                              </h4>
+                              <p className="mt-0.5 text-[10px] text-secondary/70 line-clamp-2">
+                                {(languageView === 'en' ? c.description?.en : c.description?.id) || c.description?.id}
+                              </p>
+                              <span
+                                className={`mt-2 block text-[10px] font-bold ${
+                                  theme === 'gold'
+                                    ? 'text-[#8C6013]'
+                                    : theme === 'navy'
+                                    ? 'text-secondary'
+                                    : theme === 'emerald'
+                                    ? 'text-emerald-700'
+                                    : 'text-[#1E568A]'
+                                }`}
+                              >
+                                {(languageView === 'en' ? c.cta?.en : c.cta?.id) || c.cta?.id}
+                              </span>
+                            </div>
+                          )
+                        })}
+                    </div>
+                  )}
                 </div>
 
                 {/* 4 Trust Counter Metrics in Simulator */}
@@ -1447,7 +1619,13 @@ export function LandingCmsPage() {
                   }`}
                 >
                   <span>⚡</span>
-                  <span>2. Program &amp; Layanan Unggulan (3 Card)</span>
+                  <span>
+                    2. Program &amp; Layanan Unggulan (
+                    {heroCampaigns.visible === false
+                      ? 'Hidden'
+                      : `${heroCampaigns.cards.filter((c: any) => c.visible !== false).length}/${heroCampaigns.cards.length} Card`}
+                    )
+                  </span>
                 </button>
 
                 <button
@@ -2045,17 +2223,63 @@ export function LandingCmsPage() {
                  ==================================================== */}
               {heroSubSection === 'campaigns' && (
                 <div className="space-y-4">
-                  {/* Info Banner */}
-                  <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="size-4 text-[#8C6013]" />
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                        Editor Program &amp; Layanan Unggulan (Command Strip)
-                      </h4>
+                  {/* Info Banner & Global Controls */}
+                  <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="size-4 text-[#8C6013]" />
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                            Editor Featured Campaigns &amp; Portals
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-slate-600">
+                          Kelola kartu portal cepat di bawah Hero: ubah teks &amp; link, atur urutan, ganti warna tema/ikon, sembunyikan kartu tertentu, atau hapus kartu.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={addHeroCampaignCard}
+                          disabled={heroCampaigns.cards.length >= 6}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <Plus className="size-3.5" />
+                          <span>Tambah Kartu ({heroCampaigns.cards.length}/6)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={resetHeroCampaignsToDefault}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+                        >
+                          Reset Default
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-600">
-                      Bagian ini mengatur 3 kartu aksi cepat tepat di bawah Hero banner utama untuk mempermudah calon klien memilih sesi gratis, booking psikolog, atau tes online.
-                    </p>
+
+                    {/* Section-Level Visibility Toggles */}
+                    <div className="pt-3 border-t border-amber-200/70 flex flex-wrap items-center gap-4">
+                      <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={heroCampaigns.visible !== false}
+                          onChange={(e) => updateHeroCampaignToggle('visible', e.target.checked)}
+                          className="rounded text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>Tampilkan Strip Featured Campaigns &amp; Portals di Beranda</span>
+                      </label>
+
+                      <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={heroCampaigns.showFloatingDock !== false}
+                          onChange={(e) => updateHeroCampaignToggle('showFloatingDock', e.target.checked)}
+                          className="rounded text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>Tampilkan Floating Quick Bar di Bawah Layar</span>
+                      </label>
+                    </div>
                   </div>
 
                   {/* Header & Sub-headline */}
@@ -2074,7 +2298,7 @@ export function LandingCmsPage() {
                             type="text"
                             value={heroCampaigns.eyebrow?.id || ''}
                             onChange={(e) => updateHeroCampaignHeader('eyebrow', 'id', e.target.value)}
-                            placeholder="Cth: Akses Cepat Menuju Dukungan"
+                            placeholder="Cth: Program & Layanan Unggulan"
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                           />
                         </div>
@@ -2088,7 +2312,7 @@ export function LandingCmsPage() {
                             type="text"
                             value={heroCampaigns.eyebrow?.en || ''}
                             onChange={(e) => updateHeroCampaignHeader('eyebrow', 'en', e.target.value)}
-                            placeholder="E.g: Quick Access to Care"
+                            placeholder="E.g: Featured Campaigns & Portals"
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                           />
                         </div>
@@ -2127,149 +2351,275 @@ export function LandingCmsPage() {
                     </div>
                   </div>
 
-                  {/* 3 Dedicated Campaign Cards */}
-                  <div className="space-y-4">
-                    {heroCampaigns.cards.map((card: any, cIdx: number) => {
-                      const icons = [
-                        <Gift key="gift" className="size-4 text-amber-600" />,
-                        <CalendarCheck2 key="cal" className="size-4 text-teal-600" />,
-                        <ClipboardCheck key="test" className="size-4 text-blue-600" />,
-                      ]
-
-                      return (
-                        <div
-                          key={card.id || cIdx}
-                          className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-3"
+                  {/* Campaign Cards List */}
+                  {heroCampaigns.cards.length === 0 ? (
+                    <div className="p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center space-y-3">
+                      <p className="text-xs font-semibold text-slate-600">
+                        Semua kartu Featured Campaigns &amp; Portals telah dihapus. Strip ini otomatis disembunyikan di halaman utama.
+                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={addHeroCampaignCard}
+                          className="px-3.5 py-2 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                         >
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-2">
-                              {icons[cIdx] || <Sparkles className="size-4 text-slate-600" />}
-                              <span className="text-xs font-bold text-slate-900">
-                                Kartu #{cIdx + 1}: {card.title?.id || `Program ${cIdx + 1}`}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                              {card.badge?.id || 'Program'}
-                            </span>
-                          </div>
+                          <Plus className="size-3.5" />
+                          <span>Tambah Kartu Baru</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={resetHeroCampaignsToDefault}
+                          className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+                        >
+                          Kembalikan Kartu Default
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {heroCampaigns.cards.map((card: any, cIdx: number) => {
+                        const isCardVisible = card.visible !== false
+                        const cardTheme = card.theme || (cIdx === 0 ? 'gold' : cIdx === 1 ? 'navy' : 'blue')
+                        const cardIcon = card.icon || (cIdx === 0 ? 'gift' : cIdx === 1 ? 'calendar' : 'clipboard')
 
-                          {/* Badge & Title */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Badge / Kategori Tag (ID / EN)
-                              </label>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Badge ID"
-                                  value={card.badge?.id || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'id', e.target.value)}
+                        const renderIconPreview = () => {
+                          if (cardIcon === 'gift') return <Gift className="size-4 text-amber-600" />
+                          if (cardIcon === 'calendar') return <CalendarCheck2 className="size-4 text-teal-600" />
+                          if (cardIcon === 'clipboard') return <ClipboardCheck className="size-4 text-blue-600" />
+                          if (cardIcon === 'shield') return <ShieldCheck className="size-4 text-emerald-600" />
+                          if (cardIcon === 'message') return <MessageCircle className="size-4 text-teal-600" />
+                          return <Sparkles className="size-4 text-amber-600" />
+                        }
+
+                        return (
+                          <div
+                            key={card.id || cIdx}
+                            className={`p-4 rounded-xl border shadow-2xs space-y-3 transition-all ${
+                              isCardVisible
+                                ? 'bg-white border-slate-200'
+                                : 'bg-slate-50/80 border-slate-200/80 opacity-75'
+                            }`}
+                          >
+                            {/* Card Header & Action Toolbar */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                              <div className="flex items-center gap-2">
+                                {renderIconPreview()}
+                                <span className="text-xs font-bold text-slate-900">
+                                  Kartu #{cIdx + 1}: {card.title?.id || card.title?.en || `Program ${cIdx + 1}`}
+                                </span>
+                                {!isCardVisible && (
+                                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                                    Disembunyikan
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {/* Theme Select */}
+                                <select
+                                  aria-label={`Tema Kartu ${cIdx + 1}`}
+                                  value={cardTheme}
+                                  onChange={(e) => updateHeroCampaignCardMeta(cIdx, 'theme', e.target.value)}
+                                  className="px-2 py-1 text-[11px] font-semibold bg-slate-100 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  title="Warna Tema Kartu"
+                                >
+                                  <option value="gold">Tema: Gold Highlight</option>
+                                  <option value="navy">Tema: Navy Formal</option>
+                                  <option value="blue">Tema: Blue Clinical</option>
+                                  <option value="emerald">Tema: Emerald Calm</option>
+                                </select>
+
+                                {/* Icon Select */}
+                                <select
+                                  aria-label={`Ikon Kartu ${cIdx + 1}`}
+                                  value={cardIcon}
+                                  onChange={(e) => updateHeroCampaignCardMeta(cIdx, 'icon', e.target.value)}
+                                  className="px-2 py-1 text-[11px] font-semibold bg-slate-100 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  title="Ikon Kartu"
+                                >
+                                  <option value="gift">Ikon: Gift / Promo</option>
+                                  <option value="calendar">Ikon: Calendar / Booking</option>
+                                  <option value="clipboard">Ikon: Clipboard / Test</option>
+                                  <option value="sparkles">Ikon: Sparkles / Unggulan</option>
+                                  <option value="shield">Ikon: Shield / Aman</option>
+                                  <option value="message">Ikon: Message / Konsultasi</option>
+                                </select>
+
+                                {/* Reorder Up / Down */}
+                                <button
+                                  type="button"
+                                  onClick={() => moveHeroCampaignCard(cIdx, 'up')}
+                                  disabled={cIdx === 0}
+                                  className="p-1.5 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 cursor-pointer"
+                                  title="Geser ke atas"
+                                >
+                                  <ArrowUp className="size-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveHeroCampaignCard(cIdx, 'down')}
+                                  disabled={cIdx === heroCampaigns.cards.length - 1}
+                                  className="p-1.5 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 cursor-pointer"
+                                  title="Geser ke bawah"
+                                >
+                                  <ArrowDown className="size-3.5" />
+                                </button>
+
+                                {/* Hide / Show Toggle */}
+                                <button
+                                  type="button"
+                                  onClick={() => updateHeroCampaignCardMeta(cIdx, 'visible', !isCardVisible)}
+                                  className={`px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                                    isCardVisible
+                                      ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                      : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+                                  }`}
+                                  title={isCardVisible ? 'Sembunyikan kartu ini' : 'Tampilkan kembali kartu ini'}
+                                >
+                                  {isCardVisible ? (
+                                    <>
+                                      <Eye className="size-3.5" />
+                                      <span>Tampil</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <EyeOff className="size-3.5" />
+                                      <span>Hidden</span>
+                                    </>
+                                  )}
+                                </button>
+
+                                {/* Delete Card */}
+                                <button
+                                  type="button"
+                                  onClick={() => deleteHeroCampaignCard(cIdx)}
+                                  className="px-2 py-1 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                  title="Hapus kartu ini"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                  <span>Hapus</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Badge & Title */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                  Badge / Kategori Tag (ID / EN)
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Badge ID"
+                                    value={card.badge?.id || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'id', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Badge EN"
+                                    value={card.badge?.en || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'en', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                  Judul Kartu (ID / EN)
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Judul ID"
+                                    value={card.title?.id || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'id', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Judul EN"
+                                    value={card.title?.en || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'en', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                  Deskripsi Kartu (ID)
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={card.description?.id || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'id', e.target.value)}
                                   className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
                                 />
-                                <input
-                                  type="text"
-                                  placeholder="Badge EN"
-                                  value={card.badge?.en || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'en', e.target.value)}
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                  Deskripsi Kartu (EN)
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={card.description?.en || ''}
+                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'en', e.target.value)}
                                   className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
                                 />
                               </div>
                             </div>
 
-                            <div>
-                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Judul Kartu (ID / EN)
-                              </label>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Judul ID"
-                                  value={card.title?.id || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="Judul EN"
-                                  value={card.title?.en || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
+                            {/* CTA Text & Target URL */}
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100 items-center">
+                              <div className="sm:col-span-6">
+                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                  Label Tombol CTA (ID / EN)
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="CTA ID"
+                                    value={card.cta?.id || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'id', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="CTA EN"
+                                    value={card.cta?.en || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'en', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="sm:col-span-6">
+                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+                                  Target Link URL Kartu
+                                </label>
+                                <div className="relative">
+                                  <ExternalLink className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                  <input
+                                    type="text"
+                                    placeholder="https://..."
+                                    value={card.url || ''}
+                                    onChange={(e) => updateHeroCampaignCard(cIdx, 'url', e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
-
-                          {/* Description */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Deskripsi Kartu (ID)
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={card.description?.id || ''}
-                                onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'id', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Deskripsi Kartu (EN)
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={card.description?.en || ''}
-                                onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'en', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                              />
-                            </div>
-                          </div>
-
-                          {/* CTA Text & Target URL */}
-                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100 items-center">
-                            <div className="sm:col-span-6">
-                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Label Tombol CTA (ID / EN)
-                              </label>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="CTA ID"
-                                  value={card.cta?.id || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="CTA EN"
-                                  value={card.cta?.en || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="sm:col-span-6">
-                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
-                                Target Link URL Kartu
-                              </label>
-                              <div className="relative">
-                                <ExternalLink className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
-                                  type="text"
-                                  placeholder="https://..."
-                                  value={card.url || ''}
-                                  onChange={(e) => updateHeroCampaignCard(cIdx, 'url', e.target.value)}
-                                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 

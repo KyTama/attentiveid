@@ -85,7 +85,7 @@ describeIntegration('shared content live PostgreSQL contract', () => {
     expect(landing?.content.sections[0].key).toBe('hero')
     expect(landing?.content.sections[0].items).toHaveLength(4)
     expect(landing?.content.sections[6].key).toBe('consultationReassurance')
-    expect(landing?.content.sections[6].price.en).toBe('IDR 475,000')
+    expect(landing?.content.sections[6].price.en).toBe('IDR 250,000')
   })
 
   test('searches localized areas of experience through the canonical PostgreSQL source', async () => {

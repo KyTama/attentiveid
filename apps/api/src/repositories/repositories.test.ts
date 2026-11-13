@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import type { LandingContentMutation } from '@attentiveid/shared';
+import { validateLandingContentMutation, type LandingContentMutation } from '@attentiveid/shared';
 import {
     createLandingContentRepository,
+    decodeHeroExtraPayload,
+    mapLandingSectionMutation,
     type LandingContentSource,
     type LandingRevisionProjection
 } from './landing-content.repository';
@@ -181,6 +183,69 @@ describe('content repositories', () => {
         expect((await repository.getPublished())?.revision.id).not.toBe(draft.id);
         expect((await repository.getRevision(draft.id))?.revision.status).toBe('draft');
         expect(await repository.getRevision("revision' OR 1=1 --")).toBeNull();
+    });
+
+    test('hero section campaigns and portal controls round-trip through mutation mapping and validate when hidden or deleted', () => {
+        const heroWithCustomCampaigns: LandingContentMutation['sections'][0] = {
+            ...landingContent.sections[0],
+            primaryCtaUrl: '/psychologists',
+            secondaryCtaUrl: '#services',
+            campaigns: {
+                visible: true,
+                showFloatingDock: false,
+                eyebrow: localized('Custom Portals'),
+                description: localized('Adjustable portal strip'),
+                cards: [
+                    {
+                        id: 'portal-custom-1',
+                        visible: true,
+                        theme: 'emerald',
+                        icon: 'shield',
+                        badge: localized('Priority Access'),
+                        title: localized('Corporate Wellness Portal'),
+                        description: localized('Dedicated portal for enterprise teams'),
+                        cta: localized('Open Portal'),
+                        url: 'https://booking.attentiveid.com/corporate'
+                    },
+                    {
+                        id: 'portal-hidden-2',
+                        visible: false,
+                        theme: 'gold',
+                        icon: 'gift',
+                        badge: localized('Hidden Offer'),
+                        title: localized('Archived Promo'),
+                        description: localized('Temporarily hidden card'),
+                        cta: localized('Claim'),
+                        url: 'https://free-session.attentiveid.com'
+                    }
+                ]
+            }
+        };
+
+        const mapped = mapLandingSectionMutation(heroWithCustomCampaigns, 0);
+        const idTranslation = mapped.translations.find((t) => t.locale === 'id');
+        expect(idTranslation?.contact).toBeTruthy();
+
+        const decoded = decodeHeroExtraPayload(idTranslation?.contact);
+        expect(decoded.primaryCtaUrl).toBe('/psychologists');
+        expect(decoded.campaigns).toEqual(heroWithCustomCampaigns.campaigns);
+
+        const contentWithZeroCards: LandingContentMutation = {
+            sections: [
+                {
+                    ...landingContent.sections[0],
+                    campaigns: {
+                        visible: false,
+                        showFloatingDock: false,
+                        eyebrow: localized('Hidden Portals'),
+                        description: localized('No cards'),
+                        cards: []
+                    }
+                },
+                ...landingContent.sections.slice(1)
+            ]
+        };
+        expect(validateLandingContentMutation(contentWithZeroCards)).toBe(true);
     });
 
     test('psychologist directory normalizes adversarial search and bounds pagination before querying', async () => {

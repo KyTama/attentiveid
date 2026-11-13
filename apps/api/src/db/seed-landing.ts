@@ -49,27 +49,27 @@ export const landingSeedContent = {
         {
             key: 'supportExplorer',
             visible: true,
-            headline: localized('Apa yang sedang memenuhi pikiranmu?', 'What has been on your mind?'),
+            headline: localized('Area Layanan & Dukungan Psikologi', 'Psychology Support & Care Areas'),
             description: localized(
-                'Kamu tidak harus langsung tahu jenis bantuan yang tepat. Mulailah dari area yang paling dekat dengan pengalamanmu.',
-                'You do not need to know exactly what kind of support to ask for. Begin with the area closest to your experience.'
+                'Pilih fokus dukungan yang paling relevan dengan kondisi emosional atau kebutuhan evaluasi Anda saat ini.',
+                'Select the focus area most relevant to your current emotional state or assessment needs.'
             ),
             items: [
                 item('individual-counseling', 0, 'Konseling individual', 'Individual counseling', 'Ruang privat untuk kecemasan, suasana hati, trauma, kepercayaan diri, regulasi emosi, dan pengembangan diri.', 'A private space for anxiety, mood, trauma, self-esteem, emotional regulation, and personal growth.'),
-                item('psychological-assessment', 1, 'Asesmen psikologis', 'Psychological assessment', 'Asesmen terstruktur untuk memahami kekuatan, kebutuhan, pola belajar, atau langkah lanjutan yang sesuai.', 'Structured assessment to better understand strengths, needs, learning patterns, or the next suitable step.'),
-                item('couples-relationships', 2, 'Pasangan dan relasi', 'Couples and relationships', 'Dukungan untuk komunikasi, kepercayaan, konflik, persiapan pernikahan, dan pola relasi yang ingin diubah.', 'Support for communication, trust, conflict, premarital concerns, and changing relationship patterns.'),
-                item('child-adolescent', 3, 'Anak dan remaja', 'Child and adolescent support', 'Dukungan sesuai usia untuk perkembangan, emosi, perilaku, pembelajaran, relasi sosial, dan kebutuhan keluarga.', 'Age-appropriate support for development, emotions, behavior, learning, social relationships, and family concerns.'),
-                item('family-therapy', 4, 'Terapi keluarga', 'Family therapy', 'Ruang terpandu untuk memahami konflik berulang, membangun kembali kedekatan, dan menemukan cara yang lebih sehat.', 'A guided space for families to understand recurring conflict, rebuild connection, and find healthier ways forward.'),
+                item('couples-relationships', 1, 'Pasangan dan relasi', 'Couples and relationships', 'Dukungan untuk komunikasi, kepercayaan, konflik, persiapan pernikahan, dan pola relasi yang ingin diubah.', 'Support for communication, trust, conflict, premarital concerns, and changing relationship patterns.'),
+                item('child-adolescent', 2, 'Anak dan remaja', 'Child and adolescent support', 'Dukungan sesuai usia untuk perkembangan, emosi, perilaku, pembelajaran, relasi sosial, dan kebutuhan keluarga.', 'Age-appropriate support for development, emotions, behavior, learning, social relationships, and family concerns.'),
+                item('family-therapy', 3, 'Terapi keluarga', 'Family therapy', 'Ruang terpandu untuk memahami konflik berulang, membangun kembali kedekatan, dan menemukan cara yang lebih sehat.', 'A guided space for families to understand recurring conflict, rebuild connection, and find healthier ways forward.'),
+                item('psychological-assessment', 4, 'Asesmen psikologis', 'Psychological assessment', 'Asesmen terstruktur untuk memahami kekuatan, kebutuhan, pola belajar, atau langkah lanjutan yang sesuai.', 'Structured assessment to better understand strengths, needs, learning patterns, or the next suitable step.'),
                 item('career-work', 5, 'Karier dan pekerjaan', 'Career and work', 'Dukungan untuk burnout, stres kerja, arah karier, kepercayaan diri, pengambilan keputusan, dan perkembangan profesional.', 'Support for burnout, workplace stress, career direction, confidence, decision-making, and professional growth.')
             ]
         },
         {
             key: 'carePromise',
             visible: true,
-            headline: localized('Dukungan yang dimulai dari kamu.', 'Care that starts with you.'),
+            headline: localized('Komitmen Layanan Attentive.id', 'Attentive.id Care Promise'),
             description: localized(
-                'Tidak ada dua orang yang menjalani hidup dengan cara yang sama. Peran kami adalah mendengarkan, membuat proses lebih jelas, dan membantu kamu memilih dukungan dengan yakin.',
-                'No two people move through life in the same way. Our role is to listen carefully, make the process clearer, and help you choose support with confidence.'
+                'Protokol klinis terukur demi rasa aman dan kejelasan progres konseling Anda.',
+                'Structured clinical protocols ensuring safety, clarity, and measurable progress.'
             ),
             items: [
                 item('no-judgment', 0, 'Tanpa menghakimi. Tanpa berasumsi.', 'No judgment. No assumptions.', 'Ruang privat agar ceritamu bisa didengar tanpa tekanan.', 'A private space where your concerns can be heard without pressure.'),
@@ -82,62 +82,62 @@ export const landingSeedContent = {
             key: 'featuredPsychologists',
             visible: true,
             headline: localized(
-                'Temukan seseorang yang benar-benar bisa diajak bicara.',
-                'Find someone you can actually talk to.'
+                'Tim Psikolog Profesional Kami',
+                'Our Professional Psychologist Team'
             ),
             description: localized(
-                'Setiap psikolog membawa pengalaman dan area fokus yang berbeda. Kenali seluruh tim, nomor izin praktik, dan kebutuhan yang biasa mereka dampingi.',
-                'Every psychologist brings different experience and areas of focus. Review the complete team, their practice license, and the concerns they commonly support.'
+                'Kenali latar belakang pendidikan, spesialisasi kasus, dan nomor izin praktik para praktisi kami.',
+                'Explore clinical credentials, specialized focus areas, and license details of our therapists.'
             )
         },
         {
             key: 'careJourney',
             visible: true,
-            headline: localized('Mulai dengan cara yang terasa tepat untukmu.', 'Start in the way that feels right for you.'),
+            headline: localized('Tahapan Langkah Konsultasi', 'Your Care Journey Steps'),
             description: localized(
-                'Kamu tidak harus memahami semuanya sebelum sesi pertama. Pilih titik awal yang terasa paling nyaman.',
-                'You do not need everything figured out before your first session. Choose the entry point that feels most comfortable.'
+                'Tiga langkah terstruktur untuk memulai sesi pertama Anda.',
+                'Three clear steps to begin your first counseling session.'
             ),
             items: [
-                item('find-your-fit', 0, 'Temukan kecocokanmu', 'Find your fit', 'Jelajahi area dukungan atau profil psikolog tanpa perlu terburu-buru mengambil keputusan.', 'Explore support areas or browse psychologist profiles without rushing a decision.'),
-                item('choose-how-to-meet', 1, 'Pilih cara bertemu', 'Choose how to meet', 'Pilih format online atau tatap muka dan tanyakan jadwal melalui WhatsApp.', 'Pick an online or in-person format and ask about the available schedule through WhatsApp.'),
-                item('connect-at-your-pace', 2, 'Terhubung sesuai ritmemu', 'Connect at your pace', 'Percakapan pertama membantu memahami tujuanmu dan apakah hubungan terapeutiknya terasa tepat.', 'Your first conversation is a space to understand what you want from support and whether the fit feels right.')
+                item('find-your-fit', 0, '1. Pilih Psikolog', '1. Choose Therapist', 'Telusuri profil berdasarkan keahlian dan lokasi cabang.', 'Review profiles matching your concern and preferred branch.'),
+                item('choose-how-to-meet', 1, '2. Tentukan Jadwal', '2. Schedule Slot', 'Pilih tanggal, jam, serta format tatap muka atau daring.', 'Select your preferred time slot and session format.'),
+                item('connect-at-your-pace', 2, '3. Jalani Sesi Privat', '3. Attend Session', 'Sesi 60 menit terarah di ruang privat atau tautan video aman.', 'A focused 60-minute session held in private suites or via encrypted video.')
             ]
         },
         {
             key: 'clientStories',
             visible: true,
-            headline: localized('Cerita yang dibagikan klien kami.', 'What our clients have shared.'),
+            headline: localized('Refleksi Klien Kami', 'Client Reflections & Outcomes'),
             description: localized(
-                'Pengalaman nyata dari orang-orang yang pernah kami dampingi dalam perjalanannya.',
-                'Real experiences from people we have supported on their journey.'
+                'Cerita nyata dari klien yang telah menyelesaikan rangkaian sesi konseling bersama Attentive.',
+                'Direct accounts from individuals who completed structured counseling with our psychologists.'
             ),
             items: [
-                item('online-counseling-28', 0, 'Client - Online Counseling, 28 y.o.', 'Client - Online Counseling, 28 y.o.', 'Patient and adaptive in handling clients with fluctuating commitment and progress, consistently providing tools that are feasible and actionable.', 'Patient and adaptive in handling clients with fluctuating commitment and progress, consistently providing tools that are feasible and actionable.'),
-                item('offline-psychotherapy-24', 1, 'Client - Offline Psychotherapy, 24 y.o.', 'Client - Offline Psychotherapy, 24 y.o.', 'Going therapy here, was a truly bittersweet journey for me. It was very challenging but very deeply moving and growing for me… I always tell me friends about going here, and always recommend them to go here as #1 reference.', 'Going therapy here, was a truly bittersweet journey for me. It was very challenging but very deeply moving and growing for me… I always tell me friends about going here, and always recommend them to go here as #1 reference.'),
-                item('online-psychotherapy-31', 2, 'Client - Online Psychotherapy, 31 y.o.', 'Client - Online Psychotherapy, 31 y.o.', 'The psychologist shows great understanding of my needs, avoiding pressure and allowing me to progress at my own pace. They provide a safe and comfortable space for me to share my thoughts and feelings.', 'The psychologist shows great understanding of my needs, avoiding pressure and allowing me to progress at my own pace. They provide a safe and comfortable space for me to share my thoughts and feelings.')
+                item('online-counseling-28', 0, 'Kejelasan Menghadapi Kecemasan', 'Clarity Amid Anxiety', 'Membantu saya memahami akar pola overthinking dan menemukan strategi coping yang realistis.', 'Helped me pinpoint anxiety triggers and develop practical, grounded coping routines.'),
+                item('offline-psychotherapy-24', 1, 'Ruang Aman untuk Berproses', 'A Structured Sanctuary', 'Sesi yang menghargai ritme emosi tanpa dipaksa cepat-cepat pulih sebelum siap.', 'A thoughtful pace that respected my readiness without rushing the process.'),
+                item('online-psychotherapy-31', 2, 'Dukungan Karir & Keputusan Sulit', 'Workplace Direction', 'Sangat membantu dalam mengurai burnout kerja dan menata kembali batas kerja-pribadi.', 'Crucial support for untangling professional burnout and restoring healthy boundaries.')
             ]
         },
         {
             key: 'consultationReassurance',
             visible: true,
-            headline: localized('Ketahui prosesnya sebelum memulai.', 'Know what to expect before you begin.'),
+            headline: localized('Informasi Biaya & Konsultasi', 'Consultation Pricing & Details'),
             description: localized(
-                'Memulai terapi sudah menjadi keputusan yang berarti. Proses dan biaya seharusnya memberi kejelasan, bukan menambah kekhawatiran.',
-                'Starting therapy is already a meaningful decision. The process and pricing should be another source of clarity, not uncertainty.'
+                'Biaya transparan tanpa biaya tersembunyi.',
+                'Transparent fees with no hidden costs.'
             ),
-            sessionLabel: localized('Konsultasi online mulai dari', 'Online consultation starts from'),
-            price: localized('Rp475.000', 'IDR 475,000'),
-            priceUnit: localized('per sesi konsultasi', 'per consultation session'),
-            primaryCta: localized('Tanya jadwal dan biaya', 'Ask about schedule and pricing')
+            sessionLabel: localized('Sesi Konsultasi Individu (60 Menit)', 'Individual Counseling Session (60 Mins)'),
+            price: localized('Rp 250.000', 'IDR 250,000'),
+            priceUnit: localized('/sesi', '/session'),
+            primaryCta: localized('Reservasi Sesi Sekarang', 'Book Session Now')
         },
         {
             key: 'frequentlyAskedQuestions',
             visible: true,
-            headline: localized('Tidak apa-apa kalau masih punya pertanyaan.', 'It is okay to have questions.'),
+            headline: localized('Pertanyaan Umum (FAQ)', 'Frequently Asked Questions'),
             description: localized(
-                'Memulai dukungan psikologis bisa terasa asing. Berikut jawaban jelas untuk hal-hal yang sering ditanyakan di awal.',
-                'Starting psychological support can feel unfamiliar. Here are clear answers to the things people often ask first.'
+                'Jawaban atas pertanyaan yang sering diajukan calon klien.',
+                'Answers to common questions from prospective clients.'
             ),
             items: [
                 item('choosing-a-psychologist', 0, 'Bagaimana cara memilih psikolog yang tepat?', 'How do I know which psychologist is right for me?', 'Mulailah dari hal yang ingin kamu bahas, lalu lihat pengalaman dan pendekatan tiap psikolog. Kalau masih ragu, admin kami dapat membantu mempersempit pilihan melalui WhatsApp.', 'Begin with the concern you want to work through, then review each psychologist\'s experience and approach. If you are still unsure, our admin can help narrow the options through WhatsApp.'),
@@ -151,13 +151,13 @@ export const landingSeedContent = {
         {
             key: 'closingInvitation',
             visible: true,
-            headline: localized('Mulai dari tempatmu sekarang.', 'Start wherever you are.'),
+            headline: localized('Siap Memulai Langkah Pertama Anda?', 'Ready to Take Your First Step?'),
             description: localized(
-                'Kamu tidak membutuhkan kata-kata yang sempurna, diagnosis, atau jawaban untuk semuanya. Kamu hanya membutuhkan tempat untuk memulai.',
-                'You do not need the right words, a diagnosis, or everything figured out. You just need somewhere to begin.'
+                'Jangan ragu menghubungi tim kami untuk pertanyaan lebih lanjut.',
+                'Do not hesitate to reach out to our team for further inquiries.'
             ),
-            primaryCta: localized('Temukan psikologmu', 'Find your psychologist'),
-            contact: localized('Ngobrol dengan kami dulu', 'Chat with us first')
+            primaryCta: localized('Konsultasi Sekarang', 'Consult Now'),
+            contact: localized('WhatsApp: +62 851-5641-0912 | Email: contact@attentiveid.com', 'WhatsApp: +62 851-5641-0912 | Email: contact@attentiveid.com')
         }
     ]
 } satisfies LandingContentMutation;

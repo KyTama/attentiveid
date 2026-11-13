@@ -152,3 +152,10 @@
   1. Align service methods: support both `publishLandingDraft(adminCap, revisionId?)` and alias `publishLandingRevision(adminCap, revisionId?)`. If `revisionId` is omitted, automatically target `aggregate.activeDraftRevisionId`.
   2. Allow `POST /api/admin/landing/publish` to accept optional `body: LandingContentMutation`: if provided, create the draft and publish it atomically in one step so on-screen edits in the CMS are always published live immediately.
   3. Ensure mock dependencies in unit tests provide full function signatures so API test suites catch missing transition methods before deployment.
+
+## 21. Deployment Seeding Clobbering Live CMS Edits
+- **Problem**: Running `seed-psychologists --upsert` inside `scripts/deploy/deploy.sh` caused every automated deployment to execute `resetFeaturedOrders()`, `onConflictDoUpdate`, and `deleteSupportAreas()`, silently reverting live psychologist updates made by staff in the CMS back to hardcoded `psychologistSeedFixtures`.
+- **Solution**:
+  1. Remove all automatic seed runs (`seed-landing` and `seed-psychologists --upsert`) from `scripts/deploy/deploy.sh` so deployments only run `migrate`.
+  2. Keep `seed-landing` and `seed-psychologists` under `profiles: [maintenance]` in `compose.production.yml` strictly for manual operator execution when needed.
+  3. Add a negative CI contract check in `scripts/ci/verify-runtime-config.sh` rejecting `seed-landing`, `seed-psychologists`, `--upsert`, or `--force` in `deploy.sh`.

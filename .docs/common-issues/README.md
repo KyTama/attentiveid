@@ -22,3 +22,5 @@ Run the engine: [`how-to-learn.md`](../principles/how-to-learn.md) (7 steps).
 | 11 | Containerized media uploads in read-only filesystems require shared volumes and configurable MEDIA_DIR | [readonly-filesystem-and-shared-media-volume.md](./readonly-filesystem-and-shared-media-volume.md) |
 | 12 | Service method signature alignment and atomic single-step CMS publish | [content-transition-method-signatures-and-atomic-publish.md](./content-transition-method-signatures-and-atomic-publish.md) |
 | 13 | Hero section trust metrics counter parity with CMS default template | [hero-section-trust-metrics-cms-parity.md](./hero-section-trust-metrics-cms-parity.md) |
+| 14 | Never auto-seed or reseed live VPS databases during deployment (`--upsert` clobbers CMS edits) | [deploy-reseed-overwriting-cms-data.md](./deploy-reseed-overwriting-cms-data.md) |
+| 15 | Persist hero campaigns in `contact` JSON envelope, filter deprecated portals, and sync non-PII VPS content tables | [hero-campaigns-envelope-persistence-and-vps-seed-sync.md](./hero-campaigns-envelope-persistence-and-vps-seed-sync.md) |

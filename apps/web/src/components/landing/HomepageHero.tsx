@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Gift,
   MapPin,
+  MessageCircle,
   PawPrint,
   ShieldCheck,
   Sparkles,
@@ -220,36 +221,87 @@ export function HomepageHero() {
   }
 
   // Program & Layanan Unggulan (Command Strip campaigns)
+  const localeKey = managed?.locale || (isId ? 'id' : 'en')
   const customCampaigns = (managed?.section as any)?.campaigns
-  const campaignEyebrow = customCampaigns?.eyebrow?.[managed?.locale || 'id'] ?? t('homepage.campaigns.eyebrow')
-  const campaignDescription = customCampaigns?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.description')
+  const campaignEyebrow = customCampaigns?.eyebrow?.[localeKey] || t('homepage.campaigns.eyebrow')
+  const campaignDescription = customCampaigns?.description?.[localeKey] || t('homepage.campaigns.description')
 
-  const card1Data = customCampaigns?.cards?.[0]
-  const card1 = {
-    badge: card1Data?.badge?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.badge'),
-    title: card1Data?.title?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.title'),
-    description: card1Data?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.description'),
-    cta: card1Data?.cta?.[managed?.locale || 'id'] ?? t('homepage.campaigns.freeSession.cta'),
-    url: card1Data?.url || 'https://free-session.attentiveid.com',
+  type CampaignCardItem = {
+    id: string
+    visible: boolean
+    theme: 'gold' | 'navy' | 'blue' | 'emerald'
+    icon: 'gift' | 'calendar' | 'clipboard' | 'sparkles' | 'shield' | 'message'
+    badge: string
+    title: string
+    description: string
+    cta: string
+    url: string
   }
 
-  const card2Data = customCampaigns?.cards?.[1]
-  const card2 = {
-    badge: card2Data?.badge?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.badge'),
-    title: card2Data?.title?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.title'),
-    description: card2Data?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.description'),
-    cta: card2Data?.cta?.[managed?.locale || 'id'] ?? t('homepage.campaigns.booking.cta'),
-    url: card2Data?.url || 'https://booking.attentiveid.com/',
-  }
+  const defaultCampaignCards: CampaignCardItem[] = [
+    {
+      id: 'card-free-session',
+      visible: true,
+      theme: 'gold',
+      icon: 'gift',
+      badge: t('homepage.campaigns.freeSession.badge'),
+      title: t('homepage.campaigns.freeSession.title'),
+      description: t('homepage.campaigns.freeSession.description'),
+      cta: t('homepage.campaigns.freeSession.cta'),
+      url: 'https://free-session.attentiveid.com',
+    },
+    {
+      id: 'card-booking',
+      visible: true,
+      theme: 'navy',
+      icon: 'calendar',
+      badge: t('homepage.campaigns.booking.badge'),
+      title: t('homepage.campaigns.booking.title'),
+      description: t('homepage.campaigns.booking.description'),
+      cta: t('homepage.campaigns.booking.cta'),
+      url: 'https://booking.attentiveid.com/',
+    },
+  ]
 
-  const card3Data = customCampaigns?.cards?.[2]
-  const card3 = {
-    badge: card3Data?.badge?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.badge'),
-    title: card3Data?.title?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.title'),
-    description: card3Data?.description?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.description'),
-    cta: card3Data?.cta?.[managed?.locale || 'id'] ?? t('homepage.campaigns.testCentre.cta'),
-    url: card3Data?.url || 'https://assessment.attentiveid.com/',
-  }
+  const defaultThemes = ['gold', 'navy', 'blue', 'emerald'] as const
+  const defaultIcons = ['gift', 'calendar', 'clipboard', 'sparkles'] as const
+
+  const resolvedCampaignCards: CampaignCardItem[] = Array.isArray(customCampaigns?.cards)
+    ? customCampaigns.cards.map((card: any, idx: number) => {
+        const fallback = defaultCampaignCards[idx]
+        const resolvedUrl = card.url || fallback?.url || '#'
+        return {
+          id: card.id || `campaign-card-${idx}`,
+          visible: card.visible !== false && !resolvedUrl.includes('assessment.attentiveid.com'),
+          theme: (card.theme || defaultThemes[idx % defaultThemes.length]) as 'gold' | 'navy' | 'blue' | 'emerald',
+          icon: (card.icon || defaultIcons[idx % defaultIcons.length]) as
+            | 'gift'
+            | 'calendar'
+            | 'clipboard'
+            | 'sparkles'
+            | 'shield'
+            | 'message',
+          badge: card.badge?.[localeKey] || card.badge?.id || fallback?.badge || '',
+          title: card.title?.[localeKey] || card.title?.id || fallback?.title || '',
+          description: card.description?.[localeKey] || card.description?.id || fallback?.description || '',
+          cta: card.cta?.[localeKey] || card.cta?.id || fallback?.cta || '',
+          url: resolvedUrl,
+        }
+      })
+    : defaultCampaignCards
+
+  const visibleCampaignCards = resolvedCampaignCards.filter((card) => card.visible)
+  const isCampaignsStripVisible = customCampaigns?.visible !== false && visibleCampaignCards.length > 0
+  const isFloatingDockEnabled = customCampaigns?.showFloatingDock !== false
+
+  const campaignGridColsClass =
+    visibleCampaignCards.length === 1
+      ? 'grid-cols-1'
+      : visibleCampaignCards.length === 2
+      ? 'grid-cols-1 md:grid-cols-2'
+      : visibleCampaignCards.length === 4
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+      : 'grid-cols-1 md:grid-cols-3'
 
   return (
     <section className="relative border-b border-secondary/10 bg-[#FAF7F2]" id="home">
@@ -590,150 +642,134 @@ export function HomepageHero() {
         </div>
 
         {/* Sub-Hero Command Strip (Featured Campaigns: Program & Layanan Unggulan) - NAIK KE SINI */}
-        <div className="mt-8 rounded-2xl border border-secondary/10 bg-[#FAF7F2] p-6 sm:p-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="grid size-6 place-items-center rounded-full bg-primary/20 text-[#8C6013]">
-                <Sparkles size={14} />
-              </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-secondary">
-                {campaignEyebrow}
-              </span>
+        {isCampaignsStripVisible && (
+          <div className="mt-8 rounded-2xl border border-secondary/10 bg-[#FAF7F2] p-6 sm:p-8">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <span className="grid size-6 place-items-center rounded-full bg-primary/20 text-[#8C6013]">
+                  <Sparkles size={14} />
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-secondary">
+                  {campaignEyebrow}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-secondary/70">
+                  {campaignDescription}
+                </span>
+                {isDismissed && isFloatingDockEnabled && (
+                  <motion.button
+                    type="button"
+                    onClick={restoreDock}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-secondary/20 bg-white px-2.5 py-1 text-[11px] font-semibold text-secondary shadow-2xs hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    transition={INTERACTIVE_SPRING}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Sparkles size={11} className="text-primary" />
+                    <span>{isId ? 'Tampilkan bar bawah' : 'Show quick bar'}</span>
+                  </motion.button>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-secondary/70">
-                {campaignDescription}
-              </span>
-              {isDismissed && (
-                <motion.button
-                  type="button"
-                  onClick={restoreDock}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-secondary/20 bg-white px-2.5 py-1 text-[11px] font-semibold text-secondary shadow-2xs hover:bg-secondary hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  transition={INTERACTIVE_SPRING}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <Sparkles size={11} className="text-primary" />
-                  <span>{isId ? 'Tampilkan bar bawah' : 'Show quick bar'}</span>
-                </motion.button>
-              )}
+            <div className={`mt-5 grid gap-4 ${campaignGridColsClass}`}>
+              {visibleCampaignCards.map((card) => {
+                const themeStyles =
+                  card.theme === 'gold'
+                    ? {
+                        card: 'border-primary/50 bg-gradient-to-b from-white to-[#FDF8EE] hover:border-primary',
+                        badge: 'bg-[#FAF0D7] text-[#8C6013]',
+                        iconBox: 'bg-[#FAF0D7] text-[#8C6013]',
+                        titleHover: 'group-hover:text-[#8C6013]',
+                        footer: 'border-[#E9B949]/20 text-[#8C6013]',
+                      }
+                    : card.theme === 'blue'
+                    ? {
+                        card: 'border-secondary/15 bg-white hover:border-secondary/35',
+                        badge: 'bg-[#EBF3FB] text-[#1E568A]',
+                        iconBox: 'bg-[#EBF3FB] text-[#1E568A]',
+                        titleHover: 'group-hover:text-[#1E568A]',
+                        footer: 'border-secondary/10 text-[#1E568A]',
+                      }
+                    : card.theme === 'emerald'
+                    ? {
+                        card: 'border-emerald-600/20 bg-white hover:border-emerald-600/40',
+                        badge: 'bg-emerald-50 text-emerald-800',
+                        iconBox: 'bg-emerald-50 text-emerald-800',
+                        titleHover: 'group-hover:text-emerald-800',
+                        footer: 'border-secondary/10 text-emerald-800',
+                      }
+                    : {
+                        card: 'border-secondary/15 bg-white hover:border-secondary/35',
+                        badge: 'bg-secondary/10 text-secondary',
+                        iconBox: 'bg-secondary/10 text-secondary',
+                        titleHover: 'group-hover:text-primary',
+                        footer: 'border-secondary/10 text-secondary group-hover:text-primary',
+                      }
+
+                const IconComponent =
+                  card.icon === 'gift'
+                    ? Gift
+                    : card.icon === 'calendar'
+                    ? CalendarCheck2
+                    : card.icon === 'clipboard'
+                    ? ClipboardCheck
+                    : card.icon === 'shield'
+                    ? ShieldCheck
+                    : card.icon === 'message'
+                    ? MessageCircle
+                    : Sparkles
+
+                return (
+                  <motion.a
+                    key={card.id}
+                    href={card.url}
+                    target={card.url.startsWith('http') ? '_blank' : undefined}
+                    rel={card.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    aria-label={`${card.title} - ${card.cta}`}
+                    className={`group relative flex flex-col justify-between rounded-xl border p-5 sm:p-6 shadow-xs transition-all hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer ${themeStyles.card}`}
+                    transition={INTERACTIVE_SPRING}
+                    whileHover={{ y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span
+                        className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${themeStyles.badge}`}
+                      >
+                        {card.badge}
+                      </span>
+                      <div className={`grid size-9 place-items-center rounded-lg ${themeStyles.iconBox}`}>
+                        <IconComponent size={18} strokeWidth={2.2} />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <h3
+                        className={`text-base font-bold text-secondary transition-colors sm:text-lg ${themeStyles.titleHover}`}
+                      >
+                        {card.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
+                        {card.description}
+                      </p>
+                    </div>
+                    <div
+                      className={`mt-5 flex items-center justify-between border-t pt-3 text-xs sm:text-sm font-semibold ${themeStyles.footer}`}
+                    >
+                      <span>{card.cta}</span>
+                      <ArrowUpRight
+                        size={16}
+                        strokeWidth={2.5}
+                        className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      />
+                    </div>
+                  </motion.a>
+                )
+              })}
             </div>
           </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {/* Card 1: First Free Session */}
-            <motion.a
-              href={card1.url}
-              target={card1.url.startsWith('http') ? '_blank' : undefined}
-              rel={card1.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-              aria-label={`${card1.title} - ${card1.cta}`}
-              className="group relative flex flex-col justify-between rounded-xl border border-primary/50 bg-gradient-to-b from-white to-[#FDF8EE] p-5 sm:p-6 shadow-xs transition-all hover:border-primary hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-              transition={INTERACTIVE_SPRING}
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="inline-flex items-center rounded-md bg-[#FAF0D7] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#8C6013]">
-                  {card1.badge}
-                </span>
-                <div className="grid size-9 place-items-center rounded-lg bg-[#FAF0D7] text-[#8C6013]">
-                  <Gift size={18} strokeWidth={2.2} />
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-base font-bold text-secondary group-hover:text-[#8C6013] transition-colors sm:text-lg">
-                  {card1.title}
-                </h3>
-                <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                  {card1.description}
-                </p>
-              </div>
-              <div className="mt-5 flex items-center justify-between border-t border-[#E9B949]/20 pt-3 text-xs sm:text-sm font-semibold text-[#8C6013]">
-                <span>{card1.cta}</span>
-                <ArrowUpRight
-                  size={16}
-                  strokeWidth={2.5}
-                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </div>
-            </motion.a>
-
-            {/* Card 2: Booking / Reserve */}
-            <motion.a
-              href={card2.url}
-              target={card2.url.startsWith('http') ? '_blank' : undefined}
-              rel={card2.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-              aria-label={`${card2.title} - ${card2.cta}`}
-              className="group relative flex flex-col justify-between rounded-xl border border-secondary/15 bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-secondary/35 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-              transition={INTERACTIVE_SPRING}
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="inline-flex items-center rounded-md bg-secondary/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-secondary">
-                  {card2.badge}
-                </span>
-                <div className="grid size-9 place-items-center rounded-lg bg-secondary/10 text-secondary">
-                  <CalendarCheck2 size={18} strokeWidth={2.2} />
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-base font-bold text-secondary group-hover:text-primary transition-colors sm:text-lg">
-                  {card2.title}
-                </h3>
-                <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                  {card2.description}
-                </p>
-              </div>
-              <div className="mt-5 flex items-center justify-between border-t border-secondary/10 pt-3 text-xs sm:text-sm font-semibold text-secondary group-hover:text-primary">
-                <span>{card2.cta}</span>
-                <ArrowUpRight
-                  size={16}
-                  strokeWidth={2.5}
-                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </div>
-            </motion.a>
-
-            {/* Card 3: Digital Test Centre */}
-            <motion.a
-              href={card3.url}
-              target={card3.url.startsWith('http') ? '_blank' : undefined}
-              rel={card3.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-              aria-label={`${card3.title} - ${card3.cta}`}
-              className="group relative flex flex-col justify-between rounded-xl border border-secondary/15 bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-secondary/35 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-              transition={INTERACTIVE_SPRING}
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="inline-flex items-center rounded-md bg-[#EBF3FB] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#1E568A]">
-                  {card3.badge}
-                </span>
-                <div className="grid size-9 place-items-center rounded-lg bg-[#EBF3FB] text-[#1E568A]">
-                  <ClipboardCheck size={18} strokeWidth={2.2} />
-                </div>
-              </div>
-              <div className="mt-4">
-                <h3 className="text-base font-bold text-secondary group-hover:text-[#1E568A] transition-colors sm:text-lg">
-                  {card3.title}
-                </h3>
-                <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                  {card3.description}
-                </p>
-              </div>
-              <div className="mt-5 flex items-center justify-between border-t border-secondary/10 pt-3 text-xs sm:text-sm font-semibold text-[#1E568A]">
-                <span>{card3.cta}</span>
-                <ArrowUpRight
-                  size={16}
-                  strokeWidth={2.5}
-                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </div>
-            </motion.a>
-          </div>
-        </div>
+        )}
 
         {/* 4 Trust Counter Metrics (DI BAWAHNYA Program & Layanan Unggulan) */}
         <dl className="mt-6 grid grid-cols-2 rounded-2xl bg-white/70 py-8 text-center sm:grid-cols-4 sm:py-10 shadow-2xs border border-secondary/10">

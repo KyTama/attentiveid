@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowUpRight, CalendarCheck2, Check, ClipboardCheck, Gift, Sparkles } from 'lucide-react'
+import { ArrowUpRight, CalendarCheck2, Check, Gift, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
@@ -61,23 +61,6 @@ export function CampaignSection() {
         ctaBg: 'bg-secondary hover:bg-secondary/90 text-white',
       },
     },
-    {
-      id: 'test-centre',
-      badge: t('homepage.campaigns.testCentre.badge'),
-      title: t('homepage.campaigns.testCentre.title'),
-      description: t('homepage.campaigns.testCentre.description'),
-      perks: t('homepage.campaigns.testCentre.perks', { returnObjects: true }) as string[],
-      cta: t('homepage.campaigns.testCentre.cta'),
-      href: 'https://assessment.attentiveid.com/',
-      icon: ClipboardCheck,
-      accentColor: {
-        badge: 'bg-[#EBF3FB] text-[#1E568A] border-[#C8DFFA]',
-        iconBg: 'bg-[#EBF3FB]',
-        iconColor: 'text-[#1E568A]',
-        border: 'border-secondary/15 hover:border-secondary/30 shadow-xs',
-        ctaBg: 'bg-secondary hover:bg-secondary/90 text-white',
-      },
-    },
   ]
 
   return (
@@ -96,7 +79,7 @@ export function CampaignSection() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
           {campaigns.map((card) => {
             const Icon = card.icon
             return (
