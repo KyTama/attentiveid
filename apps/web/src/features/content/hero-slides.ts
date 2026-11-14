@@ -160,9 +160,9 @@ export const DEFAULT_HERO_SLIDES: HeroSlideItem[] = [
     },
     chips: ['Sep · Being Liked', 'Nov · More Than Mine', 'Dec · How We Hold On'],
     primaryCta: { id: 'Baca brief terbaru', en: 'Read the latest brief' },
-    primaryCtaUrl: '/articles',
+    primaryCtaUrl: '/sci-brief',
     secondaryCta: { id: 'Semua brief', en: 'All briefs' },
-    secondaryCtaUrl: '/articles',
+    secondaryCtaUrl: '/sci-brief',
   },
   {
     id: 'hero-slide-5',
@@ -229,6 +229,10 @@ export function buildMergedHeroSlideItems(
   })
 }
 
+/** The Scientific Brief slide used to point at /articles; saved content may still say so. */
+const legacyBriefUrl = (layout: HeroSlideLayout, url: string | undefined) =>
+  layout === 'scientific-brief' && (!url || url === '/articles') ? '/sci-brief' : (url ?? '')
+
 export function resolveHeroSlides(
   heroSection: Partial<Extract<LandingContentMutation['sections'][number], { key: 'hero' }>> | undefined | null,
   locale: HeroLocale
@@ -255,9 +259,9 @@ export function resolveHeroSlides(
       steps: item.steps?.map((s) => s[locale] || s.id),
       chips: item.chips,
       primaryCta: item.primaryCta?.[locale] || item.primaryCta?.id || '',
-      primaryCtaUrl: item.primaryCtaUrl ?? '',
+      primaryCtaUrl: legacyBriefUrl(layout, item.primaryCtaUrl),
       secondaryCta: item.secondaryCta?.[locale] || item.secondaryCta?.id || '',
-      secondaryCtaUrl: item.secondaryCtaUrl ?? '',
+      secondaryCtaUrl: legacyBriefUrl(layout, item.secondaryCtaUrl),
       imageSrc,
       imageAlt: item.media?.alt?.[locale] || fallbackMedia.alt[locale],
     }

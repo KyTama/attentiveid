@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { UserDto } from '@attentiveid/shared'
 import { AppRoutes } from '../src/App'
@@ -169,9 +169,10 @@ describe('Public Articles & Article CMS Pages', () => {
       </MemoryRouter>
     )
 
+    // Articles now lives inside the Products dropdown of the header.
+    fireEvent.click(await screen.findByRole('button', { name: /products|produk/i }))
     await waitFor(() => {
       const articleNavLinks = screen.getAllByRole('link', { name: /artikel|articles/i })
-      expect(articleNavLinks.length).toBeGreaterThanOrEqual(1)
       expect(articleNavLinks.some((l) => l.getAttribute('href') === '/articles')).toBe(true)
     })
   })

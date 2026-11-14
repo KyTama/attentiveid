@@ -1,4 +1,27 @@
 {
+  "sciBrief": {
+    "badge": "Monthly research digest",
+    "title": "Sci-Brief",
+    "subtitle": "Every month we turn the literature we read and the research we conduct into one brief that is easy to read and practical for everyday life.",
+    "readBrief": "Read brief",
+    "empty": "No Sci-Brief has been released yet. Please check back soon.",
+    "loadError": "We couldn't load the Sci-Briefs. Please try again later.",
+    "back": "All Sci-Briefs",
+    "pages": "{{count}} pages",
+    "previewNotice": "Preview of the first {{count}} pages",
+    "notFoundTitle": "Sci-Brief not found",
+    "notFoundBody": "This brief isn't available (yet).",
+    "lockedTitle": "The rest of this brief is confidential",
+    "lockedBody": "{{count}} more pages are available on request.",
+    "requestButton": "Request to see more",
+    "requestEmail": "Via email",
+    "requestWhatsapp": "Via WhatsApp",
+    "requestHint": "We will reply with the next steps.",
+    "previewLoading": "Loading preview…",
+    "previewError": "The preview couldn't be loaded.",
+    "openPdf": "Open the preview PDF",
+    "noDocument": "The document for this brief is being prepared."
+  },
   "nav": {
     "about": "About Us",
     "why_attentive": "Why Attentive",
@@ -489,6 +512,10 @@
   "homepage": {
     "nav": {
       "label": "Primary navigation",
+      "products": "Products",
+      "service": "Services",
+      "sciBrief": "Sci-Brief",
+      "article": "Articles",
       "support": "Services",
       "psychologists": "Our psychologists",
       "articles": "Articles",
@@ -924,6 +951,7 @@
       "errorConsent": "Please confirm the confidentiality agreement to continue."
   },
   "articles": {
+    "sciBriefCta": "Explore Sci-Brief",
     "headerTitle": "Scientific Articles",
     "headerSubtitle": "Scientific insights and evidence-based psychoeducational perspectives from Attentive.id professionals.",
     "searchPlaceholder": "Search scientific topics or article titles...",

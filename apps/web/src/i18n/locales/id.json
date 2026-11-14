@@ -1,4 +1,27 @@
 {
+  "sciBrief": {
+    "badge": "Ringkasan riset bulanan",
+    "title": "Sci-Brief",
+    "subtitle": "Setiap bulan, kami merangkum literatur yang kami baca dan riset yang kami lakukan menjadi satu brief yang mudah dibaca dan praktis untuk keseharian.",
+    "readBrief": "Baca brief",
+    "empty": "Belum ada Sci-Brief yang dirilis. Silakan kembali lagi nanti.",
+    "loadError": "Sci-Brief tidak dapat dimuat. Silakan coba lagi nanti.",
+    "back": "Semua Sci-Brief",
+    "pages": "{{count}} halaman",
+    "previewNotice": "Pratinjau {{count}} halaman pertama",
+    "notFoundTitle": "Sci-Brief tidak ditemukan",
+    "notFoundBody": "Brief ini belum tersedia.",
+    "lockedTitle": "Sisa brief ini bersifat rahasia",
+    "lockedBody": "{{count}} halaman lainnya tersedia atas permintaan.",
+    "requestButton": "Minta akses untuk melihat selengkapnya",
+    "requestEmail": "Lewat email",
+    "requestWhatsapp": "Lewat WhatsApp",
+    "requestHint": "Kami akan membalas dengan langkah selanjutnya.",
+    "previewLoading": "Memuat pratinjau…",
+    "previewError": "Pratinjau tidak dapat dimuat.",
+    "openPdf": "Buka PDF pratinjau",
+    "noDocument": "Dokumen untuk brief ini sedang disiapkan."
+  },
   "nav": {
     "about": "Tentang Kami",
     "why_attentive": "Mengapa Attentive",
@@ -489,6 +512,10 @@
   "homepage": {
     "nav": {
       "label": "Navigasi utama",
+      "products": "Produk",
+      "service": "Layanan",
+      "sciBrief": "Sci-Brief",
+      "article": "Artikel",
       "support": "Layanan",
       "psychologists": "Psikolog kami",
       "articles": "Artikel",
@@ -922,6 +949,7 @@
       "errorConsent": "Mohon centang persetujuan etika kerahasiaan sebelum lanjut."
   },
   "articles": {
+    "sciBriefCta": "Lihat Sci-Brief",
     "headerTitle": "Artikel Ilmiah",
     "headerSubtitle": "Wawasan ilmiah dan artikel edukasi psikologi berbasis bukti dari para profesional Attentive.id.",
     "searchPlaceholder": "Cari topik atau judul artikel ilmiah...",

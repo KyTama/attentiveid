@@ -302,11 +302,11 @@ describe('homepage', () => {
       'https://free-session.attentiveid.com',
     )
 
-    // Switch to Slide 04 (Scientific brief): both buttons route to /articles
+    // Switch to Slide 04 (Scientific brief): both buttons route to /sci-brief
     await user.click(briefTab)
     expect(screen.getByRole('heading', { name: /research, made readable/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /read the latest brief/i })).toHaveAttribute('href', '/articles')
-    expect(screen.getByRole('link', { name: /all briefs/i })).toHaveAttribute('href', '/articles')
+    expect(screen.getByRole('link', { name: /read the latest brief/i })).toHaveAttribute('href', '/sci-brief')
+    expect(screen.getByRole('link', { name: /all briefs/i })).toHaveAttribute('href', '/sci-brief')
 
     // Switch to Slide 05 (Meet Ella): links to Ella's detail profile
     await user.click(ellaTab)
