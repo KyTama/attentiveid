@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
 import { resolveHeroSlides, type ResolvedHeroSlide } from '@/features/content/hero-slides'
+import { useSciBriefHeroChips } from '@/features/sci-brief/use-hero-chips'
 import { HeroSlideVisual } from './HeroSlideVisual'
 import { useCampaignDock } from './use-campaign-dock'
 
@@ -255,6 +256,8 @@ function HeroActionButton({
 }
 
 function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: boolean }) {
+  const portalChips = useSciBriefHeroChips(slide.layout === 'scientific-brief', isId)
+  const chips = portalChips ?? slide.chips
   if (slide.layout === 'practice' && slide.location) {
     return (
       <div className="mt-4 flex items-center gap-2 text-[13.5px] text-[#7B8496]">
@@ -291,11 +294,11 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
     )
   }
 
-  if (slide.layout === 'scientific-brief' && slide.chips && slide.chips.length > 0) {
+  if (slide.layout === 'scientific-brief' && chips && chips.length > 0) {
     return (
       <div className="mt-5 flex flex-wrap gap-2">
-        {slide.chips.map((chip, idx) => {
-          const isFeaturedChip = idx === 1 || slide.chips?.length === 1
+        {chips.map((chip, idx) => {
+          const isFeaturedChip = idx === 1 || chips.length === 1
           return (
             <span
               key={chip}
