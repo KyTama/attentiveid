@@ -13,6 +13,7 @@ import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
 import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
+import { createSitemapRoutes } from './routes/sitemap.routes';
 import { getMediaFilePath } from './services/media-storage';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
@@ -50,6 +51,7 @@ export const createApp = (dependencies: AppDependencies) => {
         // Enable CORS for frontend
         .use(cors({ origin: dependencies.frontendOrigin, credentials: true }))
         .use(createPublicContentRoutes(dependencies))
+        .use(createSitemapRoutes({ db: dependencies.db, siteOrigin: dependencies.frontendOrigin }))
         .get('/ready', () => ({ status: 'ready', service: 'attentiveid-api' }), {
             detail: {
                 tags: ['Health'],
