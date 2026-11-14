@@ -34,7 +34,7 @@ export function ProtectedRoute({ allowedRoles, allowedEmails, children }: Protec
   }
 
   const roleDenied = allowedRoles && allowedRoles.length > 0 && user.role !== 'superadmin' && !allowedRoles.includes(user.role)
-  const emailDenied = allowedEmails && user.role !== 'superadmin' && !allowedEmails.includes(user.email.trim().toLowerCase())
+  const emailDenied = allowedEmails && !allowedEmails.includes(user.email.trim().toLowerCase())
 
   if (roleDenied || emailDenied) {
     return (

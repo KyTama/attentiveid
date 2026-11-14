@@ -9,6 +9,29 @@
 
 	respond /healthz 200
 
+	# sitemap.xml is built by the API from portal data; the static file is the fallback.
+	handle /sitemap.xml {
+		rewrite * /api/content/sitemap.xml
+		reverse_proxy {$API_UPSTREAM:attentive-api:3000} {
+			@down status 5xx
+			handle_response @down {
+				rewrite * /sitemap.xml
+				file_server
+			}
+		}
+	}
+
+	# API unreachable: serve the static sitemap instead of an error.
+	handle_errors {
+		@sitemap expression {http.request.orig_uri.path} == '/sitemap.xml'
+		handle @sitemap {
+			root * /srv
+			rewrite * /sitemap.xml
+			header Content-Type application/xml
+			file_server
+		}
+	}
+
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
 

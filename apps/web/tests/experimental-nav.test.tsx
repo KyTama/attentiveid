@@ -101,6 +101,20 @@ describe('dashboard Experimental section', () => {
     expect(screen.queryByRole('link', { name: /sesi gratis/i })).not.toBeInTheDocument()
   })
 
+  it('hides Experimental from a superadmin with another email', async () => {
+    signInAs({ ...otherAdmin, role: 'superadmin' })
+    renderAt('/dashboard')
+
+    await screen.findByText(/selamat datang, admin user/i)
+    expect(screen.queryByRole('button', { name: /experimental/i })).not.toBeInTheDocument()
+  })
+
+  it('blocks a superadmin with another email from the Experimental pages', async () => {
+    signInAs({ ...otherAdmin, role: 'superadmin' })
+    renderAt('/dashboard/experimental/forms')
+    await waitFor(() => expect(screen.getByText(/403 -/i)).toBeInTheDocument())
+  })
+
   it.each(['/dashboard/free-session', '/dashboard/experimental/forms'])(
     'blocks other admins from %s',
     async (path) => {
