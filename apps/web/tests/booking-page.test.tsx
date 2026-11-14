@@ -157,7 +157,10 @@ describe('/booking page', () => {
     // Step 2: Needs + live crisis safeguard banner
     await user.type(await screen.findByLabelText(/usia/i), '27')
     await user.selectOptions(screen.getByLabelText(/^gender/i), 'male')
-    await user.selectOptions(screen.getByLabelText(/kategori kebutuhan utama/i), 'career_burnout')
+    await user.selectOptions(
+      screen.getByLabelText(/kategori kebutuhan utama/i),
+      screen.getByRole('option', { name: 'Kecemasan, stres, atau overthinking' }),
+    )
     await user.type(
       screen.getByLabelText(/apa yang sedang ingin kamu bicarakan/i),
       'Belakangan saya sering terpikir ingin mengakhiri hidup',
@@ -217,7 +220,9 @@ describe('/booking page', () => {
     expect(screen.getByText('Rp 150.000')).toBeInTheDocument()
     expect(screen.getByText('Rp 548.000')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Instagram (@attentive.id)', exact: true }))
+    await user.click(screen.getByRole('button', { name: 'Teman / Kenalan', exact: true }))
+    expect(await screen.findByLabelText(/nama teman\/kenalan/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Instagram', exact: true }))
     await user.click(screen.getByRole('button', { name: /kirim booking/i }))
 
     // Step 7: Confirmation + WhatsApp link + Meta Pixel Lead event
@@ -246,6 +251,9 @@ describe('/booking page', () => {
       await screen.findByRole('heading', { name: /pilih cara konsultasi yang paling nyaman/i }),
     ).toBeInTheDocument()
     expect(screen.queryByLabelText(/kategori kebutuhan utama/i)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('radio', { name: /^offline/i }))
+    await user.click(await screen.findByRole('button', { name: /Attentive Cabang — BSD/i }))
   })
 
   it('renders /booking with ?concern=career_burnout and ?psychologist= prefill', async () => {

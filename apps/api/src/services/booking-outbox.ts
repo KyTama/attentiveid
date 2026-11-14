@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
-    BOOKING_BRANCH_LABELS,
+    BOOKING_SHEET_LOCATION_VALUES,
     type BookingPhysicalBranch,
     type NormalizedBookingSubmission
 } from '@attentiveid/shared';
@@ -141,7 +141,7 @@ export const buildBookingWebhookPayload = (input: OutboxPayloadBuildInput): Book
     const crisisFlagTriggered = normalized.crisisFlagTriggered;
     const dash = '—';
 
-    const branchLabel = normalized.location ? BOOKING_BRANCH_LABELS.id[normalized.location] : '';
+    const sheetLocation = normalized.location ? BOOKING_SHEET_LOCATION_VALUES[normalized.location] : '';
     const clientStatusLabel = normalized.clientStatus === 'new' ? 'Klien baru' : 'Klien lama';
     const modeLabel = normalized.consultationMode === 'online' ? 'Online' : 'Offline';
     const psychChoiceLabel = PSYCH_CHOICE_LABELS[normalized.psychologistChoice];
@@ -171,7 +171,7 @@ export const buildBookingWebhookPayload = (input: OutboxPayloadBuildInput): Book
         `Kategori Kebutuhan Utama: ${normalized.concernCategory || dash}`,
         `Catatan: ${normalized.concernNote || dash}`,
         `Mode Konsultasi: ${modeLabel}`,
-        `Lokasi/Cabang: ${branchLabel || dash}`,
+        `Lokasi/Cabang: ${sheetLocation || dash}`,
         `Pilihan Psikolog: ${psychChoiceLabel}`,
         `Psikolog yang Dipilih: ${normalized.selectedPsychologistName || dash}`,
         `Pilihan Jadwal Utama: ${normalized.scheduleOption1}`,
@@ -195,7 +195,7 @@ export const buildBookingWebhookPayload = (input: OutboxPayloadBuildInput): Book
         'Need Category': normalized.concernCategory || '',
         'Concern Note': normalized.concernNote || '',
         'Consultation Mode': modeLabel,
-        Location: branchLabel,
+        Location: sheetLocation,
         'Psychologist Choice': psychChoiceLabel,
         'Selected Psychologist': normalized.selectedPsychologistName || '',
         'Schedule Option 1': normalized.scheduleOption1,
@@ -419,6 +419,12 @@ export const alignBookingRowToHeaders = (
     });
 };
 
+export function normalizeGoogleSheetId(raw: string): string {
+    const trimmed = raw.trim();
+    const urlMatch = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    return urlMatch?.[1] ?? trimmed;
+}
+
 export const deliverBookingToGoogle = async (
     payload: BookingWebhookPayload,
     config: GoogleBookingSyncConfig,
@@ -427,7 +433,7 @@ export const deliverBookingToGoogle = async (
 ): Promise<void> => {
     const accessToken = await getGoogleAccessToken(config, fetchImpl, useCache);
     const sheetName = config.sheetName?.trim() || 'Sheet1';
-    const sheetId = encodeURIComponent(config.spreadsheetId.trim());
+    const sheetId = encodeURIComponent(normalizeGoogleSheetId(config.spreadsheetId));
     const authHeaders = {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json'

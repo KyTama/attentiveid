@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, ExternalLink, MessageCircle, Phone } from 
 import {
   BOOKING_ASSESSMENT_FEE,
   BOOKING_BRANCH_LABELS,
+  BOOKING_CONCERNS,
   BOOKING_MARKETING_SOURCES,
   buildBookingWhatsAppMessage,
   buildWeekSchedule,
@@ -12,18 +13,19 @@ import {
   filterScheduleByLocation,
   getEarliestBookingDateWib,
   INTAKE_CLIENT_CATEGORIES,
-  INTAKE_CONCERNS,
   isValidEmail,
   isValidPhoneDigits,
+  mapBookingConcernToIntakeConcern,
   normalizeBookingBranch,
+  normalizeBookingConcernId,
   resolveBookingWhatsAppRouting,
   type BookingClientStatus,
+  type BookingConcernId,
   type BookingConsultationMode,
   type BookingPhysicalBranch,
   type BookingPsychologistCatalogItem,
   type BookingPsychologistChoice,
   type IntakeClientCategory,
-  type IntakeConcernId,
   type IntakeGenderPreference,
 } from '@attentiveid/shared'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
@@ -73,7 +75,7 @@ export interface BookingFormData {
   gender: string
   clientCategory: IntakeClientCategory | ''
   genderPreference: IntakeGenderPreference
-  concern: IntakeConcernId | ''
+  concern: BookingConcernId | ''
   concernNote: string
   isCrisisManual: boolean
   mode: BookingConsultationMode | ''
@@ -149,8 +151,6 @@ const INITIAL_DATA: BookingFormData = {
 const STORAGE_KEY = 'attentive_booking_draft'
 const STEP_KEY = 'attentive_booking_step'
 
-const VALID_CONCERN_IDS = new Set<string>(INTAKE_CONCERNS.map((c) => c.id))
-
 function buildInitialState(prefill?: BookingPrefillParams): { data: BookingFormData; step: number } {
   let baseData = { ...INITIAL_DATA }
   let baseStep = 1
@@ -160,7 +160,12 @@ function buildInitialState(prefill?: BookingPrefillParams): { data: BookingFormD
     const stepRaw = window.localStorage.getItem(STEP_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<BookingFormData>
-      baseData = { ...INITIAL_DATA, ...parsed, website: '' }
+      baseData = {
+        ...INITIAL_DATA,
+        ...parsed,
+        concern: normalizeBookingConcernId(parsed.concern) ?? '',
+        website: '',
+      }
       const parsedStep = stepRaw ? Number.parseInt(stepRaw, 10) : 1
       baseStep = parsedStep >= 1 && parsedStep <= 6 ? parsedStep : 1
     }
@@ -169,8 +174,9 @@ function buildInitialState(prefill?: BookingPrefillParams): { data: BookingFormD
   }
 
   if (prefill) {
-    if (prefill.concernId && VALID_CONCERN_IDS.has(prefill.concernId)) {
-      baseData.concern = prefill.concernId as IntakeConcernId
+    const normalizedConcern = normalizeBookingConcernId(prefill.concernId)
+    if (normalizedConcern) {
+      baseData.concern = normalizedConcern
     }
     if (prefill.clientStatus === 'new' || prefill.clientStatus === 'returning') {
       baseData.clientStatus = prefill.clientStatus
@@ -417,7 +423,7 @@ export function BookingForm({
 
   const cityLabelId = getCityLabel(data.cityRegion, 'id')
   const cityLabelCurrent = getCityLabel(data.cityRegion, lang)
-  const selectedConcernObj = INTAKE_CONCERNS.find((c) => c.id === data.concern)
+  const selectedConcernObj = BOOKING_CONCERNS.find((c) => c.id === data.concern)
   const concernLabel = selectedConcernObj ? selectedConcernObj.title[lang] : '—'
 
   const locationLabel =
@@ -866,7 +872,7 @@ function Step2({
 }) {
   const concernOpts = [
     { value: '', label: t.selectConcern },
-    ...INTAKE_CONCERNS.map((c) => ({ value: c.id, label: c.title[lang] })),
+    ...BOOKING_CONCERNS.map((c) => ({ value: c.id, label: c.title[lang] })),
   ]
 
   const categoryLabels: Record<IntakeClientCategory, string> = {
@@ -932,7 +938,7 @@ function Step2({
           <SelectInput
             id="booking-concern"
             value={data.concern}
-            onChange={(v) => set('concern', v as IntakeConcernId)}
+            onChange={(v) => set('concern', v as BookingConcernId)}
             options={concernOpts}
           />
         </FormField>
@@ -1048,7 +1054,7 @@ function Step3({
     {
       value: 'malang',
       name: BOOKING_BRANCH_LABELS[lang].malang,
-      address: 'Grand Arumba B17, Jl. Grand Arumba Blk. B No.17, Tunggulwulung, Lowokwaru, Kota Malang, Jawa Timur.',
+      address: 'Grand Arumba B17, Jl. Grand Arumba Blk. B No.17, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur 65143.',
       mapUrl: 'https://maps.app.goo.gl/CtYY4S8BeSfk2DZe6',
     },
   ]
@@ -1253,7 +1259,7 @@ function Step3({
               selectedSlug={data.psychologistSlug}
               onSelect={onSelectPsychologist}
               isNewClient={isNewClient}
-              concernId={data.concern}
+              concernId={mapBookingConcernToIntakeConcern(data.concern) ?? undefined}
               clientCategory={data.clientCategory}
               genderPreference={data.genderPreference}
             />
@@ -1452,7 +1458,19 @@ function Step6({
         ]
       : []
 
-  const isFriendSource = data.marketingSource === 'Rekomendasi Teman / Keluarga'
+  const marketingSourceKeyMap: Record<(typeof BOOKING_MARKETING_SOURCES)[number], keyof typeof t> = {
+    Instagram: 'marketingInstagram',
+    'Facebook/Instagram Ads': 'marketingFbAds',
+    Threads: 'marketingThreads',
+    TikTok: 'marketingTiktok',
+    'Google Search': 'marketingGoogle',
+    LinkedIn: 'marketingLinkedin',
+    'AI Search (ChatGPT, Gemini, etc.)': 'marketingAI',
+    'Teman / Kenalan': 'marketingFriend',
+    Lainnya: 'marketingOther',
+  }
+
+  const isFriendSource = data.marketingSource === 'Teman / Kenalan'
 
   return (
     <>
@@ -1504,6 +1522,7 @@ function Step6({
           <div className="flex flex-wrap gap-1.5">
             {BOOKING_MARKETING_SOURCES.map((source) => {
               const active = data.marketingSource === source
+              const displayLabel = t[marketingSourceKeyMap[source]] ?? source
               return (
                 <motion.button
                   key={source}
@@ -1512,7 +1531,7 @@ function Step6({
                   transition={INTERACTIVE_SPRING}
                   onClick={() => {
                     set('marketingSource', source)
-                    if (source !== 'Rekomendasi Teman / Keluarga') set('referrer', '')
+                    if (source !== 'Teman / Kenalan') set('referrer', '')
                   }}
                   className={`px-3 py-2 rounded-xl text-[12.5px] font-bold border transition-colors cursor-pointer ${
                     active
@@ -1520,7 +1539,7 @@ function Step6({
                       : 'border-[#e1dbd0] bg-white text-[#6f7884] hover:border-[#c5bfb3]'
                   }`}
                 >
-                  {source}
+                  {displayLabel}
                 </motion.button>
               )
             })}

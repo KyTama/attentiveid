@@ -65,25 +65,161 @@ export function canTransitionBookingStatus(from: BookingStatus, to: BookingStatu
 
 export const BOOKING_BRANCH_LABELS: Record<'id' | 'en', Record<BookingPhysicalBranch, string>> = {
   id: {
-    tbi: 'Tanjung Barat (Jakarta Selatan)',
-    bsd: 'BSD (Delrey BizTown)',
-    malang: 'Malang (Singosari)',
+    tbi: 'Attentive Pusat — Tanjung Barat',
+    bsd: 'Attentive Cabang — BSD',
+    malang: 'Attentive Cabang — Malang',
   },
   en: {
-    tbi: 'Tanjung Barat (South Jakarta)',
-    bsd: 'BSD (Delrey BizTown)',
-    malang: 'Malang (Singosari)',
+    tbi: 'Attentive Main Office — Tanjung Barat',
+    bsd: 'Attentive Branch — BSD',
+    malang: 'Attentive Branch — Malang',
   },
 }
 
+export const BOOKING_SHEET_LOCATION_VALUES: Record<BookingPhysicalBranch, string> = {
+  tbi: 'tanjung-barat',
+  bsd: 'bsd',
+  malang: 'malang',
+}
+
+export const BOOKING_CONCERN_IDS = [
+  'anxiety',
+  'depressive',
+  'emotionRegulation',
+  'attention',
+  'romantic',
+  'family',
+  'trauma',
+  'career',
+  'sleep',
+  'selfUnderstanding',
+  'academic',
+  'childDevelopment',
+  'other',
+] as const
+
+export type BookingConcernId = typeof BOOKING_CONCERN_IDS[number]
+export type AnyBookingConcernId = BookingConcernId | IntakeConcernId
+
+export interface BookingConcernOption {
+  id: BookingConcernId
+  title: { id: string; en: string }
+  intakeConcernId: IntakeConcernId
+}
+
+export const BOOKING_CONCERNS: readonly BookingConcernOption[] = [
+  {
+    id: 'anxiety',
+    title: { id: 'Kecemasan, stres, atau overthinking', en: 'Anxiety, stress, or overthinking' },
+    intakeConcernId: 'anxiety_mood',
+  },
+  {
+    id: 'depressive',
+    title: { id: 'Suasana hati depresif, motivasi rendah, atau burnout', en: 'Depressive mood, low motivation, or burnout' },
+    intakeConcernId: 'anxiety_mood',
+  },
+  {
+    id: 'emotionRegulation',
+    title: { id: 'Regulasi emosi atau kemarahan', en: 'Emotion regulation or anger' },
+    intakeConcernId: 'self_growth',
+  },
+  {
+    id: 'attention',
+    title: { id: 'Atensi, ADHD, atau fungsi eksekutif', en: 'Attention, ADHD, or executive functioning' },
+    intakeConcernId: 'general_assessment',
+  },
+  {
+    id: 'romantic',
+    title: { id: 'Masalah romantis atau hubungan', en: 'Romantic or relationship concerns' },
+    intakeConcernId: 'relationship_family',
+  },
+  {
+    id: 'family',
+    title: { id: 'Masalah keluarga atau pengasuhan', en: 'Family or parenting concerns' },
+    intakeConcernId: 'relationship_family',
+  },
+  {
+    id: 'trauma',
+    title: { id: 'Trauma, duka, atau kehilangan', en: 'Trauma, grief, or loss' },
+    intakeConcernId: 'trauma_grief',
+  },
+  {
+    id: 'career',
+    title: { id: 'Masalah pekerjaan atau karier', en: 'Work or career concerns' },
+    intakeConcernId: 'career_burnout',
+  },
+  {
+    id: 'sleep',
+    title: { id: 'Masalah tidur, makan, atau fisik', en: 'Sleep, eating, or physical concerns' },
+    intakeConcernId: 'general_assessment',
+  },
+  {
+    id: 'selfUnderstanding',
+    title: { id: 'Pemahaman diri, identitas, atau harga diri', en: 'Self-understanding, identity, or self-esteem' },
+    intakeConcernId: 'self_growth',
+  },
+  {
+    id: 'academic',
+    title: { id: 'Permasalahan belajar, sekolah, kuliah, atau akademik', en: 'Learning, School, College, or Academic Issues' },
+    intakeConcernId: 'career_burnout',
+  },
+  {
+    id: 'childDevelopment',
+    title: { id: 'Masalah perkembangan anak dan remaja', en: 'Child & Adolescent Development Issues' },
+    intakeConcernId: 'child_adolescent',
+  },
+  {
+    id: 'other',
+    title: { id: 'Lainnya', en: 'Other' },
+    intakeConcernId: 'general_assessment',
+  },
+]
+
+const LEGACY_INTAKE_TO_BOOKING_CONCERN: Record<IntakeConcernId, BookingConcernId> = {
+  anxiety_mood: 'anxiety',
+  relationship_family: 'romantic',
+  career_burnout: 'career',
+  child_adolescent: 'childDevelopment',
+  trauma_grief: 'trauma',
+  self_growth: 'selfUnderstanding',
+  general_assessment: 'other',
+}
+
+export function normalizeBookingConcernId(raw?: string | null): BookingConcernId | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  if ((BOOKING_CONCERN_IDS as readonly string[]).includes(trimmed)) {
+    return trimmed as BookingConcernId
+  }
+  const lowerMatch = BOOKING_CONCERN_IDS.find((id) => id.toLowerCase() === trimmed.toLowerCase())
+  if (lowerMatch) return lowerMatch
+  if ((INTAKE_CONCERN_IDS as readonly string[]).includes(trimmed)) {
+    return LEGACY_INTAKE_TO_BOOKING_CONCERN[trimmed as IntakeConcernId]
+  }
+  return null
+}
+
+export function mapBookingConcernToIntakeConcern(raw?: string | null): IntakeConcernId | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  if ((INTAKE_CONCERN_IDS as readonly string[]).includes(trimmed)) {
+    return trimmed as IntakeConcernId
+  }
+  const bookingId = normalizeBookingConcernId(trimmed)
+  if (!bookingId) return null
+  return BOOKING_CONCERNS.find((c) => c.id === bookingId)?.intakeConcernId ?? null
+}
+
 export const BOOKING_MARKETING_SOURCES = [
-  'Instagram (@attentive.id)',
-  'Google Search',
+  'Instagram',
+  'Facebook/Instagram Ads',
+  'Threads',
   'TikTok',
-  'Rekomendasi Teman / Keluarga',
-  'Iklan Meta / Instagram Ads',
-  'LinkedIn / Artikel',
-  'Klien Sebelumnya',
+  'Google Search',
+  'LinkedIn',
+  'AI Search (ChatGPT, Gemini, etc.)',
+  'Teman / Kenalan',
   'Lainnya',
 ] as const
 
@@ -823,7 +959,7 @@ export interface BookingSubmissionInput {
   age?: number | null
   gender?: string
   serviceType?: string
-  concernId?: IntakeConcernId
+  concernId?: AnyBookingConcernId
   concernCategory?: string
   clientCategory?: IntakeClientCategory
   genderPreference?: IntakeGenderPreference
@@ -862,7 +998,7 @@ export interface NormalizedBookingSubmission {
   age: number | null
   gender: string | null
   serviceType: string
-  concernId: IntakeConcernId | null
+  concernId: AnyBookingConcernId | null
   concernCategory: string | null
   clientCategory: IntakeClientCategory | null
   genderPreference: IntakeGenderPreference | null
@@ -961,12 +1097,19 @@ export function validateBookingSubmission(
     errors.gender = 'Jenis kelamin wajib diisi untuk klien baru.'
   }
 
-  const concernId = typeof input.concernId === 'string' && (INTAKE_CONCERN_IDS as readonly string[]).includes(input.concernId)
-    ? (input.concernId as IntakeConcernId)
-    : null
+  const concernId: AnyBookingConcernId | null =
+    typeof input.concernId === 'string' && (BOOKING_CONCERN_IDS as readonly string[]).includes(input.concernId)
+      ? (input.concernId as BookingConcernId)
+      : typeof input.concernId === 'string' && (INTAKE_CONCERN_IDS as readonly string[]).includes(input.concernId)
+        ? (input.concernId as IntakeConcernId)
+        : null
   const rawConcernCategory = trimOrNull(input.concernCategory, 160)
   const resolvedConcernCategory = rawConcernCategory
-    ?? (concernId ? INTAKE_CONCERNS.find((c) => c.id === concernId)?.title[language] ?? null : null)
+    ?? (concernId
+      ? (BOOKING_CONCERNS.find((c) => c.id === concernId)?.title.id
+        ?? INTAKE_CONCERNS.find((c) => c.id === concernId)?.title[language]
+        ?? null)
+      : null)
 
   if (clientStatus === 'new' && !concernId && !resolvedConcernCategory) {
     errors.concern = 'Kategori kebutuhan wajib dipilih untuk klien baru.'

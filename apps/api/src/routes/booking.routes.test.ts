@@ -17,6 +17,7 @@ import {
     buildBookingWebhookPayload,
     deliverBookingToGoogle,
     getRetryBackoffSeconds,
+    normalizeGoogleSheetId,
     processDueBookingOutbox,
     signBookingWebhookPayload
 } from '../services/booking-outbox';
@@ -314,14 +315,14 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
                 age: 28,
                 gender: 'Perempuan',
                 serviceType: 'Personal',
-                concernId: 'anxiety_mood',
-                concernCategory: 'Kecemasan, Overthinking & Mood',
+                concernId: 'anxiety',
+                concernCategory: 'Kecemasan, stres, atau overthinking',
                 clientCategory: 'individual',
                 genderPreference: 'female',
                 concernNote: 'OPERATIONAL_CONCERN_NOTE_AS_IS',
                 crisisFlagTriggered: true,
-                consultationMode: 'online',
-                location: null,
+                consultationMode: 'offline',
+                location: 'bsd',
                 psychologistChoice: 'self',
                 psychologistSlug: 'syazka',
                 psychologistId: 'psych-1',
@@ -348,14 +349,23 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
 
         const serialized = JSON.stringify(payload);
         expect(payload.notifications.googleSheetRow).toHaveLength(29);
+        expect(payload.notifications.googleSheetRow[8]).toBe('Kecemasan, stres, atau overthinking');
         expect(payload.notifications.googleSheetRow[9]).toBe('OPERATIONAL_CONCERN_NOTE_AS_IS');
+        expect(payload.notifications.googleSheetRow[11]).toBe('bsd');
         expect(payload.notifications.googleSheetColumns['Concern Note']).toBe('OPERATIONAL_CONCERN_NOTE_AS_IS');
+        expect(payload.notifications.googleSheetColumns.Location).toBe('bsd');
         expect(payload.notifications.googleSheetColumns['Booking Code']).toBe('ATT-2611-ABC123');
         expect(payload.notifications.googleSheetColumns['Base Rate']).toBe('750000');
         expect(payload.notifications.googleSheetColumns['Assessment Fee']).toBe('150000');
         expect(payload.notifications.googleSheetColumns['Total Rate']).toBe('900000');
         expect(payload.notifications.googleSheetColumns['UTM Source']).toBe('meta');
         expect(payload.notifications.adminEmail.textBody).toContain('OPERATIONAL_CONCERN_NOTE_AS_IS');
+        expect(payload.notifications.adminEmail.textBody).toContain('Lokasi/Cabang: bsd');
+
+        expect(
+            normalizeGoogleSheetId('https://docs.google.com/spreadsheets/d/1FbwNgk75tRHK299woCw57Oye57d2pyrwgVED1oCRzgc/edit?gid=0#gid=0')
+        ).toBe('1FbwNgk75tRHK299woCw57Oye57d2pyrwgVED1oCRzgc');
+        expect(normalizeGoogleSheetId('  sheet-123  ')).toBe('sheet-123');
 
         const secret = 'webhook_secret_123';
         const expectedSig = `sha256=${createHmac('sha256', secret).update(serialized).digest('hex')}`;

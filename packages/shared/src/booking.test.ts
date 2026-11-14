@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import {
   BOOKING_ASSESSMENT_FEE,
+  BOOKING_BRANCH_LABELS,
+  BOOKING_CONCERNS,
+  BOOKING_MARKETING_SOURCES,
+  BOOKING_SHEET_LOCATION_VALUES,
   BOOKING_WHATSAPP_NUMBERS,
   ZITE_PSYCHOLOGIST_BOOKING_DEFAULTS,
   bookingsToCsv,
@@ -11,7 +15,9 @@ import {
   getAvailableHours,
   getAvailableMinutes,
   getEarliestBookingDateWib,
+  mapBookingConcernToIntakeConcern,
   normalizeBookingBranch,
+  normalizeBookingConcernId,
   normalizeEmail,
   normalizeWhatsAppToE164,
   parseDaySchedule,
@@ -48,6 +54,51 @@ describe('Booking Domain Contract (packages/shared/src/booking.ts)', () => {
     expect(normalizeBookingBranch('bsd')).toBe('bsd')
     expect(normalizeBookingBranch('MLG')).toBe('malang')
     expect(normalizeBookingBranch('unknown')).toBeNull()
+  })
+
+  test('matches Zite 13 need categories, branch labels, sheet slugs, and 9 marketing sources', () => {
+    expect(BOOKING_CONCERNS).toHaveLength(13)
+    expect(BOOKING_CONCERNS[0]).toMatchObject({
+      id: 'anxiety',
+      title: { id: 'Kecemasan, stres, atau overthinking', en: 'Anxiety, stress, or overthinking' },
+    })
+    expect(normalizeBookingConcernId('career_burnout')).toBe('career')
+    expect(normalizeBookingConcernId('emotionRegulation')).toBe('emotionRegulation')
+    expect(mapBookingConcernToIntakeConcern('childDevelopment')).toBe('child_adolescent')
+
+    expect(BOOKING_BRANCH_LABELS.id).toEqual({
+      tbi: 'Attentive Pusat — Tanjung Barat',
+      bsd: 'Attentive Cabang — BSD',
+      malang: 'Attentive Cabang — Malang',
+    })
+    expect(BOOKING_SHEET_LOCATION_VALUES).toEqual({
+      tbi: 'tanjung-barat',
+      bsd: 'bsd',
+      malang: 'malang',
+    })
+    expect(BOOKING_MARKETING_SOURCES).toHaveLength(9)
+    expect(BOOKING_MARKETING_SOURCES).toContain('Facebook/Instagram Ads')
+    expect(BOOKING_MARKETING_SOURCES).toContain('Teman / Kenalan')
+
+    const ziteValid = validateBookingSubmission({
+      language: 'en',
+      clientStatus: 'new',
+      name: 'Dian Lestari',
+      whatsapp: '08123456789',
+      email: 'dian@example.com',
+      age: 29,
+      gender: 'female',
+      concernId: 'academic',
+      consultationMode: 'offline',
+      location: 'bsd',
+      psychologistChoice: 'recommended',
+      scheduleOption1: '20-11-2026 · 14.00 WIB',
+    })
+    expect(ziteValid.ok).toBe(true)
+    if (ziteValid.ok) {
+      expect(ziteValid.value.concernId).toBe('academic')
+      expect(ziteValid.value.concernCategory).toBe('Permasalahan belajar, sekolah, kuliah, atau akademik')
+    }
   })
 
   test('parses split ranges, appointments, OFF, and filters schedule by branch', () => {
