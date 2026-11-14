@@ -9,6 +9,7 @@ import { createRoleGuardPlugin } from '../security/role-guard'
 import { createPsychologistAuthorCapability, createAdminCapability } from '../services/authorization-capability'
 import type { AuthTokenService, AuthUserRepository } from './auth'
 import * as schema from '../db/schema'
+import { seedArticles } from '../db/seed-articles'
 
 export interface ArticleRoutesDependencies {
   tokenService: Pick<AuthTokenService, 'verifyAccessToken'>
@@ -78,7 +79,7 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         if (!dependencies.articlesRepository.listManageableArticles) {
           return { status: 'success', articles: [] }
         }
-        const filter = currentUser.role === 'admin'
+        const filter = currentUser.role === 'admin' || currentUser.role === 'superadmin'
           ? { role: 'admin' }
           : { psychologistId: currentUser.psychologistId || '', role: 'psychologist' }
         const articles = await dependencies.articlesRepository.listManageableArticles(filter)
@@ -90,6 +91,31 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
           tags: ['Articles CMS'],
           summary: 'List manageable articles for CMS',
           description: 'Returns all articles for admin or author-specific articles for psychologists.',
+        },
+      }
+    )
+    .post(
+      '/api/admin/articles/import-publications',
+      async ({ set }: any) => {
+        if (!dependencies.db) {
+          set.status = 500
+          return { status: 'error', message: 'Database is not available.' }
+        }
+        try {
+          // Insert-only: articles that already exist (by slug) are left exactly as editors left them.
+          const result = await seedArticles(dependencies.db, undefined, { overwriteExisting: false })
+          return { status: 'success', ...result }
+        } catch (error: any) {
+          set.status = 500
+          return { status: 'error', message: error?.message || 'Import failed.' }
+        }
+      },
+      {
+        requireRole: ['admin'],
+        detail: {
+          tags: ['Articles CMS'],
+          summary: 'Import scholar publications',
+          description: 'Adds the built-in scholar publication list to the articles table without touching existing articles.',
         },
       }
     )

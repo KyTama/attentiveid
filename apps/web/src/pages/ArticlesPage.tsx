@@ -109,7 +109,25 @@ export function ArticlesPage() {
           const data = await res.json()
           if (mounted && data.status === 'success' && Array.isArray(data.articles) && data.articles.length > 0) {
             const apiSlugs = new Set(data.articles.map((a: any) => a.slug))
-            const combined = [...data.articles, ...scholarItems.filter((s) => !apiSlugs.has(s.slug))]
+            // Imported publications live in the database now; keep their journal, DOI and citation details.
+            const scholarBySlug = new Map(scholarItems.map((s) => [s.slug, s]))
+            const fromApi = data.articles.map((a: ArticleItem) => {
+              const scholar = scholarBySlug.get(a.slug)
+              return scholar
+                ? {
+                    ...a,
+                    authors: scholar.authors,
+                    journal: scholar.journal,
+                    doi: scholar.doi,
+                    doiUrl: scholar.doiUrl,
+                    citationsCount: scholar.citationsCount,
+                    scholarUrl: scholar.scholarUrl,
+                    author: scholar.author,
+                    authorName: scholar.authorName,
+                  }
+                : a
+            })
+            const combined = [...fromApi, ...scholarItems.filter((s) => !apiSlugs.has(s.slug))]
             setArticles(combined)
             return
           }
