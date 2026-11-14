@@ -112,6 +112,26 @@ export const updatePsychologistStatus = async (
   return json.psychologist
 }
 
+export const reorderFeaturedPsychologists = async (
+  ids: string[],
+  options?: { headers?: Record<string, string> }
+): Promise<{ id: string; featuredOrder: number }[]> => {
+  const response = await fetch('/api/admin/psychologists/featured-order', {
+    method: 'PUT',
+    headers: buildHeaders(options?.headers),
+    credentials: 'include',
+    body: JSON.stringify({ ids }),
+  })
+
+  if (!response.ok) {
+    const errorJson = await response.json().catch(() => ({}))
+    throw new Error(errorJson?.message || `Failed to reorder featured (${response.status})`)
+  }
+
+  const json = await response.json()
+  return json.order
+}
+
 export const uploadPsychologistPhoto = async (
   file: File,
   metadata?: {

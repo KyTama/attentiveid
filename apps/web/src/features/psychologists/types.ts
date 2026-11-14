@@ -48,6 +48,7 @@ export interface PsychologistSummary {
 
 export interface PsychologistProfile extends PsychologistSummary {
   biography: string
+  conversationQuote?: string
   availabilityMessage: string
   premiumBookingUrl?: string
 }

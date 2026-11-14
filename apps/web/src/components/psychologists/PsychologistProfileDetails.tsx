@@ -32,7 +32,7 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
           <figure className="mb-14 text-center">
             <Quote aria-hidden="true" className="mx-auto text-primary" size={36} />
             <blockquote className="mt-4 font-serif text-2xl font-semibold italic leading-relaxed text-secondary sm:text-3xl sm:leading-relaxed">
-              “{t('routes.profile.conversationQuote')}”
+              “{psychologist.conversationQuote || t('routes.profile.conversationQuote')}”
             </blockquote>
             <div className="mx-auto mt-6 h-0.5 w-16 rounded-full bg-primary/30" />
           </figure>

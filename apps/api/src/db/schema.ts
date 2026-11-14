@@ -226,6 +226,7 @@ export const psychologistProfileTranslations = pgTable('psychologist_profile_tra
     locale: contentLocaleEnum('locale').notNull(),
     biography: text('biography').notNull(),
     shortBio: text('short_bio'),
+    conversationQuote: text('conversation_quote'),
     availabilityMessage: text('availability_message').notNull()
 }, (table) => [
     unique('psychologist_profile_translations_profile_locale_unique').on(table.psychologistId, table.locale)
