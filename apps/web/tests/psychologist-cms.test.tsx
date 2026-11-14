@@ -116,4 +116,22 @@ describe('Psychologist CMS Page Component', () => {
       expect(screen.getByText('Simpan Profil Psikolog')).toBeDefined()
     })
   })
+
+  it('shows the Featured order panel only on the "Semua" tab', async () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard/psychologists']}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Urutan Featured')).toBeDefined()
+
+    fireEvent.click(screen.getByRole('button', { name: 'draft' }))
+    await waitFor(() => expect(screen.queryByText('Urutan Featured')).toBeNull())
+
+    fireEvent.click(screen.getByRole('button', { name: /^Semua/ }))
+    expect(await screen.findByText('Urutan Featured')).toBeDefined()
+  })
 })

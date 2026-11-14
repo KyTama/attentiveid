@@ -732,7 +732,8 @@ export function PsychologistsCmsPage() {
         </div>
       </div>
 
-      <FeaturedOrderPanel viewMode={viewMode} refreshKey={refreshKey} onSaved={loadData} />
+      {/* Featured ordering only makes sense across everyone, so it lives on the "Semua" tab. */}
+      {statusFilter === 'all' && <FeaturedOrderPanel viewMode={viewMode} refreshKey={refreshKey} onSaved={loadData} />}
 
       {/* Main Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
