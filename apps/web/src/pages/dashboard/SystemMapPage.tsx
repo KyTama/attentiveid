@@ -285,6 +285,9 @@ export function SystemMapPage() {
 
           <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-5">
             <h2 className="text-sm font-bold text-rose-900">Perlu disambungkan ({missingEdges.length})</h2>
+            {missingEdges.length === 0 && (
+              <p className="mt-2 text-xs text-rose-800">Semua sambungan yang dipetakan sudah terhubung.</p>
+            )}
             <ul className="mt-2 space-y-1.5">
               {missingEdges.map((edge) => (
                 <li key={`${edge.from}>${edge.to}`}>

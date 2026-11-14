@@ -178,7 +178,7 @@ export const MAP_EDGES: MapEdge[] = [
 
   // Connections that should exist but do not
   { from: 'd-psych', to: 'u-hero', status: 'live', label: 'kutipan & fokus Ella' },
-  { from: 'd-sci', to: 'u-hero', status: 'missing', label: 'chip bulan brief terbaru' },
+  { from: 'd-sci', to: 'u-hero', status: 'live', label: 'chip bulan brief terbaru' },
   { from: 'd-psych', to: 'u-booking', status: 'live', label: 'psikolog aktif & foto' },
   { from: 'd-psych', to: 'u-seo', status: 'live', label: 'sitemap otomatis' },
   { from: 'd-articles', to: 'u-seo', status: 'live', label: 'sitemap otomatis' },

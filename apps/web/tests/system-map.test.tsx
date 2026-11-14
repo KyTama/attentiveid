@@ -72,10 +72,10 @@ describe('System Map', () => {
     const { container } = renderMap()
     await screen.findByRole('heading', { name: 'System Map' })
 
-    const missingLines = () => container.querySelectorAll('path[stroke="#e11d48"]').length
-    expect(missingLines()).toBeGreaterThan(0)
-    fireEvent.click(screen.getByRole('button', { name: /belum tersambung/i, pressed: true }))
-    expect(missingLines()).toBe(0)
+    const codeLines = () => container.querySelectorAll('path[stroke="#d97706"]').length
+    expect(codeLines()).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('button', { name: /terkunci di kode/i, pressed: true }))
+    expect(codeLines()).toBe(0)
   })
 
   it('is closed to other admins', async () => {
