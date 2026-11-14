@@ -17,6 +17,8 @@ export interface PsychologistListQuery {
   search?: string
   supportArea?: PsychologistSupportArea | 'all'
   experienceLevel?: PsychologistExperienceLevel | 'all'
+  /** Directory order: pinned psychologists, then complete bios, then the rest. */
+  completeBioFirst?: boolean
 }
 
 export interface PsychologistMedia {

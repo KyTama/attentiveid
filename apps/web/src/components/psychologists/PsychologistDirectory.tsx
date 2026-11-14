@@ -62,7 +62,7 @@ export function PsychologistDirectory() {
   useEffect(() => {
     let isActive = true
 
-    listPsychologists({ search, supportArea, experienceLevel, locale })
+    listPsychologists({ search, supportArea, experienceLevel, locale, completeBioFirst: true })
       .then((result) => {
         if (isActive) setRequestState({ key: requestKey, result })
       })

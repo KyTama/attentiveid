@@ -1,4 +1,5 @@
 import { psychologistApi } from '@/lib/api'
+import { orderForDirectory } from './ordering'
 import type {
   PsychologistExperienceLevel,
   PsychologistListQuery,
@@ -132,8 +133,9 @@ export const createPsychologistService = (boundary: PsychologistApiBoundary = de
         offset: 0,
       })
       if (hasTransportFailure(result)) return { status: 'error' }
-      const psychologists = result.data!.psychologists
+      const matching = result.data!.psychologists
         .filter(({ experienceYears }) => range.maximum === undefined || experienceYears <= range.maximum)
+      const psychologists = (query.completeBioFirst ? orderForDirectory(matching) : matching)
         .map(mapPsychologistSummary)
       return psychologists.length > 0
         ? { status: 'success', psychologists }
