@@ -1,17 +1,141 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ChevronRight, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronDown, ChevronRight, Menu, X } from 'lucide-react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
 const navItems = [
-  { key: 'support', href: '/#support' },
   { key: 'psychologists', href: '/#psychologists' },
   { key: 'locations', href: '/#locations' },
   { key: 'faq', href: '/#faq' },
-  { key: 'articles', href: '/articles' },
 ] as const
+
+const productItems = [
+  { key: 'service', href: '/#support' },
+  { key: 'sciBrief', href: '/sci-brief' },
+  { key: 'article', href: '/articles' },
+] as const
+
+type ClickHandler = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => void
+
+function ProductsMenu({ onAnchorClick }: { onAnchorClick: ClickHandler }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const menuId = useId()
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        rootRef.current?.querySelector('button')?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  const itemClass =
+    'block rounded-lg px-3.5 py-2.5 text-sm font-medium text-secondary/80 outline-none transition-colors hover:bg-black/[0.04] hover:text-secondary focus-visible:bg-black/[0.05]'
+
+  return (
+    <div className="relative" ref={rootRef}>
+      <button
+        aria-controls={menuId}
+        aria-expanded={open}
+        aria-haspopup="true"
+        className="inline-flex items-center gap-1 rounded-md py-1 text-sm font-medium text-secondary/75 outline-none transition-colors duration-150 hover:text-secondary focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        {t('homepage.nav.products')}
+        <ChevronDown aria-hidden="true" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`} size={15} />
+      </button>
+      {open && (
+        <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2" id={menuId}>
+          <ul className="min-w-44 rounded-xl border border-secondary/10 bg-white p-1.5 shadow-lg">
+            {productItems.map((item) => (
+              <li key={item.key}>
+                {item.href.includes('#') ? (
+                  <a
+                    className={itemClass}
+                    href={item.href}
+                    onClick={(event) => {
+                      setOpen(false)
+                      onAnchorClick(event, item.href)
+                    }}
+                  >
+                    {t(`homepage.nav.${item.key}`)}
+                  </a>
+                ) : (
+                  <Link className={itemClass} onClick={() => setOpen(false)} to={item.href}>
+                    {t(`homepage.nav.${item.key}`)}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MobileProducts({ onNavigate, onAnchorClick }: { onNavigate: () => void; onAnchorClick: ClickHandler }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const panelId = useId()
+  const rowClass =
+    'flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary'
+
+  return (
+    <div>
+      <button
+        aria-controls={panelId}
+        aria-expanded={open}
+        className={`${rowClass} w-full cursor-pointer`}
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        <span>{t('homepage.nav.products')}</span>
+        <ChevronDown aria-hidden="true" className={`text-secondary/40 transition-transform ${open ? 'rotate-180' : ''}`} size={16} />
+      </button>
+      {open && (
+        <ul className="mb-1 ml-3 border-l border-secondary/10 pl-2" id={panelId}>
+          {productItems.map((item) => (
+            <li key={item.key}>
+              {item.href.includes('#') ? (
+                <a
+                  className={rowClass}
+                  href={item.href}
+                  onClick={(event) => {
+                    onNavigate()
+                    onAnchorClick(event, item.href)
+                  }}
+                >
+                  <span>{t(`homepage.nav.${item.key}`)}</span>
+                </a>
+              ) : (
+                <Link className={rowClass} onClick={onNavigate} to={item.href}>
+                  <span>{t(`homepage.nav.${item.key}`)}</span>
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 function LanguageToggle() {
   const { i18n, t } = useTranslation()
@@ -79,6 +203,7 @@ export function SiteHeader() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
+          <ProductsMenu onAnchorClick={handleNavClick} />
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
             if (isInternal) {
@@ -162,6 +287,7 @@ export function SiteHeader() {
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6">
               <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/80 p-1.5 shadow-2xs">
+                <MobileProducts onAnchorClick={handleNavClick} onNavigate={() => setMenuOpen(false)} />
                 {navItems.map((item) => {
                   const isInternal = !item.href.includes('#')
                   if (isInternal) {

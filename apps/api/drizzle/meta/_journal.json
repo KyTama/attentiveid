@@ -71,6 +71,13 @@
       "when": 1794628363617,
       "tag": "0009_psychologist_conversation_quote",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794642888283,
+      "tag": "0010_sci_briefs",
+      "breakpoints": true
     }
   ]
 }

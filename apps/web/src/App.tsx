@@ -15,6 +15,8 @@ import { PreviewLandingPage } from './pages/PreviewLandingPage'
 import { ArticlesPage } from './pages/ArticlesPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
+import { SciBriefPage } from './pages/SciBriefPage'
+import { SciBriefDetailPage } from './pages/SciBriefDetailPage'
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
 import { TestimonialsCmsPage } from './pages/dashboard/TestimonialsCmsPage'
@@ -23,6 +25,7 @@ import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
 import { PsychologistProfileSelfPage } from './pages/dashboard/PsychologistProfileSelfPage'
 import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
+import { SciBriefCmsPage } from './pages/dashboard/SciBriefCmsPage'
 import { ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
 import { EXPERIMENTAL_EMAILS } from './features/experimental/access'
 import type { LandingContentLoader } from './features/content/service'
@@ -46,6 +49,8 @@ export function AppRoutes({
           <Route path="articles" element={<ArticlesPage />} />
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
+          <Route path="sci-brief" element={<SciBriefPage />} />
+          <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />
         </Route>
 
         {/* Obscured Staff Authentication Gate (Decommissioned /login) */}
@@ -99,6 +104,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
                 <PsychologistProfileSelfPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="sci-brief"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <SciBriefCmsPage />
               </ProtectedRoute>
             }
           />

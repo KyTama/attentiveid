@@ -7,6 +7,7 @@ import {
   Users,
   UserCheck,
   FileText,
+  BookOpenText,
   ShieldCheck,
   MessageSquareQuote,
   ClipboardList,
@@ -77,6 +78,12 @@ export function DashboardLayout() {
       label: t('dashboard.navArticles', 'Articles Management'),
       icon: <FileText className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: true,
+    },
+    {
+      to: '/dashboard/sci-brief',
+      label: t('dashboard.navSciBrief', 'Sci-Brief'),
+      icon: <BookOpenText className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
     },
     {
       to: '/dashboard/users',

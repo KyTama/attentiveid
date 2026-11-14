@@ -5,6 +5,7 @@ import {
     type AnyPgColumn,
     boolean,
     check,
+    customType,
     index,
     integer,
     pgEnum,
@@ -523,4 +524,49 @@ export const freeSessionSubmissions = pgTable('free_session_submissions', {
     index('free_session_submissions_created_at_idx').on(table.createdAt),
     index('free_session_submissions_phone_idx').on(table.phone),
     check('free_session_submissions_age_range', sql`${table.age} between 15 and 99`)
+]);
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+    dataType: () => 'bytea'
+});
+
+/**
+ * Monthly "Sci-Brief" research digests. Only the public preview file (first few
+ * pages) is ever served to visitors; the full document stays admin-only.
+ */
+export const sciBriefs = pgTable('sci_briefs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull(),
+    titleId: text('title_id').notNull(),
+    titleEn: text('title_en').notNull(),
+    summaryId: text('summary_id').notNull(),
+    summaryEn: text('summary_en').notNull(),
+    /** The month the brief covers, as YYYY-MM. */
+    periodMonth: text('period_month').notNull(),
+    /** Visible to the public once status is published and this moment has passed. */
+    releaseAt: timestamp('release_at', { withTimezone: true, mode: 'string' }).notNull(),
+    status: text('status').default('draft').notNull(),
+    documentName: text('document_name'),
+    totalPages: integer('total_pages'),
+    previewPages: integer('preview_pages').default(3).notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('sci_briefs_slug_unique').on(table.slug),
+    index('sci_briefs_release_at_idx').on(table.releaseAt),
+    check('sci_briefs_status_valid', sql`${table.status} in ('draft', 'published')`),
+    check('sci_briefs_period_month_format', sql`${table.periodMonth} ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'`),
+    check('sci_briefs_preview_pages_range', sql`${table.previewPages} between 1 and 10`)
+]);
+
+export const sciBriefFiles = pgTable('sci_brief_files', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    briefId: uuid('brief_id').notNull().references(() => sciBriefs.id, { onDelete: 'cascade' }),
+    /** 'preview' = public first pages, 'full' = complete document (admin only). */
+    kind: text('kind').notNull(),
+    data: bytea('data').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('sci_brief_files_brief_kind_unique').on(table.briefId, table.kind),
+    check('sci_brief_files_kind_valid', sql`${table.kind} in ('preview', 'full')`)
 ]);

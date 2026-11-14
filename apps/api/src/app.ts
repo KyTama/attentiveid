@@ -11,6 +11,8 @@ import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes'
 import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
+import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
+import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
 import { getMediaFilePath } from './services/media-storage';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
@@ -19,6 +21,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     contentTransitions?: any;
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
+    sciBriefsRepository?: SciBriefsRepository;
 };
 
 export const createApp = (dependencies: AppDependencies) => {
@@ -152,6 +155,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 freeSessionRepository: dependencies.freeSessionRepository || createFreeSessionRepository(dependencies.db),
+            }))
+            .use(createSciBriefsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                sciBriefsRepository: dependencies.sciBriefsRepository || createSciBriefsRepository(dependencies.db),
             }));
     }
 

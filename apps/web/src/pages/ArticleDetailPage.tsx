@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
+  ArrowRight,
   Clock,
   MessageCircle,
   Twitter,
@@ -248,10 +249,16 @@ export function ArticleDetailPage() {
       <article className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <div>
-            <Link to="/articles" className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary/70 hover:text-secondary mb-4 transition-colors">
-              <ArrowLeft size={14} />
-              <span>{t('articles.backToArticles', 'Kembali ke Semua Artikel Ilmiah')}</span>
-            </Link>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <Link to="/articles" className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary/70 hover:text-secondary transition-colors">
+                <ArrowLeft size={14} />
+                <span>{t('articles.backToArticles', 'Kembali ke Semua Artikel Ilmiah')}</span>
+              </Link>
+              <Link to="/sci-brief" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-secondary transition-colors hover:bg-[#ffcf4d]">
+                <span>{t('articles.sciBriefCta')}</span>
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
 
             {/* Badges Bar */}
             <div className="flex flex-wrap items-center gap-2 mb-3">

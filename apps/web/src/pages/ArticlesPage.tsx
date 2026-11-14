@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, Search } from 'lucide-react'
+import { ArrowRight, ExternalLink, Search } from 'lucide-react'
 import { SiteHeader } from '@/components/landing/SiteHeader'
 import { SiteFooter } from '@/components/landing/SiteFooter'
 import {
@@ -202,6 +202,14 @@ export function ArticlesPage() {
                   : 'Koleksi publikasi ilmiah, riset empiris, dan wawasan psikologi berbasis bukti karya peneliti Attentive.id.'
               )}
             </p>
+
+            <Link
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs outline-none transition-colors hover:bg-[#ffcf4d] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              to="/sci-brief"
+            >
+              {t('articles.sciBriefCta')}
+              <ArrowRight aria-hidden="true" size={16} />
+            </Link>
 
             {/* Search Box */}
             <div className="mt-6 relative max-w-lg mx-auto">
