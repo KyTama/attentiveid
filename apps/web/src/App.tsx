@@ -27,6 +27,7 @@ import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
 import { SciBriefCmsPage } from './pages/dashboard/SciBriefCmsPage'
 import { ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
+import { SystemMapPage } from './pages/dashboard/SystemMapPage'
 import { EXPERIMENTAL_EMAILS } from './features/experimental/access'
 import type { LandingContentLoader } from './features/content/service'
 
@@ -128,6 +129,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
                 <FreeSessionCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="experimental/system-map"
+            element={
+              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+                <SystemMapPage />
               </ProtectedRoute>
             }
           />

@@ -13,6 +13,7 @@ import {
   ClipboardList,
   FlaskConical,
   TextCursorInput,
+  Network,
   CalendarDays,
   ChevronDown,
   Menu,
@@ -101,6 +102,12 @@ export function DashboardLayout() {
           to: '/dashboard/experimental/forms',
           label: t('dashboard.navForms', 'Forms'),
           icon: <TextCursorInput className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/experimental/system-map',
+          label: t('dashboard.navSystemMap', 'System Map'),
+          icon: <Network className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
         {
