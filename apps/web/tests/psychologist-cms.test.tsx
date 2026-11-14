@@ -89,7 +89,8 @@ describe('Psychologist CMS Page Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Psychologist Directory CMS')).toBeDefined()
       expect(screen.getByText('Tambah Psikolog Baru')).toBeDefined()
-      expect(screen.getByText('Syazka Adira, M.Psi., Psikolog')).toBeDefined()
+      // The name also appears in the Featured order panel.
+      expect(screen.getAllByText('Syazka Adira, M.Psi., Psikolog').length).toBeGreaterThan(0)
       expect(screen.getByText('★ #0')).toBeDefined()
     })
   })

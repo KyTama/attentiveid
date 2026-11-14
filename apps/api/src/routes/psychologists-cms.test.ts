@@ -106,6 +106,10 @@ const psychologistsRepository = {
     mockPsychologistsDb.set(savedId, record)
     return record
   },
+  reorderFeaturedAdmin: async (orderedIds: string[]) => {
+    if (orderedIds.join(',') !== 'psych-001') return { status: 'mismatch' as const }
+    return { status: 'success' as const, order: [{ id: 'psych-001', featuredOrder: 1 }] }
+  },
   updateStatusAdmin: async (id: string, status: any) => {
     const existing = mockPsychologistsDb.get(id)
     if (!existing) return null
@@ -420,5 +424,70 @@ describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
     expect(res.status).toBe(413)
     const json = await res.json()
     expect(json.message).toContain('5 MB')
+  })
+
+  it('PUT /api/admin/psychologists/featured-order saves the new order', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/psychologists/featured-order', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ['psych-001'] }),
+      })
+    )
+    expect(res.status).toBe(200)
+    expect((await res.json()).order).toEqual([{ id: 'psych-001', featuredOrder: 1 }])
+  })
+
+  it('PUT /api/admin/psychologists/featured-order answers 409 when the featured list changed', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/psychologists/featured-order', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ['psych-001', 'someone-else'] }),
+      })
+    )
+    expect(res.status).toBe(409)
+  })
+
+  it('PUT /api/admin/psychologists/featured-order denies psychologists', async () => {
+    const { accessToken } = tokenService.issueAccessToken(psychologistUser)
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/psychologists/featured-order', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [] }),
+      })
+    )
+    expect(res.status).toBe(403)
+  })
+
+  it('PUT /api/admin/psychologists/:id keeps a custom conversation quote', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/psychologists/psych-001', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: 'syazka-adira',
+          status: 'active',
+          name: 'Syazka Adira',
+          nickname: 'Syazka',
+          credential: 'M.Psi., Psikolog',
+          licenseNumber: '12345678',
+          experienceYears: 6,
+          bookingUrl: 'https://attentive.id/book/syazka',
+          featured: false,
+          supportAreas: [{ supportArea: 'adultClinical', primary: true }],
+          specializations: [{ label: { id: 'Kecemasan', en: 'Anxiety' } }],
+          biography: { id: 'Bio ID', en: 'Bio EN' },
+          conversationQuote: { id: 'Kutipan saya', en: 'My quote' },
+          availabilityMessage: { id: 'Jadwal ID', en: 'Schedule EN' },
+        }),
+      })
+    )
+    expect(res.status).toBe(200)
+    expect((await res.json()).psychologist.conversationQuote).toEqual({ id: 'Kutipan saya', en: 'My quote' })
   })
 })

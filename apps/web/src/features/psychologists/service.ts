@@ -27,6 +27,7 @@ export interface PsychologistApiRecord {
   featuredOrder: number | null
   biography: string
   shortBio?: string
+  conversationQuote?: string
   availabilityMessage: string
   media?: {
     url: string
@@ -109,6 +110,7 @@ const mapPsychologistSummary = (record: PsychologistApiRecord): PsychologistSumm
 const mapPsychologistProfile = (record: PsychologistApiRecord): PsychologistProfile => ({
   ...mapPsychologistSummary(record),
   biography: record.biography,
+  ...(record.conversationQuote ? { conversationQuote: record.conversationQuote } : {}),
   availabilityMessage: record.availabilityMessage,
   ...(record.premiumBookingUrl ? { premiumBookingUrl: record.premiumBookingUrl } : {}),
 })

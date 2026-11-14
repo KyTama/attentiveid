@@ -27,6 +27,9 @@ export interface PsychologistsCmsRoutesDependencies {
     getAdminById?: (id: string) => Promise<any | null>
     saveAdmin?: (id: string | undefined, input: FullPsychologistMutation) => Promise<any>
     updateStatusAdmin?: (id: string, status: any) => Promise<any | null>
+    reorderFeaturedAdmin?: (orderedIds: string[]) => Promise<
+      { status: 'success'; order: readonly { id: string; featuredOrder: number }[] } | { status: 'mismatch' }
+    >
   }
 }
 
@@ -218,6 +221,35 @@ export const createPsychologistsCmsRoutes = (dependencies: PsychologistsCmsRoute
           tags: ['Psychologists CMS'],
           summary: 'Update psychologist profile',
           description: 'Updates an existing psychologist profile with full relations and translations.',
+        },
+      }
+    )
+    .put(
+      '/api/admin/psychologists/featured-order',
+      async ({ body, set }: any) => {
+        if (!dependencies.psychologistsRepository.reorderFeaturedAdmin) {
+          set.status = 500
+          return { status: 'error', message: 'Featured reordering is not available.' }
+        }
+        const result = await dependencies.psychologistsRepository.reorderFeaturedAdmin(body.ids)
+        if (result.status === 'mismatch') {
+          set.status = 409
+          return {
+            status: 'conflict',
+            message: 'Daftar Featured sudah berubah. Muat ulang halaman lalu atur urutan lagi.'
+          }
+        }
+        return { status: 'success', order: result.order }
+      },
+      {
+        requireRole: ['admin'],
+        body: t.Object({
+          ids: t.Array(t.String({ minLength: 1, maxLength: 64 }), { maxItems: 200 })
+        }),
+        detail: {
+          tags: ['Psychologists CMS'],
+          summary: 'Reorder featured psychologists',
+          description: 'Receives every featured psychologist id in the desired order and numbers them 1..n.',
         },
       }
     )

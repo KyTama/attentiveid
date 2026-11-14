@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gte, sql } from 'drizzle-orm';
+import { and, asc, count, eq, gte, inArray, ne, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
     CONTENT_LOCALES,
@@ -34,6 +34,7 @@ export interface CanonicalPsychologistRow {
     premiumBookingUrl: string | null;
     biography: LocalizedText;
     shortBio?: LocalizedText;
+    conversationQuote?: LocalizedText;
     availabilityMessage: LocalizedText;
     supportAreas: readonly {
         supportArea: SupportArea;
@@ -78,7 +79,12 @@ export interface PsychologistQuerySource {
     findBySlug(slug: string): Promise<CanonicalPsychologistRow | null>;
     savePsychologist?(id: string | undefined, input: FullPsychologistMutation): Promise<CanonicalPsychologistRow>;
     updateStatus?(id: string, status: PsychologistStatus): Promise<CanonicalPsychologistRow | null>;
+    reorderFeatured?(orderedIds: readonly string[]): Promise<FeaturedReorderResult>;
 }
+
+export type FeaturedReorderResult =
+    | { status: 'success'; order: readonly { id: string; featuredOrder: number }[] }
+    | { status: 'mismatch' };
 
 export interface PsychologistListQuery {
     locale: ContentLocale;
@@ -106,6 +112,7 @@ export interface PsychologistPublicProjection {
     featuredOrder: number | null;
     biography: string;
     shortBio?: string;
+    conversationQuote?: string;
     availabilityMessage: string;
     media?: {
         url: string;
@@ -193,6 +200,7 @@ const toPublicProjection = (
             featured: row.featured,
             featuredOrder: row.featuredOrder,
             ...(row.shortBio ? { shortBio: row.shortBio[locale] } : {}),
+            ...(row.conversationQuote ? { conversationQuote: row.conversationQuote[locale] } : {}),
             ...(media ? { media } : {})
         }
     };
@@ -219,6 +227,7 @@ const toPublicProjection = (
         featuredOrder: lookup.psychologist.featuredOrder,
         biography: row.biography[locale],
         ...(row.shortBio ? { shortBio: row.shortBio[locale] } : {}),
+        ...(row.conversationQuote ? { conversationQuote: row.conversationQuote[locale] } : {}),
         availabilityMessage: row.availabilityMessage[locale],
         ...(lookup.psychologist.media ? { media: lookup.psychologist.media } : {})
     };
@@ -286,10 +295,37 @@ export const createPsychologistsRepository = (
     async updateStatusAdmin(id: string, status: PsychologistStatus): Promise<CanonicalPsychologistRow | null> {
         if (!source.updateStatus) return null;
         return source.updateStatus(id, status);
+    },
+
+    async reorderFeaturedAdmin(orderedIds: readonly string[]): Promise<FeaturedReorderResult> {
+        if (!source.reorderFeatured) return { status: 'mismatch' };
+        return source.reorderFeatured(orderedIds);
     }
 });
 
-type DrizzlePsychologistBase = Omit<CanonicalPsychologistRow, 'biography' | 'availabilityMessage' | 'supportAreas' | 'specializations' | 'media'>;
+/**
+ * Where a psychologist lands in the featured carousel. `others` are the other
+ * featured practitioners, sorted by their current number. The profile takes the
+ * requested number and whoever already holds it (and everyone after) moves down
+ * one place, so numbers never collide.
+ */
+export const placeInFeaturedOrder = (
+    others: readonly { id: string; featuredOrder: number }[],
+    selfId: string,
+    requested: number
+): string[] => {
+    const ids = others.filter(({ id }) => id !== selfId);
+    const index = ids.findIndex(({ featuredOrder }) => featuredOrder >= requested);
+    const ordered = ids.map(({ id }) => id);
+    ordered.splice(index === -1 ? ordered.length : index, 0, selfId);
+    return ordered;
+};
+
+// Parking value so a row can move without hitting the unique featured_order index.
+const FEATURED_PARKING_ORDER = 2_000_000_000;
+const FEATURED_BUMP = 1_000_000;
+
+type DrizzlePsychologistBase = Omit<CanonicalPsychologistRow, 'biography' | 'conversationQuote' | 'availabilityMessage' | 'supportAreas' | 'specializations' | 'media'>;
 
 const loadPsychologistRelations = async (
     database: PostgresJsDatabase<typeof schema>,
@@ -299,6 +335,7 @@ const loadPsychologistRelations = async (
         locale: schema.psychologistProfileTranslations.locale,
         biography: schema.psychologistProfileTranslations.biography,
         shortBio: schema.psychologistProfileTranslations.shortBio,
+        conversationQuote: schema.psychologistProfileTranslations.conversationQuote,
         availabilityMessage: schema.psychologistProfileTranslations.availabilityMessage
     }).from(schema.psychologistProfileTranslations)
         .where(eq(schema.psychologistProfileTranslations.psychologistId, base.id));
@@ -309,6 +346,10 @@ const loadPsychologistRelations = async (
     }
     const shortBio = idProfile.shortBio && enProfile.shortBio
         ? { id: idProfile.shortBio, en: enProfile.shortBio }
+        : undefined;
+
+    const conversationQuote = idProfile.conversationQuote && enProfile.conversationQuote
+        ? { id: idProfile.conversationQuote, en: enProfile.conversationQuote }
         : undefined;
 
     const supportAreas = await database.select({
@@ -367,6 +408,7 @@ const loadPsychologistRelations = async (
         ...base,
         biography: { id: idProfile.biography, en: enProfile.biography },
         ...(shortBio ? { shortBio } : {}),
+        ...(conversationQuote ? { conversationQuote } : {}),
         availabilityMessage: {
             id: idProfile.availabilityMessage,
             en: enProfile.availabilityMessage
@@ -403,6 +445,22 @@ const selectPsychologistBase = {
     bookingUrl: schema.psychologistProfiles.bookingUrl,
     premiumBookingUrl: schema.psychologistProfiles.premiumBookingUrl
 } as const;
+
+// Numbers the given featured practitioners 1..n in order, without ever holding a duplicate.
+const assignFeaturedOrder = async (tx: any, orderedIds: readonly string[]) => {
+    if (orderedIds.length === 0) return;
+    await tx.update(schema.psychologists)
+        .set({ featuredOrder: sql`${schema.psychologists.featuredOrder} + ${FEATURED_BUMP}` })
+        .where(and(
+            inArray(schema.psychologists.id, [...orderedIds]),
+            sql`${schema.psychologists.featuredOrder} < ${FEATURED_PARKING_ORDER - FEATURED_BUMP}`
+        ));
+    for (const [index, psychologistId] of orderedIds.entries()) {
+        await tx.update(schema.psychologists)
+            .set({ featuredOrder: index + 1, updatedAt: sql`now()` })
+            .where(eq(schema.psychologists.id, psychologistId));
+    }
+};
 
 export const createDrizzlePsychologistQuerySource = (
     database: PostgresJsDatabase<typeof schema>
@@ -516,6 +574,27 @@ export const createDrizzlePsychologistQuerySource = (
         return this.findById!(id);
     },
 
+    async reorderFeatured(orderedIds) {
+        return await database.transaction(async (tx) => {
+            const current = await tx.select({ id: schema.psychologists.id })
+                .from(schema.psychologists)
+                .where(eq(schema.psychologists.featured, true));
+            const currentIds = new Set(current.map(({ id }) => id));
+            if (
+                new Set(orderedIds).size !== orderedIds.length
+                || orderedIds.length !== currentIds.size
+                || orderedIds.some((id) => !currentIds.has(id))
+            ) {
+                return { status: 'mismatch' as const };
+            }
+            await assignFeaturedOrder(tx, orderedIds);
+            return {
+                status: 'success' as const,
+                order: orderedIds.map((id, index) => ({ id, featuredOrder: index + 1 }))
+            };
+        });
+    },
+
     async savePsychologist(id, input) {
         return await database.transaction(async (tx) => {
             let psychologistId = id;
@@ -530,7 +609,7 @@ export const createDrizzlePsychologistQuerySource = (
                         primaryBranch: input.primaryBranch ?? 'tbi',
                         acceptingNewClients: input.acceptingNewClients ?? true,
                         featured: input.featured,
-                        featuredOrder: input.featured ? (input.featuredOrder ?? null) : null,
+                        featuredOrder: input.featured ? FEATURED_PARKING_ORDER : null,
                         updatedAt: sql`now()`
                     })
                     .where(eq(schema.psychologists.id, psychologistId));
@@ -556,7 +635,7 @@ export const createDrizzlePsychologistQuerySource = (
                         primaryBranch: input.primaryBranch ?? 'tbi',
                         acceptingNewClients: input.acceptingNewClients ?? true,
                         featured: input.featured,
-                        featuredOrder: input.featured ? (input.featuredOrder ?? null) : null
+                        featuredOrder: input.featured ? FEATURED_PARKING_ORDER : null
                     })
                     .returning({ id: schema.psychologists.id });
                 psychologistId = inserted.id;
@@ -572,6 +651,20 @@ export const createDrizzlePsychologistQuerySource = (
                     });
             }
 
+            if (input.featured) {
+                const others = await tx.select({
+                    id: schema.psychologists.id,
+                    featuredOrder: schema.psychologists.featuredOrder
+                }).from(schema.psychologists)
+                    .where(and(eq(schema.psychologists.featured, true), ne(schema.psychologists.id, psychologistId)))
+                    .orderBy(asc(schema.psychologists.featuredOrder));
+                await assignFeaturedOrder(tx, placeInFeaturedOrder(
+                    others.map((row) => ({ id: row.id, featuredOrder: row.featuredOrder ?? 0 })),
+                    psychologistId,
+                    input.featuredOrder ?? 0
+                ));
+            }
+
             // Update Profile Translations
             await tx.delete(schema.psychologistProfileTranslations)
                 .where(eq(schema.psychologistProfileTranslations.psychologistId, psychologistId));
@@ -583,6 +676,7 @@ export const createDrizzlePsychologistQuerySource = (
                         locale: 'id',
                         biography: input.biography.id,
                         shortBio: input.shortBio?.id,
+                        conversationQuote: input.conversationQuote?.id,
                         availabilityMessage: input.availabilityMessage.id
                     },
                     {
@@ -590,6 +684,7 @@ export const createDrizzlePsychologistQuerySource = (
                         locale: 'en',
                         biography: input.biography.en,
                         shortBio: input.shortBio?.en,
+                        conversationQuote: input.conversationQuote?.en,
                         availabilityMessage: input.availabilityMessage.en
                     }
                 ]);
