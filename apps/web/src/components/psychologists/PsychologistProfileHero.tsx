@@ -77,17 +77,18 @@ export function PsychologistProfileHero({ psychologist }: PsychologistProfileHer
                 {t('routes.profile.bookWhatsApp', { name: psychologist.nickname })}
               </motion.a>
 
-              <motion.a
-                href="https://booking.attentiveid.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-md border border-secondary/25 bg-white px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-2xs hover:bg-[#faf7f2] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+              <motion.div
                 transition={INTERACTIVE_SPRING}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {t('intakeDialog.title')}
-              </motion.a>
+                <Link
+                  to={`/booking?psychologist=${psychologist.slug}`}
+                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-secondary/25 bg-white px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-2xs hover:bg-[#faf7f2] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                >
+                  {t('intakeDialog.title')}
+                </Link>
+              </motion.div>
 
               <motion.a
                 className="inline-flex min-h-11 items-center gap-2 rounded-md border border-primary/40 bg-[#fcf8f1] px-4 py-3 text-sm font-semibold text-secondary outline-none shadow-2xs transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"

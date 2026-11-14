@@ -3,6 +3,7 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import {
     CONTENT_LOCALES,
+    ZITE_PSYCHOLOGIST_BOOKING_DEFAULTS,
     validateMediaMutation,
     validatePsychologistMutation,
     type LocalizedText
@@ -70,6 +71,20 @@ interface ProfileInput {
     licenseNumber: string;
     bookingUrl: string;
     premiumBookingUrl: string;
+    consultationDuration?: string;
+    onlineRate?: number | null;
+    offlineRate?: number | null;
+    availableOnline?: boolean;
+    availableTbi?: boolean;
+    availableBsd?: boolean;
+    availableMalang?: boolean;
+    scheduleMon?: string | null;
+    scheduleTue?: string | null;
+    scheduleWed?: string | null;
+    scheduleThu?: string | null;
+    scheduleFri?: string | null;
+    scheduleSat?: string | null;
+    scheduleSun?: string | null;
 }
 
 interface ProfileTranslationInput {
@@ -1197,13 +1212,15 @@ export async function seedPsychologists(
                     featuredOrder: candidate.featuredOrder
                 });
 
+                const bookingDefaults = ZITE_PSYCHOLOGIST_BOOKING_DEFAULTS[candidate.slug];
                 await transaction.upsertProfile({
                     psychologistId,
                     credential: candidate.credential,
                     experienceYears: candidate.experienceYears,
                     licenseNumber: candidate.licenseNumber,
                     bookingUrl: candidate.bookingUrl,
-                    premiumBookingUrl: candidate.premiumBookingUrl
+                    premiumBookingUrl: candidate.premiumBookingUrl,
+                    ...(bookingDefaults ?? {})
                 });
 
                 for (const locale of CONTENT_LOCALES) {
@@ -1312,6 +1329,20 @@ export const createDrizzlePsychologistSeedDatabase = (
                         licenseNumber: input.licenseNumber,
                         bookingUrl: input.bookingUrl,
                         premiumBookingUrl: input.premiumBookingUrl,
+                        ...(input.consultationDuration !== undefined ? { consultationDuration: input.consultationDuration } : {}),
+                        ...(input.onlineRate !== undefined ? { onlineRate: input.onlineRate } : {}),
+                        ...(input.offlineRate !== undefined ? { offlineRate: input.offlineRate } : {}),
+                        ...(input.availableOnline !== undefined ? { availableOnline: input.availableOnline } : {}),
+                        ...(input.availableTbi !== undefined ? { availableTbi: input.availableTbi } : {}),
+                        ...(input.availableBsd !== undefined ? { availableBsd: input.availableBsd } : {}),
+                        ...(input.availableMalang !== undefined ? { availableMalang: input.availableMalang } : {}),
+                        ...(input.scheduleMon !== undefined ? { scheduleMon: input.scheduleMon } : {}),
+                        ...(input.scheduleTue !== undefined ? { scheduleTue: input.scheduleTue } : {}),
+                        ...(input.scheduleWed !== undefined ? { scheduleWed: input.scheduleWed } : {}),
+                        ...(input.scheduleThu !== undefined ? { scheduleThu: input.scheduleThu } : {}),
+                        ...(input.scheduleFri !== undefined ? { scheduleFri: input.scheduleFri } : {}),
+                        ...(input.scheduleSat !== undefined ? { scheduleSat: input.scheduleSat } : {}),
+                        ...(input.scheduleSun !== undefined ? { scheduleSun: input.scheduleSun } : {}),
                         updatedAt: sql`now()`
                     }
                 });

@@ -445,7 +445,7 @@ export function HomepageHero() {
       title: t('homepage.campaigns.booking.title'),
       description: t('homepage.campaigns.booking.description'),
       cta: t('homepage.campaigns.booking.cta'),
-      url: 'https://booking.attentiveid.com/',
+      url: '/booking',
     },
   ]
 
@@ -455,7 +455,10 @@ export function HomepageHero() {
   const resolvedCampaignCards: CampaignCardItem[] = Array.isArray(customCampaigns?.cards)
     ? customCampaigns.cards.map((card: any, idx: number) => {
         const fallback = defaultCampaignCards[idx]
-        const resolvedUrl = card.url || fallback?.url || '#'
+        const rawUrl = card.url || fallback?.url || '#'
+        const resolvedUrl = /^https?:\/\/booking\.attentiveid\.com\/?$/i.test(String(rawUrl).trim())
+          ? '/booking'
+          : rawUrl
         return {
           id: card.id || `campaign-card-${idx}`,
           visible: card.visible !== false && !resolvedUrl.includes('assessment.attentiveid.com'),
@@ -798,18 +801,8 @@ export function HomepageHero() {
                     ? MessageCircle
                     : Sparkles
 
-                return (
-                  <motion.a
-                    key={card.id}
-                    href={card.url}
-                    target={card.url.startsWith('http') ? '_blank' : undefined}
-                    rel={card.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    aria-label={`${card.title} - ${card.cta}`}
-                    className={`group relative flex flex-col justify-between rounded-xl border p-5 sm:p-6 shadow-xs transition-all hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer ${themeStyles.card}`}
-                    transition={INTERACTIVE_SPRING}
-                    whileHover={{ y: -4 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
+                const cardInner = (
+                  <>
                     <div className="flex items-start justify-between gap-3">
                       <span
                         className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${themeStyles.badge}`}
@@ -840,7 +833,41 @@ export function HomepageHero() {
                         className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                       />
                     </div>
+                  </>
+                )
+
+                const cardClassName = `group relative flex h-full flex-col justify-between rounded-xl border p-5 sm:p-6 shadow-xs transition-shadow hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer ${themeStyles.card}`
+
+                return card.url.startsWith('http') ? (
+                  <motion.a
+                    key={card.id}
+                    href={card.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${card.title} - ${card.cta}`}
+                    className={cardClassName}
+                    transition={INTERACTIVE_SPRING}
+                    whileHover={{ y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {cardInner}
                   </motion.a>
+                ) : (
+                  <motion.div
+                    key={card.id}
+                    className="h-full"
+                    transition={INTERACTIVE_SPRING}
+                    whileHover={{ y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link
+                      to={card.url}
+                      aria-label={`${card.title} - ${card.cta}`}
+                      className={cardClassName}
+                    >
+                      {cardInner}
+                    </Link>
+                  </motion.div>
                 )
               })}
             </div>

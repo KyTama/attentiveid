@@ -110,6 +110,20 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                         licenseNumber: profile?.licenseNumber || '',
                         bookingUrl: profile?.bookingUrl || '',
                         premiumBookingUrl: profile?.premiumBookingUrl || '',
+                        consultationDuration: profile?.consultationDuration || '60 menit',
+                        onlineRate: profile?.onlineRate ?? null,
+                        offlineRate: profile?.offlineRate ?? null,
+                        availableOnline: profile?.availableOnline ?? false,
+                        availableTbi: profile?.availableTbi ?? false,
+                        availableBsd: profile?.availableBsd ?? false,
+                        availableMalang: profile?.availableMalang ?? false,
+                        scheduleMon: profile?.scheduleMon ?? null,
+                        scheduleTue: profile?.scheduleTue ?? null,
+                        scheduleWed: profile?.scheduleWed ?? null,
+                        scheduleThu: profile?.scheduleThu ?? null,
+                        scheduleFri: profile?.scheduleFri ?? null,
+                        scheduleSat: profile?.scheduleSat ?? null,
+                        scheduleSun: profile?.scheduleSun ?? null,
                         biography: {
                             id: bioId,
                             en: bioEn
@@ -135,6 +149,35 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
 
                 const psychId = currentUser.psychologistId;
 
+                const existingProfiles = await db
+                    .select()
+                    .from(psychologistProfiles)
+                    .where(eq(psychologistProfiles.psychologistId, psychId))
+                    .limit(1);
+                const existingProfile = existingProfiles[0];
+
+                const nextAvailableOnline = body.availableOnline ?? existingProfile?.availableOnline ?? false;
+                const nextAvailableTbi = body.availableTbi ?? existingProfile?.availableTbi ?? false;
+                const nextAvailableBsd = body.availableBsd ?? existingProfile?.availableBsd ?? false;
+                const nextAvailableMalang = body.availableMalang ?? existingProfile?.availableMalang ?? false;
+                const nextOnlineRate = body.onlineRate !== undefined ? body.onlineRate : existingProfile?.onlineRate ?? null;
+                const nextOfflineRate = body.offlineRate !== undefined ? body.offlineRate : existingProfile?.offlineRate ?? null;
+
+                if (nextAvailableOnline && (nextOnlineRate === null || nextOnlineRate < 0)) {
+                    set.status = 400;
+                    return {
+                        status: 'badRequest',
+                        message: 'Tarif online wajib diisi (>= 0) saat mode online diaktifkan.'
+                    };
+                }
+                if ((nextAvailableTbi || nextAvailableBsd || nextAvailableMalang) && (nextOfflineRate === null || nextOfflineRate < 0)) {
+                    set.status = 400;
+                    return {
+                        status: 'badRequest',
+                        message: 'Tarif offline wajib diisi (>= 0) saat salah satu cabang tatap muka diaktifkan.'
+                    };
+                }
+
                 try {
                     // Update main profile
                     await db
@@ -145,6 +188,20 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                             licenseNumber: body.licenseNumber,
                             bookingUrl: body.bookingUrl,
                             premiumBookingUrl: body.premiumBookingUrl || null,
+                            ...(body.consultationDuration !== undefined ? { consultationDuration: body.consultationDuration } : {}),
+                            ...(body.onlineRate !== undefined ? { onlineRate: body.onlineRate } : {}),
+                            ...(body.offlineRate !== undefined ? { offlineRate: body.offlineRate } : {}),
+                            ...(body.availableOnline !== undefined ? { availableOnline: body.availableOnline } : {}),
+                            ...(body.availableTbi !== undefined ? { availableTbi: body.availableTbi } : {}),
+                            ...(body.availableBsd !== undefined ? { availableBsd: body.availableBsd } : {}),
+                            ...(body.availableMalang !== undefined ? { availableMalang: body.availableMalang } : {}),
+                            ...(body.scheduleMon !== undefined ? { scheduleMon: body.scheduleMon } : {}),
+                            ...(body.scheduleTue !== undefined ? { scheduleTue: body.scheduleTue } : {}),
+                            ...(body.scheduleWed !== undefined ? { scheduleWed: body.scheduleWed } : {}),
+                            ...(body.scheduleThu !== undefined ? { scheduleThu: body.scheduleThu } : {}),
+                            ...(body.scheduleFri !== undefined ? { scheduleFri: body.scheduleFri } : {}),
+                            ...(body.scheduleSat !== undefined ? { scheduleSat: body.scheduleSat } : {}),
+                            ...(body.scheduleSun !== undefined ? { scheduleSun: body.scheduleSun } : {}),
                             updatedAt: new Date().toISOString()
                         })
                         .where(eq(psychologistProfiles.psychologistId, psychId));
@@ -220,6 +277,20 @@ export const createPsychologistSelfRoutes = (dependencies: PsychologistSelfDepen
                     licenseNumber: t.String(),
                     bookingUrl: t.String(),
                     premiumBookingUrl: t.Optional(t.String()),
+                    consultationDuration: t.Optional(t.String()),
+                    onlineRate: t.Optional(t.Union([t.Integer({ minimum: 0 }), t.Null()])),
+                    offlineRate: t.Optional(t.Union([t.Integer({ minimum: 0 }), t.Null()])),
+                    availableOnline: t.Optional(t.Boolean()),
+                    availableTbi: t.Optional(t.Boolean()),
+                    availableBsd: t.Optional(t.Boolean()),
+                    availableMalang: t.Optional(t.Boolean()),
+                    scheduleMon: t.Optional(t.Union([t.String(), t.Null()])),
+                    scheduleTue: t.Optional(t.Union([t.String(), t.Null()])),
+                    scheduleWed: t.Optional(t.Union([t.String(), t.Null()])),
+                    scheduleThu: t.Optional(t.Union([t.String(), t.Null()])),
+                    scheduleFri: t.Optional(t.Union([t.String(), t.Null()])),
+                    scheduleSat: t.Optional(t.Union([t.String(), t.Null()])),
+                    scheduleSun: t.Optional(t.Union([t.String(), t.Null()])),
                     biography: t.Optional(t.Object({
                         id: t.Optional(t.String()),
                         en: t.Optional(t.String())

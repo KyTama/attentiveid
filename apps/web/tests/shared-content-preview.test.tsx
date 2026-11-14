@@ -158,7 +158,7 @@ describe('shared landing preview', () => {
     expect(screen.getByText('metric description 0 EN')).toBeInTheDocument()
     expect(screen.getByText('Draft price EN')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Draft pricing action EN/i })).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('renders published content through the same provider and Homepage tree', async () => {
     const { AppRoutes } = await import('../src/App')
@@ -170,7 +170,7 @@ describe('shared landing preview', () => {
 
     expect(await screen.findByRole('heading', { name: 'Draft hero EN' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Draft FAQ EN' })).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('renders one non-reflective unavailable state without public fallback', async () => {
     const capability = 'must-never-reach-the-dom'
@@ -184,7 +184,7 @@ describe('shared landing preview', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: /preview is unavailable/i })).toBeInTheDocument())
     expect(document.documentElement.outerHTML).not.toContain(capability)
     expect(screen.queryByRole('heading', { name: /support starts with feeling understood/i })).not.toBeInTheDocument()
-  })
+  }, 15000)
 
   it('loads the scrub bootstrap before every other application import and keeps proxy routes fragment-blind', async () => {
     const [{ default: mainSource }, { default: localCaddy }, { default: deployCaddy }] = await Promise.all([

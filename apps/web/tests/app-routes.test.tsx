@@ -36,8 +36,8 @@ describe('public routes', () => {
     await waitFor(() => expect(heading).toHaveFocus())
     const planLinks = screen.getAllByRole('link', { name: /plan your consultation/i })
     expect(planLinks.length).toBeGreaterThanOrEqual(1)
-    expect(planLinks[0]).toHaveAttribute('href', 'https://booking.attentiveid.com/')
-    expect(planLinks[0]).toHaveAttribute('target', '_blank')
+    expect(planLinks[0]).toHaveAttribute('href', '/booking?psychologist=syazka')
+    expect(planLinks[0]).not.toHaveAttribute('target', '_blank')
     expect(screen.getByRole('link', { name: /get to know syazka/i })).toHaveAttribute('href', '#profile-story')
     expect(screen.getByRole('link', { name: /continue on whatsapp/i })).toHaveAttribute(
       'href',

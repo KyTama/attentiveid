@@ -577,7 +577,7 @@ export function LandingCmsPage() {
           en: 'Select your psychologist and choose an online or in-person slot.',
         },
         cta: { id: 'Reservasi Jadwal', en: 'Book a Session' },
-        url: 'https://booking.attentiveid.com/',
+        url: '/booking',
       },
     ],
   })
@@ -706,7 +706,7 @@ export function LandingCmsPage() {
         en: 'Short description for this featured campaign or care portal.',
       },
       cta: { id: 'Pelajari Selengkapnya', en: 'Learn More' },
-      url: 'https://booking.attentiveid.com/',
+      url: '/booking',
     })
     const newSections = [...content.sections]
     newSections[activeSectionIndex] = {

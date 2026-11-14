@@ -18,6 +18,7 @@ import {
 import {
     ARTICLE_LIFECYCLE_STATES,
     ARTICLE_REVISION_STATES,
+    BOOKING_STATUSES,
     CONTENT_LOCALES,
     LANDING_SECTION_ORDER,
     MEDIA_LIFECYCLE_STATES,
@@ -26,7 +27,8 @@ import {
     PSYCHOLOGIST_SUPPORT_AREAS,
     PSYCHOLOGIST_TIERS,
     USER_ROLES,
-    USER_STATUSES
+    USER_STATUSES,
+    WEBHOOK_DELIVERY_STATUSES
 } from '@attentiveid/shared';
 
 export const contentLocaleEnum = pgEnum('content_locale', CONTENT_LOCALES);
@@ -42,6 +44,8 @@ export const articleReviewDecisionEnum = pgEnum('article_review_decision', ['app
 export const mediaLifecycleStatusEnum = pgEnum('media_lifecycle_status', MEDIA_LIFECYCLE_STATES);
 export const userRoleEnum = pgEnum('user_role', USER_ROLES);
 export const userStatusEnum = pgEnum('user_status', USER_STATUSES);
+export const bookingStatusEnum = pgEnum('booking_status', BOOKING_STATUSES);
+export const webhookDeliveryStatusEnum = pgEnum('webhook_delivery_status', WEBHOOK_DELIVERY_STATUSES);
 
 
 const auditTimestamps = {
@@ -216,9 +220,27 @@ export const psychologistProfiles = pgTable('psychologist_profiles', {
     licenseNumber: text('license_number').notNull(),
     bookingUrl: text('booking_url').notNull(),
     premiumBookingUrl: text('premium_booking_url'),
+    consultationDuration: text('consultation_duration').default('60 menit').notNull(),
+    onlineRate: integer('online_rate'),
+    offlineRate: integer('offline_rate'),
+    availableOnline: boolean('available_online').default(false).notNull(),
+    availableTbi: boolean('available_tbi').default(false).notNull(),
+    availableBsd: boolean('available_bsd').default(false).notNull(),
+    availableMalang: boolean('available_malang').default(false).notNull(),
+    scheduleMon: text('schedule_mon'),
+    scheduleTue: text('schedule_tue'),
+    scheduleWed: text('schedule_wed'),
+    scheduleThu: text('schedule_thu'),
+    scheduleFri: text('schedule_fri'),
+    scheduleSat: text('schedule_sat'),
+    scheduleSun: text('schedule_sun'),
     ...auditTimestamps
 }, (table) => [
-    check('psychologist_profiles_non_negative_experience', sql`${table.experienceYears} >= 0`)
+    check('psychologist_profiles_non_negative_experience', sql`${table.experienceYears} >= 0`),
+    check('psychologist_profiles_non_negative_online_rate', sql`${table.onlineRate} is null or ${table.onlineRate} >= 0`),
+    check('psychologist_profiles_non_negative_offline_rate', sql`${table.offlineRate} is null or ${table.offlineRate} >= 0`),
+    check('psychologist_profiles_online_rate_required', sql`${table.availableOnline} = false or ${table.onlineRate} is not null`),
+    check('psychologist_profiles_offline_rate_required', sql`(not ${table.availableTbi} and not ${table.availableBsd} and not ${table.availableMalang}) or ${table.offlineRate} is not null`)
 ]);
 
 export const psychologistProfileTranslations = pgTable('psychologist_profile_translations', {
@@ -570,3 +592,131 @@ export const sciBriefFiles = pgTable('sci_brief_files', {
     uniqueIndex('sci_brief_files_brief_kind_unique').on(table.briefId, table.kind),
     check('sci_brief_files_kind_valid', sql`${table.kind} in ('preview', 'full')`)
 ]);
+
+/**
+ * Operational booking submissions migrated from Zite.
+ * Upholds the Clinical Privacy Wall (concern_note lives in booking_clinical_intakes)
+ * and prepares progressive client account claiming via client_user_id + normalized keys.
+ */
+export const bookings = pgTable('bookings', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    bookingCode: text('booking_code').notNull(),
+    clientUserId: uuid('client_user_id').references(() => users.id, { onDelete: 'set null' }),
+    status: bookingStatusEnum('status').default('pending').notNull(),
+    language: contentLocaleEnum('language').default('id').notNull(),
+    clientStatus: text('client_status').notNull(),
+    name: text('name').notNull(),
+    whatsapp: text('whatsapp').notNull(),
+    whatsappE164: text('whatsapp_e164').notNull(),
+    email: text('email').notNull(),
+    emailNormalized: text('email_normalized').notNull(),
+    countryRegion: text('country_region'),
+    age: integer('age'),
+    gender: text('gender'),
+    serviceType: text('service_type').default('Personal').notNull(),
+    concernId: text('concern_id'),
+    concernCategory: text('concern_category'),
+    clientCategory: text('client_category'),
+    genderPreference: text('gender_preference'),
+    consultationMode: text('consultation_mode').notNull(),
+    location: text('location'),
+    psychologistChoice: text('psychologist_choice').notNull(),
+    psychologistId: uuid('psychologist_id').references(() => psychologists.id, { onDelete: 'restrict' }),
+    selectedPsychologistName: text('selected_psychologist_name'),
+    scheduleOption1: text('schedule_option_1').notNull(),
+    scheduleOption2: text('schedule_option_2'),
+    scheduleOption3: text('schedule_option_3'),
+    confirmedStartAt: timestamp('confirmed_start_at', { withTimezone: true, mode: 'string' }),
+    confirmedEndAt: timestamp('confirmed_end_at', { withTimezone: true, mode: 'string' }),
+    baseRate: integer('base_rate').default(0).notNull(),
+    assessmentFee: integer('assessment_fee').default(0).notNull(),
+    totalRate: integer('total_rate').default(0).notNull(),
+    marketingSource: text('marketing_source'),
+    referrer: text('referrer'),
+    utmSource: text('utm_source'),
+    utmMedium: text('utm_medium'),
+    utmCampaign: text('utm_campaign'),
+    utmContent: text('utm_content'),
+    utmTerm: text('utm_term'),
+    campaignId: text('campaign_id'),
+    adsetId: text('adset_id'),
+    adId: text('ad_id'),
+    submittedAt: timestamp('submitted_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('bookings_booking_code_unique').on(table.bookingCode),
+    index('bookings_status_submitted_at_idx').on(table.status, table.submittedAt),
+    index('bookings_psychologist_confirmed_start_idx').on(table.psychologistId, table.confirmedStartAt),
+    index('bookings_email_normalized_idx').on(table.emailNormalized),
+    index('bookings_whatsapp_e164_idx').on(table.whatsappE164),
+    index('bookings_client_user_id_idx').on(table.clientUserId),
+    index('bookings_utm_campaign_idx').on(table.utmCampaign),
+    index('bookings_campaign_id_idx').on(table.campaignId),
+    check('bookings_client_status_valid', sql`${table.clientStatus} in ('new', 'returning')`),
+    check('bookings_consultation_mode_valid', sql`${table.consultationMode} in ('online', 'offline')`),
+    check('bookings_location_valid', sql`${table.location} is null or ${table.location} in ('tbi', 'bsd', 'malang')`),
+    check('bookings_psychologist_choice_valid', sql`${table.psychologistChoice} in ('recommended', 'previous', 'self')`),
+    check('bookings_non_negative_rates', sql`${table.baseRate} >= 0 and ${table.assessmentFee} >= 0 and ${table.totalRate} >= 0`)
+]);
+
+/**
+ * Restricted clinical triage notes & acute crisis flags separated from general
+ * booking operations (Clinical Privacy Wall).
+ */
+export const bookingClinicalIntakes = pgTable('booking_clinical_intakes', {
+    bookingId: uuid('booking_id').primaryKey().references(() => bookings.id, { onDelete: 'cascade' }),
+    concernNote: text('concern_note'),
+    crisisFlagTriggered: boolean('crisis_flag_triggered').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});
+
+/**
+ * Transactional outbox for durable idempotent n8n booking webhooks.
+ */
+export const bookingWebhookDeliveries = pgTable('booking_webhook_deliveries', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    bookingId: uuid('booking_id').notNull().references(() => bookings.id, { onDelete: 'cascade' }),
+    eventType: text('event_type').default('booking.submitted').notNull(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    payloadJson: text('payload_json').notNull(),
+    status: webhookDeliveryStatusEnum('status').default('pending').notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    lastError: text('last_error'),
+    deliveredAt: timestamp('delivered_at', { withTimezone: true, mode: 'string' }),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('booking_webhook_deliveries_idempotency_key_unique').on(table.idempotencyKey),
+    index('booking_webhook_deliveries_due_idx').on(table.status, table.nextAttemptAt),
+    index('booking_webhook_deliveries_booking_id_idx').on(table.bookingId)
+]);
+
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
+    psychologist: one(psychologists, {
+        fields: [bookings.psychologistId],
+        references: [psychologists.id]
+    }),
+    clientUser: one(users, {
+        fields: [bookings.clientUserId],
+        references: [users.id]
+    }),
+    clinicalIntake: one(bookingClinicalIntakes, {
+        fields: [bookings.id],
+        references: [bookingClinicalIntakes.bookingId]
+    }),
+    webhookDeliveries: many(bookingWebhookDeliveries)
+}));
+
+export const bookingClinicalIntakesRelations = relations(bookingClinicalIntakes, ({ one }) => ({
+    booking: one(bookings, {
+        fields: [bookingClinicalIntakes.bookingId],
+        references: [bookings.id]
+    })
+}));
+
+export const bookingWebhookDeliveriesRelations = relations(bookingWebhookDeliveries, ({ one }) => ({
+    booking: one(bookings, {
+        fields: [bookingWebhookDeliveries.bookingId],
+        references: [bookings.id]
+    })
+}));

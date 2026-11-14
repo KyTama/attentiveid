@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Menu } from 'lucide-react'
 import { BRAND } from '@/assets/images'
@@ -102,9 +102,9 @@ export function Navbar() {
                         size="sm"
                         className="btn-primary shrink-0"
                     >
-                        <a href="https://booking.attentiveid.com/" target="_blank" rel="noopener noreferrer">
+                        <Link to="/booking">
                             {t('nav.headerCta')}
-                        </a>
+                        </Link>
                     </Button>
                 </div>
 
@@ -133,14 +133,12 @@ export function Navbar() {
                                     asChild
                                     className="btn-primary w-full mt-2"
                                 >
-                                    <a
-                                        href="https://booking.attentiveid.com/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <Link
+                                        to="/booking"
                                         onClick={() => setMobileOpen(false)}
                                     >
                                         {t('nav.headerCta')}
-                                    </a>
+                                    </Link>
                                 </Button>
                             </div>
                         </SheetContent>

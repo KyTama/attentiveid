@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, CalendarCheck2, Check, Gift, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
 interface CampaignItem {
@@ -51,7 +52,7 @@ export function CampaignSection() {
       description: t('homepage.campaigns.booking.description'),
       perks: t('homepage.campaigns.booking.perks', { returnObjects: true }) as string[],
       cta: t('homepage.campaigns.booking.cta'),
-      href: 'https://booking.attentiveid.com/',
+      href: '/booking',
       icon: CalendarCheck2,
       accentColor: {
         badge: 'bg-secondary/10 text-secondary border-secondary/20',
@@ -129,19 +130,36 @@ export function CampaignSection() {
                 </div>
 
                 <div className="mt-8 pt-2">
-                  <motion.a
-                    href={card.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${card.title} - ${card.cta}`}
-                    className={`inline-flex w-full items-center justify-center gap-2.5 rounded-lg px-5 py-3.5 text-sm font-semibold shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${card.accentColor.ctaBg}`}
-                    transition={INTERACTIVE_SPRING}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <span>{card.cta}</span>
-                    <ArrowUpRight size={17} strokeWidth={2.4} />
-                  </motion.a>
+                  {card.href.startsWith('http') ? (
+                    <motion.a
+                      href={card.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${card.title} - ${card.cta}`}
+                      className={`inline-flex w-full items-center justify-center gap-2.5 rounded-lg px-5 py-3.5 text-sm font-semibold shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${card.accentColor.ctaBg}`}
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span>{card.cta}</span>
+                      <ArrowUpRight size={17} strokeWidth={2.4} />
+                    </motion.a>
+                  ) : (
+                    <motion.div
+                      transition={INTERACTIVE_SPRING}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link
+                        to={card.href}
+                        aria-label={`${card.title} - ${card.cta}`}
+                        className={`inline-flex w-full items-center justify-center gap-2.5 rounded-lg px-5 py-3.5 text-sm font-semibold shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${card.accentColor.ctaBg}`}
+                      >
+                        <span>{card.cta}</span>
+                        <ArrowUpRight size={17} strokeWidth={2.4} />
+                      </Link>
+                    </motion.div>
+                  )}
                 </div>
               </motion.article>
             )

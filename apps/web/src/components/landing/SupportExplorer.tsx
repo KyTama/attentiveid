@@ -133,14 +133,12 @@ export function SupportExplorer() {
                     <p className="mt-2 text-sm leading-relaxed font-[450] text-secondary/85">{topic.description}</p>
                   </div>
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 pt-4">
-                    <a
-                      href="https://booking.attentiveid.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      to={topicToIntakeConcern[topic.id] ? `/booking?concern=${topicToIntakeConcern[topic.id]}` : '/booking'}
                       className="inline-flex min-h-11 items-center text-xs font-bold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
                     >
                       {t('intakeDialog.title')}
-                    </a>
+                    </Link>
                     <Link
                       className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       to={topicToDirectoryQuery[topic.id]?.[locale] ?? '/psychologists'}

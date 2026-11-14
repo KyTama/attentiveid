@@ -32,6 +32,20 @@ export interface CanonicalPsychologistRow {
     licenseNumber: string;
     bookingUrl: string;
     premiumBookingUrl: string | null;
+    consultationDuration?: string;
+    onlineRate?: number | null;
+    offlineRate?: number | null;
+    availableOnline?: boolean;
+    availableTbi?: boolean;
+    availableBsd?: boolean;
+    availableMalang?: boolean;
+    scheduleMon?: string | null;
+    scheduleTue?: string | null;
+    scheduleWed?: string | null;
+    scheduleThu?: string | null;
+    scheduleFri?: string | null;
+    scheduleSat?: string | null;
+    scheduleSun?: string | null;
     biography: LocalizedText;
     shortBio?: LocalizedText;
     conversationQuote?: LocalizedText;
@@ -443,7 +457,21 @@ const selectPsychologistBase = {
     experienceYears: schema.psychologistProfiles.experienceYears,
     licenseNumber: schema.psychologistProfiles.licenseNumber,
     bookingUrl: schema.psychologistProfiles.bookingUrl,
-    premiumBookingUrl: schema.psychologistProfiles.premiumBookingUrl
+    premiumBookingUrl: schema.psychologistProfiles.premiumBookingUrl,
+    consultationDuration: schema.psychologistProfiles.consultationDuration,
+    onlineRate: schema.psychologistProfiles.onlineRate,
+    offlineRate: schema.psychologistProfiles.offlineRate,
+    availableOnline: schema.psychologistProfiles.availableOnline,
+    availableTbi: schema.psychologistProfiles.availableTbi,
+    availableBsd: schema.psychologistProfiles.availableBsd,
+    availableMalang: schema.psychologistProfiles.availableMalang,
+    scheduleMon: schema.psychologistProfiles.scheduleMon,
+    scheduleTue: schema.psychologistProfiles.scheduleTue,
+    scheduleWed: schema.psychologistProfiles.scheduleWed,
+    scheduleThu: schema.psychologistProfiles.scheduleThu,
+    scheduleFri: schema.psychologistProfiles.scheduleFri,
+    scheduleSat: schema.psychologistProfiles.scheduleSat,
+    scheduleSun: schema.psychologistProfiles.scheduleSun
 } as const;
 
 // Numbers the given featured practitioners 1..n in order, without ever holding a duplicate.
@@ -621,6 +649,20 @@ export const createDrizzlePsychologistQuerySource = (
                         licenseNumber: input.licenseNumber,
                         bookingUrl: input.bookingUrl,
                         premiumBookingUrl: input.premiumBookingUrl || null,
+                        ...(input.consultationDuration !== undefined ? { consultationDuration: input.consultationDuration } : {}),
+                        ...(input.onlineRate !== undefined ? { onlineRate: input.onlineRate } : {}),
+                        ...(input.offlineRate !== undefined ? { offlineRate: input.offlineRate } : {}),
+                        ...(input.availableOnline !== undefined ? { availableOnline: input.availableOnline } : {}),
+                        ...(input.availableTbi !== undefined ? { availableTbi: input.availableTbi } : {}),
+                        ...(input.availableBsd !== undefined ? { availableBsd: input.availableBsd } : {}),
+                        ...(input.availableMalang !== undefined ? { availableMalang: input.availableMalang } : {}),
+                        ...(input.scheduleMon !== undefined ? { scheduleMon: input.scheduleMon } : {}),
+                        ...(input.scheduleTue !== undefined ? { scheduleTue: input.scheduleTue } : {}),
+                        ...(input.scheduleWed !== undefined ? { scheduleWed: input.scheduleWed } : {}),
+                        ...(input.scheduleThu !== undefined ? { scheduleThu: input.scheduleThu } : {}),
+                        ...(input.scheduleFri !== undefined ? { scheduleFri: input.scheduleFri } : {}),
+                        ...(input.scheduleSat !== undefined ? { scheduleSat: input.scheduleSat } : {}),
+                        ...(input.scheduleSun !== undefined ? { scheduleSun: input.scheduleSun } : {}),
                         updatedAt: sql`now()`
                     })
                     .where(eq(schema.psychologistProfiles.psychologistId, psychologistId));
@@ -646,8 +688,22 @@ export const createDrizzlePsychologistQuerySource = (
                         credential: input.credential,
                         experienceYears: input.experienceYears,
                         licenseNumber: input.licenseNumber,
-                        bookingUrl: input.bookingUrl,
-                        premiumBookingUrl: input.premiumBookingUrl || null
+                        bookingUrl: input.bookingUrl || `https://attentiveid.com/booking?psychologist=${input.slug}`,
+                        premiumBookingUrl: input.premiumBookingUrl || null,
+                        ...(input.consultationDuration !== undefined ? { consultationDuration: input.consultationDuration } : {}),
+                        ...(input.onlineRate !== undefined ? { onlineRate: input.onlineRate } : {}),
+                        ...(input.offlineRate !== undefined ? { offlineRate: input.offlineRate } : {}),
+                        ...(input.availableOnline !== undefined ? { availableOnline: input.availableOnline } : {}),
+                        ...(input.availableTbi !== undefined ? { availableTbi: input.availableTbi } : {}),
+                        ...(input.availableBsd !== undefined ? { availableBsd: input.availableBsd } : {}),
+                        ...(input.availableMalang !== undefined ? { availableMalang: input.availableMalang } : {}),
+                        ...(input.scheduleMon !== undefined ? { scheduleMon: input.scheduleMon } : {}),
+                        ...(input.scheduleTue !== undefined ? { scheduleTue: input.scheduleTue } : {}),
+                        ...(input.scheduleWed !== undefined ? { scheduleWed: input.scheduleWed } : {}),
+                        ...(input.scheduleThu !== undefined ? { scheduleThu: input.scheduleThu } : {}),
+                        ...(input.scheduleFri !== undefined ? { scheduleFri: input.scheduleFri } : {}),
+                        ...(input.scheduleSat !== undefined ? { scheduleSat: input.scheduleSat } : {}),
+                        ...(input.scheduleSun !== undefined ? { scheduleSun: input.scheduleSun } : {})
                     });
             }
 

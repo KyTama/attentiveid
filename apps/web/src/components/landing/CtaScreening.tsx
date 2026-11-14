@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 export const CtaScreening = () => {
@@ -23,9 +24,9 @@ export const CtaScreening = () => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-secondary font-bold rounded-full px-10 py-6 text-lg cursor-pointer transition-transform hover:scale-105"
           >
-            <a href="https://booking.attentiveid.com/" target="_blank" rel="noopener noreferrer">
+            <Link to="/booking">
               {buttonText}
-            </a>
+            </Link>
           </Button>
         </motion.div>
       </div>

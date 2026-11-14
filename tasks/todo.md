@@ -1,28 +1,35 @@
-# Task: Fix & End-to-End Test CMS Update Dashboard (Local Commit Only)
+# Task: Native Booking Engine Migration (`Attentive-Booking` -> `attentiveid`)
 
-> **Status:** DONE (LOCAL COMMIT ONLY — NOT PUSHED)
-> **Rule:** DO NOT PUSH THIS FIX TO GITHUB. Local commit only (`git commit` without `git push`).
-
----
-
-## Action Items
-- [x] **1. Reproduce & audit real CMS failure modes against live local Postgres + `createApp`**:
-  - Audited `landing-cms.ts`, `public-content.ts`, `preview-capability.ts`, `LandingCmsPage.tsx`, `TestimonialsCmsPage.tsx`, `content.ts`, `service.ts` against real Postgres and headless Chrome.
-- [x] **2. Fix uncovered CMS backend (`landing-cms.ts` / `public-content.ts` / `preview-capability.ts` / `app.ts` / `shared`) and frontend (`LandingCmsPage.tsx` / `TestimonialsCmsPage.tsx` / `service.ts`) bugs**:
-  - Eliminated silent fallback on invalid `POST /api/admin/landing/publish` payloads (`400` + `getLandingContentMutationErrors` field diagnostics).
-  - Unwrapped `TestimonialsCmsPage.tsx` `{ content: ... }` publish bug + added `Simpan Draft` + max-8 bound enforcement.
-  - Added `POST /api/admin/landing/preview`, fixed `Date.parse` Postgres timestamp comparison in `preview-capability.ts`, conditional `Secure` cookie for local HTTP vs HTTPS, and React `<StrictMode>` in-flight promise coalescing in `loadPreviewLandingContent()`.
-  - Normalized empty optional slide localized fields & fixed Slide 1 photo reset in `LandingCmsPage.tsx`.
-- [x] **3. Run real end-to-end CMS update & publish verification against live local API + Web dev servers**:
-  - Verified live HTTP roundtrips + real headless Chromium CDP flow (`LandingCmsPage` Save Draft -> `Preview Draft ↗` rendering draft live -> `TestimonialsCmsPage` Save Draft & Publish -> homepage live update) + restored clean pre-test Postgres revisions.
-- [x] **4. Add automated API & Web regression tests for the real failure modes**:
-  - Added tests in `apps/api/src/routes/landing-cms.test.ts`, `apps/api/src/security/preview-capability.test.ts`, `apps/web/tests/landing-cms.test.tsx`, `apps/web/tests/shared-content-preview.test.tsx`.
-- [x] **5. Full verification (`bun test`, `build:web`, `lint`), knowledge graph sync, harvest `.docs/` lesson, and local-only `git commit` (NO `git push`)**.
+> **Branch:** `feat/booking` (rebased onto `origin/master` `369388c`)
+> **Commit Policy:** Local commit only on `feat/booking` — DO NOT push until user instructs.
+> **Specification:** `.docs/specifications/booking-migration-plan.md`
 
 ---
 
-## Hardening Follow-up: Prevent Draft/Key/ID Errors on Publish (Local Commit Only)
-- [x] **H1. Lock `landing_aggregates` row (`FOR UPDATE`) in `createLandingDraft` & `publishLandingRevision` (`content-transitions.ts`)** to eliminate concurrent `duplicate key` races on `landing_revisions_one_draft_per_aggregate`.
-- [x] **H2. Export shared `normalizeLandingContentMutation` in `packages/shared/src/content.ts`** (position re-indexing, unique/valid identifier repair, bilingual 1-side fallback + optional blank removal, clean schema whitelisting).
-- [x] **H3. Wire shared normalizer + pre-flight `getLandingContentMutationErrors` + unified busy lock** into `LandingCmsPage.tsx` and `TestimonialsCmsPage.tsx` (plus `crypto.randomUUID` / unique ID generation on add).
-- [x] **H4. Add regression tests (shared/API/web), run full checks (`bun test`, `build:web`, `lint`), update knowledge graph & local-only commit (NO `git push`)**.
+## Checklist
+
+- [x] **Step 0: Sync Branch & Staging Content (Non-PII)**
+  - Pulled `origin/master` (`369388c`), rebased `feat/booking` onto `master`.
+  - Applied `0000`–`0010` migrations to local Postgres (`attentiveid`) and synced 20 non-PII tables from staging (`tencent-lab`) + re-seeded local dev users (`db:seed:users`).
+- [x] **Stage A: Shared Domain Contract (`packages/shared/src/booking.ts`)**
+  - Implemented `packages/shared/src/booking.ts` reusing `PRACTICE_BRANCHES` (`tbi | bsd | malang`), `INTAKE_CONCERNS`, `matchPsychologists`, `detectCrisisKeywords`, and `EMERGENCY_CRISIS_HOTLINES`.
+  - Added `ZITE_PSYCHOLOGIST_BOOKING_DEFAULTS`, email/WhatsApp E.164 normalizers, booking validators, `parseDaySchedule`, 20:00 WIB cutoff, WhatsApp routing, status transitions, and formula-neutralized operational CSV exporter (no `concernNote`).
+  - Extended `FullPsychologistMutation` & validation in `packages/shared/src/content.ts` with optional booking catalog fields, exported in `packages/shared/src/index.ts`, and verified (`48 pass, 0 fail` across `packages/shared/`).
+- [x] **Stage B: Schema, Drizzle Migration & Psychologists Compatibility (`apps/api`)**
+  - Extended `psychologist_profiles` (preserving `bookingUrl`/`premiumBookingUrl`, adding rates/availability/schedule columns + mode-rate `CHECK` constraints).
+  - Added `booking_status`, `webhook_delivery_status`, `bookings` (`client_user_id`, `email_normalized`, `whatsapp_e164`, `onDelete: 'restrict'` on `psychologist_id`, `confirmed_start_at`/`confirmed_end_at`), `booking_clinical_intakes`, and `booking_webhook_deliveries`.
+  - Generated Drizzle migration (`0011_booking_foundation.sql`), appended Zite 18-psychologist backfill SQL, migrated local DB (`26` tables, `18` backfilled booking profiles), updated `psychologists.repository.ts`, `psychologist-self.routes.ts`, and `seed-psychologists.ts`, and verified `apps/api` tests (`150 pass, 5 skip, 0 fail`).
+- [x] **Stage C: Backend Repositories, Durable n8n Outbox & Separated Routes (`apps/api`)**
+  - Implement `booking.repository.ts` (`pg_advisory_xact_lock` + 15-min buffer overlap check, attribution SQL aggregation, Clinical Privacy Wall isolation).
+  - Implement `booking-outbox.ts` (`FOR UPDATE SKIP LOCKED`, exponential backoff, HMAC + `X-Attentive-Idempotency-Key`, redacted `A:V` Google Sheet array & admin email).
+  - Implement separated `booking-public.routes.ts` & `booking-admin.routes.ts`, wire into `apps/api/src/app.ts` & `index.ts`, add API integration tests, and verify with `bun test`.
+- [x] **Stage D: Public `/booking` UI & Global Attribution (`apps/web`)**
+  - Add root `captureAttribution()` in `apps/web/src/App.tsx`.
+  - Implement `apps/web/src/features/booking/*` (attribution, plain-`fetch` service, `timezone-data.ts`, `booking-i18n.ts`, Framer Motion `INTERACTIVE_SPRING` UI components integrating `matchPsychologists` and `detectCrisisKeywords` crisis banner) and `apps/web/src/pages/BookingPage.tsx` (Meta Pixel `Lead` dedup + `?psychologist=` / `?concern=` / `?mode=` query pre-fill).
+- [x] **Stage E: CTA Migration, Caddy Proxy Redirect & Incremental Modal Retirement**
+  - Update `deploy/Caddyfile` (`booking.{$DOMAIN}` redirect) and verify `./scripts/ci/verify-runtime-config.sh`.
+  - Update `PublicLayout.tsx` `?intake=true` redirect to `/booking`, update `FREE_SESSION_BOOKING_URL` / ~15 outbound links & intake triggers to `/booking`, retire `ConsultationIntakeModal.tsx` after confirming zero broken references, and update/add web tests.
+- [x] **Stage F: Portal `/dashboard/bookings`, Psychologist Schedule/Rates CMS & Final Verification + Local Commit**
+  - Add `/dashboard/bookings` (`BookingsCmsPage.tsx`) for `admin`/`superadmin` (operational booking queue, confirmation slot + overlap error display, n8n outbox retry, CSV export, Attribution Report tab).
+  - Extend `PsychologistsCmsPage.tsx` (Tab 3) and `PsychologistProfileSelfPage.tsx` with rates, branch availability booleans, and Mon–Sun schedule editor with live `parseDaySchedule` preview; update `map-data.ts`.
+  - Run full tests (`bun run test`, `bun run test:web`, `bun run lint`, `bun run build`, CI checks), live API + browser smoke test on local dev, rebuild `code-review-graph`, harvest lesson under `.docs/common-issues/`, and create local commit on `feat/booking` (NO `git push`).

@@ -17,6 +17,8 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { SciBriefPage } from './pages/SciBriefPage'
 import { SciBriefDetailPage } from './pages/SciBriefDetailPage'
+import { BookingPage } from './pages/BookingPage'
+import { captureAttribution } from './features/booking/attribution'
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
 import { TestimonialsCmsPage } from './pages/dashboard/TestimonialsCmsPage'
@@ -25,6 +27,7 @@ import { ArticlesCmsPage } from './pages/dashboard/ArticlesCmsPage'
 import { PsychologistProfileSelfPage } from './pages/dashboard/PsychologistProfileSelfPage'
 import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
+import { BookingsCmsPage } from './pages/dashboard/BookingsCmsPage'
 import { SciBriefCmsPage } from './pages/dashboard/SciBriefCmsPage'
 import { ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
 import { SystemMapPage } from './pages/dashboard/SystemMapPage'
@@ -53,6 +56,9 @@ export function AppRoutes({
           <Route path="sci-brief" element={<SciBriefPage />} />
           <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />
         </Route>
+
+        {/* Native Consultation Booking Wizard (No Public Navbar/Footer Chrome) */}
+        <Route path="/booking" element={<BookingPage />} />
 
         {/* Obscured Staff Authentication Gate (Decommissioned /login) */}
         <Route path="portal-gate" element={<LoginPage />} />
@@ -89,6 +95,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <PsychologistsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="bookings"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <BookingsCmsPage />
               </ProtectedRoute>
             }
           />
@@ -161,6 +175,10 @@ export function AppRoutes({
 
 function App() {
   const { i18n } = useTranslation()
+
+  useEffect(() => {
+    captureAttribution()
+  }, [])
 
   useEffect(() => {
     document.documentElement.lang = i18n.language

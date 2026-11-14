@@ -1,7 +1,65 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { parseDaySchedule } from '@attentiveid/shared'
 import { useAuth } from '../../features/auth/auth-context'
+
+type ScheduleDayKey =
+  | 'scheduleMon'
+  | 'scheduleTue'
+  | 'scheduleWed'
+  | 'scheduleThu'
+  | 'scheduleFri'
+  | 'scheduleSat'
+  | 'scheduleSun'
+
+type ScheduleMap = Record<ScheduleDayKey, string>
+
+const BOOKING_SCHEDULE_DAYS: ReadonlyArray<{ key: ScheduleDayKey; label: string }> = [
+  { key: 'scheduleMon', label: 'Senin' },
+  { key: 'scheduleTue', label: 'Selasa' },
+  { key: 'scheduleWed', label: 'Rabu' },
+  { key: 'scheduleThu', label: 'Kamis' },
+  { key: 'scheduleFri', label: 'Jumat' },
+  { key: 'scheduleSat', label: 'Sabtu' },
+  { key: 'scheduleSun', label: 'Minggu' },
+]
+
+const DEFAULT_SCHEDULES: ScheduleMap = {
+  scheduleMon: 'Off',
+  scheduleTue: 'Off',
+  scheduleWed: 'Off',
+  scheduleThu: 'Off',
+  scheduleFri: 'Off',
+  scheduleSat: 'Off',
+  scheduleSun: 'Off',
+}
+
+const getScheduleBadgeMeta = (rawSchedule: string) => {
+  const parsed = parseDaySchedule(rawSchedule)
+  if (!parsed) {
+    return {
+      text: 'Format belum dikenali',
+      className: 'bg-rose-50 text-rose-700 border-rose-200',
+    }
+  }
+  if (parsed.type === 'off') {
+    return {
+      text: 'Off',
+      className: 'bg-slate-100 text-slate-600 border-slate-200',
+    }
+  }
+  if (parsed.type === 'appointment') {
+    return {
+      text: 'By Appointment',
+      className: 'bg-amber-50 text-amber-800 border-amber-200',
+    }
+  }
+  return {
+    text: `${parsed.ranges.length} rentang jam`,
+    className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  }
+}
 
 const springConfig = { type: 'spring', stiffness: 400, damping: 30 } as const
 
@@ -17,6 +75,20 @@ interface PsychologistSelfData {
   licenseNumber: string
   bookingUrl: string
   premiumBookingUrl: string | null
+  consultationDuration?: string | null
+  onlineRate?: number | null
+  offlineRate?: number | null
+  availableOnline?: boolean
+  availableTbi?: boolean
+  availableBsd?: boolean
+  availableMalang?: boolean
+  scheduleMon?: string | null
+  scheduleTue?: string | null
+  scheduleWed?: string | null
+  scheduleThu?: string | null
+  scheduleFri?: string | null
+  scheduleSat?: string | null
+  scheduleSun?: string | null
   biography: {
     id: string
     en: string
@@ -40,6 +112,14 @@ export function PsychologistProfileSelfPage() {
   const [licenseNumber, setLicenseNumber] = useState('')
   const [bookingUrl, setBookingUrl] = useState('')
   const [premiumBookingUrl, setPremiumBookingUrl] = useState('')
+  const [consultationDuration, setConsultationDuration] = useState('±60 menit / sesi')
+  const [onlineRate, setOnlineRate] = useState('')
+  const [offlineRate, setOfflineRate] = useState('')
+  const [availableOnline, setAvailableOnline] = useState(false)
+  const [availableTbi, setAvailableTbi] = useState(false)
+  const [availableBsd, setAvailableBsd] = useState(false)
+  const [availableMalang, setAvailableMalang] = useState(false)
+  const [schedules, setSchedules] = useState<ScheduleMap>({ ...DEFAULT_SCHEDULES })
   const [bioId, setBioId] = useState('')
   const [bioEn, setBioEn] = useState('')
 
@@ -68,6 +148,22 @@ export function PsychologistProfileSelfPage() {
         setLicenseNumber(d.licenseNumber || '')
         setBookingUrl(d.bookingUrl || '')
         setPremiumBookingUrl(d.premiumBookingUrl || '')
+        setConsultationDuration(d.consultationDuration || '±60 menit / sesi')
+        setOnlineRate(d.onlineRate !== null && d.onlineRate !== undefined ? String(d.onlineRate) : '')
+        setOfflineRate(d.offlineRate !== null && d.offlineRate !== undefined ? String(d.offlineRate) : '')
+        setAvailableOnline(Boolean(d.availableOnline))
+        setAvailableTbi(Boolean(d.availableTbi))
+        setAvailableBsd(Boolean(d.availableBsd))
+        setAvailableMalang(Boolean(d.availableMalang))
+        setSchedules({
+          scheduleMon: d.scheduleMon || 'Off',
+          scheduleTue: d.scheduleTue || 'Off',
+          scheduleWed: d.scheduleWed || 'Off',
+          scheduleThu: d.scheduleThu || 'Off',
+          scheduleFri: d.scheduleFri || 'Off',
+          scheduleSat: d.scheduleSat || 'Off',
+          scheduleSun: d.scheduleSun || 'Off',
+        })
         setBioId(d.biography?.id || '')
         setBioEn(d.biography?.en || '')
       }
@@ -84,6 +180,28 @@ export function PsychologistProfileSelfPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    const rawOnlineRate = onlineRate.trim()
+    const rawOfflineRate = offlineRate.trim()
+    const parsedOnlineRate = rawOnlineRate === '' ? null : Number(rawOnlineRate)
+    const parsedOfflineRate = rawOfflineRate === '' ? null : Number(rawOfflineRate)
+
+    if (parsedOnlineRate !== null && (!Number.isInteger(parsedOnlineRate) || parsedOnlineRate < 0)) {
+      setFeedback({ type: 'error', message: 'Tarif sesi Online harus berupa angka bulat >= 0.' })
+      return
+    }
+    if (parsedOfflineRate !== null && (!Number.isInteger(parsedOfflineRate) || parsedOfflineRate < 0)) {
+      setFeedback({ type: 'error', message: 'Tarif sesi Offline harus berupa angka bulat >= 0.' })
+      return
+    }
+    if (availableOnline && parsedOnlineRate === null) {
+      setFeedback({ type: 'error', message: 'Tarif sesi Online wajib diisi jika layanan Online diaktifkan.' })
+      return
+    }
+    if ((availableTbi || availableBsd || availableMalang) && parsedOfflineRate === null) {
+      setFeedback({ type: 'error', message: 'Tarif sesi Offline wajib diisi jika minimal satu cabang tatap muka diaktifkan.' })
+      return
+    }
+
     setIsSaving(true)
     setFeedback(null)
 
@@ -101,6 +219,20 @@ export function PsychologistProfileSelfPage() {
           licenseNumber,
           bookingUrl,
           premiumBookingUrl: premiumBookingUrl || undefined,
+          consultationDuration: consultationDuration.trim() || undefined,
+          onlineRate: parsedOnlineRate,
+          offlineRate: parsedOfflineRate,
+          availableOnline,
+          availableTbi,
+          availableBsd,
+          availableMalang,
+          scheduleMon: schedules.scheduleMon.trim() || null,
+          scheduleTue: schedules.scheduleTue.trim() || null,
+          scheduleWed: schedules.scheduleWed.trim() || null,
+          scheduleThu: schedules.scheduleThu.trim() || null,
+          scheduleFri: schedules.scheduleFri.trim() || null,
+          scheduleSat: schedules.scheduleSat.trim() || null,
+          scheduleSun: schedules.scheduleSun.trim() || null,
           biography: {
             id: bioId,
             en: bioEn,
@@ -123,6 +255,20 @@ export function PsychologistProfileSelfPage() {
             licenseNumber,
             bookingUrl,
             premiumBookingUrl: premiumBookingUrl || null,
+            consultationDuration: consultationDuration.trim() || null,
+            onlineRate: parsedOnlineRate,
+            offlineRate: parsedOfflineRate,
+            availableOnline,
+            availableTbi,
+            availableBsd,
+            availableMalang,
+            scheduleMon: schedules.scheduleMon.trim() || null,
+            scheduleTue: schedules.scheduleTue.trim() || null,
+            scheduleWed: schedules.scheduleWed.trim() || null,
+            scheduleThu: schedules.scheduleThu.trim() || null,
+            scheduleFri: schedules.scheduleFri.trim() || null,
+            scheduleSat: schedules.scheduleSat.trim() || null,
+            scheduleSun: schedules.scheduleSun.trim() || null,
             biography: {
               id: bioId,
               en: bioEn,
@@ -410,6 +556,113 @@ export function PsychologistProfileSelfPage() {
                   </span>
                 </div>
               )}
+            </div>
+
+            <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 space-y-4">
+              <div>
+                <h4 className="text-xs font-semibold text-slate-800">Tarif, Cabang & Jadwal Praktik Booking</h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Perubahan pada bagian ini langsung tampil di katalog dan kalender halaman publik <span className="font-mono">/booking</span>.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Durasi Konsultasi</label>
+                  <input
+                    type="text"
+                    value={consultationDuration}
+                    onChange={(e) => setConsultationDuration(e.target.value)}
+                    placeholder="±60 menit / sesi"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Tarif Online (IDR)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={onlineRate}
+                    onChange={(e) => setOnlineRate(e.target.value)}
+                    placeholder="Contoh: 350000"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Tarif Offline (IDR)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={offlineRate}
+                    onChange={(e) => setOfflineRate(e.target.value)}
+                    placeholder="Contoh: 450000"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-medium text-slate-600 mb-2">Ketersediaan Mode & Cabang</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { key: 'online', label: 'Online (Video)', checked: availableOnline, onToggle: setAvailableOnline },
+                    { key: 'tbi', label: 'Offline — Jakarta (TBI Pusat)', checked: availableTbi, onToggle: setAvailableTbi },
+                    { key: 'bsd', label: 'Offline — BSD (Delrey BizTown)', checked: availableBsd, onToggle: setAvailableBsd },
+                    { key: 'malang', label: 'Offline — Malang (Grand Arumba)', checked: availableMalang, onToggle: setAvailableMalang },
+                  ].map((item) => (
+                    <label
+                      key={item.key}
+                      className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={(e) => item.onToggle(e.target.checked)}
+                        className="rounded border-slate-300 text-teal-600 focus:ring-teal-500/20"
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div>
+                  <p className="text-[11px] font-medium text-slate-600">Jadwal Praktik Mingguan (Senin – Minggu)</p>
+                  <p className="text-[11px] text-slate-400">
+                    Format: <span className="font-mono">09:00-17:00</span>, <span className="font-mono">By Appointment</span>, atau <span className="font-mono">Off</span>.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {BOOKING_SCHEDULE_DAYS.map((day) => {
+                    const badge = getScheduleBadgeMeta(schedules[day.key])
+                    return (
+                      <div key={day.key} className="grid grid-cols-12 items-center gap-2">
+                        <label className="col-span-3 sm:col-span-2 text-xs font-medium text-slate-700">
+                          {day.label}
+                        </label>
+                        <input
+                          type="text"
+                          value={schedules[day.key]}
+                          onChange={(e) =>
+                            setSchedules((prev) => ({
+                              ...prev,
+                              [day.key]: e.target.value,
+                            }))
+                          }
+                          placeholder="Off / 09:00-17:00 / By Appointment"
+                          className="col-span-5 sm:col-span-7 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        />
+                        <div className="col-span-4 sm:col-span-3 flex justify-end">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${badge.className}`}>
+                            {badge.text}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="pt-4 flex justify-end">

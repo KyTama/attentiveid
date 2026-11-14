@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Building2, CalendarCheck2, CalendarClock, Car, ExternalLink, MapPin, Navigation, ShieldCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { clinicBranches, type ClinicBranch } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
@@ -146,31 +147,33 @@ export function OurLocations() {
                 {/* Card Action Button */}
                 <div className="mt-8 pt-5 border-t border-secondary/10">
                   {isOpeningSoon ? (
-                    <motion.a
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                      href="https://booking.attentiveid.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <motion.div
                       transition={INTERACTIVE_SPRING}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
-                      <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
-                    </motion.a>
+                      <Link
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                        to="/booking?mode=online"
+                      >
+                        <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
+                        <span>{t('homepage.locations.consultOnlineNow', 'Konsultasi Online Sekarang')}</span>
+                      </Link>
+                    </motion.div>
                   ) : (
-                    <motion.a
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                      href="https://booking.attentiveid.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <motion.div
                       transition={INTERACTIVE_SPRING}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
-                      <span>{t('homepage.locations.planOfflineSession', 'Jadwalkan Sesi Offline')}</span>
-                    </motion.a>
+                      <Link
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-white shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                        to={`/booking?mode=offline&location=${branch.id}`}
+                      >
+                        <CalendarCheck2 aria-hidden="true" className="size-4 text-primary" />
+                        <span>{t('homepage.locations.planOfflineSession', 'Jadwalkan Sesi Offline')}</span>
+                      </Link>
+                    </motion.div>
                   )}
                 </div>
               </motion.div>

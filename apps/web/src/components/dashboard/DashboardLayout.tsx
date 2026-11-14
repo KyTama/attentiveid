@@ -69,6 +69,12 @@ export function DashboardLayout() {
       show: isAdmin,
     },
     {
+      to: '/dashboard/bookings',
+      label: t('dashboard.navBookings', 'Reservasi & Booking'),
+      icon: <CalendarDays className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
+    },
+    {
       to: '/dashboard/profile',
       label: t('dashboard.navProfile', 'Profil Saya'),
       icon: <UserCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,

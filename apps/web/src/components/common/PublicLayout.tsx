@@ -1,29 +1,34 @@
 import { useEffect } from 'react'
-import { Outlet, useLocation, useNavigationType, useSearchParams } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { IntakeModalProvider, ConsultationIntakeModal, useIntakeModal } from '@/components/intake'
 import type { IntakeConcernId } from '@attentiveid/shared'
 
 function PublicIntakeModalWrapper() {
-  const { isOpen, options, closeIntake, openIntake } = useIntakeModal()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { isOpen, options, closeIntake } = useIntakeModal()
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
+    if (location.pathname === '/booking') return
     const intakeParam = searchParams.get('intake')
     const concernParam = searchParams.get('concern') as IntakeConcernId | null
     const psychologistParam = searchParams.get('psychologist')
 
     if (intakeParam === 'true' || concernParam || psychologistParam) {
-      openIntake({
-        concernId: concernParam || undefined,
-        psychologistId: psychologistParam || undefined,
-      })
-      const nextParams = new URLSearchParams(searchParams)
-      nextParams.delete('intake')
-      nextParams.delete('concern')
-      nextParams.delete('psychologist')
-      setSearchParams(nextParams, { replace: true })
+      const bookingParams = new URLSearchParams()
+      if (concernParam) bookingParams.set('concern', concernParam)
+      if (psychologistParam) bookingParams.set('psychologist', psychologistParam)
+      const search = bookingParams.toString()
+      navigate(
+        {
+          pathname: '/booking',
+          search: search ? `?${search}` : '',
+        },
+        { replace: true },
+      )
     }
-  }, [searchParams, openIntake, setSearchParams])
+  }, [searchParams, location.pathname, navigate])
 
   return (
     <ConsultationIntakeModal

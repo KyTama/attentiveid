@@ -7,7 +7,9 @@ const EnvSchema = t.Object({
     FRONTEND_URL: t.Optional(t.String()),
     PREVIEW_HMAC_SECRET: t.Optional(t.String()),
     JWT_SECRET: t.Optional(t.String()),
-    MEDIA_DIR: t.Optional(t.String())
+    MEDIA_DIR: t.Optional(t.String()),
+    N8N_BOOKING_WEBHOOK_URL: t.Optional(t.String()),
+    N8N_WEBHOOK_SECRET: t.Optional(t.String())
 });
 
 export const parseEnv = (source: Record<string, string | undefined>) => {
