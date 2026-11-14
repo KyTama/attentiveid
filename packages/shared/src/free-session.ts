@@ -32,7 +32,7 @@ export type FreeSessionGenderId = typeof FREE_SESSION_GENDER_OPTIONS[number]['id
 export const FREE_SESSION_MAX_DETAIL_LENGTH = 500
 export const FREE_SESSION_MIN_AGE = 15
 export const FREE_SESSION_MAX_AGE = 99
-export const FREE_SESSION_BOOKING_URL = '/booking'
+export const FREE_SESSION_BOOKING_URL = 'https://booking.attentiveid.com'
 
 /** A validated submission, ready to store. `phone` is digits only. */
 export interface FreeSessionSubmission {

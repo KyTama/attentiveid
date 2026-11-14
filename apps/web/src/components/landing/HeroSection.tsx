@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 
 export function HeroSection() {
@@ -13,9 +12,9 @@ export function HeroSection() {
         {t("hero.tagline")}
       </p>
       <Button asChild className="mt-8 btn-primary">
-        <Link to="/booking">
+        <a href="https://booking.attentiveid.com/" target="_blank" rel="noopener noreferrer">
           {t("cta.button")}
-        </Link>
+        </a>
       </Button>
     </section>
   );

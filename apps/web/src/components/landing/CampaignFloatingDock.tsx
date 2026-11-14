@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useIntakeModal } from '@/components/intake'
 import { useLandingSection } from '@/features/content/landing-content-context'
@@ -56,7 +55,7 @@ export function CampaignFloatingDock() {
       shortLabel: isId ? 'Booking' : 'Book Session',
       title: t('homepage.campaigns.booking.title'),
       cta: t('homepage.campaigns.booking.cta'),
-      url: '/booking',
+      url: 'https://booking.attentiveid.com/',
     },
   ]
 
@@ -69,10 +68,7 @@ export function CampaignFloatingDock() {
         const badgeText = card.badge?.[localeKey] || card.badge?.id || ''
         const titleText = card.title?.[localeKey] || card.title?.id || fallback?.title || ''
         const ctaText = card.cta?.[localeKey] || card.cta?.id || fallback?.cta || ''
-        const rawUrl = card.url || fallback?.url || '#'
-        const resolvedUrl = /^https?:\/\/booking\.attentiveid\.com\/?$/i.test(String(rawUrl).trim())
-          ? '/booking'
-          : rawUrl
+        const resolvedUrl = card.url || fallback?.url || '#'
         return {
           id: card.id || `dock-card-${idx}`,
           visible: card.visible !== false && !resolvedUrl.includes('assessment.attentiveid.com'),
@@ -131,61 +127,40 @@ export function CampaignFloatingDock() {
                   : Sparkles
 
               const isHighlight = item.theme === 'gold' || idx === 0
-              const itemClassName = isHighlight
-                ? 'group flex h-full items-center gap-1 whitespace-nowrap rounded-full bg-primary px-2.5 text-[11px] font-bold text-secondary shadow-2xs outline-none hover:bg-[#ffcf4d] focus-visible:ring-2 focus-visible:ring-primary sm:gap-1.5 sm:px-3 sm:text-xs'
-                : 'group flex h-full items-center gap-1 whitespace-nowrap rounded-full px-2 text-[11px] font-medium text-white/90 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-primary sm:gap-1.5 sm:px-2.5 sm:text-xs'
-              const itemContent = (
-                <>
-                  <IconComponent
-                    size={12}
-                    strokeWidth={isHighlight ? 2.5 : 2.2}
-                    className={
-                      isHighlight
-                        ? 'shrink-0 text-secondary'
-                        : 'shrink-0 text-white/75 group-hover:text-white'
-                    }
-                  />
-                  <span className="leading-none">{item.shortLabel}</span>
-                  <ArrowUpRight
-                    size={11}
-                    strokeWidth={isHighlight ? 2.6 : 2.4}
-                    className="hidden shrink-0 opacity-70 group-hover:opacity-100 sm:inline-block"
-                  />
-                </>
-              )
 
               return (
                 <Fragment key={item.id}>
                   {idx > 0 && <div aria-hidden="true" className="mx-0.5 h-3 w-px bg-white/20" />}
-                  {item.url.startsWith('http') ? (
-                    <motion.a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${item.title} - ${item.cta}`}
-                      className={itemClassName}
-                      transition={INTERACTIVE_SPRING}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      {itemContent}
-                    </motion.a>
-                  ) : (
-                    <motion.div
-                      className="flex h-full items-center"
-                      transition={INTERACTIVE_SPRING}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      <Link
-                        to={item.url}
-                        aria-label={`${item.title} - ${item.cta}`}
-                        className={itemClassName}
-                      >
-                        {itemContent}
-                      </Link>
-                    </motion.div>
-                  )}
+                  <motion.a
+                    href={item.url}
+                    target={item.url.startsWith('http') ? '_blank' : undefined}
+                    rel={item.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    aria-label={`${item.title} - ${item.cta}`}
+                    className={
+                      isHighlight
+                        ? 'group flex h-full items-center gap-1 whitespace-nowrap rounded-full bg-primary px-2.5 text-[11px] font-bold text-secondary shadow-2xs outline-none hover:bg-[#ffcf4d] focus-visible:ring-2 focus-visible:ring-primary sm:gap-1.5 sm:px-3 sm:text-xs'
+                        : 'group flex h-full items-center gap-1 whitespace-nowrap rounded-full px-2 text-[11px] font-medium text-white/90 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-primary sm:gap-1.5 sm:px-2.5 sm:text-xs'
+                    }
+                    transition={INTERACTIVE_SPRING}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                  >
+                    <IconComponent
+                      size={12}
+                      strokeWidth={isHighlight ? 2.5 : 2.2}
+                      className={
+                        isHighlight
+                          ? 'shrink-0 text-secondary'
+                          : 'shrink-0 text-white/75 group-hover:text-white'
+                      }
+                    />
+                    <span className="leading-none">{item.shortLabel}</span>
+                    <ArrowUpRight
+                      size={11}
+                      strokeWidth={isHighlight ? 2.6 : 2.4}
+                      className="hidden shrink-0 opacity-70 group-hover:opacity-100 sm:inline-block"
+                    />
+                  </motion.a>
                 </Fragment>
               )
             })}

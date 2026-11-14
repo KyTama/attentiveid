@@ -234,18 +234,17 @@ export function SiteHeader() {
         <div className="hidden items-center gap-4 lg:flex">
           <LanguageToggle />
 
-          <motion.div
+          <motion.a
+            href="https://booking.attentiveid.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
             transition={INTERACTIVE_SPRING}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
-            <Link
-              to="/booking"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-            >
-              {t('homepage.nav.headerCta')}
-            </Link>
-          </motion.div>
+            {t('homepage.nav.headerCta')}
+          </motion.a>
         </div>
 
         {/* Mobile Header Controls */}
@@ -322,13 +321,15 @@ export function SiteHeader() {
               </nav>
 
               <div className="mt-2">
-                <Link
-                  to="/booking"
+                <a
+                  href="https://booking.attentiveid.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
                   onClick={() => setMenuOpen(false)}
                 >
                   {t('homepage.nav.headerCta')}
-                </Link>
+                </a>
               </div>
             </div>
           </motion.div>

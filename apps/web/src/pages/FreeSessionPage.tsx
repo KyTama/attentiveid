@@ -272,12 +272,14 @@ export function FreeSessionPage() {
                     Kamu tetap bisa menggunakan layanan Attentive melalui booking reguler. Terima kasih sudah tertarik
                     untuk bergabung kembali.
                   </p>
-                  <Link
-                    to={FREE_SESSION_BOOKING_URL}
+                  <a
+                    href={FREE_SESSION_BOOKING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex rounded-full bg-primary px-6 py-3 text-sm font-bold text-white"
                   >
                     Booking reguler ↗
-                  </Link>
+                  </a>
                 </div>
               ) : null}
 

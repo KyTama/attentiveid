@@ -1,7 +1,3 @@
-booking.{$DOMAIN} {
-	redir https://{$DOMAIN}/booking{uri} permanent
-}
-
 {$DOMAIN} {
 	encode zstd gzip
 

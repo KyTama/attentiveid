@@ -65,7 +65,7 @@ describe('/free-session page', () => {
     expect(screen.getByText(/program ini khusus pengguna baru attentive/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /booking reguler/i })).toHaveAttribute(
       'href',
-      '/booking',
+      'https://booking.attentiveid.com',
     )
     expect(screen.queryByLabelText(/nama lengkap/i)).not.toBeInTheDocument()
   })

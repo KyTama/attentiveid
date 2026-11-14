@@ -85,18 +85,17 @@ export function PsychologistProfileDetails({ psychologist }: PsychologistProfile
               <motion.a className="inline-flex min-h-12 items-center justify-center gap-3 rounded-md bg-primary px-7 py-4 font-semibold text-secondary outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-secondary" href={psychologist.bookingUrl} rel="noopener noreferrer" target="_blank" transition={INTERACTIVE_SPRING} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}>
                 <MessageCircle aria-hidden="true" size={19} />{t('routes.profile.bookingAction')}
               </motion.a>
-              <motion.div
+              <motion.a
+                href="https://booking.attentiveid.com/"
+                target="_blank"
+                rel="noopener noreferrer"
                 transition={INTERACTIVE_SPRING}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.98 }}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-white/40 px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer hover:bg-white/10"
               >
-                <Link
-                  to={`/booking?psychologist=${psychologist.slug}`}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-white/40 px-6 py-4 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer hover:bg-white/10"
-                >
-                  {t('intakeDialog.title')}
-                </Link>
-              </motion.div>
+                {t('intakeDialog.title')}
+              </motion.a>
             </div>
           </div>
           <aside className="border-t border-white/20 pt-8 md:border-l md:border-t-0 md:pl-10">

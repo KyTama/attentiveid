@@ -39,6 +39,22 @@ const contentTransitions = createContentTransitions(createDrizzleContentTransiti
 const landingRepository = createLandingContentRepository(createDrizzleLandingContentSource(db));
 const bookingRepository = createBookingRepository(db);
 
+const googleOutboxConfig =
+    env.GOOGLE_CLIENT_ID &&
+    env.GOOGLE_CLIENT_SECRET &&
+    env.GOOGLE_REFRESH_TOKEN &&
+    env.GOOGLE_SHEET_ID
+        ? {
+              clientId: env.GOOGLE_CLIENT_ID,
+              clientSecret: env.GOOGLE_CLIENT_SECRET,
+              refreshToken: env.GOOGLE_REFRESH_TOKEN,
+              spreadsheetId: env.GOOGLE_SHEET_ID,
+              sheetName: env.GOOGLE_SHEET_NAME || 'Sheet1',
+              notifyEmail: env.BOOKING_NOTIFY_EMAIL || 'contact@attentiveid.com',
+              sendEmail: true
+          }
+        : undefined;
+
 let outboxDraining = false;
 const triggerOutboxDrain = async () => {
     if (outboxDraining) return;
@@ -48,6 +64,7 @@ const triggerOutboxDrain = async () => {
             db,
             webhookUrl: env.N8N_BOOKING_WEBHOOK_URL,
             webhookSecret: env.N8N_WEBHOOK_SECRET,
+            google: googleOutboxConfig,
             onError: (err) => console.error('[booking-outbox] Delivery error:', err)
         });
     } finally {
@@ -55,7 +72,7 @@ const triggerOutboxDrain = async () => {
     }
 };
 
-if (env.N8N_BOOKING_WEBHOOK_URL) {
+if (env.N8N_BOOKING_WEBHOOK_URL || googleOutboxConfig) {
     const outboxTimer = setInterval(() => {
         void triggerOutboxDrain();
     }, 30_000);

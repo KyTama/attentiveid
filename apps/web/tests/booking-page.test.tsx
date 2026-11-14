@@ -248,9 +248,9 @@ describe('/booking page', () => {
     expect(screen.queryByLabelText(/kategori kebutuhan utama/i)).not.toBeInTheDocument()
   })
 
-  it('redirects legacy /?intake=true&concern=career_burnout to /booking and supports ?psychologist= prefill', async () => {
+  it('renders /booking with ?concern=career_burnout and ?psychologist= prefill', async () => {
     render(
-      <MemoryRouter initialEntries={['/?intake=true&concern=career_burnout']}>
+      <MemoryRouter initialEntries={['/booking?concern=career_burnout']}>
         <AppRoutes />
       </MemoryRouter>,
     )

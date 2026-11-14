@@ -13,7 +13,9 @@ import { db } from '../db';
 import * as schema from '../db/schema';
 import { createBookingRepository, type BookingRepository } from '../repositories/booking.repository';
 import {
+    alignBookingRowToHeaders,
     buildBookingWebhookPayload,
+    deliverBookingToGoogle,
     getRetryBackoffSeconds,
     processDueBookingOutbox,
     signBookingWebhookPayload
@@ -295,7 +297,7 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
         expect(csvText).toContain('"CRISIS_FLAG"');
     });
 
-    it('redacts raw clinical concernNote from n8n webhook payload and computes HMAC signatures', () => {
+    it('builds 29-column A:AC outbox payload with operational Concern Note and computes HMAC signatures', () => {
         const payload = buildBookingWebhookPayload({
             id: 'booking-uuid-1',
             bookingCode: 'ATT-2611-ABC123',
@@ -316,7 +318,7 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
                 concernCategory: 'Kecemasan, Overthinking & Mood',
                 clientCategory: 'individual',
                 genderPreference: 'female',
-                concernNote: 'ULTRA_PRIVATE_CLINICAL_NOTE_NEVER_EXPORT',
+                concernNote: 'OPERATIONAL_CONCERN_NOTE_AS_IS',
                 crisisFlagTriggered: true,
                 consultationMode: 'online',
                 location: null,
@@ -345,16 +347,145 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
         });
 
         const serialized = JSON.stringify(payload);
-        expect(serialized).not.toContain('ULTRA_PRIVATE_CLINICAL_NOTE_NEVER_EXPORT');
-        expect(payload.notifications.googleSheetRow).toHaveLength(22);
-        expect(payload.notifications.googleSheetRow[9]).toContain('CRISIS FLAG');
-        expect(payload.notifications.adminEmail.textBody).toContain('CRISIS FLAG');
+        expect(payload.notifications.googleSheetRow).toHaveLength(29);
+        expect(payload.notifications.googleSheetRow[9]).toBe('OPERATIONAL_CONCERN_NOTE_AS_IS');
+        expect(payload.notifications.googleSheetColumns['Concern Note']).toBe('OPERATIONAL_CONCERN_NOTE_AS_IS');
+        expect(payload.notifications.googleSheetColumns['Booking Code']).toBe('ATT-2611-ABC123');
+        expect(payload.notifications.googleSheetColumns['Base Rate']).toBe('750000');
+        expect(payload.notifications.googleSheetColumns['Assessment Fee']).toBe('150000');
+        expect(payload.notifications.googleSheetColumns['Total Rate']).toBe('900000');
+        expect(payload.notifications.googleSheetColumns['UTM Source']).toBe('meta');
+        expect(payload.notifications.adminEmail.textBody).toContain('OPERATIONAL_CONCERN_NOTE_AS_IS');
 
         const secret = 'webhook_secret_123';
         const expectedSig = `sha256=${createHmac('sha256', secret).update(serialized).digest('hex')}`;
         expect(signBookingWebhookPayload(serialized, secret)).toBe(expectedSig);
         expect(getRetryBackoffSeconds(1)).toBe(10);
         expect(getRetryBackoffSeconds(5)).toBe(1800);
+    });
+
+    it('delivers directly to Google Sheets (header-aware + auto-expanding columns) and Gmail API', async () => {
+        const alignedSample = alignBookingRowToHeaders(
+            ['', 'Email', 'Catatan CS Custom', 'WhatsApp', 'Name', 'Booking Code'],
+            {
+                Name: 'Budi',
+                Email: 'budi@example.com',
+                WhatsApp: '08123456789',
+                'Booking Code': 'ATT-2611-XYZ'
+            }
+        );
+        expect(alignedSample).toEqual(['=ROW()-1', 'budi@example.com', '', '08123456789', 'Budi', 'ATT-2611-XYZ']);
+
+        const payload = buildBookingWebhookPayload({
+            id: 'booking-google-test',
+            bookingCode: 'ATT-2611-GOOGLE',
+            submittedAt: '2026-11-15T10:00:00.000Z',
+            normalized: {
+                language: 'id',
+                clientStatus: 'new',
+                name: 'Sinta Wijaya',
+                whatsapp: '081234567890',
+                whatsappE164: '+6281234567890',
+                email: 'sinta@example.com',
+                emailNormalized: 'sinta@example.com',
+                countryRegion: 'Indonesia / Bandung',
+                age: 26,
+                gender: 'Perempuan',
+                serviceType: 'Personal',
+                concernId: 'anxiety_mood',
+                concernCategory: 'Kecemasan & Mood',
+                clientCategory: 'individual',
+                genderPreference: 'female',
+                concernNote: 'Sering cemas malam hari',
+                crisisFlagTriggered: false,
+                consultationMode: 'online',
+                location: null,
+                psychologistChoice: 'self',
+                psychologistSlug: 'syazka',
+                psychologistId: 'psych-1',
+                selectedPsychologistName: 'Syazka Kirani Narindra',
+                scheduleOption1: '20-11-2026 · 14.00 WIB',
+                scheduleOption2: null,
+                scheduleOption3: null,
+                marketingSource: 'Instagram',
+                referrer: null,
+                utmSource: 'ig',
+                utmMedium: 'cpc',
+                utmCampaign: 'nov_promo',
+                utmContent: null,
+                utmTerm: null,
+                campaignId: null,
+                adsetId: null,
+                adId: null
+            },
+            baseRate: 750_000,
+            assessmentFee: 150_000,
+            totalRate: 900_000,
+            whatsappRouting: { target: 'pusat', whatsappNumber: '6285156410912' }
+        });
+
+        const calls: { url: string; method: string; body?: string }[] = [];
+        const mockFetch = async (url: string, init: RequestInit): Promise<Response> => {
+            calls.push({ url, method: init.method ?? 'GET', body: typeof init.body === 'string' ? init.body : undefined });
+            if (url === 'https://oauth2.googleapis.com/token') {
+                return new Response(JSON.stringify({ access_token: 'mock-access-token', expires_in: 3600 }), { status: 200 });
+            }
+            if (url.includes('/values/') && init.method === 'GET') {
+                return new Response(JSON.stringify({
+                    values: [['', 'Email', 'Custom Admin Column', 'Name', 'WhatsApp', 'Concern Note']]
+                }), { status: 200 });
+            }
+            if (url.includes('/values/') && init.method === 'PUT') {
+                return new Response(JSON.stringify({ updatedCells: 30 }), { status: 200 });
+            }
+            if (url.includes(':append')) {
+                return new Response(JSON.stringify({ updates: { updatedRows: 1 } }), { status: 200 });
+            }
+            if (url === 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send') {
+                return new Response(JSON.stringify({ id: 'gmail-msg-1' }), { status: 200 });
+            }
+            return new Response('Not Found', { status: 404 });
+        };
+
+        await deliverBookingToGoogle(
+            payload,
+            {
+                clientId: 'cid',
+                clientSecret: 'csec',
+                refreshToken: 'rtok',
+                spreadsheetId: 'sheet-123',
+                sheetName: 'Sheet1',
+                notifyEmail: 'contact@attentiveid.com'
+            },
+            mockFetch,
+            false
+        );
+
+        expect(calls.map((c) => `${c.method} ${c.url.split('?')[0]}`)).toEqual([
+            'POST https://oauth2.googleapis.com/token',
+            "GET https://sheets.googleapis.com/v4/spreadsheets/sheet-123/values/'Sheet1'!A1%3AAZ1",
+            "PUT https://sheets.googleapis.com/v4/spreadsheets/sheet-123/values/'Sheet1'!A1",
+            "POST https://sheets.googleapis.com/v4/spreadsheets/sheet-123/values/'Sheet1'!A1%3AAD1:append",
+            'POST https://gmail.googleapis.com/gmail/v1/users/me/messages/send'
+        ]);
+
+        const putBody = JSON.parse(calls[2].body!);
+        expect(putBody.values[0]).toContain('Booking Code');
+        expect(putBody.values[0]).toContain('Custom Admin Column');
+
+        const appendBody = JSON.parse(calls[3].body!);
+        const appendedRow = appendBody.values[0] as string[];
+        expect(appendedRow[0]).toBe('=ROW()-1');
+        expect(appendedRow[1]).toBe('sinta@example.com');
+        expect(appendedRow[2]).toBe('');
+        expect(appendedRow[3]).toBe('Sinta Wijaya');
+        expect(appendedRow[4]).toBe('081234567890');
+        expect(appendedRow[5]).toBe('Sering cemas malam hari');
+
+        const gmailBody = JSON.parse(calls[4].body!);
+        const decodedMime = Buffer.from(gmailBody.raw, 'base64url').toString('utf8');
+        expect(decodedMime).toContain('To: contact@attentiveid.com');
+        expect(decodedMime).toContain('Sering cemas malam hari');
     });
 
     it('persists booking + clinical privacy wall + advisory-locked 15m buffer + outbox delivery against real Postgres', async () => {

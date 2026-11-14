@@ -9,7 +9,13 @@ const EnvSchema = t.Object({
     JWT_SECRET: t.Optional(t.String()),
     MEDIA_DIR: t.Optional(t.String()),
     N8N_BOOKING_WEBHOOK_URL: t.Optional(t.String()),
-    N8N_WEBHOOK_SECRET: t.Optional(t.String())
+    N8N_WEBHOOK_SECRET: t.Optional(t.String()),
+    GOOGLE_CLIENT_ID: t.Optional(t.String()),
+    GOOGLE_CLIENT_SECRET: t.Optional(t.String()),
+    GOOGLE_REFRESH_TOKEN: t.Optional(t.String()),
+    GOOGLE_SHEET_ID: t.Optional(t.String()),
+    GOOGLE_SHEET_NAME: t.Optional(t.String()),
+    BOOKING_NOTIFY_EMAIL: t.Optional(t.String())
 });
 
 export const parseEnv = (source: Record<string, string | undefined>) => {

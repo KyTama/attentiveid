@@ -93,7 +93,7 @@ export const DEFAULT_HERO_SLIDES: HeroSlideItem[] = [
       en: 'Jakarta · BSD · Malang · Online video counseling',
     },
     primaryCta: { id: 'Jadwalkan konsultasi', en: 'Book consultation' },
-    primaryCtaUrl: '/booking',
+    primaryCtaUrl: 'https://booking.attentiveid.com/',
     secondaryCta: { id: 'Lihat layanan', en: 'Explore services' },
     secondaryCtaUrl: '/psychologists',
   },
@@ -118,7 +118,7 @@ export const DEFAULT_HERO_SLIDES: HeroSlideItem[] = [
     primaryCta: { id: 'Lihat ruang kami', en: 'See our space' },
     primaryCtaUrl: '#locations',
     secondaryCta: { id: 'Jadwalkan sesi', en: 'Book a session' },
-    secondaryCtaUrl: '/booking',
+    secondaryCtaUrl: 'https://booking.attentiveid.com/',
   },
   {
     id: 'hero-slide-3',
@@ -181,7 +181,7 @@ export const DEFAULT_HERO_SLIDES: HeroSlideItem[] = [
     primaryCta: { id: 'Kenali Ella', en: 'Get to know Ella' },
     primaryCtaUrl: '/psychologists/gisella',
     secondaryCta: { id: 'Konsultasi dengan Ella', en: 'Book with Ella' },
-    secondaryCtaUrl: '/booking?psychologist=gisella',
+    secondaryCtaUrl: 'https://booking.attentiveid.com/',
   },
 ]
 
@@ -229,17 +229,9 @@ export function buildMergedHeroSlideItems(
   })
 }
 
-/** The Scientific Brief slide used to point at /articles and legacy CTAs used booking.attentiveid.com; saved content may still say so. */
-const legacyBriefUrl = (layout: HeroSlideLayout, url: string | undefined) => {
-  const trimmed = url?.trim() ?? ''
-  if (layout === 'scientific-brief' && (!trimmed || trimmed === '/articles')) {
-    return '/sci-brief'
-  }
-  if (/^https?:\/\/booking\.attentiveid\.com\/?$/i.test(trimmed)) {
-    return layout === 'wisdom-ella' ? '/booking?psychologist=gisella' : '/booking'
-  }
-  return url ?? ''
-}
+/** The Scientific Brief slide used to point at /articles; saved content may still say so. */
+const legacyBriefUrl = (layout: HeroSlideLayout, url: string | undefined) =>
+  layout === 'scientific-brief' && (!url || url === '/articles') ? '/sci-brief' : (url ?? '')
 
 export function resolveHeroSlides(
   heroSection: Partial<Extract<LandingContentMutation['sections'][number], { key: 'hero' }>> | undefined | null,

@@ -163,8 +163,10 @@ describe('homepage', () => {
     const bookingLinks = screen.getAllByRole('link', { name: /booking \/ reserve psychologist/i })
     expect(bookingLinks.length).toBeGreaterThanOrEqual(1)
     for (const link of bookingLinks) {
-      expect(link).toHaveAttribute('href', '/booking')
-      expect(link).not.toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('href', 'https://booking.attentiveid.com/')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
     }
 
     const assessmentLinks = screen
