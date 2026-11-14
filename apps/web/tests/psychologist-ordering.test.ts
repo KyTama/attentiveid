@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { hasCompleteBio, orderForDirectory } from '../src/features/psychologists/ordering'
 
 const longBio = 'x'.repeat(400)
-const rec = (slug: string, complete: boolean) => ({
+const rec = (slug: string, featuredOrder: number | null, complete: boolean) => ({
   slug,
+  featuredOrder,
   shortBio: complete ? 'Short bio' : undefined,
   biography: complete ? longBio : 'One line.',
 })
@@ -15,28 +16,18 @@ describe('directory order', () => {
     expect(hasCompleteBio({ biography: longBio })).toBe(false)
   })
 
-  it('puts Ella, Syazka and Haykal first, then complete bios, then the rest', () => {
-    const input = [
-      rec('andri', false),
-      rec('dinda', true),
-      rec('haykal', true),
-      rec('farah', false),
-      rec('gisella', true),
-      rec('mayda', true),
-      rec('syazka', true),
-    ]
-    expect(orderForDirectory(input).map((r) => r.slug)).toEqual([
-      'gisella',
-      'syazka',
-      'haykal',
-      'dinda',
-      'mayda',
-      'andri',
-      'farah',
-    ])
+  it('follows the manual Featured order, even when a bio is thin', () => {
+    const input = [rec('c', 3, true), rec('a', 1, false), rec('b', 2, true)]
+    expect(orderForDirectory(input).map((r) => r.slug)).toEqual(['a', 'b', 'c'])
   })
 
-  it('keeps pinned psychologists on top even when their bio is incomplete', () => {
-    expect(orderForDirectory([rec('dinda', true), rec('haykal', false)]).map((r) => r.slug)).toEqual(['haykal', 'dinda'])
+  it('puts profiles without a Featured number after the featured ones, complete bios first', () => {
+    const input = [rec('thin', null, false), rec('full', null, true), rec('f2', 2, false), rec('f1', 1, false)]
+    expect(orderForDirectory(input).map((r) => r.slug)).toEqual(['f1', 'f2', 'full', 'thin'])
+  })
+
+  it('keeps the incoming order inside a group', () => {
+    const input = [rec('z', null, true), rec('y', null, true)]
+    expect(orderForDirectory(input).map((r) => r.slug)).toEqual(['z', 'y'])
   })
 })
