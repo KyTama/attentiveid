@@ -36,6 +36,16 @@ export interface ArticleItem {
 
 function formatPublicationDate(dateStr?: string, locale = 'id'): string {
   if (!dateStr) return ''
+  // Articles from the database carry an ISO timestamp (2026-08-01 00:00:00+00).
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const [year, month, day] = dateStr.slice(0, 10).split('-').map(Number)
+    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(locale === 'en' ? 'en-US' : 'id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    })
+  }
   const parts = dateStr.split('/')
   if (parts.length === 3) {
     const [year, month, day] = parts.map(Number)
