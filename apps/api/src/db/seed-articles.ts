@@ -1,4 +1,4 @@
-import { count, eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { randomUUID } from 'crypto';
@@ -68,7 +68,12 @@ function formatArticleBody(art: ScholarArticleFixture): string {
   return lines.join('\n');
 }
 
-export async function seedArticles(database: any, articlesList: ScholarArticleFixture[] = scholarArticles as ScholarArticleFixture[]) {
+export async function seedArticles(
+  database: any,
+  articlesList: ScholarArticleFixture[] = scholarArticles as ScholarArticleFixture[],
+  options: { overwriteExisting?: boolean } = {},
+) {
+  const overwriteExisting = options.overwriteExisting ?? true;
   return await database.transaction(async (tx: any) => {
     // 1. Find default psychologist records
     const [haykal] = await tx
@@ -89,6 +94,7 @@ export async function seedArticles(database: any, articlesList: ScholarArticleFi
 
     let inserted = 0;
     let updated = 0;
+    let skipped = 0;
 
     for (const item of articlesList) {
       const pubDateIso = parsePublicationDateToIso(item.publicationDate);
@@ -142,6 +148,9 @@ export async function seedArticles(database: any, articlesList: ScholarArticleFi
           .where(eq(schema.articles.id, articleId));
 
         inserted++;
+      } else if (!overwriteExisting) {
+        // Keep whatever editors have done to an article that is already in the database.
+        skipped++;
       } else {
         // Update existing article & revision
         let revisionId = existing.publishedRevisionId;
@@ -189,7 +198,7 @@ export async function seedArticles(database: any, articlesList: ScholarArticleFi
       }
     }
 
-    return { total: articlesList.length, inserted, updated };
+    return { total: articlesList.length, inserted, updated, skipped };
   });
 }
 

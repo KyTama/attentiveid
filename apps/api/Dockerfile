@@ -11,6 +11,8 @@ RUN bun install --frozen-lockfile
 COPY packages/shared packages/shared
 COPY apps/api apps/api
 COPY apps/web/public/media apps/web/public/media
+# The publications import (src/db/seed-articles.ts) reads this list at build time.
+COPY apps/web/src/data/scholar-articles.json apps/web/src/data/scholar-articles.json
 RUN bun run build:api && \
     cd apps/api && \
     bun build src/db/migrate.ts --outfile=dist/migrate.js --target=bun && \
