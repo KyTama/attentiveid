@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useHeroPsychologist } from '@/features/psychologists/use-hero-psychologist'
 import type { ResolvedHeroSlide } from '@/features/content/hero-slides'
 
 const CONTENT_EASE = [0.2, 0.7, 0.2, 1] as const
@@ -17,6 +18,7 @@ export function HeroSlideVisual({
   isActive = true,
   compact = false,
 }: HeroSlideVisualProps) {
+  const portalPsychologist = useHeroPsychologist(slide.layout === 'wisdom-ella' ? 'gisella' : null, isId ? 'id' : 'en')
   const containerClass = compact
     ? 'relative h-[260px] w-full overflow-hidden rounded-tl-[110px] bg-[#ECE3D4]'
     : 'relative h-[340px] sm:h-[400px] lg:h-[640px] w-full overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px] bg-[#ECE3D4]'
@@ -336,7 +338,7 @@ export function HeroSlideVisual({
   }
 
   if (slide.layout === 'wisdom-ella') {
-    const focusItems = isId
+    const typedFocusItems = isId
       ? [
           'Trauma kompleks dan masa kecil',
           'Depresi remaja dan pikiran menyakiti diri',
@@ -347,6 +349,13 @@ export function HeroSlideVisual({
           'Adolescent depression and suicidality',
           'Parents of teens and young adults',
         ]
+    // The quote and focus areas follow the portal (Psychologists menu); the typed text is the fallback.
+    const portalFocus = portalPsychologist?.specializations.filter(Boolean).slice(0, 3) ?? []
+    const focusItems = portalFocus.length > 0 ? portalFocus : typedFocusItems
+    const typedQuote = isId
+      ? 'Kamu boleh mulai dari bagian yang terasa paling sulit untuk dijelaskan.'
+      : 'You can start with the part that feels hardest to explain.'
+    const quote = portalPsychologist?.conversationQuote?.trim() || typedQuote
 
     return (
       <div className={containerClass}>
@@ -376,9 +385,7 @@ export function HeroSlideVisual({
             “
           </div>
           <p className={`font-medium leading-[1.4] text-[#14284B] ${compact ? 'text-xs' : 'text-[17px]'}`}>
-            {isId
-              ? 'Kamu boleh mulai dari bagian yang terasa paling sulit untuk dijelaskan.'
-              : 'You can start with the part that feels hardest to explain.'}
+            {quote}
           </p>
           <small className="mt-3 block text-[11px] font-semibold tracking-[0.06em] uppercase text-[#7B8496]">
             — ELLA

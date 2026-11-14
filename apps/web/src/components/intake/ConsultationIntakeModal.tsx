@@ -14,7 +14,7 @@ import {
   EMERGENCY_CRISIS_HOTLINES,
   generateIntakeWhatsAppUrl,
 } from '@attentiveid/shared'
-import { psychologists } from '@/data/psychologists'
+import { useBookingPsychologists } from '@/features/psychologists/use-booking-psychologists'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 
 export interface ConsultationIntakeModalProps {
@@ -34,6 +34,7 @@ export function ConsultationIntakeModal({
 }: ConsultationIntakeModalProps) {
   const { t, i18n } = useTranslation()
   const currentLang = (i18n.language?.startsWith('en') ? 'en' : 'id') as 'id' | 'en'
+  const psychologists = useBookingPsychologists(currentLang, isOpen)
   const titleId = useId()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -79,7 +80,7 @@ export function ConsultationIntakeModal({
       psychologists,
       { maxResults: 3 }
     )
-  }, [concernId, genderPreference, clientCategory])
+  }, [concernId, genderPreference, clientCategory, psychologists])
 
   // Effective selected psychologist
   const effectivePsychologistId = selectedPsychologistId || (matchedResults.length > 0 ? matchedResults[0].psychologist.id : null)

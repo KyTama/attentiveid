@@ -164,8 +164,8 @@ export const MAP_EDGES: MapEdge[] = [
   { from: 'u-free', to: 'd-free', status: 'live', label: 'kiriman form' },
 
   // Typed in code -> public (portal cannot change)
-  { from: 'c-herovisual', to: 'u-hero', status: 'code', label: 'kartu & kutipan slide' },
-  { from: 'c-psychlist', to: 'u-booking', status: 'code', label: 'daftar psikolog manual' },
+  { from: 'c-herovisual', to: 'u-hero', status: 'code', label: 'cadangan teks kartu slide' },
+  { from: 'c-psychlist', to: 'u-booking', status: 'code', label: 'cadangan jika portal tak terjangkau' },
   { from: 'c-contact', to: 'u-locations', status: 'code', label: 'alamat & peta' },
   { from: 'c-contact', to: 'u-footer', status: 'code', label: 'kontak & cabang' },
   { from: 'c-booking', to: 'u-campaign', status: 'code', label: 'link booking/WA' },
@@ -177,9 +177,9 @@ export const MAP_EDGES: MapEdge[] = [
   { from: 'c-seo', to: 'u-seo', status: 'code', label: 'sitemap & thumbnail' },
 
   // Connections that should exist but do not
-  { from: 'd-psych', to: 'u-hero', status: 'missing', label: 'kutipan, tahun, fokus Ella' },
+  { from: 'd-psych', to: 'u-hero', status: 'live', label: 'kutipan & fokus Ella' },
   { from: 'd-sci', to: 'u-hero', status: 'missing', label: 'chip bulan brief terbaru' },
-  { from: 'd-psych', to: 'u-booking', status: 'missing', label: 'psikolog aktif & foto' },
+  { from: 'd-psych', to: 'u-booking', status: 'live', label: 'psikolog aktif & foto' },
   { from: 'd-psych', to: 'u-seo', status: 'missing', label: 'sitemap otomatis' },
   { from: 'd-articles', to: 'u-seo', status: 'missing', label: 'sitemap otomatis' },
   { from: 'd-sci', to: 'u-seo', status: 'missing', label: 'sitemap otomatis' },
