@@ -134,7 +134,7 @@ export const MAP_NODES: MapNode[] = [
   { id: 'u-locations', column: 'public', label: 'Bagian lokasi', sub: 'Beranda', status: 'live',
     about: 'Kartu tiga cabang dengan alamat dan peta.' },
   { id: 'u-footer', column: 'public', label: 'Header & footer', sub: 'Menu, kontak, cabang', status: 'live',
-    about: 'Menu Products, tautan, alamat, dan kontak.' },
+    about: 'Menu Our Services, Our Science, tautan, alamat, dan kontak.' },
   { id: 'u-campaign', column: 'public', label: 'Banner kampanye', sub: 'Dock Sesi Gratis/Booking', status: 'live',
     about: 'Dock melayang dan blok promo.' },
   { id: 'u-seo', column: 'public', label: 'Pencarian & share', sub: 'Sitemap, judul, thumbnail', status: 'live',

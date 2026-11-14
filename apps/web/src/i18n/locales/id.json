@@ -513,6 +513,13 @@
     "nav": {
       "label": "Navigasi utama",
       "products": "Produk",
+      "ourServices": "Our Services",
+      "ourServicesHint": "Halaman baru sedang dalam tahap desain",
+      "ourScience": "Our Science",
+      "academicArticles": "Academic Articles",
+      "scientificBrief": "Scientific Brief",
+      "laboratory": "Laboratory",
+      "comingSoon": "Coming Soon",
       "service": "Layanan",
       "sciBrief": "Sci-Brief",
       "article": "Artikel",

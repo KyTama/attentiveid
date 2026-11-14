@@ -1,4 +1,4 @@
-import { animate, motion, useInView, useReducedMotion } from 'framer-motion'
+import { animate, motion, useInView, useMotionValue, useReducedMotion } from 'framer-motion'
 import {
   ArrowLeft,
   ArrowRight,
@@ -359,6 +359,8 @@ export function HomepageHero() {
   const [isPaused, setIsPaused] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const pointerStartX = useRef<number | null>(null)
+  const elapsedMsRef = useRef(0)
+  const progressScale = useMotionValue(0)
 
   const managed = useLandingSection('hero')
   const metrics = managed
@@ -383,6 +385,8 @@ export function HomepageHero() {
     (nextIndex: number, announce = true) => {
       if (slidesToRender.length <= 1) return
       const wrapped = ((nextIndex % slidesToRender.length) + slidesToRender.length) % slidesToRender.length
+      elapsedMsRef.current = 0
+      progressScale.set(shouldReduceMotion ? 1 : 0)
       setActiveSlide(wrapped)
       if (announce) {
         const targetSlide = slidesToRender[wrapped]
@@ -393,19 +397,44 @@ export function HomepageHero() {
         )
       }
     },
-    [slidesToRender, isId]
+    [slidesToRender, isId, progressScale, shouldReduceMotion]
   )
 
   const nextSlide = useCallback(() => goToSlide(safeActiveIndex + 1), [goToSlide, safeActiveIndex])
   const prevSlide = useCallback(() => goToSlide(safeActiveIndex - 1), [goToSlide, safeActiveIndex])
 
   useEffect(() => {
-    if (shouldReduceMotion || isPaused || slidesToRender.length <= 1) return
-    const timer = window.setTimeout(() => {
-      goToSlide(safeActiveIndex + 1, false)
-    }, SLIDE_AUTOPLAY_MS)
-    return () => window.clearTimeout(timer)
-  }, [safeActiveIndex, isPaused, shouldReduceMotion, slidesToRender.length, goToSlide])
+    elapsedMsRef.current = 0
+    progressScale.set(shouldReduceMotion ? 1 : 0)
+  }, [safeActiveIndex, progressScale, shouldReduceMotion])
+
+  useEffect(() => {
+    if (slidesToRender.length <= 1) return
+    if (shouldReduceMotion) {
+      progressScale.set(1)
+      return
+    }
+    if (isPaused) return
+
+    let frameId = 0
+    let lastTick = performance.now()
+
+    const step = (now: number) => {
+      const delta = Math.max(0, Math.min(now - lastTick, 250))
+      lastTick = now
+      elapsedMsRef.current += delta
+      const ratio = Math.min(1, elapsedMsRef.current / SLIDE_AUTOPLAY_MS)
+      progressScale.set(ratio)
+      if (elapsedMsRef.current >= SLIDE_AUTOPLAY_MS) {
+        goToSlide(safeActiveIndex + 1, false)
+        return
+      }
+      frameId = window.requestAnimationFrame(step)
+    }
+
+    frameId = window.requestAnimationFrame(step)
+    return () => window.cancelAnimationFrame(frameId)
+  }, [safeActiveIndex, isPaused, shouldReduceMotion, slidesToRender.length, goToSlide, progressScale])
 
   // Featured Campaigns & Portals
   const customCampaigns = (managed?.section as any)?.campaigns
@@ -513,9 +542,16 @@ export function HomepageHero() {
           role="region"
           aria-roledescription="carousel"
           aria-label={t('homepage.hero.kicker')}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          onFocusCapture={() => setIsPaused(true)}
+          onFocusCapture={(event) => {
+            const target = event.target
+            if (target instanceof HTMLElement) {
+              try {
+                if (target.matches(':focus-visible')) setIsPaused(true)
+              } catch {
+                // Ignore unsupported :focus-visible selector in test environments.
+              }
+            }
+          }}
           onBlurCapture={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
               setIsPaused(false)
@@ -544,7 +580,11 @@ export function HomepageHero() {
           }}
         >
           {/* Main Split Stage */}
-          <div className="touch-pan-y select-none overflow-hidden rounded-[24px] bg-[#F5EFE5] shadow-[0_1px_0_#e8e1d5,0_30px_60px_-40px_rgba(20,40,75,0.25)] lg:h-[640px]">
+          <div
+            className="touch-pan-y select-none overflow-hidden rounded-[24px] bg-[#F5EFE5] shadow-[0_1px_0_#e8e1d5,0_30px_60px_-40px_rgba(20,40,75,0.25)] lg:h-[640px]"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
             <motion.div
               key={currentSlide.id}
               role="group"
@@ -645,14 +685,9 @@ export function HomepageHero() {
                       <div className="h-[3px] overflow-hidden rounded-[3px] bg-[#E1DDD5]">
                         {isActiveTab ? (
                           <motion.div
-                            key={`${slide.id}-${safeActiveIndex}-${isPaused ? 'paused' : 'run'}`}
-                            initial={{ width: shouldReduceMotion || isPaused ? '45%' : '0%' }}
-                            animate={{ width: shouldReduceMotion || isPaused ? '45%' : '100%' }}
-                            transition={{
-                              duration: shouldReduceMotion || isPaused ? 0 : SLIDE_AUTOPLAY_MS / 1000,
-                              ease: 'linear',
-                            }}
-                            className="h-full bg-[#C08A2C]"
+                            data-testid={`hero-tab-progress-${slide.id}`}
+                            style={{ scaleX: progressScale }}
+                            className="h-full w-full origin-left bg-[#C08A2C]"
                           />
                         ) : (
                           <div

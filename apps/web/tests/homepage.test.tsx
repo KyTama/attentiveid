@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LandingContentMutation } from '@attentiveid/shared'
 import i18n from '../src/i18n'
 import { Homepage } from '../src/components/landing/Homepage'
@@ -373,5 +373,69 @@ describe('homepage', () => {
     expect(screen.getByRole('tab', { name: /our practice/i })).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: /hidden big 10 slide/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /find your psychologist.*soon/i })).toBeDisabled()
+  })
+
+  it('splits header Products menu into Our Services (inert) and Our Science dropdown', async () => {
+    const user = userEvent.setup()
+    renderHomepage()
+
+    expect(screen.queryByRole('button', { name: /^products$|^produk$/i })).not.toBeInTheDocument()
+
+    const ourServices = screen.getByRole('button', { name: /our services/i })
+    expect(ourServices).toHaveAttribute('aria-disabled', 'true')
+    expect(ourServices).not.toHaveAttribute('href')
+
+    const ourScience = screen.getByRole('button', { name: /our science/i })
+    await user.click(ourScience)
+    const menuId = ourScience.getAttribute('aria-controls')!
+    const menu = document.getElementById(menuId)!
+    expect(menu).toBeInTheDocument()
+    expect(menu.querySelector('a[href="/articles"]')).toHaveTextContent('Academic Articles')
+    expect(menu.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Scientific Brief')
+    expect(menu.querySelector('[aria-disabled="true"]')).toHaveTextContent(/Laboratory.*Coming Soon/)
+
+    await user.click(screen.getByRole('button', { name: /open navigation menu/i }))
+    const mobileDrawer = document.getElementById('homepage-mobile-menu')!
+    expect(mobileDrawer.querySelector('button[aria-disabled="true"]')).toHaveTextContent('Our Services')
+    const mobileScienceToggle = Array.from(mobileDrawer.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('Our Science'),
+    )!
+    await user.click(mobileScienceToggle)
+    expect(mobileDrawer.querySelector('a[href="/articles"]')).toHaveTextContent('Academic Articles')
+    expect(mobileDrawer.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Scientific Brief')
+    expect(mobileDrawer.querySelector('div[aria-disabled="true"]')).toHaveTextContent(/Laboratory.*Coming Soon/)
+  })
+
+  it('animates hero tab progress smoothly and continues autoplay after clicking a tab', async () => {
+    vi.useFakeTimers()
+    try {
+      renderHomepage()
+
+      const petTab = screen.getByRole('tab', { name: /pet garden/i })
+      const big10Tab = screen.getByRole('tab', { name: /free big 10 \+ session/i })
+
+      fireEvent.click(petTab)
+      expect(petTab).toHaveAttribute('aria-selected', 'true')
+
+      const progressEl = screen.getByTestId('hero-tab-progress-hero-slide-2')
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3500)
+      })
+
+      const transform = progressEl.style.transform
+      const match = transform.match(/scaleX\(([^)]+)\)/)
+      expect(match).not.toBeNull()
+      const midScale = Number.parseFloat(match![1])
+      expect(midScale).toBeGreaterThan(0.3)
+      expect(midScale).toBeLessThan(0.8)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3700)
+      })
+
+      expect(big10Tab).toHaveAttribute('aria-selected', 'true')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

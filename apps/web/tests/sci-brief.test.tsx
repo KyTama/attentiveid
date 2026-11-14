@@ -87,7 +87,7 @@ describe('public Sci-Brief pages', () => {
   })
 })
 
-describe('header Products dropdown', () => {
+describe('header Our Science dropdown', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respond({ status: 'success', briefs: [] })))
   })
@@ -95,15 +95,18 @@ describe('header Products dropdown', () => {
     vi.restoreAllMocks()
   })
 
-  it('holds Service, Sci-Brief and Article', async () => {
+  it('holds Academic Articles, Scientific Brief and Laboratory (Coming Soon)', async () => {
     renderAt('/sci-brief')
-    const toggle = await screen.findByRole('button', { name: /products|produk/i })
+    const toggle = await screen.findByRole('button', { name: /our science/i })
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(toggle)
     await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('true'))
 
     const menu = document.getElementById(toggle.getAttribute('aria-controls') as string) as HTMLElement
     const links = within(menu).getAllByRole('link')
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/#support', '/sci-brief', '/articles'])
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/articles', '/sci-brief'])
+    const labItem = within(menu).getByText('Laboratory').closest('[aria-disabled="true"]')
+    expect(labItem).not.toBeNull()
+    expect(within(menu).getByText('Coming Soon')).toBeDefined()
   })
 })

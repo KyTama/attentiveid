@@ -169,10 +169,10 @@ describe('Public Articles & Article CMS Pages', () => {
       </MemoryRouter>
     )
 
-    // Articles now lives inside the Products dropdown of the header.
-    fireEvent.click(await screen.findByRole('button', { name: /products|produk/i }))
+    // Academic Articles now lives inside the Our Science dropdown of the header.
+    fireEvent.click(await screen.findByRole('button', { name: /our science/i }))
     await waitFor(() => {
-      const articleNavLinks = screen.getAllByRole('link', { name: /artikel|articles/i })
+      const articleNavLinks = screen.getAllByRole('link', { name: /academic articles/i })
       expect(articleNavLinks.some((l) => l.getAttribute('href') === '/articles')).toBe(true)
     })
   })

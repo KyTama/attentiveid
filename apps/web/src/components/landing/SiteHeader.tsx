@@ -11,19 +11,18 @@ const navItems = [
   { key: 'faq', href: '/#faq' },
 ] as const
 
-const productItems = [
-  { key: 'service', href: '/#support' },
-  { key: 'sciBrief', href: '/sci-brief' },
-  { key: 'article', href: '/articles' },
+const scienceItems = [
+  { key: 'academicArticles', href: '/articles', comingSoon: false },
+  { key: 'scientificBrief', href: '/sci-brief', comingSoon: false },
+  { key: 'laboratory', href: null, comingSoon: true },
 ] as const
 
-type ClickHandler = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => void
-
-function ProductsMenu({ onAnchorClick }: { onAnchorClick: ClickHandler }) {
+function ScienceMenu() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     if (!open) return
@@ -45,7 +44,7 @@ function ProductsMenu({ onAnchorClick }: { onAnchorClick: ClickHandler }) {
   }, [open])
 
   const itemClass =
-    'block rounded-lg px-3.5 py-2.5 text-sm font-medium text-secondary/80 outline-none transition-colors hover:bg-black/[0.04] hover:text-secondary focus-visible:bg-black/[0.05]'
+    'block whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium text-secondary/80 outline-none transition-colors hover:bg-black/[0.04] hover:text-secondary focus-visible:bg-black/[0.05]'
 
   return (
     <div className="relative" ref={rootRef}>
@@ -57,40 +56,48 @@ function ProductsMenu({ onAnchorClick }: { onAnchorClick: ClickHandler }) {
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
-        {t('homepage.nav.products')}
+        {t('homepage.nav.ourScience')}
         <ChevronDown aria-hidden="true" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`} size={15} />
       </button>
-      {open && (
-        <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2" id={menuId}>
-          <ul className="min-w-44 rounded-xl border border-secondary/10 bg-white p-1.5 shadow-lg">
-            {productItems.map((item) => (
-              <li key={item.key}>
-                {item.href.includes('#') ? (
-                  <a
-                    className={itemClass}
-                    href={item.href}
-                    onClick={(event) => {
-                      setOpen(false)
-                      onAnchorClick(event, item.href)
-                    }}
-                  >
-                    {t(`homepage.nav.${item.key}`)}
-                  </a>
-                ) : (
-                  <Link className={itemClass} onClick={() => setOpen(false)} to={item.href}>
-                    {t(`homepage.nav.${item.key}`)}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2"
+            exit={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : -4 }}
+            id={menuId}
+            initial={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : -4 }}
+            transition={INTERACTIVE_SPRING}
+          >
+            <ul className="min-w-60 rounded-xl border border-secondary/10 bg-white p-1.5 shadow-lg">
+              {scienceItems.map((item) => (
+                <li key={item.key}>
+                  {item.comingSoon || !item.href ? (
+                    <div
+                      aria-disabled="true"
+                      className="flex items-center justify-between gap-3 whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium text-secondary/45 cursor-not-allowed select-none"
+                    >
+                      <span>{t(`homepage.nav.${item.key}`)}</span>
+                      <span className="shrink-0 rounded-full bg-secondary/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary/60">
+                        {t('homepage.nav.comingSoon')}
+                      </span>
+                    </div>
+                  ) : (
+                    <Link className={itemClass} onClick={() => setOpen(false)} to={item.href}>
+                      {t(`homepage.nav.${item.key}`)}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function MobileProducts({ onNavigate, onAnchorClick }: { onNavigate: () => void; onAnchorClick: ClickHandler }) {
+function MobileScience({ onNavigate }: { onNavigate: () => void }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const panelId = useId()
@@ -106,24 +113,23 @@ function MobileProducts({ onNavigate, onAnchorClick }: { onNavigate: () => void;
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
-        <span>{t('homepage.nav.products')}</span>
+        <span>{t('homepage.nav.ourScience')}</span>
         <ChevronDown aria-hidden="true" className={`text-secondary/40 transition-transform ${open ? 'rotate-180' : ''}`} size={16} />
       </button>
       {open && (
         <ul className="mb-1 ml-3 border-l border-secondary/10 pl-2" id={panelId}>
-          {productItems.map((item) => (
+          {scienceItems.map((item) => (
             <li key={item.key}>
-              {item.href.includes('#') ? (
-                <a
-                  className={rowClass}
-                  href={item.href}
-                  onClick={(event) => {
-                    onNavigate()
-                    onAnchorClick(event, item.href)
-                  }}
+              {item.comingSoon || !item.href ? (
+                <div
+                  aria-disabled="true"
+                  className="flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 text-base font-semibold text-secondary/45 cursor-not-allowed select-none"
                 >
                   <span>{t(`homepage.nav.${item.key}`)}</span>
-                </a>
+                  <span className="shrink-0 rounded-full bg-secondary/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary/60">
+                    {t('homepage.nav.comingSoon')}
+                  </span>
+                </div>
               ) : (
                 <Link className={rowClass} onClick={onNavigate} to={item.href}>
                   <span>{t(`homepage.nav.${item.key}`)}</span>
@@ -203,7 +209,16 @@ export function SiteHeader() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
-          <ProductsMenu onAnchorClick={handleNavClick} />
+          <button
+            aria-disabled="true"
+            className="rounded-md py-1 text-sm font-medium text-secondary/55 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={(event) => event.preventDefault()}
+            title={t('homepage.nav.ourServicesHint')}
+            type="button"
+          >
+            {t('homepage.nav.ourServices')}
+          </button>
+          <ScienceMenu />
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
             if (isInternal) {
@@ -287,7 +302,16 @@ export function SiteHeader() {
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6">
               <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/80 p-1.5 shadow-2xs">
-                <MobileProducts onAnchorClick={handleNavClick} onNavigate={() => setMenuOpen(false)} />
+                <button
+                  aria-disabled="true"
+                  className="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left text-base font-semibold text-secondary/50 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  onClick={(event) => event.preventDefault()}
+                  title={t('homepage.nav.ourServicesHint')}
+                  type="button"
+                >
+                  <span>{t('homepage.nav.ourServices')}</span>
+                </button>
+                <MobileScience onNavigate={() => setMenuOpen(false)} />
                 {navItems.map((item) => {
                   const isInternal = !item.href.includes('#')
                   if (isInternal) {

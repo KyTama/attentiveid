@@ -513,6 +513,13 @@
     "nav": {
       "label": "Primary navigation",
       "products": "Products",
+      "ourServices": "Our Services",
+      "ourServicesHint": "New pages are currently in design",
+      "ourScience": "Our Science",
+      "academicArticles": "Academic Articles",
+      "scientificBrief": "Scientific Brief",
+      "laboratory": "Laboratory",
+      "comingSoon": "Coming Soon",
       "service": "Services",
       "sciBrief": "Sci-Brief",
       "article": "Articles",
