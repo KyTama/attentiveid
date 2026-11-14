@@ -97,7 +97,7 @@ describe('header Our Science dropdown', () => {
 
   it('holds Academic Articles, Scientific Brief and Laboratory (Coming Soon)', async () => {
     renderAt('/sci-brief')
-    const toggle = await screen.findByRole('button', { name: /our science/i })
+    const toggle = await screen.findByRole('button', { name: /our science|riset kami/i })
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(toggle)
     await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('true'))
@@ -105,8 +105,8 @@ describe('header Our Science dropdown', () => {
     const menu = document.getElementById(toggle.getAttribute('aria-controls') as string) as HTMLElement
     const links = within(menu).getAllByRole('link')
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/articles', '/sci-brief'])
-    const labItem = within(menu).getByText('Laboratory').closest('[aria-disabled="true"]')
+    const labItem = within(menu).getByText(/laboratory|laboratorium/i).closest('[aria-disabled="true"]')
     expect(labItem).not.toBeNull()
-    expect(within(menu).getByText('Coming Soon')).toBeDefined()
+    expect(within(menu).getByText(/coming soon|segera hadir/i)).toBeDefined()
   })
 })

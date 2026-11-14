@@ -170,9 +170,9 @@ describe('Public Articles & Article CMS Pages', () => {
     )
 
     // Academic Articles now lives inside the Our Science dropdown of the header.
-    fireEvent.click(await screen.findByRole('button', { name: /our science/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /our science|riset kami/i }))
     await waitFor(() => {
-      const articleNavLinks = screen.getAllByRole('link', { name: /academic articles/i })
+      const articleNavLinks = screen.getAllByRole('link', { name: /academic articles|artikel ilmiah/i })
       expect(articleNavLinks.some((l) => l.getAttribute('href') === '/articles')).toBe(true)
     })
   })

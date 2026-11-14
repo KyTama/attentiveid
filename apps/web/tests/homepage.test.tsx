@@ -404,6 +404,25 @@ describe('homepage', () => {
     expect(mobileDrawer.querySelector('a[href="/articles"]')).toHaveTextContent('Academic Articles')
     expect(mobileDrawer.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Scientific Brief')
     expect(mobileDrawer.querySelector('div[aria-disabled="true"]')).toHaveTextContent(/Laboratory.*Coming Soon/)
+
+    await act(async () => {
+      await i18n.changeLanguage('id')
+    })
+
+    const layananButtons = await screen.findAllByRole('button', { name: /layanan kami/i })
+    expect(layananButtons[0]).toHaveAttribute('aria-disabled', 'true')
+    const desktopScienceId = screen.getAllByRole('button', { name: /riset kami/i })[0]
+    await user.click(desktopScienceId)
+    const desktopMenuId = desktopScienceId.getAttribute('aria-controls')!
+    const desktopMenuIdEl = document.getElementById(desktopMenuId)!
+    expect(desktopMenuIdEl.querySelector('a[href="/articles"]')).toHaveTextContent('Artikel Ilmiah')
+    expect(desktopMenuIdEl.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Ringkasan Ilmiah')
+    expect(desktopMenuIdEl.querySelector('[aria-disabled="true"]')).toHaveTextContent(/Laboratorium.*Segera Hadir/)
+
+    expect(mobileDrawer.querySelector('button[aria-disabled="true"]')).toHaveTextContent('Layanan kami')
+    expect(mobileDrawer.querySelector('a[href="/articles"]')).toHaveTextContent('Artikel Ilmiah')
+    expect(mobileDrawer.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Ringkasan Ilmiah')
+    expect(mobileDrawer.querySelector('div[aria-disabled="true"]')).toHaveTextContent(/Laboratorium.*Segera Hadir/)
   })
 
   it('animates hero tab progress smoothly and continues autoplay after clicking a tab', async () => {
