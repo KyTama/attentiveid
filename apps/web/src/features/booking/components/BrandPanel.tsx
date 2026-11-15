@@ -6,19 +6,13 @@ import { BOOKING_TEXT, type BookingLang } from '../booking-i18n'
 
 function AttentiveBrandMark({ size = 64 }: { size?: number }) {
   return (
-    <svg
+    <img
+      src="/images/brand/attentive-mark.png"
+      alt="Attentive"
       width={size}
       height={size}
-      viewBox="0 0 64 64"
-      fill="none"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <rect width="64" height="64" rx="16" fill="#243766" />
-      <circle cx="32" cy="32" r="20" stroke="#d8a74d" strokeWidth="2.5" />
-      <circle cx="32" cy="32" r="11" stroke="#e8d4a0" strokeWidth="1.75" opacity="0.85" />
-      <circle cx="32" cy="32" r="4" fill="#d8a74d" />
-    </svg>
+      className="shrink-0 object-contain rounded-xl"
+    />
   )
 }
 
