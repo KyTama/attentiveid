@@ -78,6 +78,13 @@
       "when": 1794642888283,
       "tag": "0010_sci_briefs",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794680445137,
+      "tag": "0011_booking_foundation",
+      "breakpoints": true
     }
   ]
 }

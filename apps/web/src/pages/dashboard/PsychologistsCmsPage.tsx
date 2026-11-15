@@ -13,7 +13,7 @@ import {
   type DirectoryViewMode,
 } from '../../components/dashboard/FeaturedOrderPanel'
 import { useAuth } from '../../features/auth/auth-context'
-import type { FullPsychologistMutation } from '@attentiveid/shared'
+import { parseDaySchedule, type FullPsychologistMutation } from '@attentiveid/shared'
 import {
   UploadCloud,
   Camera,
@@ -68,6 +68,49 @@ const branchLabels: Record<string, string> = {
   multiple: 'Multiple (TBI & BSD)',
 }
 
+const BOOKING_SCHEDULE_DAYS = [
+  { key: 'scheduleMon', label: 'Senin' },
+  { key: 'scheduleTue', label: 'Selasa' },
+  { key: 'scheduleWed', label: 'Rabu' },
+  { key: 'scheduleThu', label: 'Kamis' },
+  { key: 'scheduleFri', label: 'Jumat' },
+  { key: 'scheduleSat', label: 'Sabtu' },
+  { key: 'scheduleSun', label: 'Minggu' },
+] as const
+
+const BOOKING_AVAILABILITY_FLAGS = [
+  { key: 'availableOnline', label: 'Online (Video)' },
+  { key: 'availableTbi', label: 'Offline — Jakarta (TBI Pusat)' },
+  { key: 'availableBsd', label: 'Offline — BSD (Delrey BizTown)' },
+  { key: 'availableMalang', label: 'Offline — Malang (Grand Arumba)' },
+] as const
+
+const getScheduleBadgeMeta = (rawSchedule: string) => {
+  const parsed = parseDaySchedule(rawSchedule)
+  if (!parsed) {
+    return {
+      text: 'Format belum dikenali',
+      className: 'bg-rose-50 text-rose-700 border-rose-200',
+    }
+  }
+  if (parsed.type === 'off') {
+    return {
+      text: 'Off',
+      className: 'bg-slate-100 text-slate-600 border-slate-200',
+    }
+  }
+  if (parsed.type === 'appointment') {
+    return {
+      text: 'By Appointment',
+      className: 'bg-amber-50 text-amber-800 border-amber-200',
+    }
+  }
+  return {
+    text: `${parsed.ranges.length} rentang jam`,
+    className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  }
+}
+
 type TabId = 'basic' | 'skills' | 'bio'
 
 const TABS: { id: TabId; label: string; short: string; subtitle: string }[] = [
@@ -91,6 +134,20 @@ interface FormState {
   bookingUrl: string
   premiumBookingUrl: string
   featured: boolean
+  consultationDuration: string
+  onlineRate: string
+  offlineRate: string
+  availableOnline: boolean
+  availableTbi: boolean
+  availableBsd: boolean
+  availableMalang: boolean
+  scheduleMon: string
+  scheduleTue: string
+  scheduleWed: string
+  scheduleThu: string
+  scheduleFri: string
+  scheduleSat: string
+  scheduleSun: string
   featuredOrder: string
   supportAreas: { supportArea: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'; primary: boolean }[]
   specializations: { id: string; labelId: string; labelEn: string }[]
@@ -124,6 +181,20 @@ const defaultFormState: FormState = {
   bookingUrl: 'https://attentive.id/book/',
   premiumBookingUrl: '',
   featured: false,
+  consultationDuration: '±60 menit / sesi',
+  onlineRate: '',
+  offlineRate: '',
+  availableOnline: false,
+  availableTbi: false,
+  availableBsd: false,
+  availableMalang: false,
+  scheduleMon: 'Off',
+  scheduleTue: 'Off',
+  scheduleWed: 'Off',
+  scheduleThu: 'Off',
+  scheduleFri: 'Off',
+  scheduleSat: 'Off',
+  scheduleSun: 'Off',
   featuredOrder: '',
   supportAreas: [{ supportArea: 'adultClinical', primary: true }],
   specializations: [{ id: 'spec-0', labelId: 'Konseling Dewasa', labelEn: 'Adult Counseling' }],
@@ -364,6 +435,20 @@ export function PsychologistsCmsPage() {
         bookingUrl: full.bookingUrl,
         premiumBookingUrl: full.premiumBookingUrl || '',
         featured: full.featured,
+        consultationDuration: full.consultationDuration || '±60 menit / sesi',
+        onlineRate: full.onlineRate !== null && full.onlineRate !== undefined ? String(full.onlineRate) : '',
+        offlineRate: full.offlineRate !== null && full.offlineRate !== undefined ? String(full.offlineRate) : '',
+        availableOnline: Boolean(full.availableOnline),
+        availableTbi: Boolean(full.availableTbi),
+        availableBsd: Boolean(full.availableBsd),
+        availableMalang: Boolean(full.availableMalang),
+        scheduleMon: full.scheduleMon || 'Off',
+        scheduleTue: full.scheduleTue || 'Off',
+        scheduleWed: full.scheduleWed || 'Off',
+        scheduleThu: full.scheduleThu || 'Off',
+        scheduleFri: full.scheduleFri || 'Off',
+        scheduleSat: full.scheduleSat || 'Off',
+        scheduleSun: full.scheduleSun || 'Off',
         featuredOrder: full.featuredOrder !== null ? String(full.featuredOrder) : '',
         supportAreas: full.supportAreas.map((sa: { supportArea: 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist'; primary: boolean }) => ({ supportArea: sa.supportArea, primary: sa.primary })),
         specializations: full.specializations.map((sp: { id?: string; label: { id: string; en: string } }, index: number) => ({
@@ -515,6 +600,42 @@ export function PsychologistsCmsPage() {
       return
     }
 
+    const rawOnlineRate = formState.onlineRate.trim()
+    const rawOfflineRate = formState.offlineRate.trim()
+    const parsedOnlineRate = rawOnlineRate === '' ? null : Number(rawOnlineRate)
+    const parsedOfflineRate = rawOfflineRate === '' ? null : Number(rawOfflineRate)
+
+    if (
+      parsedOnlineRate !== null &&
+      (!Number.isInteger(parsedOnlineRate) || parsedOnlineRate < 0)
+    ) {
+      setFormError('Tarif sesi Online harus berupa angka bulat >= 0.')
+      setActiveFormTab('bio')
+      return
+    }
+
+    if (
+      parsedOfflineRate !== null &&
+      (!Number.isInteger(parsedOfflineRate) || parsedOfflineRate < 0)
+    ) {
+      setFormError('Tarif sesi Offline harus berupa angka bulat >= 0.')
+      setActiveFormTab('bio')
+      return
+    }
+
+    if (formState.availableOnline && parsedOnlineRate === null) {
+      setFormError('Tarif sesi Online wajib diisi jika layanan Online diaktifkan.')
+      setActiveFormTab('bio')
+      return
+    }
+
+    const hasOfflineBranch = formState.availableTbi || formState.availableBsd || formState.availableMalang
+    if (hasOfflineBranch && parsedOfflineRate === null) {
+      setFormError('Tarif sesi Offline wajib diisi jika minimal satu cabang tatap muka diaktifkan.')
+      setActiveFormTab('bio')
+      return
+    }
+
     setIsSubmitting(true)
 
     const safeSlug = formState.slug.trim() || generateSlug(formState.name) || generateSlug(formState.nickname) || 'psychologist'
@@ -549,6 +670,20 @@ export function PsychologistsCmsPage() {
       bookingUrl: formState.bookingUrl.trim().startsWith('https://') ? formState.bookingUrl.trim() : `https://${formState.bookingUrl.trim()}`,
       premiumBookingUrl: formState.premiumBookingUrl.trim() ? formState.premiumBookingUrl.trim() : null,
       featured: formState.featured,
+      consultationDuration: formState.consultationDuration.trim() || undefined,
+      onlineRate: parsedOnlineRate,
+      offlineRate: parsedOfflineRate,
+      availableOnline: formState.availableOnline,
+      availableTbi: formState.availableTbi,
+      availableBsd: formState.availableBsd,
+      availableMalang: formState.availableMalang,
+      scheduleMon: formState.scheduleMon.trim() || null,
+      scheduleTue: formState.scheduleTue.trim() || null,
+      scheduleWed: formState.scheduleWed.trim() || null,
+      scheduleThu: formState.scheduleThu.trim() || null,
+      scheduleFri: formState.scheduleFri.trim() || null,
+      scheduleSat: formState.scheduleSat.trim() || null,
+      scheduleSun: formState.scheduleSun.trim() || null,
       featuredOrder: formState.featured && formState.featuredOrder !== '' ? Number(formState.featuredOrder) : null,
       supportAreas: formState.supportAreas,
       specializations: finalSpecs,
@@ -1930,6 +2065,113 @@ export function PsychologistsCmsPage() {
                               placeholder="e.g. Available Tuesday, Thursday, and Saturday"
                               className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                             />
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 space-y-4">
+                          <div>
+                            <h4 className="text-xs font-semibold text-slate-800">Tarif, Cabang & Jadwal Praktik Booking</h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              Dipakai langsung oleh halaman publik <span className="font-mono">/booking</span> untuk menghitung tarif, cabang tersedia, dan slot waktu.
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-600 mb-1">Durasi Konsultasi</label>
+                              <input
+                                type="text"
+                                value={formState.consultationDuration}
+                                onChange={(e) => setFormState((prev) => ({ ...prev, consultationDuration: e.target.value }))}
+                                placeholder="±60 menit / sesi"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-600 mb-1">Tarif Online (IDR)</label>
+                              <input
+                                type="number"
+                                min={0}
+                                value={formState.onlineRate}
+                                onChange={(e) => setFormState((prev) => ({ ...prev, onlineRate: e.target.value }))}
+                                placeholder="Contoh: 350000"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-600 mb-1">Tarif Offline (IDR)</label>
+                              <input
+                                type="number"
+                                min={0}
+                                value={formState.offlineRate}
+                                onChange={(e) => setFormState((prev) => ({ ...prev, offlineRate: e.target.value }))}
+                                placeholder="Contoh: 450000"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-[11px] font-medium text-slate-600 mb-2">Ketersediaan Mode & Cabang</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {BOOKING_AVAILABILITY_FLAGS.map((flag) => (
+                                <label
+                                  key={flag.key}
+                                  className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 cursor-pointer"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={formState[flag.key]}
+                                    onChange={(e) =>
+                                      setFormState((prev) => ({
+                                        ...prev,
+                                        [flag.key]: e.target.checked,
+                                      }))
+                                    }
+                                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500/20"
+                                  />
+                                  <span>{flag.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-600">Jadwal Praktik Mingguan (Senin – Minggu)</p>
+                              <p className="text-[11px] text-slate-400">
+                                Format: <span className="font-mono">09:00-17:00</span>, <span className="font-mono">By Appointment</span>, atau <span className="font-mono">Off</span>.
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              {BOOKING_SCHEDULE_DAYS.map((day) => {
+                                const badge = getScheduleBadgeMeta(formState[day.key])
+                                return (
+                                  <div key={day.key} className="grid grid-cols-12 items-center gap-2">
+                                    <label className="col-span-3 sm:col-span-2 text-xs font-medium text-slate-700">
+                                      {day.label}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formState[day.key]}
+                                      onChange={(e) =>
+                                        setFormState((prev) => ({
+                                          ...prev,
+                                          [day.key]: e.target.value,
+                                        }))
+                                      }
+                                      placeholder="Off / 09:00-17:00 / By Appointment"
+                                      className="col-span-5 sm:col-span-7 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    />
+                                    <div className="col-span-4 sm:col-span-3 flex justify-end">
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${badge.className}`}>
+                                        {badge.text}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
                         </div>
                       </div>

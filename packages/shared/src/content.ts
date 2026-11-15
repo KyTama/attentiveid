@@ -793,6 +793,20 @@ export const FullPsychologistMutationSchema = Type.Object({
   experienceYears: Type.Number({ minimum: 0, maximum: 80 }),
   bookingUrl: Type.String({ minLength: 1, maxLength: 2_048, pattern: '^https://' }),
   premiumBookingUrl: Type.Optional(Type.Union([Type.String({ minLength: 1, maxLength: 2_048 }), Type.Null()])),
+  consultationDuration: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),
+  onlineRate: Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()])),
+  offlineRate: Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()])),
+  availableOnline: Type.Optional(Type.Boolean()),
+  availableTbi: Type.Optional(Type.Boolean()),
+  availableBsd: Type.Optional(Type.Boolean()),
+  availableMalang: Type.Optional(Type.Boolean()),
+  scheduleMon: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
+  scheduleTue: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
+  scheduleWed: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
+  scheduleThu: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
+  scheduleFri: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
+  scheduleSat: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
+  scheduleSun: Type.Optional(Type.Union([Type.String({ maxLength: 200 }), Type.Null()])),
   featured: Type.Boolean(),
   featuredOrder: Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()])),
   supportAreas: Type.Array(Type.Object({
@@ -831,6 +845,12 @@ export const validateFullPsychologistMutation = (value: unknown): value is FullP
   if (!value.featured && value.featuredOrder !== null && value.featuredOrder !== undefined) {
     return false
   }
+  if (value.availableOnline && (value.onlineRate === null || value.onlineRate === undefined)) {
+    return false
+  }
+  if ((value.availableTbi || value.availableBsd || value.availableMalang) && (value.offlineRate === null || value.offlineRate === undefined)) {
+    return false
+  }
   return true
 }
 
@@ -849,6 +869,12 @@ export const getFullPsychologistMutationErrors = (value: unknown): string[] => {
     }
     if (!obj.featured && obj.featuredOrder !== null && obj.featuredOrder !== undefined) {
       errors.push("Field 'featuredOrder' harus null jika featured tidak diaktifkan.")
+    }
+    if (obj.availableOnline === true && (obj.onlineRate === null || obj.onlineRate === undefined)) {
+      errors.push("Field 'onlineRate' wajib diisi jika mode online diaktifkan.")
+    }
+    if ((obj.availableTbi === true || obj.availableBsd === true || obj.availableMalang === true) && (obj.offlineRate === null || obj.offlineRate === undefined)) {
+      errors.push("Field 'offlineRate' wajib diisi jika cabang offline diaktifkan.")
     }
   }
   return errors

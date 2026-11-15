@@ -14,6 +14,9 @@ import { createFreeSessionRepository, type FreeSessionRepository } from './repos
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
 import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
 import { createSitemapRoutes } from './routes/sitemap.routes';
+import { createBookingRepository, type BookingRepository } from './repositories/booking.repository';
+import { createBookingPublicRoutes } from './routes/booking-public.routes';
+import { createBookingAdminRoutes } from './routes/booking-admin.routes';
 import { getMediaFilePath } from './services/media-storage';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
@@ -23,9 +26,13 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
     sciBriefsRepository?: SciBriefsRepository;
+    bookingRepository?: BookingRepository;
+    triggerOutboxDrain?: () => Promise<unknown>;
 };
 
 export const createApp = (dependencies: AppDependencies) => {
+    const bookingRepository = dependencies.bookingRepository ?? createBookingRepository(dependencies.db);
+
     const baseApp = new Elysia()
         // Swagger documentation
         .use(swagger({
@@ -45,6 +52,7 @@ export const createApp = (dependencies: AppDependencies) => {
                     { name: 'Admin', description: 'Admin operations' },
                     { name: 'Psychologist', description: 'Psychologist operations' },
                     { name: 'Free Session', description: 'Free session registration form and admin report' },
+                    { name: 'Booking', description: 'Consultation booking catalog, submission, operational portal, and attribution' },
                 ],
             },
         }))
@@ -52,6 +60,10 @@ export const createApp = (dependencies: AppDependencies) => {
         .use(cors({ origin: dependencies.frontendOrigin, credentials: true }))
         .use(createPublicContentRoutes(dependencies))
         .use(createSitemapRoutes({ db: dependencies.db, siteOrigin: dependencies.frontendOrigin }))
+        .use(createBookingPublicRoutes({
+            bookingRepository,
+            triggerOutboxDrain: dependencies.triggerOutboxDrain
+        }))
         .get('/ready', () => ({ status: 'ready', service: 'attentiveid-api' }), {
             detail: {
                 tags: ['Health'],
@@ -162,6 +174,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 sciBriefsRepository: dependencies.sciBriefsRepository || createSciBriefsRepository(dependencies.db),
+            }))
+            .use(createBookingAdminRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                bookingRepository,
+                triggerOutboxDrain: dependencies.triggerOutboxDrain
             }));
     }
 

@@ -4,6 +4,8 @@ import { db } from './db';
 import { createDrizzleLandingContentSource, createLandingContentRepository } from './repositories/landing-content.repository';
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from './repositories/psychologists.repository';
 import { createArticlesRepository, createDrizzleArticleQuerySource } from './repositories/articles.repository';
+import { createBookingRepository } from './repositories/booking.repository';
+import { processDueBookingOutbox } from './services/booking-outbox';
 import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
 import {
@@ -35,6 +37,47 @@ const articlesRepository = createArticlesRepository(createDrizzleArticleQuerySou
 const contentTransitions = createContentTransitions(createDrizzleContentTransitionDatabase(db));
 
 const landingRepository = createLandingContentRepository(createDrizzleLandingContentSource(db));
+const bookingRepository = createBookingRepository(db);
+
+const googleOutboxConfig =
+    env.GOOGLE_CLIENT_ID &&
+    env.GOOGLE_CLIENT_SECRET &&
+    env.GOOGLE_REFRESH_TOKEN &&
+    env.GOOGLE_SHEET_ID
+        ? {
+              clientId: env.GOOGLE_CLIENT_ID,
+              clientSecret: env.GOOGLE_CLIENT_SECRET,
+              refreshToken: env.GOOGLE_REFRESH_TOKEN,
+              spreadsheetId: env.GOOGLE_SHEET_ID,
+              sheetName: env.GOOGLE_SHEET_NAME || 'Sheet1',
+              notifyEmail: env.BOOKING_NOTIFY_EMAIL || 'contact@attentiveid.com',
+              sendEmail: true
+          }
+        : undefined;
+
+let outboxDraining = false;
+const triggerOutboxDrain = async () => {
+    if (outboxDraining) return;
+    outboxDraining = true;
+    try {
+        await processDueBookingOutbox({
+            db,
+            webhookUrl: env.N8N_BOOKING_WEBHOOK_URL,
+            webhookSecret: env.N8N_WEBHOOK_SECRET,
+            google: googleOutboxConfig,
+            onError: (err) => console.error('[booking-outbox] Delivery error:', err)
+        });
+    } finally {
+        outboxDraining = false;
+    }
+};
+
+if (env.N8N_BOOKING_WEBHOOK_URL || googleOutboxConfig) {
+    const outboxTimer = setInterval(() => {
+        void triggerOutboxDrain();
+    }, 30_000);
+    outboxTimer.unref();
+}
 
 const app = createApp({
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',
@@ -48,6 +91,8 @@ const app = createApp({
     userRepository,
     tokenService,
     verifyPassword,
+    bookingRepository,
+    triggerOutboxDrain,
     db
 })
     // Listen
