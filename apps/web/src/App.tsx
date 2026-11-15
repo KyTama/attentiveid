@@ -15,6 +15,7 @@ import { PreviewLandingPage } from './pages/PreviewLandingPage'
 import { ArticlesPage } from './pages/ArticlesPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
+import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { SciBriefPage } from './pages/SciBriefPage'
 import { SciBriefDetailPage } from './pages/SciBriefDetailPage'
 import { BookingPage } from './pages/BookingPage'
@@ -53,6 +54,7 @@ export function AppRoutes({
           <Route path="articles" element={<ArticlesPage />} />
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
+          <Route path="let-there-be-light" element={<LetThereBeLightPage />} />
           <Route path="sci-brief" element={<SciBriefPage />} />
           <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />
         </Route>
