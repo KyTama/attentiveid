@@ -29,7 +29,7 @@ const makeRepository = () => {
   const qr: QrCodeDto[] = []
   const rows: TrafficDayRow[] = [{ path: '/', day: '2026-12-05', views: 4, sessions: 2, lastVisitAt: '2026-12-05T01:00:00Z' }]
   const repository = {
-    listActiveFeatured: async () => [{ id: '1', slug: 'ltbl', title: { id: 'LTBL', en: 'LTBL' }, description: { id: '', en: '' }, url: '/let-there-be-light' }],
+    listActiveFeatured: async () => [{ id: '1', slug: 'ltbl', title: { id: 'LTBL', en: 'LTBL' }, description: { id: '', en: '' }, theme: 'blue', icon: 'sparkles', badge: { id: '', en: '' }, cta: { id: '', en: '' }, url: '/let-there-be-light' }],
     getSharePreview: async (path: string) => (path === '/free-session' ? { id: 'p', path, title: 'Sesi "Gratis"', description: 'Isi', imageUrl: '/media/x.jpg', updatedAt: 'x' } : null),
     recordPageView: async (path: string, newSession: boolean) => { views.push({ path, newSession }) },
     listTrafficRows: async () => rows,

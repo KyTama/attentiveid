@@ -45,6 +45,10 @@ const toFeaturedPublic = (row: FeaturedRow): FeaturedProductPublicDto => ({
   slug: row.slug,
   title: { id: row.titleId, en: row.titleEn },
   description: { id: row.descriptionId, en: row.descriptionEn },
+  theme: row.theme as FeaturedProductPublicDto['theme'],
+  icon: row.icon as FeaturedProductPublicDto['icon'],
+  badge: { id: row.badgeId, en: row.badgeEn },
+  cta: { id: row.ctaId, en: row.ctaEn },
   url: row.url ? row.url : null,
 })
 
@@ -69,6 +73,12 @@ const featuredValues = (input: FeaturedProductInput) => ({
   titleEn: input.titleEn,
   descriptionId: input.descriptionId,
   descriptionEn: input.descriptionEn,
+  theme: input.theme,
+  icon: input.icon,
+  badgeId: input.badgeId,
+  badgeEn: input.badgeEn,
+  ctaId: input.ctaId,
+  ctaEn: input.ctaEn,
   url: input.url,
   startAt: input.startAt,
   endAt: input.endAt,

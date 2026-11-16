@@ -4,8 +4,8 @@ import type { FeaturedProductPublicDto } from '@attentiveid/shared'
 export interface FeaturedStripCard {
   id: string
   visible: boolean
-  theme: 'gold' | 'navy' | 'blue' | 'emerald'
-  icon: 'gift' | 'calendar' | 'clipboard' | 'sparkles' | 'shield' | 'message'
+  theme: FeaturedProductPublicDto['theme']
+  icon: FeaturedProductPublicDto['icon']
   badge: string
   title: string
   description: string
@@ -16,33 +16,38 @@ export interface FeaturedStripCard {
 }
 
 export interface FeaturedCardLabels {
+  /** Used when a card has no label of its own. */
   badge: string
+  /** Used when a live card has no button text of its own. */
   open: string
+  /** Used when a card without a page address has no button text of its own. */
   comingSoon: string
 }
 
+const pick = (value: { id: string; en: string }, isId: boolean) => (isId ? value.id || value.en : value.en || value.id).trim()
+
 /**
- * Featured products (portal: Produk Featured) become cards at the end of the strip. A product whose
- * page is already used by one of the strip's own cards is skipped so nothing shows twice.
+ * Every featured card on the strip comes from the portal (menu: Produk Featured): look, icon, label,
+ * title, description and button text. Empty label/button text fall back to sensible defaults.
  */
 export function featuredProductsToCards(
   products: readonly FeaturedProductPublicDto[],
   isId: boolean,
   labels: FeaturedCardLabels,
-  existingUrls: readonly string[] = [],
 ): FeaturedStripCard[] {
-  return products
-    .filter((product) => !product.url || !existingUrls.includes(product.url))
-    .map((product) => ({
+  return products.map((product) => {
+    const comingSoon = !product.url
+    return {
       id: `product-${product.slug}`,
       visible: true,
-      theme: product.url ? ('blue' as const) : ('navy' as const),
-      icon: 'sparkles' as const,
-      badge: labels.badge,
-      title: isId ? product.title.id : product.title.en,
-      description: (isId ? product.description.id : product.description.en) ?? '',
-      cta: product.url ? labels.open : labels.comingSoon,
+      theme: product.theme ?? (comingSoon ? 'navy' : 'blue'),
+      icon: product.icon ?? 'sparkles',
+      badge: pick(product.badge ?? { id: '', en: '' }, isId) || labels.badge,
+      title: pick(product.title, isId),
+      description: pick(product.description, isId),
+      cta: pick(product.cta ?? { id: '', en: '' }, isId) || (comingSoon ? labels.comingSoon : labels.open),
       url: product.url ?? '',
-      comingSoon: !product.url,
-    }))
+      comingSoon,
+    }
+  })
 }

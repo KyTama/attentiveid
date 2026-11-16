@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { FeaturedProductAdminDto, FeaturedProductState } from '@attentiveid/shared'
+import {
+  FEATURED_CARD_ICONS,
+  FEATURED_CARD_THEMES,
+  type FeaturedCardIcon,
+  type FeaturedCardTheme,
+  type FeaturedProductAdminDto,
+  type FeaturedProductState,
+} from '@attentiveid/shared'
 import { Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
 import {
   AdminToolsApiError,
@@ -7,6 +14,12 @@ import {
   listAdminFeaturedProducts,
   saveAdminFeaturedProduct,
 } from '../../features/admin-tools/service'
+import {
+  CARD_ICONS,
+  CARD_ICON_LABELS,
+  CARD_THEME_LABELS,
+  CARD_THEME_STYLES,
+} from '../../features/featured/card-style'
 
 interface FormState {
   id?: string
@@ -14,6 +27,12 @@ interface FormState {
   titleEn: string
   descriptionId: string
   descriptionEn: string
+  theme: FeaturedCardTheme
+  icon: FeaturedCardIcon
+  badgeId: string
+  badgeEn: string
+  ctaId: string
+  ctaEn: string
   url: string
   /** datetime-local values (browser local time); empty = open-ended */
   startAt: string
@@ -37,6 +56,12 @@ const emptyForm = (): FormState => ({
   titleEn: '',
   descriptionId: '',
   descriptionEn: '',
+  theme: 'blue',
+  icon: 'sparkles',
+  badgeId: '',
+  badgeEn: '',
+  ctaId: '',
+  ctaEn: '',
   url: '',
   startAt: '',
   endAt: '',
@@ -51,6 +76,12 @@ const toForm = (product: FeaturedProductAdminDto): FormState => ({
   titleEn: product.title.en,
   descriptionId: product.description.id,
   descriptionEn: product.description.en,
+  theme: product.theme,
+  icon: product.icon,
+  badgeId: product.badge.id,
+  badgeEn: product.badge.en,
+  ctaId: product.cta.id,
+  ctaEn: product.cta.en,
   url: product.url ?? '',
   startAt: toLocalInput(product.startAt),
   endAt: toLocalInput(product.endAt),
@@ -111,6 +142,12 @@ export function FeaturedProductsCmsPage() {
         titleEn: form.titleEn,
         descriptionId: form.descriptionId,
         descriptionEn: form.descriptionEn,
+        theme: form.theme,
+        icon: form.icon,
+        badgeId: form.badgeId,
+        badgeEn: form.badgeEn,
+        ctaId: form.ctaId,
+        ctaEn: form.ctaEn,
         url: form.url,
         startAt: fromLocalInput(form.startAt),
         endAt: fromLocalInput(form.endAt),
@@ -147,7 +184,7 @@ export function FeaturedProductsCmsPage() {
             Produk Featured
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Produk yang tampil sebagai kartu di bagian "Featured Campaigns & Portals" pada beranda, setelah kartu Sesi Gratis dan Booking, selama masa featured-nya. Masa tampil hanya terlihat di sini, tidak di halaman pengunjung.
+            Semua kartu di bagian "Featured Campaigns & Portals" pada beranda diatur di sini: tema (termasuk kartu emas), ikon, label, teks tombol, tautan, urutan, dan masa featured. Masa tampil hanya terlihat di sini, tidak di halaman pengunjung.
           </p>
         </div>
         <button
@@ -199,8 +236,21 @@ export function FeaturedProductsCmsPage() {
                   return (
                     <tr className="hover:bg-slate-50/50" key={product.id}>
                       <td className="px-4 py-3.5">
-                        <div className="font-semibold text-slate-900">{product.title.id}</div>
-                        <div className="text-[11px] text-slate-500">urutan {product.sortOrder}</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`grid size-7 place-items-center rounded-lg ${CARD_THEME_STYLES[product.theme].iconBox}`}>
+                            {(() => {
+                              const Icon = CARD_ICONS[product.icon]
+                              return <Icon size={15} strokeWidth={2.2} />
+                            })()}
+                          </span>
+                          <div>
+                            <div className="font-semibold text-slate-900">{product.title.id}</div>
+                            <div className="text-[11px] text-slate-500">
+                              urutan {product.sortOrder}
+                              {product.badge.id ? ` · ${product.badge.id}` : ''}
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3.5 text-slate-700">
                         {product.url ?? <span className="text-amber-700">Belum ada (tampil "Segera Hadir")</span>}
@@ -275,6 +325,66 @@ export function FeaturedProductsCmsPage() {
                 Deskripsi singkat (English)
                 <input className={inputClass} onChange={(e) => update({ descriptionEn: e.target.value })} value={form.descriptionEn} />
               </label>
+              <div className="sm:col-span-2">
+                <span className="text-sm font-medium text-slate-700">Tema kartu</span>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {FEATURED_CARD_THEMES.map((theme) => (
+                    <button
+                      aria-pressed={form.theme === theme}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium cursor-pointer ${
+                        form.theme === theme ? 'border-navy-700 bg-navy-50 text-navy-800 ring-2 ring-gold-300' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                      key={theme}
+                      onClick={() => update({ theme })}
+                      type="button"
+                    >
+                      <span className={`size-4 rounded-full ${CARD_THEME_STYLES[theme].badge}`} aria-hidden="true" />
+                      {CARD_THEME_LABELS[theme]}
+                    </button>
+                  ))}
+                </div>
+                {fieldErrors.theme && <span className="text-xs text-rose-700">{fieldErrors.theme}</span>}
+              </div>
+              <div className="sm:col-span-2">
+                <span className="text-sm font-medium text-slate-700">Ikon kartu</span>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {FEATURED_CARD_ICONS.map((icon) => {
+                    const Icon = CARD_ICONS[icon]
+                    return (
+                      <button
+                        aria-label={`Ikon ${CARD_ICON_LABELS[icon]}`}
+                        aria-pressed={form.icon === icon}
+                        className={`grid size-11 place-items-center rounded-xl border cursor-pointer ${
+                          form.icon === icon ? 'border-navy-700 bg-navy-50 text-navy-800 ring-2 ring-gold-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                        key={icon}
+                        onClick={() => update({ icon })}
+                        title={CARD_ICON_LABELS[icon]}
+                        type="button"
+                      >
+                        <Icon size={20} strokeWidth={2.2} />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <label className="text-sm font-medium text-slate-700">
+                Label kartu (Indonesia)
+                <input className={inputClass} maxLength={30} onChange={(e) => update({ badgeId: e.target.value })} placeholder="Produk Baru" value={form.badgeId} />
+                {fieldErrors.badgeId && <span className="text-xs text-rose-700">{fieldErrors.badgeId}</span>}
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                Label kartu (English)
+                <input className={inputClass} maxLength={30} onChange={(e) => update({ badgeEn: e.target.value })} placeholder="New Product" value={form.badgeEn} />
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                Teks tombol (Indonesia)
+                <input className={inputClass} maxLength={40} onChange={(e) => update({ ctaId: e.target.value })} placeholder="Buka" value={form.ctaId} />
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                Teks tombol (English)
+                <input className={inputClass} maxLength={40} onChange={(e) => update({ ctaEn: e.target.value })} placeholder="Open" value={form.ctaEn} />
+              </label>
               <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                 Halaman tujuan
                 <input
@@ -303,6 +413,30 @@ export function FeaturedProductsCmsPage() {
                 <input checked={form.enabled} onChange={(e) => update({ enabled: e.target.checked })} type="checkbox" />
                 Aktif (bisa dimatikan tanpa menghapus)
               </label>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-slate-700">Pratinjau kartu (Indonesia)</span>
+              {(() => {
+                const style = CARD_THEME_STYLES[form.theme]
+                const Icon = CARD_ICONS[form.icon]
+                return (
+                  <div className={`mt-1.5 max-w-xs rounded-xl border p-5 shadow-xs ${style.card}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${style.badge}`}>
+                        {form.badgeId || 'Produk Baru'}
+                      </span>
+                      <div className={`grid size-9 place-items-center rounded-lg ${style.iconBox}`}>
+                        <Icon size={18} strokeWidth={2.2} />
+                      </div>
+                    </div>
+                    <h3 className="mt-4 text-base font-bold text-secondary">{form.titleId || 'Nama produk'}</h3>
+                    {form.descriptionId && <p className="mt-1.5 text-xs leading-relaxed text-secondary/80">{form.descriptionId}</p>}
+                    <div className={`mt-5 border-t pt-3 text-xs font-semibold ${style.footer}`}>
+                      {form.ctaId || (form.url ? 'Buka' : 'Segera Hadir')}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
             <p className="text-xs text-slate-500">Kosongkan tanggal untuk tampil tanpa batas waktu. Waktu mengikuti zona waktu browser Anda.</p>
             <div className="flex justify-end gap-2 pt-2">

@@ -69,7 +69,7 @@ export const MAP_NODES: MapNode[] = [
     about: 'Mengelola pengajuan reservasi /booking, transisi status, pencegahan konflik slot 15 menit, retry webhook n8n, ekspor CSV operasional, dan laporan atribusi UTM/Meta Ads.' },
 
   { id: 'p-featured', column: 'portal', label: 'Produk Featured', sub: 'Kartu di beranda + masa tampil', status: 'live', route: '/dashboard/featured-products',
-    about: 'Produk (mis. Let There Be Light, Your Social World) yang tampil sebagai kartu di bagian Featured Campaigns & Portals beranda, dengan tanggal mulai-selesai, urutan, dan saklar aktif. Masa tampil tidak terlihat oleh pengunjung.' },
+    about: 'Semua kartu di bagian Featured Campaigns & Portals beranda (Sesi Gratis, Booking, Let There Be Light, Your Social World): tema/warna emas, ikon, label, teks tombol, tautan, urutan, saklar aktif, dan masa tampil. Masa tampil tidak terlihat oleh pengunjung.' },
   { id: 'p-share', column: 'portal', label: 'Thumbnail Link', sub: 'Judul, deskripsi, gambar per halaman', status: 'live', route: '/dashboard/share-previews',
     about: 'Mengatur tampilan link saat dibagikan (WhatsApp, media sosial) untuk tiap alamat halaman, mis. /free-session. Halaman tanpa pengaturan memakai logo Attentive.' },
   { id: 'p-traffic', column: 'portal', label: 'Traffic Monitor', sub: 'Eksklusif pemilik (Experimental)', status: 'live', route: '/dashboard/experimental/traffic',
@@ -160,7 +160,7 @@ export const MAP_NODES: MapNode[] = [
   { id: 'u-campaign', column: 'public', label: 'Banner kampanye', sub: 'Dock Sesi Gratis/Booking', status: 'live',
     about: 'Dock melayang dan blok promo.' },
   { id: 'u-featuredmenu', column: 'public', label: 'Featured Campaigns & Portals', sub: 'Strip kartu di bawah hero beranda', status: 'live',
-    about: 'Kartu Sesi Gratis dan Booking (dari Landing Content) diikuti produk featured yang masa tampilnya sedang berjalan; produk tanpa halaman tampil "Segera Hadir".' },
+    about: 'Semua kartu (Sesi Gratis, Booking, Let There Be Light, dst.) berasal dari Produk Featured: tema, ikon, label, tombol, urutan, dan masa tampil. Kartu di Landing Content hanya cadangan dan untuk dock bawah.' },
   { id: 'u-lights', column: 'public', label: 'Cahaya kursor (LTBL)', sub: 'Semua halaman publik kecuali form', status: 'live',
     about: 'Cahaya kecil berkelip di dekat kursor. Mati di /free-session, /booking, dan halaman LTBL, mati saat kursor di atas input/form, dan mati untuk perangkat sentuh atau pengaturan "kurangi gerakan".' },
   { id: 'u-seo', column: 'public', label: 'Pencarian & share', sub: 'Sitemap, judul, thumbnail', status: 'live',
