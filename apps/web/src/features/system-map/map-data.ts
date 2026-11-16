@@ -74,8 +74,8 @@ export const MAP_NODES: MapNode[] = [
     about: 'Mengatur tampilan link saat dibagikan (WhatsApp, media sosial) untuk tiap alamat halaman, mis. /free-session. Halaman tanpa pengaturan memakai logo Attentive.' },
   { id: 'p-traffic', column: 'portal', label: 'Traffic Monitor', sub: 'Eksklusif pemilik (Experimental)', status: 'live', route: '/dashboard/experimental/traffic',
     about: 'Tabel kunjungan halaman utama (hari ini, 7, 30 hari, total) dengan pencarian, filter header, dan urutan. Hanya akun pemilik; dijaga di server.' },
-  { id: 'p-qr', column: 'portal', label: 'QR Generator', sub: 'Eksklusif pemilik (Experimental)', status: 'live', route: '/dashboard/experimental/qr-generator',
-    about: 'Membuat QR dengan logo sendiri, menyimpan desainnya, dan mengunduh PNG. Hanya akun pemilik; dijaga di server.' },
+  { id: 'p-qr', column: 'portal', label: 'QR Generator', sub: 'Alat Bantu (semua akun staf)', status: 'live', route: '/dashboard/qr-generator',
+    about: 'Membuat QR dengan logo Attentive di tengah (atau logo sendiri), menyimpan desainnya, dan mengunduh PNG. Bisa dipakai semua akun staf (admin dan psikolog).' },
 
   // ---- Portal menus (proposed) --------------------------------------------
   { id: 'g-settings', column: 'portal', label: 'Site Settings', sub: 'Kontak, booking, kampanye', status: 'proposed',

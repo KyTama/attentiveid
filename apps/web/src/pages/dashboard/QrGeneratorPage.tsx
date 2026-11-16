@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { QR_LOGO_SCALE_RANGE, QR_MAX_LOGO_BYTES, dataUrlBytes, type QrCodeDto } from '@attentiveid/shared'
 import { Download, ImagePlus, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { AdminToolsApiError, deleteQrCode, listQrCodes, saveQrCode } from '../../features/admin-tools/service'
-import { downloadCanvasPng, renderQrToCanvas } from '../../features/admin-tools/qr-render'
+import { downloadCanvasPng, loadAttentiveMarkDataUrl, renderQrToCanvas } from '../../features/admin-tools/qr-render'
 
 interface Design {
   id?: string
@@ -37,6 +37,7 @@ const readFileAsDataUrl = (file: File) =>
 export function QrGeneratorPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [design, setDesign] = useState<Design>(emptyDesign)
+  const [attentiveMark, setAttentiveMark] = useState('')
   const [saved, setSaved] = useState<QrCodeDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -57,6 +58,21 @@ export function QrGeneratorPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // New designs start with the small Attentive mark in the middle (just the mark, no name).
+  useEffect(() => {
+    let cancelled = false
+    loadAttentiveMarkDataUrl()
+      .then((dataUrl) => {
+        if (cancelled) return
+        setAttentiveMark(dataUrl)
+        setDesign((current) => (current.id || current.logoDataUrl || current.name ? current : { ...current, logoDataUrl: dataUrl }))
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -109,7 +125,7 @@ export function QrGeneratorPage() {
     if (!window.confirm(`Hapus QR "${item.name}"?`)) return
     try {
       await deleteQrCode(item.id)
-      if (design.id === item.id) setDesign(emptyDesign())
+      if (design.id === item.id) setDesign({ ...emptyDesign(), logoDataUrl: attentiveMark })
       setNotice('QR dihapus.')
       await load()
     } catch (caught) {
@@ -130,7 +146,7 @@ export function QrGeneratorPage() {
           QR Generator
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Buat QR code dengan logo sendiri, simpan desainnya, dan unduh sebagai PNG. Selalu tes scan sebelum dicetak.
+          Buat QR code dengan logo Attentive di tengah (atau logo sendiri), simpan desainnya, dan unduh sebagai PNG. Selalu tes scan sebelum dicetak.
         </p>
       </div>
 
@@ -168,22 +184,38 @@ export function QrGeneratorPage() {
             </label>
           </div>
           <div>
-            <span className="text-sm font-medium text-slate-700">Logo di tengah (PNG/JPG/WebP, maks 150 KB)</span>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-slate-700">Logo di tengah QR</span>
+            <p className="text-xs text-slate-500">Bawaan: logo Attentive (hanya simbol, tanpa nama). Bisa diganti logo sendiri (PNG/JPG/WebP, maks 150 KB) atau dihapus.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                aria-pressed={Boolean(attentiveMark) && design.logoDataUrl === attentiveMark}
+                className={`rounded-xl border px-3 py-2 text-sm font-medium cursor-pointer ${
+                  attentiveMark && design.logoDataUrl === attentiveMark ? 'border-navy-700 bg-navy-50 text-navy-800 ring-2 ring-gold-300' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+                disabled={!attentiveMark}
+                onClick={() => update({ logoDataUrl: attentiveMark })}
+                type="button"
+              >
+                Logo Attentive
+              </button>
               <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <ImagePlus className="size-4" aria-hidden="true" />
-                Unggah logo
+                Unggah logo sendiri
                 <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => handleLogo(e.target.files?.[0])} type="file" />
               </label>
-              {design.logoDataUrl && (
-                <>
-                  <img alt="Logo terpilih" className="h-10 w-auto rounded border border-slate-200" src={design.logoDataUrl} />
-                  <button className="text-sm text-slate-500 underline cursor-pointer" onClick={() => update({ logoDataUrl: '' })} type="button">
-                    Hapus logo
-                  </button>
-                </>
-              )}
+              <button
+                aria-pressed={!design.logoDataUrl}
+                className={`rounded-xl border px-3 py-2 text-sm font-medium cursor-pointer ${
+                  !design.logoDataUrl ? 'border-navy-700 bg-navy-50 text-navy-800 ring-2 ring-gold-300' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+                onClick={() => update({ logoDataUrl: '' })}
+                type="button"
+              >
+                Tanpa logo
+              </button>
+              {design.logoDataUrl && <img alt="Logo terpilih" className="h-10 w-auto rounded border border-slate-200 bg-white p-0.5" src={design.logoDataUrl} />}
             </div>
+            {fieldErrors.logoDataUrl && <span className="text-xs text-rose-700">{fieldErrors.logoDataUrl}</span>}
             {design.logoDataUrl && (
               <label className="mt-3 block text-sm font-medium text-slate-700">
                 Ukuran logo ({Math.round(design.logoScale * 100)}%)
@@ -213,7 +245,7 @@ export function QrGeneratorPage() {
               Unduh PNG
             </button>
             {design.id && (
-              <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer" onClick={() => setDesign(emptyDesign())} type="button">
+              <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer" onClick={() => setDesign({ ...emptyDesign(), logoDataUrl: attentiveMark })} type="button">
                 QR baru
               </button>
             )}

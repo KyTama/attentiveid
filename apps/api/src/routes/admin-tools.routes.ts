@@ -76,6 +76,9 @@ export const buildSharePreviewHtml = (
 `
 }
 
+/** Any signed-in staff account (admin, psychologist; superadmin always passes) may use the QR generator. */
+const QR_ROLES: Array<'admin' | 'psychologist'> = ['admin', 'psychologist']
+
 export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencies) => {
   const roleGuard = createRoleGuardPlugin({
     tokenService: dependencies.tokenService,
@@ -84,7 +87,7 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
   const repository = dependencies.repository
   const now = dependencies.now ?? (() => new Date())
 
-  /** Owner-only data (traffic, QR codes): enforced here on the server, not just hidden in the menu. */
+  /** Owner-only data (traffic): enforced here on the server, not just hidden in the menu. */
   const ownerOnly = ({ currentUser, set }: any) => {
     if (!currentUser) {
       set.status = 401
@@ -217,13 +220,13 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       }
       return { status: 'success' }
     }, { requireRole: ['admin'], detail: { tags: ['Share previews'], summary: 'Remove a link preview' } })
-    // ---- Owner only: traffic + QR codes ------------------------------------
+    // ---- Owner only: traffic. QR codes: any signed-in staff account -------------
     .get('/api/admin/traffic', async () => ({
       status: 'success',
       rows: summarizeTraffic(await repository.listTrafficRows(), now()),
     }), { beforeHandle: ownerOnly, detail: { tags: ['Traffic'], summary: 'Traffic per main page (owner only)' } })
     .get('/api/admin/qr-codes', async () => ({ status: 'success', qrCodes: await repository.listQrCodes() }),
-      { beforeHandle: ownerOnly, detail: { tags: ['QR'], summary: 'List saved QR codes (owner only)' } })
+      { requireRole: QR_ROLES, detail: { tags: ['QR'], summary: 'List saved QR codes' } })
     .post('/api/admin/qr-codes', async ({ body, set }: any) => {
       const parsed = validateQrCodeInput(body)
       if (!parsed.ok) {
@@ -232,7 +235,7 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       }
       set.status = 201
       return { status: 'success', qrCode: await repository.createQrCode(parsed.value) }
-    }, { beforeHandle: ownerOnly, body: t.Any(), detail: { tags: ['QR'], summary: 'Save a QR code (owner only)' } })
+    }, { requireRole: QR_ROLES, body: t.Any(), detail: { tags: ['QR'], summary: 'Save a QR code' } })
     .put('/api/admin/qr-codes/:id', async ({ params: { id }, body, set }: any) => {
       const parsed = validateQrCodeInput(body)
       if (!parsed.ok) {
@@ -245,12 +248,12 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
         return { status: 'notFound', message: 'QR tidak ditemukan.' }
       }
       return { status: 'success', qrCode }
-    }, { beforeHandle: ownerOnly, body: t.Any(), detail: { tags: ['QR'], summary: 'Update a QR code (owner only)' } })
+    }, { requireRole: QR_ROLES, body: t.Any(), detail: { tags: ['QR'], summary: 'Update a QR code' } })
     .delete('/api/admin/qr-codes/:id', async ({ params: { id }, set }: any) => {
       if (!(await repository.removeQrCode(id))) {
         set.status = 404
         return { status: 'notFound', message: 'QR tidak ditemukan.' }
       }
       return { status: 'success' }
-    }, { beforeHandle: ownerOnly, detail: { tags: ['QR'], summary: 'Delete a QR code (owner only)' } })
+    }, { requireRole: QR_ROLES, detail: { tags: ['QR'], summary: 'Delete a QR code' } })
 }

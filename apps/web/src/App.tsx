@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './features/auth/auth-context'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { PublicLayout } from './components/common/PublicLayout'
@@ -163,13 +163,14 @@ export function AppRoutes({
             }
           />
           <Route
-            path="experimental/qr-generator"
+            path="qr-generator"
             element={
-              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
                 <QrGeneratorPage />
               </ProtectedRoute>
             }
           />
+          <Route path="experimental/qr-generator" element={<Navigate to="/dashboard/qr-generator" replace />} />
           <Route
             path="users"
             element={

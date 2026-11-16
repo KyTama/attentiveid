@@ -50,6 +50,28 @@ export async function renderQrToCanvas(
   return true
 }
 
+/** The Attentive ring mark (no name), shrunk to a small PNG so a saved QR design stays tiny. */
+export const ATTENTIVE_MARK_URL = '/images/brand/attentive-mark.png'
+let defaultMarkPromise: Promise<string> | null = null
+
+export function loadAttentiveMarkDataUrl(): Promise<string> {
+  defaultMarkPromise ??= loadImage(ATTENTIVE_MARK_URL)
+    .then((image) => {
+      const size = 256
+      const canvas = document.createElement('canvas')
+      const ratio = image.naturalHeight / image.naturalWidth || 1
+      canvas.width = size
+      canvas.height = Math.round(size * ratio)
+      canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/png')
+    })
+    .catch((error) => {
+      defaultMarkPromise = null
+      throw error
+    })
+  return defaultMarkPromise
+}
+
 export const downloadCanvasPng = (canvas: HTMLCanvasElement, fileName: string) => {
   const link = document.createElement('a')
   link.href = canvas.toDataURL('image/png')

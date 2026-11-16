@@ -23,7 +23,7 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/free-session': 'sesi gratis leads pendaftar form ekspor',
   '/dashboard/experimental/forms': 'form formulir eksperimen',
   '/dashboard/experimental/traffic': 'traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
-  '/dashboard/experimental/qr-generator': 'qr code barcode logo kode scan',
+  '/dashboard/qr-generator': 'qr code barcode logo attentive kode scan poster cetak alat bantu',
   '/dashboard/experimental/system-map': 'peta sistem diagram koneksi hubungan arsitektur',
 }
 
