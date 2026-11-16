@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTx } from '@/features/i18n/use-tx'
 import type { TrafficRow } from '@attentiveid/shared'
 import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCw, Search } from 'lucide-react'
 import { getTraffic } from '../../features/admin-tools/service'
 import {
   PAGE_LABELS,
+  PAGE_LABELS_EN,
   emptyTrafficFilters,
   filterAndSortTraffic,
   pageLabel,
@@ -31,6 +33,19 @@ const minFilterKey: Partial<Record<TrafficSortKey, keyof TrafficFilters>> = {
 const inputClass = 'w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-normal normal-case tracking-normal text-slate-900 outline-none focus:border-navy-500'
 
 export function TrafficMonitorPage() {
+  const { tx, isEn } = useTx()
+  const columns = COLUMNS.map((column) => ({
+    ...column,
+    label: {
+      path: tx('Halaman', 'Page'),
+      today: tx('Hari ini', 'Today'),
+      last7Days: tx('7 hari', '7 days'),
+      last30Days: tx('30 hari', '30 days'),
+      total: 'Total',
+      sessionsLast30Days: tx('Sesi 30 hari', 'Sessions 30 days'),
+      lastVisitAt: tx('Kunjungan terakhir', 'Last visit'),
+    }[column.key],
+  }))
   const [rows, setRows] = useState<TrafficRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +61,7 @@ export function TrafficMonitorPage() {
       setUpdatedAt(new Date())
       setError(null)
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Gagal memuat traffic.')
+      setError(caught instanceof Error ? caught.message : tx('Gagal memuat traffic.', 'Failed to load traffic.'))
     } finally {
       setIsLoading(false)
     }
@@ -83,7 +98,7 @@ export function TrafficMonitorPage() {
             Traffic Monitor
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Jumlah kunjungan halaman utama saja. Halaman dengan banyak sub-halaman (artikel, profil psikolog, edisi Sci-Brief) dihitung di halaman awalnya. Tidak ada data pribadi yang disimpan; bot dan "Do Not Track" tidak dihitung.
+            {tx('Jumlah kunjungan halaman utama saja. Halaman dengan banyak sub-halaman (artikel, profil psikolog, edisi Sci-Brief) dihitung di halaman awalnya. Tidak ada data pribadi yang disimpan; bot dan "Do Not Track" tidak dihitung.', 'Visits to the main pages only. Sections with many sub-pages (articles, psychologist profiles, Sci-Brief issues) are counted once, on their first page. No personal data is stored; bots and "Do Not Track" visitors are not counted.')}
           </p>
         </div>
         <button
@@ -93,7 +108,7 @@ export function TrafficMonitorPage() {
           type="button"
         >
           <RefreshCw className={`size-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-          Muat ulang
+          {tx('Muat ulang', 'Refresh')}
         </button>
       </div>
 
@@ -105,23 +120,23 @@ export function TrafficMonitorPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative block w-full max-w-sm">
-          <span className="sr-only">Cari halaman</span>
+          <span className="sr-only">{tx('Cari halaman', 'Search pages')}</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input
             className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100"
             onChange={(e) => setFilters((current) => ({ ...current, search: e.target.value }))}
-            placeholder="Cari halaman..."
+            placeholder={tx('Cari halaman...', 'Search pages...')}
             type="search"
             value={filters.search}
           />
         </label>
         {isFiltered && (
           <button className="text-sm text-slate-500 underline cursor-pointer" onClick={() => setFilters(emptyTrafficFilters())} type="button">
-            Hapus semua filter
+            {tx('Hapus semua filter', 'Clear all filters')}
           </button>
         )}
         <span className="ml-auto text-xs text-slate-500">
-          {visible.length} dari {rows.length} halaman{updatedAt ? ` · diperbarui ${updatedAt.toLocaleTimeString('id-ID', { timeStyle: 'short' })}` : ''}
+          {tx(`${visible.length} dari ${rows.length} halaman`, `${visible.length} of ${rows.length} pages`)}{updatedAt ? ` · ${tx('diperbarui', 'updated')} ${updatedAt.toLocaleTimeString(isEn ? 'en-US' : 'id-ID', { timeStyle: 'short' })}` : ''}
         </span>
       </div>
 
@@ -130,7 +145,7 @@ export function TrafficMonitorPage() {
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {COLUMNS.map((column) => {
+                {columns.map((column) => {
                   const active = sortKey === column.key
                   return (
                     <th
@@ -152,13 +167,13 @@ export function TrafficMonitorPage() {
                 })}
               </tr>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                {COLUMNS.map((column) => {
+                {columns.map((column) => {
                   const filterKey = minFilterKey[column.key]
                   return (
                     <th className="px-4 pb-3 pt-1" key={column.key}>
                       {column.key === 'path' ? (
                         <input
-                          aria-label="Filter halaman"
+                          aria-label={tx('Filter halaman', 'Filter page')}
                           className={inputClass}
                           onChange={(e) => setFilters((current) => ({ ...current, page: e.target.value }))}
                           placeholder="Filter..."
@@ -166,7 +181,7 @@ export function TrafficMonitorPage() {
                         />
                       ) : filterKey ? (
                         <input
-                          aria-label={`Minimal ${column.label}`}
+                          aria-label={tx(`Minimal ${column.label}`, `Minimum ${column.label}`)}
                           className={`${inputClass} text-right`}
                           min={0}
                           onChange={(e) => setMin(filterKey, e.target.value)}
@@ -184,23 +199,23 @@ export function TrafficMonitorPage() {
               {visible.length === 0 ? (
                 <tr>
                   <td className="px-4 py-10 text-center text-sm text-slate-500" colSpan={COLUMNS.length}>
-                    {isLoading ? 'Memuat...' : 'Tidak ada halaman yang cocok dengan filter.'}
+                    {isLoading ? tx('Memuat...', 'Loading...') : tx('Tidak ada halaman yang cocok dengan filter.', 'No pages match the filters.')}
                   </td>
                 </tr>
               ) : (
                 visible.map((row) => (
                   <tr className="hover:bg-slate-50/50" key={row.path}>
                     <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-900">{pageLabel(row.path)}</div>
+                      <div className="font-semibold text-slate-900">{pageLabel(row.path, isEn)}</div>
                       <div className="text-xs text-slate-500">{row.path}</div>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">{row.today.toLocaleString('id-ID')}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{row.last7Days.toLocaleString('id-ID')}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{row.last30Days.toLocaleString('id-ID')}</td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums">{row.total.toLocaleString('id-ID')}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{row.sessionsLast30Days.toLocaleString('id-ID')}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{row.today.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{row.last7Days.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{row.last30Days.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums">{row.total.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{row.sessionsLast30Days.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                      {row.lastVisitAt ? new Date(row.lastVisitAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                      {row.lastVisitAt ? new Date(row.lastVisitAt).toLocaleString(isEn ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
                     </td>
                   </tr>
                 ))
@@ -209,11 +224,11 @@ export function TrafficMonitorPage() {
             {visible.length > 0 && (
               <tfoot>
                 <tr className="border-t border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-700">
-                  <td className="px-4 py-3">Jumlah ({visible.length} halaman)</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{totals.today.toLocaleString('id-ID')}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{totals.last7Days.toLocaleString('id-ID')}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{totals.last30Days.toLocaleString('id-ID')}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{totals.total.toLocaleString('id-ID')}</td>
+                  <td className="px-4 py-3">{tx(`Jumlah (${visible.length} halaman)`, `Total (${visible.length} pages)`)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{totals.today.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{totals.last7Days.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{totals.last30Days.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{totals.total.toLocaleString(isEn ? 'en-US' : 'id-ID')}</td>
                   <td colSpan={2} />
                 </tr>
               </tfoot>
@@ -221,7 +236,7 @@ export function TrafficMonitorPage() {
           </table>
         </div>
       </div>
-      <p className="text-xs text-slate-500">Halaman yang dihitung: {Object.values(PAGE_LABELS).join(', ')}. Hari dihitung menurut waktu Jakarta (WIB).</p>
+      <p className="text-xs text-slate-500">{tx('Halaman yang dihitung', 'Pages counted')}: {Object.values(isEn ? PAGE_LABELS_EN : PAGE_LABELS).join(', ')}. {tx('Hari dihitung menurut waktu Jakarta (WIB).', 'Days follow Jakarta time (WIB).')}</p>
     </div>
   )
 }

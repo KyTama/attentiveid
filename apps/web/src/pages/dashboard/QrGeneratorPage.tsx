@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTx } from '@/features/i18n/use-tx'
 import { QR_LOGO_SCALE_RANGE, QR_MAX_LOGO_BYTES, dataUrlBytes, type QrCodeDto } from '@attentiveid/shared'
 import { Download, ImagePlus, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { AdminToolsApiError, deleteQrCode, listQrCodes, saveQrCode } from '../../features/admin-tools/service'
@@ -35,6 +36,7 @@ const readFileAsDataUrl = (file: File) =>
   })
 
 export function QrGeneratorPage() {
+  const { tx } = useTx()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [design, setDesign] = useState<Design>(emptyDesign)
   const [attentiveMark, setAttentiveMark] = useState('')
@@ -49,7 +51,7 @@ export function QrGeneratorPage() {
     try {
       setSaved(await listQrCodes())
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Gagal memuat QR tersimpan.')
+      setError(caught instanceof Error ? caught.message : tx('Gagal memuat QR tersimpan.', 'Failed to load saved QR codes.'))
     } finally {
       setIsLoading(false)
     }
@@ -79,7 +81,7 @@ export function QrGeneratorPage() {
     if (!canvas) return
     let cancelled = false
     renderQrToCanvas(canvas, design).catch((caught) => {
-      if (!cancelled) setError(caught instanceof Error ? caught.message : 'Gagal membuat QR.')
+      if (!cancelled) setError(caught instanceof Error ? caught.message : tx('Gagal membuat QR.', 'Failed to generate the QR code.'))
     })
     return () => {
       cancelled = true
@@ -92,12 +94,12 @@ export function QrGeneratorPage() {
     if (!file) return
     setError(null)
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-      setError('Logo harus PNG, JPG, atau WebP.')
+      setError(tx('Logo harus PNG, JPG, atau WebP.', 'Logo must be PNG, JPG or WebP.'))
       return
     }
     const dataUrl = await readFileAsDataUrl(file)
     if (dataUrlBytes(dataUrl) > QR_MAX_LOGO_BYTES) {
-      setError('Ukuran logo maks 150 KB. Kecilkan dulu gambarnya.')
+      setError(tx('Ukuran logo maks 150 KB. Kecilkan dulu gambarnya.', 'Logo must be 150 KB or smaller. Please shrink the image first.'))
       return
     }
     update({ logoDataUrl: dataUrl })
@@ -111,25 +113,25 @@ export function QrGeneratorPage() {
       const { id, ...input } = design
       const result = await saveQrCode(id, input)
       setDesign((current) => ({ ...current, id: result.id }))
-      setNotice('QR tersimpan di daftar di bawah.')
+      setNotice(tx('QR tersimpan di daftar di bawah.', 'QR saved in the list below.'))
       await load()
     } catch (caught) {
       if (caught instanceof AdminToolsApiError) setFieldErrors(caught.fieldErrors)
-      setError(caught instanceof Error ? caught.message : 'Gagal menyimpan.')
+      setError(caught instanceof Error ? caught.message : tx('Gagal menyimpan.', 'Failed to save.'))
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleDelete = async (item: QrCodeDto) => {
-    if (!window.confirm(`Hapus QR "${item.name}"?`)) return
+    if (!window.confirm(tx(`Hapus QR "${item.name}"?`, `Delete QR "${item.name}"?`))) return
     try {
       await deleteQrCode(item.id)
       if (design.id === item.id) setDesign({ ...emptyDesign(), logoDataUrl: attentiveMark })
-      setNotice('QR dihapus.')
+      setNotice(tx('QR dihapus.', 'QR deleted.'))
       await load()
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Gagal menghapus.')
+      setError(caught instanceof Error ? caught.message : tx('Gagal menghapus.', 'Failed to delete.'))
     }
   }
 
@@ -146,7 +148,7 @@ export function QrGeneratorPage() {
           QR Generator
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Buat QR code dengan logo Attentive di tengah (atau logo sendiri), simpan desainnya, dan unduh sebagai PNG. Selalu tes scan sebelum dicetak.
+          {tx('Buat QR code dengan logo Attentive di tengah (atau logo sendiri), simpan desainnya, dan unduh sebagai PNG. Selalu tes scan sebelum dicetak.', 'Create a QR code with the Attentive logo in the middle (or your own logo), save the design and download it as PNG. Always test-scan before printing.')}
         </p>
       </div>
 
@@ -164,28 +166,28 @@ export function QrGeneratorPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
           <label className="block text-sm font-medium text-slate-700">
-            Nama QR
-            <input className={inputClass} onChange={(e) => update({ name: e.target.value })} placeholder="Poster Sesi Gratis" value={design.name} />
+            {tx('Nama QR', 'QR name')}
+            <input className={inputClass} onChange={(e) => update({ name: e.target.value })} placeholder={tx('Poster Sesi Gratis', 'Free Session poster')} value={design.name} />
             {fieldErrors.name && <span className="text-xs text-rose-700">{fieldErrors.name}</span>}
           </label>
           <label className="block text-sm font-medium text-slate-700">
-            Alamat tujuan
+            {tx('Alamat tujuan', 'Destination address')}
             <input className={inputClass} onChange={(e) => update({ targetUrl: e.target.value })} placeholder="https://attentiveid.com/free-session" value={design.targetUrl} />
             {fieldErrors.targetUrl && <span className="text-xs text-rose-700">{fieldErrors.targetUrl}</span>}
           </label>
           <div className="grid grid-cols-2 gap-4">
             <label className="block text-sm font-medium text-slate-700">
-              Warna QR
-              <input aria-label="Warna QR" className="mt-1 h-10 w-full cursor-pointer rounded-xl border border-slate-200" onChange={(e) => update({ foreground: e.target.value.toUpperCase() })} type="color" value={design.foreground} />
+              {tx('Warna QR', 'QR color')}
+              <input aria-label={tx('Warna QR', 'QR color')} className="mt-1 h-10 w-full cursor-pointer rounded-xl border border-slate-200" onChange={(e) => update({ foreground: e.target.value.toUpperCase() })} type="color" value={design.foreground} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Warna latar
-              <input aria-label="Warna latar" className="mt-1 h-10 w-full cursor-pointer rounded-xl border border-slate-200" onChange={(e) => update({ background: e.target.value.toUpperCase() })} type="color" value={design.background} />
+              {tx('Warna latar', 'Background color')}
+              <input aria-label={tx('Warna latar', 'Background color')} className="mt-1 h-10 w-full cursor-pointer rounded-xl border border-slate-200" onChange={(e) => update({ background: e.target.value.toUpperCase() })} type="color" value={design.background} />
             </label>
           </div>
           <div>
-            <span className="text-sm font-medium text-slate-700">Logo di tengah QR</span>
-            <p className="text-xs text-slate-500">Bawaan: logo Attentive (hanya simbol, tanpa nama). Bisa diganti logo sendiri (PNG/JPG/WebP, maks 150 KB) atau dihapus.</p>
+            <span className="text-sm font-medium text-slate-700">{tx('Logo di tengah QR', 'Logo in the middle of the QR')}</span>
+            <p className="text-xs text-slate-500">{tx('Bawaan: logo Attentive (hanya simbol, tanpa nama). Bisa diganti logo sendiri (PNG/JPG/WebP, maks 150 KB) atau dihapus.', 'Default: the Attentive logo (symbol only, no name). You can replace it with your own logo (PNG/JPG/WebP, max 150 KB) or remove it.')}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <button
                 aria-pressed={Boolean(attentiveMark) && design.logoDataUrl === attentiveMark}
@@ -196,11 +198,11 @@ export function QrGeneratorPage() {
                 onClick={() => update({ logoDataUrl: attentiveMark })}
                 type="button"
               >
-                Logo Attentive
+                {tx('Logo Attentive', 'Attentive logo')}
               </button>
               <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <ImagePlus className="size-4" aria-hidden="true" />
-                Unggah logo sendiri
+                {tx('Unggah logo sendiri', 'Upload your own logo')}
                 <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => handleLogo(e.target.files?.[0])} type="file" />
               </label>
               <button
@@ -211,14 +213,14 @@ export function QrGeneratorPage() {
                 onClick={() => update({ logoDataUrl: '' })}
                 type="button"
               >
-                Tanpa logo
+                {tx('Tanpa logo', 'No logo')}
               </button>
-              {design.logoDataUrl && <img alt="Logo terpilih" className="h-10 w-auto rounded border border-slate-200 bg-white p-0.5" src={design.logoDataUrl} />}
+              {design.logoDataUrl && <img alt={tx('Logo terpilih', 'Selected logo')} className="h-10 w-auto rounded border border-slate-200 bg-white p-0.5" src={design.logoDataUrl} />}
             </div>
             {fieldErrors.logoDataUrl && <span className="text-xs text-rose-700">{fieldErrors.logoDataUrl}</span>}
             {design.logoDataUrl && (
               <label className="mt-3 block text-sm font-medium text-slate-700">
-                Ukuran logo ({Math.round(design.logoScale * 100)}%)
+                {tx('Ukuran logo', 'Logo size')} ({Math.round(design.logoScale * 100)}%)
                 <input
                   className="mt-1 w-full"
                   max={QR_LOGO_SCALE_RANGE.max}
@@ -234,7 +236,7 @@ export function QrGeneratorPage() {
           <div className="flex flex-wrap gap-2 pt-2">
             <button className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer" disabled={isSaving} onClick={handleSave} type="button">
               {isSaving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {design.id ? 'Simpan perubahan' : 'Simpan QR'}
+              {design.id ? tx('Simpan perubahan', 'Save changes') : tx('Simpan QR', 'Save QR')}
             </button>
             <button
               className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
@@ -242,28 +244,28 @@ export function QrGeneratorPage() {
               type="button"
             >
               <Download className="size-4" aria-hidden="true" />
-              Unduh PNG
+              {tx('Unduh PNG', 'Download PNG')}
             </button>
             {design.id && (
               <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer" onClick={() => setDesign({ ...emptyDesign(), logoDataUrl: attentiveMark })} type="button">
-                QR baru
+                {tx('QR baru', 'New QR')}
               </button>
             )}
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
-          <p className="mb-3 text-sm font-medium text-slate-700">Pratinjau</p>
-          <canvas aria-label="Pratinjau QR code" className="aspect-square w-full rounded-xl border border-slate-200" ref={canvasRef} />
+          <p className="mb-3 text-sm font-medium text-slate-700">{tx('Pratinjau', 'Preview')}</p>
+          <canvas aria-label={tx('Pratinjau QR code', 'QR code preview')} className="aspect-square w-full rounded-xl border border-slate-200" ref={canvasRef} />
         </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-        <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-800">QR tersimpan</div>
+        <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-800">{tx('QR tersimpan', 'Saved QR codes')}</div>
         {isLoading ? (
-          <p className="p-8 text-center text-sm text-slate-500">Memuat...</p>
+          <p className="p-8 text-center text-sm text-slate-500">{tx('Memuat...', 'Loading...')}</p>
         ) : saved.length === 0 ? (
-          <p className="p-8 text-center text-sm text-slate-500">Belum ada QR tersimpan.</p>
+          <p className="p-8 text-center text-sm text-slate-500">{tx('Belum ada QR tersimpan.', 'No saved QR codes yet.')}</p>
         ) : (
           <ul className="divide-y divide-slate-100">
             {saved.map((item) => (
@@ -273,13 +275,13 @@ export function QrGeneratorPage() {
                   <div className="truncate text-xs text-slate-500">{item.targetUrl}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  <button aria-label={`Muat ${item.name}`} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 cursor-pointer" onClick={() => setDesign({ ...item })} type="button">
+                  <button aria-label={tx(`Muat ${item.name}`, `Load ${item.name}`)} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 cursor-pointer" onClick={() => setDesign({ ...item })} type="button">
                     <Pencil className="size-3.5" aria-hidden="true" />
                   </button>
-                  <button aria-label={`Unduh ${item.name}`} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 cursor-pointer" onClick={() => handleDownloadSaved(item)} type="button">
+                  <button aria-label={tx(`Unduh ${item.name}`, `Download ${item.name}`)} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 cursor-pointer" onClick={() => handleDownloadSaved(item)} type="button">
                     <Download className="size-3.5" aria-hidden="true" />
                   </button>
-                  <button aria-label={`Hapus ${item.name}`} className="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 cursor-pointer" onClick={() => handleDelete(item)} type="button">
+                  <button aria-label={tx(`Hapus ${item.name}`, `Delete ${item.name}`)} className="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 cursor-pointer" onClick={() => handleDelete(item)} type="button">
                     <Trash2 className="size-3.5" aria-hidden="true" />
                   </button>
                 </div>

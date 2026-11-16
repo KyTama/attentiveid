@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { UserDto } from '@attentiveid/shared'
 import { AppRoutes } from '../src/App'
+import i18n from '../src/i18n'
 import { AuthProvider } from '../src/features/auth/auth-context'
 
 const admin: UserDto = {
@@ -33,8 +34,14 @@ function renderDashboard() {
 }
 
 describe('dashboard sidebar', () => {
-  beforeEach(() => vi.stubGlobal('fetch', vi.fn()))
-  afterEach(() => vi.restoreAllMocks())
+  beforeEach(async () => {
+    await i18n.changeLanguage('id')
+    vi.stubGlobal('fetch', vi.fn())
+  })
+  afterEach(async () => {
+    vi.restoreAllMocks()
+    await i18n.changeLanguage('en')
+  })
 
   it('groups the menus instead of listing them all at the top level', async () => {
     renderDashboard()
@@ -68,5 +75,19 @@ describe('dashboard sidebar', () => {
     await screen.findByText(/selamat datang, admin user/i)
     await user.type(screen.getAllByRole('combobox', { name: /cari menu portal/i })[0], 'zzzz')
     expect(await screen.findByText(/tidak ada menu untuk/i)).toBeInTheDocument()
+  })
+
+  it('follows the language toggle: switching to English translates the menus and the overview', async () => {
+    renderDashboard()
+    await screen.findByText(/selamat datang, admin user/i)
+    expect(screen.getAllByRole('button', { name: /konten website/i }).length).toBeGreaterThan(0)
+
+    await act(async () => {
+      await i18n.changeLanguage('en')
+    })
+    expect(await screen.findByText(/welcome, admin user/i)).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /website content/i }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('button', { name: /konten website/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/system operations summary/i)).toBeInTheDocument()
   })
 })

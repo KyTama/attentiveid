@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { UserDto } from '@attentiveid/shared'
 import { AppRoutes } from '../src/App'
+import i18n from '../src/i18n'
 import { AuthProvider } from '../src/features/auth/auth-context'
 
 const adminUser: UserDto = {
@@ -34,8 +35,9 @@ describe('Dashboard Protected Routes & Layout', () => {
     vi.stubGlobal('fetch', vi.fn())
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks()
+    await i18n.changeLanguage('en')
   })
 
   it('redirects unauthenticated user accessing /dashboard to /portal-gate', async () => {
@@ -76,6 +78,7 @@ describe('Dashboard Protected Routes & Layout', () => {
   })
 
   it('renders dashboard overview when admin is authenticated', async () => {
+    await i18n.changeLanguage('id')
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({

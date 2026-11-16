@@ -1,4 +1,38 @@
 {
+  "dashboard": {
+    "groupContent": "Konten Website",
+    "groupTeam": "Tim & Psikolog",
+    "groupResearch": "Riset & Publikasi",
+    "groupOperations": "Operasional",
+    "groupTools": "Alat Bantu",
+    "groupSettings": "Pengaturan",
+    "navOverview": "Overview",
+    "navLanding": "Landing Content",
+    "navTestimonials": "Testimoni Klien",
+    "navFeaturedProducts": "Produk Featured",
+    "navSharePreviews": "Thumbnail Link",
+    "navPsychologists": "Psikolog",
+    "navProfile": "Profil Saya",
+    "navArticles": "Manajemen Artikel",
+    "navSciBrief": "Sci-Brief",
+    "navBookings": "Reservasi & Booking",
+    "navUsers": "Manajemen Staff",
+    "navQrGenerator": "QR Generator",
+    "navExperimental": "Experimental",
+    "navForms": "Forms",
+    "navTraffic": "Traffic Monitor",
+    "navSystemMap": "System Map",
+    "navEvents": "Events",
+    "navFreeSession": "Sesi Gratis",
+    "viewPublicSite": "Lihat Website Publik",
+    "viewPublicWebsite": "Lihat Website Publik",
+    "adminRole": "Administrator Portal",
+    "psychologistRole": "Portal Psikolog",
+    "welcomeMessage": "Selamat Datang"
+  },
+  "auth": {
+    "logout": "Keluar"
+  },
   "sciBrief": {
     "badge": "Ringkasan riset bulanan",
     "title": "Sci-Brief",
