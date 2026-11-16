@@ -166,13 +166,14 @@ export function AppRoutes({
             }
           />
           <Route
-            path="experimental/traffic"
+            path="traffic"
             element={
-              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <TrafficMonitorPage />
               </ProtectedRoute>
             }
           />
+          <Route path="experimental/traffic" element={<Navigate to="/dashboard/traffic" replace />} />
           <Route
             path="qr-generator"
             element={

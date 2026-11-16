@@ -80,14 +80,15 @@ describe('public endpoints', () => {
 })
 
 describe('owner-only tools', () => {
-  it('serves traffic only to the owner account', async () => {
+  it('serves traffic to admin accounts, not to staff or visitors', async () => {
     const { repository } = makeRepository()
     const app = makeApp(repository)
     const get = (path: string, headers: Record<string, string> = {}) => app.handle(new Request(`http://localhost${path}`, { headers }))
 
     expect((await get('/api/admin/traffic')).status).toBe(401)
-    expect((await get('/api/admin/traffic', bearer(otherAdmin))).status).toBe(403)
-    expect((await get('/api/admin/traffic', bearer(otherSuper))).status).toBe(403)
+    expect((await get('/api/admin/traffic', bearer(psychologist))).status).toBe(403)
+    expect((await get('/api/admin/traffic', bearer(otherAdmin))).status).toBe(200)
+    expect((await get('/api/admin/traffic', bearer(otherSuper))).status).toBe(200)
 
     const ok = await get('/api/admin/traffic', bearer(owner))
     expect(ok.status).toBe(200)

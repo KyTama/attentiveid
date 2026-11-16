@@ -72,7 +72,7 @@ export const MAP_NODES: MapNode[] = [
     about: 'Semua kartu di bagian Featured Campaigns & Portals beranda (Sesi Gratis, Booking, Let There Be Light, Your Social World): tema/warna emas, ikon, label, teks tombol, tautan, urutan, saklar aktif, dan masa tampil. Masa tampil tidak terlihat oleh pengunjung.' },
   { id: 'p-share', column: 'portal', label: 'Thumbnail Link', sub: 'Judul, deskripsi, gambar per halaman', status: 'live', route: '/dashboard/share-previews',
     about: 'Mengatur tampilan link saat dibagikan (WhatsApp, media sosial) untuk tiap alamat halaman, mis. /free-session. Halaman tanpa pengaturan memakai logo Attentive.' },
-  { id: 'p-traffic', column: 'portal', label: 'Traffic Monitor', sub: 'Eksklusif pemilik (Experimental)', status: 'live', route: '/dashboard/experimental/traffic',
+  { id: 'p-traffic', column: 'portal', label: 'Traffic Monitor', sub: 'Untuk semua admin', status: 'live', route: '/dashboard/traffic',
     about: 'Tabel kunjungan halaman utama (hari ini, 7, 30 hari, total) dengan pencarian, filter header, dan urutan. Hanya akun pemilik; dijaga di server.' },
   { id: 'p-qr', column: 'portal', label: 'QR Generator', sub: 'Alat Bantu (semua akun staf)', status: 'live', route: '/dashboard/qr-generator',
     about: 'Membuat QR dengan logo Attentive di tengah (atau logo sendiri), menyimpan desainnya, dan mengunduh PNG. Bisa dipakai semua akun staf (admin dan psikolog).' },

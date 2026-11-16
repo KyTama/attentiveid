@@ -161,6 +161,12 @@ export function DashboardLayout() {
           icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
+        {
+          to: '/dashboard/traffic',
+          label: t('dashboard.navTraffic', 'Traffic Monitor'),
+          icon: <BarChart3 className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
       ],
     },
     {
@@ -187,12 +193,6 @@ export function DashboardLayout() {
           to: '/dashboard/experimental/forms',
           label: t('dashboard.navForms', 'Forms'),
           icon: <TextCursorInput className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-        },
-        {
-          to: '/dashboard/experimental/traffic',
-          label: t('dashboard.navTraffic', 'Traffic Monitor'),
-          icon: <BarChart3 className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
         {
