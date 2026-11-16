@@ -83,7 +83,7 @@ export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearch
           aria-expanded={showPanel}
           aria-label="Cari menu portal"
           autoComplete="off"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-14 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:ring-2 focus:ring-teal-100"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-14 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-gold-500 focus:bg-white focus:ring-2 focus:ring-gold-100"
           onChange={(event) => {
             setQuery(event.target.value)
             setActive(0)
@@ -130,7 +130,7 @@ export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearch
             results.map((item, index) => (
               <li
                 aria-selected={index === active}
-                className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 ${index === active ? 'bg-teal-50' : 'hover:bg-slate-50'}`}
+                className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 ${index === active ? 'bg-gold-50' : 'hover:bg-slate-50'}`}
                 id={`${listId}-${index}`}
                 key={item.to}
                 onClick={() => choose(item)}

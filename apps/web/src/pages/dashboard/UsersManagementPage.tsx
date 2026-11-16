@@ -227,7 +227,7 @@ export function UsersManagementPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
-          <div className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-teal-50 text-teal-800 border border-teal-200/60 mb-1">
+          <div className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-gold-50 text-navy-800 border border-gold-200/60 mb-1">
             Access Control
           </div>
           <h1 className="text-2xl font-bold text-slate-900">
@@ -242,7 +242,7 @@ export function UsersManagementPage() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-navy-700 hover:bg-navy-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs self-start sm:self-auto"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -284,7 +284,7 @@ export function UsersManagementPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari nama, email, atau psikolog..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
           />
           <svg className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -295,7 +295,7 @@ export function UsersManagementPage() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as 'all' | 'superadmin' | 'admin' | 'psychologist')}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
           >
             <option value="all">Semua Role</option>
             <option value="superadmin">Superadmin</option>
@@ -306,7 +306,7 @@ export function UsersManagementPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'suspended')}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
           >
             <option value="all">Semua Status</option>
             <option value="active">Aktif</option>
@@ -319,7 +319,7 @@ export function UsersManagementPage() {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-slate-500 flex items-center justify-center gap-3">
-            <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-navy-700 border-t-transparent rounded-full animate-spin" />
             <span>Memuat data akun pengguna...</span>
           </div>
         ) : error ? (
@@ -359,8 +359,8 @@ export function UsersManagementPage() {
                           u.role === 'superadmin'
                             ? 'bg-amber-50 text-amber-900 border border-amber-300/60'
                             : u.role === 'admin'
-                            ? 'bg-teal-50 text-teal-800 border border-teal-200/60'
-                            : 'bg-sky-50 text-sky-800 border border-sky-200/60'
+                            ? 'bg-gold-50 text-navy-800 border border-gold-200/60'
+                            : 'bg-navy-50 text-navy-900 border border-navy-200/60'
                         }`}
                       >
                         {u.role.toUpperCase()}
@@ -458,7 +458,7 @@ export function UsersManagementPage() {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="e.g. Anggun Pratiwi, M.Psi."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
 
@@ -472,7 +472,7 @@ export function UsersManagementPage() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="e.g. staff@attentive.id"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
 
@@ -487,7 +487,7 @@ export function UsersManagementPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Min 8 karakter..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
 
@@ -499,7 +499,7 @@ export function UsersManagementPage() {
                     <select
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value as 'superadmin' | 'admin' | 'psychologist')}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                     >
                       <option value="psychologist">Psikolog</option>
                       <option value="admin">Administrator</option>
@@ -515,7 +515,7 @@ export function UsersManagementPage() {
                       <select
                         value={newPsychologistId}
                         onChange={(e) => setNewPsychologistId(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                       >
                         <option value="">Pilih profil direktori...</option>
                         {psychologists.map((p) => (
@@ -539,7 +539,7 @@ export function UsersManagementPage() {
                   <button
                     type="submit"
                     disabled={isSubmittingAdd}
-                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs disabled:opacity-50"
+                    className="px-4 py-2 bg-navy-700 hover:bg-navy-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs disabled:opacity-50"
                   >
                     {isSubmittingAdd ? 'Menyimpan...' : 'Buat Akun'}
                   </button>
@@ -589,7 +589,7 @@ export function UsersManagementPage() {
                     value={resetPasswordVal}
                     onChange={(e) => setResetPasswordVal(e.target.value)}
                     placeholder="Masukkan password baru..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
 
@@ -604,7 +604,7 @@ export function UsersManagementPage() {
                   <button
                     type="submit"
                     disabled={isSubmittingReset}
-                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs disabled:opacity-50"
+                    className="px-4 py-2 bg-navy-700 hover:bg-navy-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs disabled:opacity-50"
                   >
                     {isSubmittingReset ? 'Mereset...' : 'Simpan Password'}
                   </button>

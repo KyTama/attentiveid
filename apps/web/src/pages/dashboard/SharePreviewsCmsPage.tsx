@@ -21,7 +21,7 @@ interface FormState {
 }
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100'
+  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100'
 
 export function SharePreviewsCmsPage() {
   const [previews, setPreviews] = useState<SharePreviewDto[]>([])
@@ -123,7 +123,7 @@ export function SharePreviewsCmsPage() {
           </p>
         </div>
         <button
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-sky-700 cursor-pointer"
+          className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-navy-800 cursor-pointer"
           onClick={() => {
             setFieldErrors({})
             setError(null)
@@ -274,7 +274,7 @@ export function SharePreviewsCmsPage() {
               <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer" onClick={() => setForm(null)} type="button">
                 Batal
               </button>
-              <button className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60 cursor-pointer" disabled={isSaving || isUploading} type="submit">
+              <button className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer" disabled={isSaving || isUploading} type="submit">
                 {isSaving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
                 Simpan
               </button>

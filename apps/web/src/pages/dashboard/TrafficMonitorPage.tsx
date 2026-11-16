@@ -28,7 +28,7 @@ const minFilterKey: Partial<Record<TrafficSortKey, keyof TrafficFilters>> = {
   total: 'minTotal',
 }
 
-const inputClass = 'w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-normal normal-case tracking-normal text-slate-900 outline-none focus:border-sky-500'
+const inputClass = 'w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-normal normal-case tracking-normal text-slate-900 outline-none focus:border-navy-500'
 
 export function TrafficMonitorPage() {
   const [rows, setRows] = useState<TrafficRow[]>([])
@@ -108,7 +108,7 @@ export function TrafficMonitorPage() {
           <span className="sr-only">Cari halaman</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input
-            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100"
             onChange={(e) => setFilters((current) => ({ ...current, search: e.target.value }))}
             placeholder="Cari halaman..."
             type="search"

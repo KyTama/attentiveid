@@ -60,24 +60,24 @@ export function DashboardOverviewPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="bg-gradient-to-r from-[#142c52] via-[#1a3865] to-teal-800 text-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/20"
+        className="bg-gradient-to-r from-[#142c52] via-[#1a3865] to-navy-600 text-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/20"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-block px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-semibold uppercase tracking-wider mb-2 text-teal-100 border border-white/10">
+            <div className="inline-block px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-semibold uppercase tracking-wider mb-2 text-gold-100 border border-white/10">
               {isAdmin ? t('dashboard.adminRole', 'Administrator Portal') : t('dashboard.psychologistRole', 'Psychologist Portal')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               {t('dashboard.welcomeMessage', 'Selamat Datang')}, {user?.name}!
             </h1>
-            <p className="text-teal-100/90 text-sm mt-1">
+            <p className="text-gold-100/90 text-sm mt-1">
               {user?.email} • Akses level: <span className="font-semibold uppercase">{user?.role}</span>
             </p>
           </div>
           <Link
             to="/"
             target="_blank"
-            className="self-start sm:self-auto px-4 py-2 bg-white text-teal-950 hover:bg-teal-50 font-medium text-sm rounded-xl transition-colors shrink-0 shadow-sm flex items-center gap-1.5"
+            className="self-start sm:self-auto px-4 py-2 bg-white text-navy-950 hover:bg-gold-50 font-medium text-sm rounded-xl transition-colors shrink-0 shadow-sm flex items-center gap-1.5"
           >
             <span>{t('dashboard.viewPublicWebsite', 'Lihat Website Publik')}</span>
             <span>→</span>
@@ -100,7 +100,7 @@ export function DashboardOverviewPage() {
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Direktori Psikolog</span>
-              <div className="size-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+              <div className="size-9 rounded-xl bg-gold-50 text-navy-700 flex items-center justify-center">
                 <Users className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
@@ -120,7 +120,7 @@ export function DashboardOverviewPage() {
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Landing Page</span>
-              <div className="size-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center">
+              <div className="size-9 rounded-xl bg-navy-50 text-navy-800 flex items-center justify-center">
                 <LayoutTemplate className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
@@ -162,7 +162,7 @@ export function DashboardOverviewPage() {
           >
             <div className="flex items-center justify-between text-slate-600 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Staff & Kredensial</span>
-              <div className="size-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <div className="size-9 rounded-xl bg-gold-50 text-gold-700 flex items-center justify-center">
                 <ShieldCheck className="size-4.5 stroke-[1.75]" aria-hidden="true" />
               </div>
             </div>
@@ -191,12 +191,12 @@ export function DashboardOverviewPage() {
             >
               <Link
                 to="/dashboard/profile"
-                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-navy-700/60 transition-all group"
               >
-                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <div className="size-10 rounded-xl bg-gold-50 text-navy-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                   <UserCheck className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
-                <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                <h3 className="font-bold text-slate-900 group-hover:text-navy-700 transition-colors">
                   Profil Mandiri Saya
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -213,12 +213,12 @@ export function DashboardOverviewPage() {
             >
               <Link
                 to="/dashboard/landing"
-                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-navy-700/60 transition-all group"
               >
-                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <div className="size-10 rounded-xl bg-gold-50 text-navy-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                   <LayoutTemplate className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
-                <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                <h3 className="font-bold text-slate-900 group-hover:text-navy-700 transition-colors">
                   Landing Content CMS
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -235,7 +235,7 @@ export function DashboardOverviewPage() {
             >
               <Link
                 to="/dashboard/testimonials"
-                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-navy-700/60 transition-all group"
               >
                 <div className="size-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                   <MessageSquareQuote className="size-5 stroke-[1.75]" aria-hidden="true" />
@@ -257,12 +257,12 @@ export function DashboardOverviewPage() {
             >
               <Link
                 to="/dashboard/psychologists"
-                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-navy-700/60 transition-all group"
               >
-                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <div className="size-10 rounded-xl bg-gold-50 text-navy-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                   <Users className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
-                <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                <h3 className="font-bold text-slate-900 group-hover:text-navy-700 transition-colors">
                   Direktori Psikolog
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -278,12 +278,12 @@ export function DashboardOverviewPage() {
           >
             <Link
               to="/dashboard/articles"
-              className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+              className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-navy-700/60 transition-all group"
             >
-              <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+              <div className="size-10 rounded-xl bg-gold-50 text-navy-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <FileText className="size-5 stroke-[1.75]" aria-hidden="true" />
               </div>
-              <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+              <h3 className="font-bold text-slate-900 group-hover:text-navy-700 transition-colors">
                 Manajemen Artikel
               </h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -299,12 +299,12 @@ export function DashboardOverviewPage() {
             >
               <Link
                 to="/dashboard/users"
-                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-600/60 transition-all group"
+                className="block h-full p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-navy-700/60 transition-all group"
               >
-                <div className="size-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                <div className="size-10 rounded-xl bg-gold-50 text-navy-700 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                   <ShieldCheck className="size-5 stroke-[1.75]" aria-hidden="true" />
                 </div>
-                <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                <h3 className="font-bold text-slate-900 group-hover:text-navy-700 transition-colors">
                   Manajemen Staff & User
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
