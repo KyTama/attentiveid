@@ -143,6 +143,20 @@ export function DashboardLayout() {
       ],
     },
     {
+      id: 'tools',
+      label: t('dashboard.groupTools', 'Alat Bantu'),
+      icon: <QrCode className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: true,
+      children: [
+        {
+          to: '/dashboard/qr-generator',
+          label: t('dashboard.navQrGenerator', 'QR Generator'),
+          icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+      ],
+    },
+    {
       id: 'settings',
       label: t('dashboard.groupSettings', 'Pengaturan'),
       icon: <ShieldCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
@@ -172,12 +186,6 @@ export function DashboardLayout() {
           to: '/dashboard/experimental/traffic',
           label: t('dashboard.navTraffic', 'Traffic Monitor'),
           icon: <BarChart3 className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-        },
-        {
-          to: '/dashboard/experimental/qr-generator',
-          label: t('dashboard.navQrGenerator', 'QR Generator'),
-          icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
         {

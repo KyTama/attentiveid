@@ -15,7 +15,8 @@ const user = (role: UserDto['role'], id: string, email: string): UserDto => ({
 const owner = user('admin', 'owner', 'nico.alex.ha@gmail.com')
 const otherAdmin = user('admin', 'other', 'admin@attentive.id')
 const otherSuper = user('superadmin', 'super', 'super@attentive.id')
-const users = new Map([owner, otherAdmin, otherSuper].map((u) => [u.id, u]))
+const psychologist = user('psychologist', 'psych', 'psych@attentive.id')
+const users = new Map([owner, otherAdmin, otherSuper, psychologist].map((u) => [u.id, u]))
 const userRepository = { findById: async (id: string) => users.get(id) ?? null }
 
 const bearer = (u: UserDto) => ({
@@ -76,7 +77,7 @@ describe('public endpoints', () => {
 })
 
 describe('owner-only tools', () => {
-  it('serves traffic and QR codes only to the owner account', async () => {
+  it('serves traffic only to the owner account', async () => {
     const { repository } = makeRepository()
     const app = makeApp(repository)
     const get = (path: string, headers: Record<string, string> = {}) => app.handle(new Request(`http://localhost${path}`, { headers }))
@@ -84,7 +85,6 @@ describe('owner-only tools', () => {
     expect((await get('/api/admin/traffic')).status).toBe(401)
     expect((await get('/api/admin/traffic', bearer(otherAdmin))).status).toBe(403)
     expect((await get('/api/admin/traffic', bearer(otherSuper))).status).toBe(403)
-    expect((await get('/api/admin/qr-codes', bearer(otherAdmin))).status).toBe(403)
 
     const ok = await get('/api/admin/traffic', bearer(owner))
     expect(ok.status).toBe(200)
@@ -92,11 +92,21 @@ describe('owner-only tools', () => {
     expect(json.rows.find((row: any) => row.path === '/').today).toBe(4)
   })
 
-  it('lets the owner save a valid QR code and rejects an invalid one', async () => {
+  it('lets every signed-in staff account use the QR generator, but not visitors', async () => {
+    const { repository } = makeRepository()
+    const app = makeApp(repository)
+    const get = (headers: Record<string, string> = {}) => app.handle(new Request('http://localhost/api/admin/qr-codes', { headers }))
+    expect((await get()).status).toBe(401)
+    expect((await get(bearer(otherAdmin))).status).toBe(200)
+    expect((await get(bearer(psychologist))).status).toBe(200)
+    expect((await get(bearer(owner))).status).toBe(200)
+  })
+
+  it('lets staff save a valid QR code and rejects an invalid one', async () => {
     const { repository } = makeRepository()
     const app = makeApp(repository)
     const post = (body: unknown) =>
-      app.handle(new Request('http://localhost/api/admin/qr-codes', { method: 'POST', headers: { ...bearer(owner), 'content-type': 'application/json' }, body: JSON.stringify(body) }))
+      app.handle(new Request('http://localhost/api/admin/qr-codes', { method: 'POST', headers: { ...bearer(psychologist), 'content-type': 'application/json' }, body: JSON.stringify(body) }))
     expect((await post({ name: 'Poster', targetUrl: 'https://attentiveid.com/free-session' })).status).toBe(201)
     expect((await post({ name: 'P', targetUrl: 'nope' })).status).toBe(400)
   })
