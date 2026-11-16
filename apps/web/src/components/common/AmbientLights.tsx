@@ -52,13 +52,17 @@ export function AmbientLights() {
         const alpha = particleAlpha(particle, now)
         if (alpha <= 0) continue
         const y = particle.y + particle.vy * (now - particle.born)
-        const radius = particle.size * 3
+        const radius = particle.size * 3.6
         const glow = context.createRadialGradient(particle.x, y, 0, particle.x, y, radius)
         glow.addColorStop(0, `rgba(${LIGHTS_CONFIG.color}, ${alpha})`)
         glow.addColorStop(1, `rgba(${LIGHTS_CONFIG.color}, 0)`)
         context.fillStyle = glow
         context.beginPath()
         context.arc(particle.x, y, radius, 0, Math.PI * 2)
+        context.fill()
+        context.fillStyle = `rgba(255, 238, 200, ${Math.min(1, alpha * 1.15)})`
+        context.beginPath()
+        context.arc(particle.x, y, Math.max(0.8, particle.size * 0.5), 0, Math.PI * 2)
         context.fill()
       }
       if (particles.length > 0 && !document.hidden) frame = window.requestAnimationFrame(draw)

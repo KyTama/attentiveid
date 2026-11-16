@@ -18,8 +18,8 @@ export const LIGHTS_CONFIG = {
   lifeMs: 1000,
   minSpawnGapMs: 70,
   minMoveDistance: 22,
-  spread: 18,
-  maxAlpha: 0.55,
+  spread: 22,
+  maxAlpha: 0.8,
   color: '226, 174, 82',
 } as const
 
@@ -36,7 +36,7 @@ export const spawnParticle = (x: number, y: number, now: number, random: () => n
   x: x + (random() - 0.5) * 2 * LIGHTS_CONFIG.spread,
   y: y + (random() - 0.5) * 2 * LIGHTS_CONFIG.spread,
   vy: -(0.012 + random() * 0.02),
-  size: 1 + random() * 1.8,
+  size: 1.4 + random() * 2,
   born: now,
   phase: random() * Math.PI * 2,
 })
