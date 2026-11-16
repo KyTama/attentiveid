@@ -57,7 +57,7 @@ export const DEFAULT_FLOATING_BAR: FloatingBarSettings = {
   top: {
     visible: true,
     mode: 'image',
-    imageUrl: '/images/brand/attend-mark.png',
+    imageUrl: '/images/brand/star-glow.svg',
     label: { id: 'Attend', en: 'Attend' },
     icon: 'lightbulb',
     url: '/let-there-be-light',

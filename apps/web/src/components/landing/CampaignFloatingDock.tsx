@@ -25,7 +25,7 @@ export function CampaignFloatingDock() {
       {shouldShowDock && (
         <motion.aside
           aria-label={isId ? 'Navigasi cepat' : 'Quick links'}
-          className="fixed bottom-3.5 left-1/2 z-40 -translate-x-1/2 px-2 pt-5 sm:bottom-5"
+          className="fixed bottom-3.5 left-1/2 z-40 -translate-x-1/2 px-2 pt-4 sm:bottom-5"
           initial={{ y: 60, opacity: 0 }}
           animate={{
             y: isOpen ? 100 : 0,

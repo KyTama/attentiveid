@@ -329,3 +329,20 @@
     animation-delay: 400ms;
   }
 }
+
+/* Gentle pulse for the glowing star badge of the floating bar. */
+@keyframes floating-bar-star-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(242, 196, 90, 0.55)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 8px rgba(255, 224, 140, 0.95)); transform: scale(1.08); }
+}
+
+.floating-bar-star {
+  animation: floating-bar-star-glow 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-bar-star {
+    animation: none;
+    filter: drop-shadow(0 0 4px rgba(242, 196, 90, 0.7));
+  }
+}
