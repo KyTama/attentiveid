@@ -5,7 +5,9 @@ import {
   normalizeSharePath,
   normalizeTrackedPath,
   summarizeTraffic,
+  validateBrowserTab,
   validateFeaturedProductInput,
+  validateFloatingBar,
   validateQrCodeInput,
   validateSharePreviewInput,
 } from '@attentiveid/shared'
@@ -113,6 +115,10 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       set.headers['cache-control'] = 'public, max-age=300'
       return buildSharePreviewHtml(dependencies.siteOrigin, path, preview)
     }, { detail: { tags: ['Share previews'], summary: 'Meta-tag page for link-preview crawlers' } })
+    .get('/api/content/site-settings', async ({ set }: any) => {
+      set.headers['cache-control'] = 'public, max-age=60'
+      return { status: 'success', settings: await repository.getSiteSettings() }
+    }, { detail: { tags: ['Site settings'], summary: 'Floating bar and browser tab settings' } })
     .post('/api/content/track', async ({ body, headers }: any) => {
       const path = normalizeTrackedPath(body?.path)
       const agent = String(headers['user-agent'] ?? '')
@@ -182,6 +188,27 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       }
       return { status: 'success' }
     }, { requireRole: ['admin'], detail: { tags: ['Featured'], summary: 'Delete a featured product' } })
+    // ---- Admin: site settings ----------------------------------------------
+    .get('/api/admin/site-settings', async () => ({ status: 'success', settings: await repository.getSiteSettings() }),
+      { requireRole: ['admin'], detail: { tags: ['Site settings'], summary: 'Read the site settings' } })
+    .put('/api/admin/site-settings/floating-bar', async ({ body, set }: any) => {
+      const parsed = validateFloatingBar(body)
+      if (!parsed.ok) {
+        set.status = 400
+        return { status: 'badRequest', message: 'Pengaturan bar melayang belum valid.', errors: parsed.errors }
+      }
+      await repository.saveSiteSetting('floatingBar', parsed.value)
+      return { status: 'success', settings: await repository.getSiteSettings() }
+    }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Site settings'], summary: 'Save the floating bar' } })
+    .put('/api/admin/site-settings/browser-tab', async ({ body, set }: any) => {
+      const parsed = validateBrowserTab(body)
+      if (!parsed.ok) {
+        set.status = 400
+        return { status: 'badRequest', message: 'Pengaturan tab browser belum valid.', errors: parsed.errors }
+      }
+      await repository.saveSiteSetting('browserTab', parsed.value)
+      return { status: 'success', settings: await repository.getSiteSettings() }
+    }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Site settings'], summary: 'Save the browser tab title and icon' } })
     // ---- Admin: share previews ---------------------------------------------
     .get('/api/admin/share-previews', async () => ({ status: 'success', previews: await repository.listSharePreviews() }),
       { requireRole: ['admin'], detail: { tags: ['Share previews'], summary: 'List link previews' } })

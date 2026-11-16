@@ -10,6 +10,7 @@ import {
     doublePrecision,
     index,
     integer,
+    jsonb,
     pgEnum,
     primaryKey,
     timestamp,
@@ -783,5 +784,12 @@ export const qrCodes = pgTable('qr_codes', {
     logoDataUrl: text('logo_data_url').default('').notNull(),
     logoScale: doublePrecision('logo_scale').default(0.2).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});
+
+/** Site-wide settings edited in the portal (floating bar, browser tab...), one JSON value per key. */
+export const siteSettings = pgTable('site_settings', {
+    key: text('key').primaryKey(),
+    value: jsonb('value').notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 });

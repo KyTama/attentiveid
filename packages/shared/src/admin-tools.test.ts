@@ -106,3 +106,36 @@ describe('summarizeTraffic', () => {
     expect(result.some((row) => row.path === '/not-tracked')).toBe(false)
   })
 })
+
+import { DEFAULT_FLOATING_BAR, mergeSiteSettings, validateBrowserTab, validateFloatingBar } from './index'
+
+describe('site settings', () => {
+  it('accepts the default floating bar and keeps three buttons with the lights logo on top', () => {
+    const result = validateFloatingBar(DEFAULT_FLOATING_BAR)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.items.map((item) => item.id)).toEqual(['free-session', 'booking', 'personality-test'])
+      expect(result.value.top.mode).toBe('image')
+    }
+  })
+
+  it('supports a text link with an icon on top and rejects bad links, too many buttons and missing text', () => {
+    const link = validateFloatingBar({ ...DEFAULT_FLOATING_BAR, top: { ...DEFAULT_FLOATING_BAR.top, mode: 'link', label: { id: 'Coba Attend', en: 'Try Attend' }, icon: 'sun' } })
+    expect(link.ok && link.value.top).toMatchObject({ mode: 'link', icon: 'sun' })
+    const bad = validateFloatingBar({
+      visible: true,
+      top: { mode: 'link', label: { id: '' }, url: 'javascript:x' },
+      items: [{ label: { id: '' }, url: 'ftp://x' }, ...new Array(4).fill({ label: { id: 'ok' } })],
+    })
+    expect(bad.ok).toBe(false)
+    if (!bad.ok) expect(Object.keys(bad.errors).sort()).toEqual(['items', 'items.0.label', 'items.0.url', 'top.label', 'top.url'])
+  })
+
+  it('validates the browser tab and falls back to defaults for missing/invalid stored data', () => {
+    expect(validateBrowserTab({ titleId: 'A' }).ok).toBe(false)
+    const ok = validateBrowserTab({ titleId: 'Attentive.id', faviconUrl: '/media/share/x.png' })
+    expect(ok.ok && ok.value.titleEn).toBe('Attentive.id')
+    expect(mergeSiteSettings(null).floatingBar.items).toHaveLength(3)
+    expect(mergeSiteSettings({ floatingBar: { items: 'nope', top: { mode: 'link', label: {} } } }).floatingBar).toEqual(DEFAULT_FLOATING_BAR)
+  })
+})

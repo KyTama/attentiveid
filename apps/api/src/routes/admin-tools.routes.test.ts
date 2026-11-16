@@ -26,10 +26,13 @@ const bearer = (u: UserDto) => ({
 const NOW = new Date('2026-12-05T00:00:00Z')
 
 const makeRepository = () => {
+  const saved: Record<string, unknown> = {}
   const views: Array<{ path: string; newSession: boolean }> = []
   const qr: QrCodeDto[] = []
   const rows: TrafficDayRow[] = [{ path: '/', day: '2026-12-05', views: 4, sessions: 2, lastVisitAt: '2026-12-05T01:00:00Z' }]
   const repository = {
+    getSiteSettings: async () => ({ floatingBar: { visible: true, top: {}, items: [] }, browserTab: saved.browserTab ?? { titleId: 'Default', titleEn: 'Default', faviconUrl: '' } }),
+    saveSiteSetting: async (key: string, value: unknown) => { saved[key] = value },
     reorderFeatured: async (ids: string[]) => ids.join() === 'b,a' || ids.join() === 'a,b',
     listFeaturedAdmin: async () => [],
     listActiveFeatured: async () => [{ id: '1', slug: 'ltbl', title: { id: 'LTBL', en: 'LTBL' }, description: { id: '', en: '' }, theme: 'blue', icon: 'sparkles', badge: { id: '', en: '' }, cta: { id: '', en: '' }, url: '/let-there-be-light' }],
@@ -39,7 +42,7 @@ const makeRepository = () => {
     listQrCodes: async () => qr,
     createQrCode: async (input: any) => { const dto = { ...input, id: 'qr1', createdAt: 'x', updatedAt: 'x' }; qr.push(dto); return dto },
   } as unknown as AdminToolsRepository
-  return { repository, views, qr }
+  return { repository, views, qr, saved }
 }
 
 const makeApp = (repository: AdminToolsRepository) =>
@@ -134,5 +137,23 @@ describe('featured order', () => {
     expect((await put(['a'])).status).toBe(409)
     const unauth = await app.handle(new Request('http://localhost/api/admin/featured-products/order', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids: ['a', 'b'] }) }))
     expect(unauth.status).toBe(401)
+  })
+})
+
+describe('site settings', () => {
+  it('serves the settings publicly and lets admins save a valid floating bar and browser tab only', async () => {
+    const { repository, saved } = makeRepository()
+    const app = makeApp(repository)
+    const pub = await app.handle(new Request('http://localhost/api/content/site-settings'))
+    expect(pub.status).toBe(200)
+    const put = (path: string, body: unknown, headers: Record<string, string> = bearer(otherAdmin)) =>
+      app.handle(new Request(`http://localhost/api/admin/site-settings/${path}`, { method: 'PUT', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) }))
+    expect((await put('browser-tab', { titleId: 'Attentive' }, {})).status).toBe(401)
+    expect((await put('browser-tab', { titleId: 'Attentive', titleEn: 'Attentive EN' })).status).toBe(200)
+    expect((saved.browserTab as any).titleEn).toBe('Attentive EN')
+    expect((await put('browser-tab', { titleId: 'A' })).status).toBe(400)
+    const bar = { visible: true, top: { mode: 'image', imageUrl: '/images/brand/attend-mark.png', url: '/let-there-be-light' }, items: [{ label: { id: 'Sesi Gratis' }, url: 'https://free-session.attentiveid.com' }] }
+    expect((await put('floating-bar', bar)).status).toBe(200)
+    expect((await put('floating-bar', { ...bar, items: [{ label: { id: '' } }] })).status).toBe(400)
   })
 })

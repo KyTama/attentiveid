@@ -16,9 +16,10 @@ import { resolveHeroSlides, type ResolvedHeroSlide } from '@/features/content/he
 import { useSciBriefHeroChips } from '@/features/sci-brief/use-hero-chips'
 import { HeroSlideVisual } from './HeroSlideVisual'
 import { useCampaignDock } from './use-campaign-dock'
-import { featuredProductsToCards } from '@/features/featured/cards'
+import { featuredProductsToCards, type FeaturedStripCard } from '@/features/featured/cards'
 import { CARD_ICONS, CARD_THEME_STYLES } from '@/features/featured/card-style'
 import { useFeaturedProducts } from '@/features/featured/use-featured-products'
+import { useSiteSettings } from '@/features/site-settings/use-site-settings'
 
 export interface TrustMetric {
   label: string
@@ -443,7 +444,7 @@ export function HomepageHero() {
     id: string
     visible: boolean
     theme: 'gold' | 'navy' | 'blue' | 'emerald'
-    icon: 'gift' | 'calendar' | 'clipboard' | 'sparkles' | 'shield' | 'message'
+    icon: FeaturedStripCard['icon']
     badge: string
     title: string
     description: string
@@ -514,7 +515,7 @@ export function HomepageHero() {
   })
   const visibleCampaignCards = productCards.length > 0 ? productCards : resolvedCampaignCards.filter((card) => card.visible)
   const isCampaignsStripVisible = customCampaigns?.visible !== false && visibleCampaignCards.length > 0
-  const isFloatingDockEnabled = customCampaigns?.showFloatingDock !== false
+  const isFloatingDockEnabled = useSiteSettings().floatingBar.visible
 
   const campaignGridColsClass =
     visibleCampaignCards.length === 1

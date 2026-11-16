@@ -5,6 +5,8 @@ import {
   type FeaturedProductAdminDto,
   type FeaturedProductInput,
   type FeaturedProductPublicDto,
+  type SiteSettings,
+  mergeSiteSettings,
   type QrCodeDto,
   type QrCodeInput,
   type SharePreviewDto,
@@ -12,9 +14,12 @@ import {
   type TrafficDayRow,
 } from '@attentiveid/shared'
 import { db as defaultDb } from '../db'
-import { featuredProducts, pageViewDaily, qrCodes, sharePreviews } from '../db/schema'
+import { featuredProducts, pageViewDaily, qrCodes, sharePreviews, siteSettings } from '../db/schema'
 
 export interface AdminToolsRepository {
+  // Site settings (floating bar, browser tab)
+  getSiteSettings(): Promise<SiteSettings>
+  saveSiteSetting(key: 'floatingBar' | 'browserTab', value: unknown): Promise<void>
   // Featured products
   listActiveFeatured(now?: Date): Promise<FeaturedProductPublicDto[]>
   listFeaturedAdmin(now?: Date): Promise<FeaturedProductAdminDto[]>
@@ -110,6 +115,19 @@ const toQr = (row: typeof qrCodes.$inferSelect): QrCodeDto => ({
 })
 
 export const createAdminToolsRepository = (database: typeof defaultDb = defaultDb): AdminToolsRepository => ({
+  async getSiteSettings() {
+    const rows = await database.select().from(siteSettings)
+    const byKey = Object.fromEntries(rows.map((row) => [row.key, row.value])) as { floatingBar?: unknown; browserTab?: unknown }
+    return mergeSiteSettings(byKey)
+  },
+
+  async saveSiteSetting(key, value) {
+    await database
+      .insert(siteSettings)
+      .values({ key, value: value as object })
+      .onConflictDoUpdate({ target: siteSettings.key, set: { value: value as object, updatedAt: sql`now()` } })
+  },
+
   async listActiveFeatured(now = new Date()) {
     const rows = await database.select().from(featuredProducts).orderBy(asc(featuredProducts.sortOrder), asc(featuredProducts.titleId))
     return rows
