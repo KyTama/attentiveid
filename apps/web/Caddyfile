@@ -54,6 +54,10 @@
 	@html path / /index.html
 	header @html Cache-Control "no-cache, no-store, must-revalidate"
 
-	try_files {path} /index.html
-	file_server
+	# try_files must sit inside a handle: as a top-level directive it runs before every handle block
+	# and would rewrite the path to /index.html before the matchers above can see the real one.
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
 }
