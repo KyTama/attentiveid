@@ -85,6 +85,13 @@
       "when": 1794680445137,
       "tag": "0011_booking_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794792313076,
+      "tag": "0012_admin_tools",
+      "breakpoints": true
     }
   ]
 }

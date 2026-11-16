@@ -23,6 +23,8 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
 
 describe('/free-session page', () => {
   const fetchMock = vi.fn()
+  // The page also counts a visit and loads the Featured menu; only the form submission matters here.
+  const submissions = () => fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/public/free-session'))
 
   beforeEach(() => {
     fetchMock.mockReset()
@@ -80,7 +82,7 @@ describe('/free-session page', () => {
     expect(screen.getByText(/nomor whatsapp tidak valid/i)).toBeInTheDocument()
     expect(screen.getByText(/pilih salah satu keluhan/i)).toBeInTheDocument()
     expect(screen.getByText(/persetujuan diperlukan/i)).toBeInTheDocument()
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(submissions()).toHaveLength(0)
   })
 
   it('submits to the API and hands off to WhatsApp', async () => {
@@ -96,8 +98,8 @@ describe('/free-session page', () => {
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
     expect(decodeURIComponent(link.getAttribute('href') ?? '')).toContain('Keluhan: Cemas / panik')
 
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [url, init] = fetchMock.mock.calls[0]
+    expect(submissions()).toHaveLength(1)
+    const [url, init] = submissions()[0]
     expect(String(url)).toMatch(/\/api\/public\/free-session$/)
     expect(init.method).toBe('POST')
     expect(JSON.parse(init.body)).toMatchObject({

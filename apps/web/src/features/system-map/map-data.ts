@@ -68,6 +68,15 @@ export const MAP_NODES: MapNode[] = [
   { id: 'p-bookings', column: 'portal', label: 'Reservasi & Booking', sub: 'Antrean booking & atribusi', status: 'live', route: '/dashboard/bookings',
     about: 'Mengelola pengajuan reservasi /booking, transisi status, pencegahan konflik slot 15 menit, retry webhook n8n, ekspor CSV operasional, dan laporan atribusi UTM/Meta Ads.' },
 
+  { id: 'p-featured', column: 'portal', label: 'Produk Featured', sub: 'Menu Unggulan + masa tampil', status: 'live', route: '/dashboard/featured-products',
+    about: 'Produk yang tampil di menu "Unggulan" (mis. Let There Be Light, Your Social World) dengan tanggal mulai-selesai, urutan, dan saklar aktif. Masa tampil tidak terlihat oleh pengunjung.' },
+  { id: 'p-share', column: 'portal', label: 'Thumbnail Link', sub: 'Judul, deskripsi, gambar per halaman', status: 'live', route: '/dashboard/share-previews',
+    about: 'Mengatur tampilan link saat dibagikan (WhatsApp, media sosial) untuk tiap alamat halaman, mis. /free-session. Halaman tanpa pengaturan memakai logo Attentive.' },
+  { id: 'p-traffic', column: 'portal', label: 'Traffic Monitor', sub: 'Eksklusif pemilik (Experimental)', status: 'live', route: '/dashboard/experimental/traffic',
+    about: 'Tabel kunjungan halaman utama (hari ini, 7, 30 hari, total) dengan pencarian, filter header, dan urutan. Hanya akun pemilik; dijaga di server.' },
+  { id: 'p-qr', column: 'portal', label: 'QR Generator', sub: 'Eksklusif pemilik (Experimental)', status: 'live', route: '/dashboard/experimental/qr-generator',
+    about: 'Membuat QR dengan logo sendiri, menyimpan desainnya, dan mengunduh PNG. Hanya akun pemilik; dijaga di server.' },
+
   // ---- Portal menus (proposed) --------------------------------------------
   { id: 'g-settings', column: 'portal', label: 'Site Settings', sub: 'Kontak, booking, kampanye', status: 'proposed',
     about: 'Satu tempat untuk nomor WhatsApp, email, tautan booking, media sosial, banner/kampanye (dengan tanggal mulai-selesai), dan thumbnail share default.',
@@ -79,7 +88,7 @@ export const MAP_NODES: MapNode[] = [
   { id: 'g-media', column: 'portal', label: 'Media Library', sub: 'Gambar terpusat', status: 'proposed',
     about: 'Unggah gambar sekali, pakai ulang, dengan pengecilan otomatis agar foto tidak pecah/berat.' },
   { id: 'g-seo', column: 'portal', label: 'SEO & Sitemap', sub: 'Judul, deskripsi, share', status: 'proposed',
-    about: 'Judul, deskripsi, dan gambar share per halaman, plus sitemap yang dibuat otomatis dari data.' },
+    about: 'Sisa yang belum ada: judul & deskripsi SEO untuk Google (bukan hanya thumbnail share) per halaman. Thumbnail share dan sitemap otomatis sudah tersedia.' },
 
   // ---- Where the data lives ------------------------------------------------
   { id: 'd-landing', column: 'source', label: 'Konten beranda', sub: 'Database (draft/publish)', status: 'live',
@@ -94,6 +103,14 @@ export const MAP_NODES: MapNode[] = [
     about: 'Pendaftar form Sesi Gratis.' },
   { id: 'd-bookings', column: 'source', label: 'Reservasi & Outbox', sub: 'Database: bookings & outbox Google/n8n', status: 'live',
     about: 'Data booking klien, catatan triase klinis terisolasi (Clinical Privacy Wall), jadwal & tarif psikolog, serta outbox sinkronisasi langsung Google Sheets (header-aware) + Gmail / n8n.' },
+  { id: 'd-featured', column: 'source', label: 'Produk featured', sub: 'Database: produk + masa tampil', status: 'live',
+    about: 'Daftar produk unggulan beserta tanggal mulai-selesai dan status aktif.' },
+  { id: 'd-share', column: 'source', label: 'Thumbnail link', sub: 'Database + /media/share', status: 'live',
+    about: 'Judul, deskripsi, dan gambar share per alamat halaman.' },
+  { id: 'd-traffic', column: 'source', label: 'Hitungan kunjungan', sub: 'Database: counter harian', status: 'live',
+    about: 'Hanya angka per halaman per hari (tanpa data pribadi). Halaman dengan sub-halaman dihitung di halaman awalnya.' },
+  { id: 'd-qr', column: 'source', label: 'Desain QR', sub: 'Database', status: 'live',
+    about: 'Pengaturan QR tersimpan (alamat, warna, logo, ukuran logo).' },
   { id: 'd-users', column: 'source', label: 'Akun & peran', sub: 'Database', status: 'live',
     about: 'Akun staf, peran admin/psikolog, dan status aktif.' },
 
@@ -111,8 +128,8 @@ export const MAP_NODES: MapNode[] = [
   { id: 'c-i18n', column: 'source', label: 'File terjemahan', sub: 'en.json / id.json', status: 'code',
     about: 'Menu, footer, teks kampanye, teks tetap halaman profil (langkah pertama, judul catatan, dll.).' },
   { id: 'c-seo', column: 'source', label: 'sitemap.xml & meta', sub: 'File statis', status: 'code',
-    about: 'Daftar 24 halaman psikolog + beberapa halaman tetap, dan satu judul/thumbnail global.',
-    note: 'Psikolog, artikel, dan Sci-Brief baru tidak masuk sitemap otomatis.' },
+    about: 'Cadangan: sitemap.xml statis dipakai hanya jika API tidak terjangkau; thumbnail bawaan (logo Attentive) untuk halaman tanpa pengaturan.',
+    note: 'Sitemap utama kini dibuat otomatis dari database.' },
   { id: 'c-photos', column: 'source', label: 'Daftar foto (kode)', sub: 'assets/images.ts', status: 'code',
     about: 'Daftar nama file foto psikolog di kode. Perlu diperiksa apakah masih ada yang memakainya selain foto unggahan portal.' },
 
@@ -142,6 +159,10 @@ export const MAP_NODES: MapNode[] = [
     about: 'Menu Our Services, Our Science, tautan, alamat, dan kontak.' },
   { id: 'u-campaign', column: 'public', label: 'Banner kampanye', sub: 'Dock Sesi Gratis/Booking', status: 'live',
     about: 'Dock melayang dan blok promo.' },
+  { id: 'u-featuredmenu', column: 'public', label: 'Menu Unggulan', sub: 'Header (desktop & mobile)', status: 'live',
+    about: 'Produk featured yang masa tampilnya sedang berjalan; produk tanpa halaman tampil "Segera Hadir". Menu hilang jika tidak ada produk aktif.' },
+  { id: 'u-lights', column: 'public', label: 'Cahaya kursor (LTBL)', sub: 'Semua halaman publik kecuali form', status: 'live',
+    about: 'Cahaya kecil berkelip di dekat kursor. Mati di /free-session, /booking, dan halaman LTBL, mati saat kursor di atas input/form, dan mati untuk perangkat sentuh atau pengaturan "kurangi gerakan".' },
   { id: 'u-seo', column: 'public', label: 'Pencarian & share', sub: 'Sitemap, judul, thumbnail', status: 'live',
     about: 'Cara situs muncul di Google dan saat tautan dibagikan.' },
 ]
@@ -157,7 +178,15 @@ export const MAP_EDGES: MapEdge[] = [
   { from: 'p-users', to: 'd-users', status: 'live', label: 'akun & peran' },
   { from: 'p-free', to: 'd-free', status: 'live', label: 'baca & ekspor leads' },
 
+  { from: 'p-featured', to: 'd-featured', status: 'live', label: 'produk & masa tampil' },
+  { from: 'p-share', to: 'd-share', status: 'live', label: 'thumbnail per halaman' },
+  { from: 'p-traffic', to: 'd-traffic', status: 'live', label: 'baca hitungan' },
+  { from: 'p-qr', to: 'd-qr', status: 'live', label: 'desain QR' },
+
   // Data -> public (working)
+  { from: 'd-featured', to: 'u-featuredmenu', status: 'live', label: 'produk aktif' },
+  { from: 'd-share', to: 'u-seo', status: 'live', label: 'thumbnail per halaman' },
+  { from: 'u-hero', to: 'd-traffic', status: 'live', label: 'hitung kunjungan halaman utama' },
   { from: 'd-landing', to: 'u-hero', status: 'live', label: 'judul, deskripsi, tombol slide' },
   { from: 'd-landing', to: 'u-sections', status: 'live', label: 'teks bagian' },
   { from: 'd-landing', to: 'u-featured', status: 'live', label: 'judul bagian' },
