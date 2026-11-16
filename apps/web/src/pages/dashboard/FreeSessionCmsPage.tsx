@@ -59,7 +59,8 @@ export function FreeSessionCmsPage() {
   const loadSheetStatus = useCallback(async () => {
     try {
       const res = await fetch(`${apiBaseUrl()}/api/admin/free-session/sheet-status`, { headers: authHeaders() })
-      if (res.ok) setSheet(((await res.json()) as { data: SheetStatus }).data)
+      const data = res.ok ? ((await res.json()) as { data?: SheetStatus }).data : undefined
+      if (data && typeof data.configured === 'boolean') setSheet(data)
     } catch {
       // the status is informational; the report still works without it
     }
