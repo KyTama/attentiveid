@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTx } from '@/features/i18n/use-tx'
-import type { TrafficRow } from '@attentiveid/shared'
+import { dailySeries, TRACKED_PAGES, type TrafficDayRow, type TrafficRow } from '@attentiveid/shared'
 import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCw, Search } from 'lucide-react'
 import { getTraffic } from '../../features/admin-tools/service'
 import {
@@ -47,6 +47,9 @@ export function TrafficMonitorPage() {
     }[column.key],
   }))
   const [rows, setRows] = useState<TrafficRow[]>([])
+  const [daily, setDaily] = useState<TrafficDayRow[]>([])
+  const [range, setRange] = useState(30)
+  const [chartPage, setChartPage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
@@ -57,7 +60,9 @@ export function TrafficMonitorPage() {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      setRows(await getTraffic())
+      const traffic = await getTraffic()
+      setRows(traffic.rows)
+      setDaily(traffic.daily)
       setUpdatedAt(new Date())
       setError(null)
     } catch (caught) {
@@ -77,7 +82,9 @@ export function TrafficMonitorPage() {
     [visible],
   )
 
-  const toggleSort = (key: TrafficSortKey) => {
+  const series = useMemo(() => dailySeries(daily, range, new Date(), chartPage || undefined), [daily, range, chartPage])
+
+  const toggleSort =(key: TrafficSortKey) => {
     if (key === sortKey) setDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
     else {
       setSortKey(key)
@@ -117,6 +124,37 @@ export function TrafficMonitorPage() {
           {error}
         </div>
       )}
+
+      <section aria-label={tx('Grafik kunjungan harian', 'Daily visits graph')} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">{tx('Grafik kunjungan harian', 'Daily visits graph')}</h2>
+            <p className="text-xs text-slate-500">{tx('Hitungan harian dimulai ulang tiap tengah malam WIB; riwayat semua hari tetap tersimpan.', 'Counts restart every midnight (WIB); the history of every day is kept.')}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select aria-label={tx('Halaman grafik', 'Graph page')} className={`${inputClass} w-auto`} onChange={(e) => setChartPage(e.target.value)} value={chartPage}>
+              <option value="">{tx('Semua halaman', 'All pages')}</option>
+              {TRACKED_PAGES.map((path) => (
+                <option key={path} value={path}>{pageLabel(path, isEn)}</option>
+              ))}
+            </select>
+            <div className="flex overflow-hidden rounded-lg border border-slate-200 text-xs font-semibold" role="group" aria-label={tx('Rentang waktu', 'Time range')}>
+              {[7, 30, 90, 365].map((days) => (
+                <button
+                  aria-pressed={range === days}
+                  className={`cursor-pointer px-3 py-1.5 ${range === days ? 'bg-navy-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                  key={days}
+                  onClick={() => setRange(days)}
+                  type="button"
+                >
+                  {days === 365 ? tx('1 tahun', '1 year') : tx(`${days} hari`, `${days} days`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <TrafficChart isEn={isEn} points={series} />
+      </section>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative block w-full max-w-sm">
@@ -237,6 +275,58 @@ export function TrafficMonitorPage() {
         </div>
       </div>
       <p className="text-xs text-slate-500">{tx('Halaman yang dihitung', 'Pages counted')}: {Object.values(isEn ? PAGE_LABELS_EN : PAGE_LABELS).join(', ')}. {tx('Hari dihitung menurut waktu Jakarta (WIB).', 'Days follow Jakarta time (WIB).')}</p>
+    </div>
+  )
+}
+
+function TrafficChart({ points, isEn }: { points: Array<{ day: string; views: number }>; isEn: boolean }) {
+  const [hover, setHover] = useState<number | null>(null)
+  const width = 760
+  const height = 220
+  const pad = { top: 12, right: 12, bottom: 24, left: 36 }
+  const max = Math.max(1, ...points.map((point) => point.views))
+  const niceMax = max <= 4 ? 4 : Math.ceil(max / 4) * 4
+  const innerW = width - pad.left - pad.right
+  const innerH = height - pad.top - pad.bottom
+  const slot = innerW / Math.max(1, points.length)
+  const barW = Math.max(1, slot * 0.7)
+  const total = points.reduce((sum, point) => sum + point.views, 0)
+  const locale = isEn ? 'en-US' : 'id-ID'
+  const label = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+  const active = hover === null ? null : points[hover]
+  const tickEvery = Math.max(1, Math.ceil(points.length / 7))
+
+  return (
+    <div>
+      <div className="mb-1 min-h-5 text-xs text-slate-600" aria-live="polite">
+        {active
+          ? `${label(active.day)}: ${active.views.toLocaleString(locale)} ${isEn ? 'visits' : 'kunjungan'}`
+          : `${total.toLocaleString(locale)} ${isEn ? 'visits in this period' : 'kunjungan pada periode ini'}`}
+      </div>
+      <svg aria-label={isEn ? 'Bar chart of visits per day' : 'Grafik batang kunjungan per hari'} className="h-auto w-full" onMouseLeave={() => setHover(null)} role="img" viewBox={`0 0 ${width} ${height}`}>
+        {[0, 1, 2, 3, 4].map((step) => {
+          const y = pad.top + innerH - (innerH * step) / 4
+          return (
+            <g key={step}>
+              <line className="stroke-slate-100" x1={pad.left} x2={width - pad.right} y1={y} y2={y} />
+              <text className="fill-slate-400" fontSize="10" textAnchor="end" x={pad.left - 6} y={y + 3}>{Math.round((niceMax * step) / 4)}</text>
+            </g>
+          )
+        })}
+        {points.map((point, index) => {
+          const h = (point.views / niceMax) * innerH
+          const x = pad.left + index * slot + (slot - barW) / 2
+          return (
+            <g key={point.day} onMouseEnter={() => setHover(index)}>
+              <rect fill="transparent" height={innerH} width={slot} x={pad.left + index * slot} y={pad.top} />
+              <rect className={hover === index ? 'fill-gold-500' : 'fill-navy-700'} height={Math.max(point.views > 0 ? 1 : 0, h)} rx={Math.min(2, barW / 2)} width={barW} x={x} y={pad.top + innerH - h} />
+              {index % tickEvery === 0 && (
+                <text className="fill-slate-400" fontSize="10" textAnchor="middle" x={pad.left + index * slot + slot / 2} y={height - 6}>{label(point.day)}</text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }

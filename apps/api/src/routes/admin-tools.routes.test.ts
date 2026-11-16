@@ -94,6 +94,7 @@ describe('owner-only tools', () => {
     expect(ok.status).toBe(200)
     const json = await ok.json()
     expect(json.rows.find((row: any) => row.path === '/').today).toBe(4)
+    expect(json.daily).toEqual([expect.objectContaining({ path: '/', day: '2026-12-05', views: 4 })])
   })
 
   it('lets every signed-in staff account use the QR generator, but not visitors', async () => {

@@ -81,3 +81,32 @@ export const summarizeTraffic = (rows: readonly TrafficDayRow[], now: Date = new
   }
   return [...result.values()]
 }
+
+export interface TrafficDayPoint {
+  /** YYYY-MM-DD in Asia/Jakarta */
+  day: string
+  views: number
+  sessions: number
+}
+
+/**
+ * One point per calendar day for the last `days` days (today included, zero days filled in), oldest first.
+ * Pass `path` to look at a single page; otherwise every tracked page is added together.
+ */
+export const dailySeries = (rows: readonly TrafficDayRow[], days: number, now: Date = new Date(), path?: string): TrafficDayPoint[] => {
+  const today = jakartaDay(now)
+  const points = new Map<string, TrafficDayPoint>()
+  for (let offset = days - 1; offset >= 0; offset -= 1) {
+    const day = shiftDay(today, -offset)
+    points.set(day, { day, views: 0, sessions: 0 })
+  }
+  for (const row of rows) {
+    if (path && row.path !== path) continue
+    if (!isTrackedPage(row.path)) continue
+    const point = points.get(row.day)
+    if (!point) continue
+    point.views += row.views
+    point.sessions += row.sessions
+  }
+  return [...points.values()]
+}
