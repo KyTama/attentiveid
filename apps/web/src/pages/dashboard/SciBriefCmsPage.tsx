@@ -78,12 +78,12 @@ const fromBrief = (brief: SciBriefAdminDto): FormState => ({
 })
 
 const fieldClass =
-  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20'
+  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20'
 
 function statusLabel(brief: SciBriefAdminDto) {
   if (brief.status === 'draft') return { text: 'Draft', style: 'bg-amber-50 text-amber-800 border-amber-200/60' }
   if (isSciBriefPublic(brief)) return { text: 'Tayang', style: 'bg-emerald-50 text-emerald-800 border-emerald-200/60' }
-  return { text: 'Terjadwal', style: 'bg-sky-50 text-sky-800 border-sky-200/60' }
+  return { text: 'Terjadwal', style: 'bg-navy-50 text-navy-900 border-navy-200/60' }
 }
 
 export function SciBriefCmsPage() {
@@ -211,7 +211,7 @@ export function SciBriefCmsPage() {
           </p>
         </div>
         <button
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-sky-700 cursor-pointer"
+          className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-navy-800 cursor-pointer"
           onClick={() => openForm(emptyForm())}
           type="button"
         >
@@ -291,7 +291,7 @@ export function SciBriefCmsPage() {
                           )}
                           <button
                             aria-label={`Edit ${brief.title.id}`}
-                            className="rounded-lg bg-sky-50 p-1.5 text-sky-700 hover:bg-sky-100 cursor-pointer"
+                            className="rounded-lg bg-navy-50 p-1.5 text-navy-800 hover:bg-navy-100 cursor-pointer"
                             onClick={() => openForm(fromBrief(brief))}
                             type="button"
                           >
@@ -445,7 +445,7 @@ export function SciBriefCmsPage() {
                 Batal
               </button>
               <button
-                className="flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60 cursor-pointer"
+                className="flex items-center gap-2 rounded-xl bg-navy-700 px-5 py-2 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer"
                 disabled={isSaving}
                 type="submit"
               >

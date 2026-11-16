@@ -386,7 +386,7 @@ export function TestimonialsCmsPage() {
             type="button"
             onClick={handleSaveDraft}
             disabled={isSaving || isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 text-teal-800 border border-teal-200 font-semibold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gold-50 hover:bg-gold-100 disabled:opacity-50 text-navy-800 border border-gold-200 font-semibold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
           >
             <span>Simpan Draft</span>
           </button>
@@ -395,7 +395,7 @@ export function TestimonialsCmsPage() {
             type="button"
             onClick={handlePublish}
             disabled={isSaving || isLoading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 disabled:opacity-50 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 hover:bg-navy-900 disabled:opacity-50 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
           >
             {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             <span>{isSaving ? 'Menerbitkan...' : 'Terbitkan ke Homepage'}</span>
@@ -496,7 +496,7 @@ export function TestimonialsCmsPage() {
 
         {isLoading ? (
           <div className="p-12 text-center text-slate-400 flex flex-col items-center gap-2">
-            <Loader2 className="size-6 animate-spin text-teal-600" />
+            <Loader2 className="size-6 animate-spin text-navy-700" />
             <p className="text-sm">Memuat data testimoni...</p>
           </div>
         ) : testimonials.length === 0 ? (
@@ -507,7 +507,7 @@ export function TestimonialsCmsPage() {
             <button
               type="button"
               onClick={handleAddNew}
-              className="px-4 py-2 bg-teal-800 text-white rounded-xl text-xs font-semibold shadow-xs hover:bg-teal-900 cursor-pointer"
+              className="px-4 py-2 bg-navy-800 text-white rounded-xl text-xs font-semibold shadow-xs hover:bg-navy-900 cursor-pointer"
             >
               + Tambah Testimoni Baru
             </button>
@@ -579,7 +579,7 @@ export function TestimonialsCmsPage() {
                     type="button"
                     onClick={() => handleEdit(index)}
                     title="Edit testimoni"
-                    className="p-1.5 rounded-lg border border-teal-200 text-teal-700 hover:bg-teal-50 cursor-pointer"
+                    className="p-1.5 rounded-lg border border-gold-200 text-navy-700 hover:bg-gold-50 cursor-pointer"
                   >
                     <Edit3 className="size-4" />
                   </button>
@@ -641,7 +641,7 @@ export function TestimonialsCmsPage() {
                             nameEn: preset.en,
                           })
                         }}
-                        className="px-2.5 py-1 bg-slate-50 border border-slate-200 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-800 rounded-md text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
+                        className="px-2.5 py-1 bg-slate-50 border border-slate-200 hover:border-gold-500 hover:bg-gold-50 hover:text-navy-800 rounded-md text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
                       >
                         {preset.id}
                       </button>
@@ -660,7 +660,7 @@ export function TestimonialsCmsPage() {
                     placeholder="Contoh: Klien - Konseling Online, 28 th"
                     value={modalForm.nameId}
                     onChange={(e) => setModalForm({ ...modalForm, nameId: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                   />
                 </div>
 
@@ -674,7 +674,7 @@ export function TestimonialsCmsPage() {
                     placeholder="Example: Client - Online Counseling, 28 y.o."
                     value={modalForm.nameEn}
                     onChange={(e) => setModalForm({ ...modalForm, nameEn: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                   />
                 </div>
 
@@ -689,7 +689,7 @@ export function TestimonialsCmsPage() {
                     placeholder="Tuliskan cerita dan pengalaman positif klien selama menjalani sesi konseling..."
                     value={modalForm.quoteId}
                     onChange={(e) => setModalForm({ ...modalForm, quoteId: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500 leading-relaxed"
                   />
                 </div>
 
@@ -703,7 +703,7 @@ export function TestimonialsCmsPage() {
                     placeholder="English translation of client's feedback and experience..."
                     value={modalForm.quoteEn}
                     onChange={(e) => setModalForm({ ...modalForm, quoteEn: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500 leading-relaxed"
                   />
                 </div>
 
@@ -717,7 +717,7 @@ export function TestimonialsCmsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+                    className="px-5 py-2 bg-navy-800 hover:bg-navy-900 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
                   >
                     {editingIndex !== null ? 'Simpan Perubahan' : 'Tambahkan'}
                   </button>

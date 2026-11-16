@@ -61,7 +61,7 @@ const toForm = (product: FeaturedProductAdminDto): FormState => ({
 
 const STATE_BADGE: Record<FeaturedProductState, { text: string; style: string }> = {
   active: { text: 'Tampil sekarang', style: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
-  scheduled: { text: 'Terjadwal', style: 'border-sky-200 bg-sky-50 text-sky-800' },
+  scheduled: { text: 'Terjadwal', style: 'border-navy-200 bg-navy-50 text-navy-900' },
   ended: { text: 'Masa berakhir', style: 'border-slate-200 bg-slate-100 text-slate-600' },
   disabled: { text: 'Nonaktif', style: 'border-amber-200 bg-amber-50 text-amber-800' },
 }
@@ -70,7 +70,7 @@ const formatDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : null
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100'
+  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100'
 
 export function FeaturedProductsCmsPage() {
   const [products, setProducts] = useState<FeaturedProductAdminDto[]>([])
@@ -151,7 +151,7 @@ export function FeaturedProductsCmsPage() {
           </p>
         </div>
         <button
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-sky-700 cursor-pointer"
+          className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-navy-800 cursor-pointer"
           onClick={() => {
             setFieldErrors({})
             setForm(emptyForm())
@@ -309,7 +309,7 @@ export function FeaturedProductsCmsPage() {
               <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer" onClick={() => setForm(null)} type="button">
                 Batal
               </button>
-              <button className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60 cursor-pointer" disabled={isSaving} type="submit">
+              <button className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer" disabled={isSaving} type="submit">
                 {isSaving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
                 Simpan
               </button>

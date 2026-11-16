@@ -789,7 +789,7 @@ export function PsychologistsCmsPage() {
           whileTap={{ scale: 0.97 }}
           transition={springConfig}
           onClick={handleOpenCreateModal}
-          className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm rounded-xl shadow-sm shadow-sky-600/20 flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-navy-700/20 flex items-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Tambah Psikolog Baru
@@ -842,7 +842,7 @@ export function PsychologistsCmsPage() {
             <select
               value={supportAreaFilter}
               onChange={(e) => setSupportAreaFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-navy-500"
             >
               <option value="all">Semua Area Layanan</option>
               <option value="adultClinical">Dewasa & Klinis</option>
@@ -860,7 +860,7 @@ export function PsychologistsCmsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari nama atau spesialisasi..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-navy-500"
               />
             </div>
           </div>
@@ -918,7 +918,7 @@ export function PsychologistsCmsPage() {
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(psych)}
-                    className="w-full rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100 cursor-pointer"
+                    className="w-full rounded-lg bg-navy-50 px-2.5 py-1 text-xs font-semibold text-navy-800 hover:bg-navy-100 cursor-pointer"
                   >
                     Edit
                   </button>
@@ -1016,7 +1016,7 @@ export function PsychologistsCmsPage() {
                           <select
                             value={psych.status}
                             onChange={(e) => handleQuickStatusChange(psych.id, e.target.value as 'draft' | 'active' | 'inactive' | 'archived')}
-                            className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-gold-500"
                           >
                             <option value="draft">Draft</option>
                             <option value="active">Active</option>
@@ -1027,7 +1027,7 @@ export function PsychologistsCmsPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(psych)}
-                            className="px-2.5 py-1 text-sky-700 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 font-semibold rounded-lg transition-colors cursor-pointer"
+                            className="px-2.5 py-1 text-navy-800 hover:text-navy-900 bg-navy-50 hover:bg-navy-100 font-semibold rounded-lg transition-colors cursor-pointer"
                           >
                             Edit
                           </button>
@@ -1066,7 +1066,7 @@ export function PsychologistsCmsPage() {
               {/* Modal Top Header */}
               <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-700">
+                  <div className="w-10 h-10 rounded-2xl bg-gold-50 border border-gold-200/80 flex items-center justify-center text-navy-700">
                     <User className="w-5 h-5" />
                   </div>
                   <div>
@@ -1089,10 +1089,10 @@ export function PsychologistsCmsPage() {
                     <button
                       type="button"
                       onClick={handleQuickPrefill}
-                      className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/90 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-gold-50 hover:bg-gold-100 text-navy-800 border border-gold-200/90 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                       title="Isi otomatis dengan data contoh agar lebih cepat"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                      <Sparkles className="w-3.5 h-3.5 text-navy-700" />
                       <span>Isi Contoh Cepat</span>
                     </button>
                   )}
@@ -1118,7 +1118,7 @@ export function PsychologistsCmsPage() {
                         onClick={() => setActiveFormTab(tab.id)}
                         className={`py-3 px-4 border-b-2 text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
                           activeFormTab === tab.id
-                            ? 'border-teal-600 text-teal-700 font-bold'
+                            ? 'border-navy-700 text-navy-700 font-bold'
                             : 'border-transparent text-slate-500 hover:text-slate-800'
                         }`}
                       >
@@ -1271,12 +1271,12 @@ export function PsychologistsCmsPage() {
                         >
                           {isUploading ? (
                             <>
-                              <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+                              <Loader2 className="w-4 h-4 animate-spin text-navy-700" />
                               Mengunggah Foto...
                             </>
                           ) : (
                             <>
-                              <Camera className="w-4 h-4 text-teal-600" />
+                              <Camera className="w-4 h-4 text-navy-700" />
                               Unggah / Ganti Foto
                             </>
                           )}
@@ -1293,11 +1293,11 @@ export function PsychologistsCmsPage() {
                           onClick={() => fileInputRef.current?.click()}
                           className={`p-3 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${
                             isDragOver
-                              ? 'border-teal-500 bg-teal-50/50'
-                              : 'border-slate-200 hover:border-teal-400 bg-white hover:bg-slate-50/60'
+                              ? 'border-gold-500 bg-gold-50/50'
+                              : 'border-slate-200 hover:border-gold-400 bg-white hover:bg-slate-50/60'
                           }`}
                         >
-                          <UploadCloud className="w-5 h-5 text-teal-600" />
+                          <UploadCloud className="w-5 h-5 text-navy-700" />
                           <div className="text-[11px] font-semibold text-slate-700 text-center">
                             Tarik foto ke sini atau klik
                           </div>
@@ -1349,7 +1349,7 @@ export function PsychologistsCmsPage() {
                                   value={formState.mediaAltId}
                                   onChange={(e) => setFormState({ ...formState, mediaAltId: e.target.value })}
                                   placeholder="e.g. Foto profil Dr. Haykal"
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                                 />
                               </div>
                               <div>
@@ -1361,7 +1361,7 @@ export function PsychologistsCmsPage() {
                                   value={formState.mediaAltEn}
                                   onChange={(e) => setFormState({ ...formState, mediaAltEn: e.target.value })}
                                   placeholder="e.g. Profile photo of Dr. Haykal"
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                                 />
                               </div>
                               <div>
@@ -1373,7 +1373,7 @@ export function PsychologistsCmsPage() {
                                   value={formState.mediaReference}
                                   onChange={(e) => setFormState({ ...formState, mediaReference: e.target.value })}
                                   placeholder="media/psychologists/photo.webp"
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-mono"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 font-mono"
                                 />
                               </div>
                             </div>
@@ -1397,7 +1397,7 @@ export function PsychologistsCmsPage() {
                               Nama lengkap, kredensial profesi, nomor SIP, cabang, dan tautan reservasi.
                             </p>
                           </div>
-                          <span className="text-[11px] text-teal-700 font-bold bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-lg">
+                          <span className="text-[11px] text-navy-700 font-bold bg-gold-50 border border-gold-200 px-2.5 py-0.5 rounded-lg">
                             Langkah 1 dari 3
                           </span>
                         </div>
@@ -1418,7 +1418,7 @@ export function PsychologistsCmsPage() {
                               value={formState.name}
                               onChange={(e) => handleNameChange(e.target.value)}
                               placeholder="e.g. Dr. Budi Santoso, M.Psi., Psikolog"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                                 !formState.name.trim() ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -1438,7 +1438,7 @@ export function PsychologistsCmsPage() {
                               value={formState.nickname}
                               onChange={(e) => setFormState({ ...formState, nickname: e.target.value })}
                               placeholder="e.g. Budi"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                                 !formState.nickname.trim() ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -1461,7 +1461,7 @@ export function PsychologistsCmsPage() {
                               value={formState.slug}
                               onChange={(e) => setFormState({ ...formState, slug: generateSlug(e.target.value) })}
                               placeholder="e.g. budi-santoso"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-mono ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 font-mono ${
                                 !formState.slug.trim() ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -1482,7 +1482,7 @@ export function PsychologistsCmsPage() {
                               value={formState.credential}
                               onChange={(e) => setFormState({ ...formState, credential: e.target.value })}
                               placeholder="e.g. M.Psi., Psikolog"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                                 !formState.credential.trim() ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -1505,7 +1505,7 @@ export function PsychologistsCmsPage() {
                               value={formState.licenseNumber}
                               onChange={(e) => setFormState({ ...formState, licenseNumber: e.target.value })}
                               placeholder="e.g. 503/SIP-049/2023"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                                 !formState.licenseNumber.trim() ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -1526,7 +1526,7 @@ export function PsychologistsCmsPage() {
                               max={80}
                               value={formState.experienceYears}
                               onChange={(e) => setFormState({ ...formState, experienceYears: Number(e.target.value) })}
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             />
                           </div>
                         </div>
@@ -1545,7 +1545,7 @@ export function PsychologistsCmsPage() {
                             <select
                               value={formState.primaryBranch}
                               onChange={(e) => setFormState({ ...formState, primaryBranch: e.target.value as 'tbi' | 'bsd' | 'malang' | 'online_only' | 'multiple' })}
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             >
                               <option value="tbi">Jakarta Selatan (TBI Pusat)</option>
                               <option value="bsd">Delrey BizTown BSD</option>
@@ -1567,7 +1567,7 @@ export function PsychologistsCmsPage() {
                             <select
                               value={formState.tier}
                               onChange={(e) => setFormState({ ...formState, tier: e.target.value as 'principal' | 'senior' | 'senior_mid' | 'mid' | 'consultant' })}
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             >
                               <option value="principal">Principal Psychologist</option>
                               <option value="senior">Senior Psychologist</option>
@@ -1594,7 +1594,7 @@ export function PsychologistsCmsPage() {
                               value={formState.bookingUrl}
                               onChange={(e) => setFormState({ ...formState, bookingUrl: e.target.value })}
                               placeholder="https://attentive.id/book/budi"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                                 !formState.bookingUrl.trim().startsWith('https://') ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -1614,7 +1614,7 @@ export function PsychologistsCmsPage() {
                               value={formState.premiumBookingUrl}
                               onChange={(e) => setFormState({ ...formState, premiumBookingUrl: e.target.value })}
                               placeholder="https://attentive.id/book/budi-vip"
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             />
                           </div>
                         </div>
@@ -1628,7 +1628,7 @@ export function PsychologistsCmsPage() {
                             <select
                               value={formState.status}
                               onChange={(e) => setFormState({ ...formState, status: e.target.value as 'draft' | 'active' | 'inactive' | 'archived' })}
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             >
                               <option value="draft">Draft (Belum Tampil di Direktori Publik)</option>
                               <option value="active">Active (Tampil Terbuka di Direktori Publik)</option>
@@ -1646,7 +1646,7 @@ export function PsychologistsCmsPage() {
                               type="checkbox"
                               checked={formState.acceptingNewClients}
                               onChange={(e) => setFormState({ ...formState, acceptingNewClients: e.target.checked })}
-                              className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
+                              className="w-4 h-4 rounded text-navy-700 focus:ring-gold-500 cursor-pointer"
                             />
                           </div>
                         </div>
@@ -1665,7 +1665,7 @@ export function PsychologistsCmsPage() {
                               Pilih minimal 1 area layanan klinis utama dan tambahkan tag keahlian.
                             </p>
                           </div>
-                          <span className="text-[11px] text-teal-700 font-bold bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-lg">
+                          <span className="text-[11px] text-navy-700 font-bold bg-gold-50 border border-gold-200 px-2.5 py-0.5 rounded-lg">
                             Langkah 2 dari 3
                           </span>
                         </div>
@@ -1697,7 +1697,7 @@ export function PsychologistsCmsPage() {
                                   key={area.key}
                                   className={`p-3 rounded-2xl border transition-colors ${
                                     isSelected
-                                      ? 'bg-teal-50/80 border-teal-300'
+                                      ? 'bg-gold-50/80 border-gold-300'
                                       : 'bg-white border-slate-200'
                                   }`}
                                 >
@@ -1707,7 +1707,7 @@ export function PsychologistsCmsPage() {
                                       type="checkbox"
                                       checked={isSelected}
                                       onChange={() => toggleSupportArea(area.key as 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist')}
-                                      className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
+                                      className="w-4 h-4 rounded text-navy-700 focus:ring-gold-500 cursor-pointer"
                                     />
                                   </div>
 
@@ -1717,7 +1717,7 @@ export function PsychologistsCmsPage() {
                                       onClick={() => setPrimarySupportArea(area.key as 'adultClinical' | 'childAdolescent' | 'educational' | 'psychologyScientist')}
                                       className={`w-full text-[10px] font-semibold py-1 rounded-md transition-colors cursor-pointer ${
                                         isPrimary
-                                          ? 'bg-teal-600 text-white shadow-2xs'
+                                          ? 'bg-navy-700 text-white shadow-2xs'
                                           : 'bg-slate-200/80 text-slate-700 hover:bg-slate-300'
                                       }`}
                                     >
@@ -1747,7 +1747,7 @@ export function PsychologistsCmsPage() {
                             <button
                               type="button"
                               onClick={addSpecializationItem}
-                              className="text-xs text-teal-700 hover:text-teal-800 font-bold px-2.5 py-1 bg-teal-50 border border-teal-200 rounded-lg cursor-pointer flex items-center gap-1"
+                              className="text-xs text-navy-700 hover:text-navy-800 font-bold px-2.5 py-1 bg-gold-50 border border-gold-200 rounded-lg cursor-pointer flex items-center gap-1"
                             >
                               <Plus className="w-3.5 h-3.5" />
                               Tambah Tag
@@ -1772,7 +1772,7 @@ export function PsychologistsCmsPage() {
                                     }))
                                   }}
                                   placeholder="ID: Kecemasan, Trauma, Burnout..."
-                                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                                 />
                                 <input
                                   type="text"
@@ -1785,7 +1785,7 @@ export function PsychologistsCmsPage() {
                                     }))
                                   }}
                                   placeholder="EN: Anxiety, Trauma, Burnout..."
-                                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                                 />
                                 {formState.specializations.length > 1 && (
                                   <button
@@ -1820,7 +1820,7 @@ export function PsychologistsCmsPage() {
                                   featuredOrder: checked ? (prev.featuredOrder || String(getNextAvailableFeaturedOrder())) : ''
                                 }))
                               }}
-                              className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
+                              className="w-4 h-4 rounded text-navy-700 focus:ring-gold-500 cursor-pointer"
                             />
                           </div>
 
@@ -1842,15 +1842,15 @@ export function PsychologistsCmsPage() {
                                   value={formState.featuredOrder}
                                   onChange={(e) => setFormState({ ...formState, featuredOrder: e.target.value })}
                                   placeholder="e.g. 1"
-                                  className="w-32 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                  className="w-32 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                                 />
 
                                 <button
                                   type="button"
                                   onClick={() => setFormState((prev) => ({ ...prev, featuredOrder: String(getNextAvailableFeaturedOrder()) }))}
-                                  className="px-3 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/90 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                                  className="px-3 py-2 bg-gold-50 hover:bg-gold-100 text-navy-800 border border-gold-200/90 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                                 >
-                                  <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                                  <Sparkles className="w-3.5 h-3.5 text-navy-700" />
                                   <span>Gunakan Nomor Berikutnya (#{getNextAvailableFeaturedOrder()})</span>
                                 </button>
                               </div>
@@ -1880,13 +1880,13 @@ export function PsychologistsCmsPage() {
                             <button
                               type="button"
                               onClick={handleSyncAllIdToEn}
-                              className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                              className="px-2.5 py-1 bg-gold-50 hover:bg-gold-100 text-navy-800 border border-gold-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                               title="Salin seluruh teks Bahasa Indonesia ke English bila belum ada terjemahan"
                             >
-                              <CheckCheck className="w-3.5 h-3.5 text-teal-600" />
+                              <CheckCheck className="w-3.5 h-3.5 text-navy-700" />
                               <span>Salin Semua ID → EN</span>
                             </button>
-                            <span className="text-[11px] text-teal-700 font-bold bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-lg">
+                            <span className="text-[11px] text-navy-700 font-bold bg-gold-50 border border-gold-200 px-2.5 py-0.5 rounded-lg">
                               Langkah 3 dari 3
                             </span>
                           </div>
@@ -1907,7 +1907,7 @@ export function PsychologistsCmsPage() {
                             value={formState.shortBioId}
                             onChange={(e) => setFormState({ ...formState, shortBioId: e.target.value })}
                             placeholder="Ringkasan 1 paragraf untuk dropdown dan kartu seleksi..."
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                           />
                         </div>
 
@@ -1919,7 +1919,7 @@ export function PsychologistsCmsPage() {
                             <button
                               type="button"
                               onClick={() => setFormState((prev) => ({ ...prev, shortBioEn: prev.shortBioId }))}
-                              className="text-[11px] text-teal-600 hover:underline flex items-center gap-1 cursor-pointer"
+                              className="text-[11px] text-navy-700 hover:underline flex items-center gap-1 cursor-pointer"
                             >
                               <Copy className="w-3 h-3" /> Salin dari ID
                             </button>
@@ -1929,7 +1929,7 @@ export function PsychologistsCmsPage() {
                             value={formState.shortBioEn}
                             onChange={(e) => setFormState({ ...formState, shortBioEn: e.target.value })}
                             placeholder="1-paragraph summary for dropdowns and selection cards..."
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                           />
                         </div>
 
@@ -1948,7 +1948,7 @@ export function PsychologistsCmsPage() {
                             value={formState.biographyId}
                             onChange={(e) => setFormState({ ...formState, biographyId: e.target.value })}
                             placeholder="Deskripsi pendekatan terapi, filosofi, latar belakang akademis..."
-                            className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                            className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                               !formState.biographyId.trim() ? 'border-amber-300' : 'border-slate-200'
                             }`}
                           />
@@ -1962,7 +1962,7 @@ export function PsychologistsCmsPage() {
                             <button
                               type="button"
                               onClick={() => setFormState((prev) => ({ ...prev, biographyEn: prev.biographyId }))}
-                              className="text-[11px] text-teal-600 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                              className="text-[11px] text-navy-700 hover:underline flex items-center gap-1 cursor-pointer font-medium"
                             >
                               <Copy className="w-3 h-3" /> Salin dari ID
                             </button>
@@ -1972,7 +1972,7 @@ export function PsychologistsCmsPage() {
                             value={formState.biographyEn}
                             onChange={(e) => setFormState({ ...formState, biographyEn: e.target.value })}
                             placeholder="Approach, philosophy, and academic background (otomatis disamakan bila kosong)..."
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                           />
                         </div>
 
@@ -1995,7 +1995,7 @@ export function PsychologistsCmsPage() {
                               value={formState.conversationQuoteId}
                               onChange={(e) => setFormState({ ...formState, conversationQuoteId: e.target.value })}
                               placeholder="Mulai dari bagian yang paling sulit kamu jelaskan."
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             />
                           </div>
                           <div>
@@ -2006,7 +2006,7 @@ export function PsychologistsCmsPage() {
                               <button
                                 type="button"
                                 onClick={() => setFormState((prev) => ({ ...prev, conversationQuoteEn: prev.conversationQuoteId }))}
-                                className="text-[11px] text-teal-600 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                                className="text-[11px] text-navy-700 hover:underline flex items-center gap-1 cursor-pointer font-medium"
                               >
                                 <Copy className="w-3 h-3" /> Salin dari ID
                               </button>
@@ -2018,7 +2018,7 @@ export function PsychologistsCmsPage() {
                               value={formState.conversationQuoteEn}
                               onChange={(e) => setFormState({ ...formState, conversationQuoteEn: e.target.value })}
                               placeholder="You can start with the part that feels hardest to explain."
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             />
                           </div>
                         </div>
@@ -2039,7 +2039,7 @@ export function PsychologistsCmsPage() {
                               value={formState.availabilityMessageId}
                               onChange={(e) => setFormState({ ...formState, availabilityMessageId: e.target.value })}
                               placeholder="e.g. Tersedia Selasa, Kamis, dan Sabtu"
-                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 ${
+                              className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 ${
                                 !formState.availabilityMessageId.trim() ? 'border-amber-300' : 'border-slate-200'
                               }`}
                             />
@@ -2053,7 +2053,7 @@ export function PsychologistsCmsPage() {
                               <button
                                 type="button"
                                 onClick={() => setFormState((prev) => ({ ...prev, availabilityMessageEn: prev.availabilityMessageId }))}
-                                className="text-[11px] text-teal-600 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                                className="text-[11px] text-navy-700 hover:underline flex items-center gap-1 cursor-pointer font-medium"
                               >
                                 <Copy className="w-3 h-3" /> Salin
                               </button>
@@ -2063,7 +2063,7 @@ export function PsychologistsCmsPage() {
                               value={formState.availabilityMessageEn}
                               onChange={(e) => setFormState({ ...formState, availabilityMessageEn: e.target.value })}
                               placeholder="e.g. Available Tuesday, Thursday, and Saturday"
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                             />
                           </div>
                         </div>
@@ -2084,7 +2084,7 @@ export function PsychologistsCmsPage() {
                                 value={formState.consultationDuration}
                                 onChange={(e) => setFormState((prev) => ({ ...prev, consultationDuration: e.target.value }))}
                                 placeholder="±60 menit / sesi"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                               />
                             </div>
                             <div>
@@ -2095,7 +2095,7 @@ export function PsychologistsCmsPage() {
                                 value={formState.onlineRate}
                                 onChange={(e) => setFormState((prev) => ({ ...prev, onlineRate: e.target.value }))}
                                 placeholder="Contoh: 350000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                               />
                             </div>
                             <div>
@@ -2106,7 +2106,7 @@ export function PsychologistsCmsPage() {
                                 value={formState.offlineRate}
                                 onChange={(e) => setFormState((prev) => ({ ...prev, offlineRate: e.target.value }))}
                                 placeholder="Contoh: 450000"
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                               />
                             </div>
                           </div>
@@ -2128,7 +2128,7 @@ export function PsychologistsCmsPage() {
                                         [flag.key]: e.target.checked,
                                       }))
                                     }
-                                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500/20"
+                                    className="rounded border-slate-300 text-navy-700 focus:ring-gold-500/20"
                                   />
                                   <span>{flag.label}</span>
                                 </label>
@@ -2161,7 +2161,7 @@ export function PsychologistsCmsPage() {
                                         }))
                                       }
                                       placeholder="Off / 09:00-17:00 / By Appointment"
-                                      className="col-span-5 sm:col-span-7 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                      className="col-span-5 sm:col-span-7 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                                     />
                                     <div className="col-span-4 sm:col-span-3 flex justify-end">
                                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${badge.className}`}>
@@ -2194,7 +2194,7 @@ export function PsychologistsCmsPage() {
                         <button
                           type="button"
                           onClick={() => setActiveFormTab(TABS[currentTabIndex + 1].id)}
-                          className="px-4 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border border-teal-200/80 font-bold"
+                          className="px-4 py-2 bg-gold-50 hover:bg-gold-100 text-navy-800 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border border-gold-200/80 font-bold"
                         >
                           <span>Lanjut: {TABS[currentTabIndex + 1].short}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -2239,7 +2239,7 @@ export function PsychologistsCmsPage() {
                       transition={springConfig}
                       type="submit"
                       disabled={isSubmitting || isUploading}
-                      className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-2"
+                      className="px-6 py-2.5 bg-navy-700 hover:bg-navy-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-2"
                     >
                       {isSubmitting ? (
                         <>

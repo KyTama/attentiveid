@@ -123,7 +123,7 @@ export function FeaturedOrderPanel({ viewMode, refreshKey, onSaved }: FeaturedOr
           value={index + 1}
           onChange={(event) => move(id, Number(event.target.value))}
           aria-label={`Posisi ${name}`}
-          className="rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
+          className="rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-gold-500"
         >
           {rankOptions.map((rank) => (
             <option key={rank} value={rank}>
@@ -166,7 +166,7 @@ export function FeaturedOrderPanel({ viewMode, refreshKey, onSaved }: FeaturedOr
             type="button"
             onClick={handleSave}
             disabled={!isDirty || isSaving}
-            className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="flex items-center gap-1.5 rounded-lg bg-navy-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-800 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             {isSaving ? (
               <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />

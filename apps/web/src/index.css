@@ -42,6 +42,29 @@
   --color-muted-background: #fafafa;
   --color-footer-background: #f4f4f4;
 
+  /* ========== Portal brand scales (navy + gold) ========== */
+  --color-navy-50: #eef1f7;
+  --color-navy-100: #dde3ef;
+  --color-navy-200: #bcc7de;
+  --color-navy-300: #8fa0c4;
+  --color-navy-400: #5c73a3;
+  --color-navy-500: #34497a;
+  --color-navy-600: #1f3560;
+  --color-navy-700: #14284b;
+  --color-navy-800: #0f1f3b;
+  --color-navy-900: #0a1528;
+  --color-navy-950: #060d1a;
+  --color-gold-50: #fbf5e6;
+  --color-gold-100: #f6e8c3;
+  --color-gold-200: #efd596;
+  --color-gold-300: #e6bf66;
+  --color-gold-400: #dcac45;
+  --color-gold-500: #d6a74d;
+  --color-gold-600: #b5832c;
+  --color-gold-700: #946a22;
+  --color-gold-800: #7a561d;
+  --color-gold-900: #5f4318;
+
   /* ========== Semantic Colors ========== */
   --color-success: #22c55e;
   --color-success-foreground: #ffffff;

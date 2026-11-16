@@ -20,7 +20,7 @@ export function ProtectedRoute({ allowedRoles, allowedEmails, children }: Protec
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="flex flex-col items-center gap-3" role="status">
-          <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-gold-500 border-t-transparent rounded-full animate-spin" />
           <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
             {t('common.loading', 'Loading session...')}
           </span>
@@ -53,7 +53,7 @@ export function ProtectedRoute({ allowedRoles, allowedEmails, children }: Protec
           </p>
           <a
             href="/"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-navy-700 hover:bg-navy-700 rounded-lg transition-colors"
           >
             {t('auth.backHome', 'Return to Home')}
           </a>

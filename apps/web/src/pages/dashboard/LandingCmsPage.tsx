@@ -1101,7 +1101,7 @@ export function LandingCmsPage() {
               <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                 Landing Content Editor
               </h1>
-              <span className="px-2 py-0.5 text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200 rounded-md">
+              <span className="px-2 py-0.5 text-[10px] font-bold bg-gold-50 text-navy-700 border border-gold-200 rounded-md">
                 Live CMS
               </span>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-md hidden sm:inline-block">
@@ -1121,7 +1121,7 @@ export function LandingCmsPage() {
                 onClick={() => setLanguageView('both')}
                 className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
                   languageView === 'both'
-                    ? 'bg-white text-teal-800 font-bold shadow-2xs'
+                    ? 'bg-white text-navy-800 font-bold shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Tampilkan Bahasa Indonesia dan English berdampingan"
@@ -1133,7 +1133,7 @@ export function LandingCmsPage() {
                 onClick={() => setLanguageView('id')}
                 className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
                   languageView === 'id'
-                    ? 'bg-white text-teal-800 font-bold shadow-2xs'
+                    ? 'bg-white text-navy-800 font-bold shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Fokus edit Bahasa Indonesia saja"
@@ -1146,7 +1146,7 @@ export function LandingCmsPage() {
                 onClick={() => setLanguageView('en')}
                 className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
                   languageView === 'en'
-                    ? 'bg-white text-teal-800 font-bold shadow-2xs'
+                    ? 'bg-white text-navy-800 font-bold shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Fokus edit English saja"
@@ -1169,7 +1169,7 @@ export function LandingCmsPage() {
             <button
               onClick={handleSaveDraft}
               disabled={isMutating}
-              className="px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors cursor-pointer disabled:opacity-60"
+              className="px-3 py-1.5 text-xs font-semibold text-navy-700 bg-gold-50 hover:bg-gold-100 rounded-lg border border-gold-200 transition-colors cursor-pointer disabled:opacity-60"
             >
               {isSaving ? 'Menyimpan...' : 'Simpan Draft'}
             </button>
@@ -1178,7 +1178,7 @@ export function LandingCmsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handlePublish}
               disabled={isMutating}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-60"
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-navy-700 hover:bg-navy-700 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-60"
             >
               {isPublishing ? 'Menerbitkan...' : 'Terbitkan ke Publik'}
             </motion.button>
@@ -1246,7 +1246,7 @@ export function LandingCmsPage() {
                   }}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
                     activeSectionIndex === idx
-                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200/80 shadow-2xs'
+                      ? 'bg-gold-50 text-navy-800 font-bold border border-gold-200/80 shadow-2xs'
                       : 'text-slate-600 hover:bg-slate-50 border border-transparent'
                   }`}
                 >
@@ -1254,14 +1254,14 @@ export function LandingCmsPage() {
                     <span
                       className={`size-5 rounded-md text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${
                         activeSectionIndex === idx
-                          ? 'bg-teal-600 text-white shadow-2xs'
+                          ? 'bg-navy-700 text-white shadow-2xs'
                           : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-800'
                       }`}
                     >
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate font-semibold text-slate-800 group-hover:text-teal-900">
+                      <div className="truncate font-semibold text-slate-800 group-hover:text-navy-900">
                         {displayMeta.label}
                       </div>
                       <div className="text-[10px] text-slate-400 truncate">
@@ -1272,7 +1272,7 @@ export function LandingCmsPage() {
 
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {hasCustomMedia && (
-                      <span className="size-1.5 rounded-full bg-teal-500" title="Memiliki visual foto kustom" />
+                      <span className="size-1.5 rounded-full bg-gold-500" title="Memiliki visual foto kustom" />
                     )}
                     <span
                       className={`w-2 h-2 rounded-full ${sec.visible ? 'bg-emerald-500' : 'bg-slate-300'}`}
@@ -1342,9 +1342,9 @@ export function LandingCmsPage() {
           })}
 
           {/* Clinic Locations Info Badge */}
-          <div className="mt-3 p-3 bg-teal-50/70 rounded-xl border border-teal-100 text-xs">
-            <div className="font-semibold text-teal-900 mb-1 flex items-center gap-1.5">
-              <MapPin className="size-3.5 text-teal-700 shrink-0" />
+          <div className="mt-3 p-3 bg-gold-50/70 rounded-xl border border-gold-100 text-xs">
+            <div className="font-semibold text-navy-900 mb-1 flex items-center gap-1.5">
+              <MapPin className="size-3.5 text-navy-700 shrink-0" />
               <span>Lokasi Klinik (#locations)</span>
             </div>
             <p className="text-slate-600 text-[11px] leading-relaxed">
@@ -1357,7 +1357,7 @@ export function LandingCmsPage() {
         <div className="md:col-span-3 bg-white p-6 rounded-2xl border border-slate-200 space-y-6 shadow-2xs">
           <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div>
-              <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">
+              <span className="text-xs font-bold text-navy-700 uppercase tracking-wider">
                 Editing Section #{activeSectionIndex + 1}
               </span>
               <h2 className="text-lg font-bold text-slate-900 capitalize flex items-center gap-2 mt-0.5">
@@ -1379,7 +1379,7 @@ export function LandingCmsPage() {
                   newSections[activeSectionIndex] = { ...activeSection, visible: e.target.checked }
                   setContent({ ...content, sections: newSections })
                 }}
-                className="rounded text-teal-600 focus:ring-teal-500"
+                className="rounded text-navy-700 focus:ring-gold-500"
               />
               <span>Tampilkan Section di Website</span>
             </label>
@@ -1806,7 +1806,7 @@ export function LandingCmsPage() {
                           type="checkbox"
                           checked={activeHeroSlideItem.visible !== false}
                           onChange={(e) => updateHeroSlideVisible(safeHeroSlideIndex, e.target.checked)}
-                          className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                          className="rounded border-slate-300 text-navy-700 focus:ring-gold-500"
                         />
                         <span>
                           {activeHeroSlideItem.visible !== false ? 'Tampilkan di Beranda' : 'Disembunyikan'}
@@ -1818,10 +1818,10 @@ export function LandingCmsPage() {
                     <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                          <Camera className="size-4 text-teal-600" />
+                          <Camera className="size-4 text-navy-700" />
                           <span>Foto Utama Slide {safeHeroSlideIndex + 1}</span>
                         </span>
-                        <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                        <span className="text-[10px] font-semibold text-navy-800 bg-gold-50 px-2 py-0.5 rounded border border-gold-200">
                           {HERO_SLIDE_LAYOUT_LABELS[activeHeroSlideItem.layout || 'practice']}
                         </span>
                       </div>
@@ -1856,7 +1856,7 @@ export function LandingCmsPage() {
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border shadow-2xs transition-colors ${
                                 uploadingTarget === `hero-slide-${safeHeroSlideIndex}`
                                   ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none'
-                                  : 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600'
+                                  : 'bg-navy-700 hover:bg-navy-700 text-white border-navy-700'
                               }`}
                             >
                               {uploadingTarget === `hero-slide-${safeHeroSlideIndex}` ? (
@@ -1900,13 +1900,13 @@ export function LandingCmsPage() {
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-xs font-semibold text-slate-700">Label Tab Progress Bawah (ID)</label>
-                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              <span className="text-[10px] font-bold text-navy-700 bg-gold-50 px-1.5 py-0.5 rounded border border-gold-200">ID</span>
                             </div>
                             <input
                               type="text"
                               value={activeHeroSlideItem.tabLabel?.id || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tabLabel', 'id', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -1914,13 +1914,13 @@ export function LandingCmsPage() {
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-xs font-semibold text-slate-700">Bottom Tab Label (EN)</label>
-                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              <span className="text-[10px] font-bold text-navy-800 bg-navy-50 px-1.5 py-0.5 rounded border border-navy-200">EN</span>
                             </div>
                             <input
                               type="text"
                               value={activeHeroSlideItem.tabLabel?.en || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tabLabel', 'en', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -1932,13 +1932,13 @@ export function LandingCmsPage() {
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-xs font-semibold text-slate-700">Eyebrow / Tag Slide (ID)</label>
-                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              <span className="text-[10px] font-bold text-navy-700 bg-gold-50 px-1.5 py-0.5 rounded border border-gold-200">ID</span>
                             </div>
                             <input
                               type="text"
                               value={activeHeroSlideItem.tag?.id || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tag', 'id', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -1946,13 +1946,13 @@ export function LandingCmsPage() {
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-xs font-semibold text-slate-700">Eyebrow / Tag Slide (EN)</label>
-                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              <span className="text-[10px] font-bold text-navy-800 bg-navy-50 px-1.5 py-0.5 rounded border border-navy-200">EN</span>
                             </div>
                             <input
                               type="text"
                               value={activeHeroSlideItem.tag?.en || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'tag', 'en', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -1966,13 +1966,13 @@ export function LandingCmsPage() {
                               <label className="text-xs font-semibold text-slate-700">
                                 Headline Slide {safeHeroSlideIndex + 1} (ID)
                               </label>
-                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              <span className="text-[10px] font-bold text-navy-700 bg-gold-50 px-1.5 py-0.5 rounded border border-gold-200">ID</span>
                             </div>
                             <input
                               type="text"
                               value={activeHeroSlideItem.headline?.id || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'headline', 'id', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -1982,13 +1982,13 @@ export function LandingCmsPage() {
                               <label className="text-xs font-semibold text-slate-700">
                                 Headline Slide {safeHeroSlideIndex + 1} (EN)
                               </label>
-                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              <span className="text-[10px] font-bold text-navy-800 bg-navy-50 px-1.5 py-0.5 rounded border border-navy-200">EN</span>
                             </div>
                             <input
                               type="text"
                               value={activeHeroSlideItem.headline?.en || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'headline', 'en', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -2013,13 +2013,13 @@ export function LandingCmsPage() {
                               <label className="text-xs font-semibold text-slate-700">
                                 Deskripsi Slide {safeHeroSlideIndex + 1} (ID)
                               </label>
-                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                              <span className="text-[10px] font-bold text-navy-700 bg-gold-50 px-1.5 py-0.5 rounded border border-gold-200">ID</span>
                             </div>
                             <textarea
                               rows={3}
                               value={activeHeroSlideItem.description?.id || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'description', 'id', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -2029,13 +2029,13 @@ export function LandingCmsPage() {
                               <label className="text-xs font-semibold text-slate-700">
                                 Deskripsi Slide {safeHeroSlideIndex + 1} (EN)
                               </label>
-                              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                              <span className="text-[10px] font-bold text-navy-800 bg-navy-50 px-1.5 py-0.5 rounded border border-navy-200">EN</span>
                             </div>
                             <textarea
                               rows={3}
                               value={activeHeroSlideItem.description?.en || ''}
                               onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'description', 'en', e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
                         )}
@@ -2053,7 +2053,7 @@ export function LandingCmsPage() {
                                 type="text"
                                 value={activeHeroSlideItem.location?.id || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'location', 'id', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                               />
                             </div>
                           )}
@@ -2066,7 +2066,7 @@ export function LandingCmsPage() {
                                 type="text"
                                 value={activeHeroSlideItem.location?.en || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'location', 'en', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                               />
                             </div>
                           )}
@@ -2084,7 +2084,7 @@ export function LandingCmsPage() {
                                 type="text"
                                 value={activeHeroSlideItem.note?.id || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'note', 'id', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                               />
                             </div>
                           )}
@@ -2097,7 +2097,7 @@ export function LandingCmsPage() {
                                 type="text"
                                 value={activeHeroSlideItem.note?.en || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'note', 'en', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                               />
                             </div>
                           )}
@@ -2127,14 +2127,14 @@ export function LandingCmsPage() {
                                 placeholder="Label (ID)"
                                 value={activeHeroSlideItem.primaryCta?.id || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'primaryCta', 'id', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                               <input
                                 type="text"
                                 placeholder="Label (EN)"
                                 value={activeHeroSlideItem.primaryCta?.en || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'primaryCta', 'en', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                             </div>
                             <div>
@@ -2148,7 +2148,7 @@ export function LandingCmsPage() {
                                   placeholder="Kosongkan untuk badge Soon, atau /path / https://..."
                                   value={activeHeroSlideItem.primaryCtaUrl ?? ''}
                                   onChange={(e) => updateHeroSlideUrl(safeHeroSlideIndex, 'primaryCtaUrl', e.target.value)}
-                                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                 />
                               </div>
                             </div>
@@ -2165,14 +2165,14 @@ export function LandingCmsPage() {
                                 placeholder="Label (ID)"
                                 value={activeHeroSlideItem.secondaryCta?.id || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'secondaryCta', 'id', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                               <input
                                 type="text"
                                 placeholder="Label (EN)"
                                 value={activeHeroSlideItem.secondaryCta?.en || ''}
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'secondaryCta', 'en', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                             </div>
                             <div>
@@ -2186,7 +2186,7 @@ export function LandingCmsPage() {
                                   placeholder="#locations, /articles, atau https://..."
                                   value={activeHeroSlideItem.secondaryCtaUrl ?? ''}
                                   onChange={(e) => updateHeroSlideUrl(safeHeroSlideIndex, 'secondaryCtaUrl', e.target.value)}
-                                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                 />
                               </div>
                             </div>
@@ -2223,7 +2223,7 @@ export function LandingCmsPage() {
                           type="button"
                           onClick={addHeroCampaignCard}
                           disabled={heroCampaigns.cards.length >= 6}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-navy-700 text-white hover:bg-navy-700 disabled:opacity-50 transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                         >
                           <Plus className="size-3.5" />
                           <span>Tambah Kartu ({heroCampaigns.cards.length}/6)</span>
@@ -2245,7 +2245,7 @@ export function LandingCmsPage() {
                           type="checkbox"
                           checked={heroCampaigns.visible !== false}
                           onChange={(e) => updateHeroCampaignToggle('visible', e.target.checked)}
-                          className="rounded text-teal-600 focus:ring-teal-500"
+                          className="rounded text-navy-700 focus:ring-gold-500"
                         />
                         <span>Tampilkan Strip Featured Campaigns &amp; Portals di Beranda</span>
                       </label>
@@ -2255,7 +2255,7 @@ export function LandingCmsPage() {
                           type="checkbox"
                           checked={heroCampaigns.showFloatingDock !== false}
                           onChange={(e) => updateHeroCampaignToggle('showFloatingDock', e.target.checked)}
-                          className="rounded text-teal-600 focus:ring-teal-500"
+                          className="rounded text-navy-700 focus:ring-gold-500"
                         />
                         <span>Tampilkan Floating Quick Bar di Bawah Layar</span>
                       </label>
@@ -2279,7 +2279,7 @@ export function LandingCmsPage() {
                             value={heroCampaigns.eyebrow?.id || ''}
                             onChange={(e) => updateHeroCampaignHeader('eyebrow', 'id', e.target.value)}
                             placeholder="Cth: Program & Layanan Unggulan"
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                           />
                         </div>
                       )}
@@ -2293,7 +2293,7 @@ export function LandingCmsPage() {
                             value={heroCampaigns.eyebrow?.en || ''}
                             onChange={(e) => updateHeroCampaignHeader('eyebrow', 'en', e.target.value)}
                             placeholder="E.g: Featured Campaigns & Portals"
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                           />
                         </div>
                       )}
@@ -2310,7 +2310,7 @@ export function LandingCmsPage() {
                             value={heroCampaigns.description?.id || ''}
                             onChange={(e) => updateHeroCampaignHeader('description', 'id', e.target.value)}
                             placeholder="Deskripsi singkat layanan unggulan..."
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                           />
                         </div>
                       )}
@@ -2324,7 +2324,7 @@ export function LandingCmsPage() {
                             value={heroCampaigns.description?.en || ''}
                             onChange={(e) => updateHeroCampaignHeader('description', 'en', e.target.value)}
                             placeholder="Brief description of featured programs..."
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                           />
                         </div>
                       )}
@@ -2341,7 +2341,7 @@ export function LandingCmsPage() {
                         <button
                           type="button"
                           onClick={addHeroCampaignCard}
-                          className="px-3.5 py-2 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                          className="px-3.5 py-2 rounded-lg text-xs font-bold bg-navy-700 text-white hover:bg-navy-700 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                         >
                           <Plus className="size-3.5" />
                           <span>Tambah Kartu Baru</span>
@@ -2364,10 +2364,10 @@ export function LandingCmsPage() {
 
                         const renderIconPreview = () => {
                           if (cardIcon === 'gift') return <Gift className="size-4 text-amber-600" />
-                          if (cardIcon === 'calendar') return <CalendarCheck2 className="size-4 text-teal-600" />
+                          if (cardIcon === 'calendar') return <CalendarCheck2 className="size-4 text-navy-700" />
                           if (cardIcon === 'clipboard') return <ClipboardCheck className="size-4 text-blue-600" />
                           if (cardIcon === 'shield') return <ShieldCheck className="size-4 text-emerald-600" />
-                          if (cardIcon === 'message') return <MessageCircle className="size-4 text-teal-600" />
+                          if (cardIcon === 'message') return <MessageCircle className="size-4 text-navy-700" />
                           return <Sparkles className="size-4 text-amber-600" />
                         }
 
@@ -2400,7 +2400,7 @@ export function LandingCmsPage() {
                                   aria-label={`Tema Kartu ${cIdx + 1}`}
                                   value={cardTheme}
                                   onChange={(e) => updateHeroCampaignCardMeta(cIdx, 'theme', e.target.value)}
-                                  className="px-2 py-1 text-[11px] font-semibold bg-slate-100 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  className="px-2 py-1 text-[11px] font-semibold bg-slate-100 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   title="Warna Tema Kartu"
                                 >
                                   <option value="gold">Tema: Gold Highlight</option>
@@ -2414,7 +2414,7 @@ export function LandingCmsPage() {
                                   aria-label={`Ikon Kartu ${cIdx + 1}`}
                                   value={cardIcon}
                                   onChange={(e) => updateHeroCampaignCardMeta(cIdx, 'icon', e.target.value)}
-                                  className="px-2 py-1 text-[11px] font-semibold bg-slate-100 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  className="px-2 py-1 text-[11px] font-semibold bg-slate-100 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   title="Ikon Kartu"
                                 >
                                   <option value="gift">Ikon: Gift / Promo</option>
@@ -2494,14 +2494,14 @@ export function LandingCmsPage() {
                                     placeholder="Badge ID"
                                     value={card.badge?.id || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'id', e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                   <input
                                     type="text"
                                     placeholder="Badge EN"
                                     value={card.badge?.en || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'badge', 'en', e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                 </div>
                               </div>
@@ -2516,14 +2516,14 @@ export function LandingCmsPage() {
                                     placeholder="Judul ID"
                                     value={card.title?.id || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'id', e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                   <input
                                     type="text"
                                     placeholder="Judul EN"
                                     value={card.title?.en || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'title', 'en', e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                 </div>
                               </div>
@@ -2539,7 +2539,7 @@ export function LandingCmsPage() {
                                   rows={2}
                                   value={card.description?.id || ''}
                                   onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'id', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                 />
                               </div>
                               <div>
@@ -2550,7 +2550,7 @@ export function LandingCmsPage() {
                                   rows={2}
                                   value={card.description?.en || ''}
                                   onChange={(e) => updateHeroCampaignCard(cIdx, 'description', 'en', e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                 />
                               </div>
                             </div>
@@ -2567,14 +2567,14 @@ export function LandingCmsPage() {
                                     placeholder="CTA ID"
                                     value={card.cta?.id || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'id', e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                   <input
                                     type="text"
                                     placeholder="CTA EN"
                                     value={card.cta?.en || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'cta', 'en', e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                 </div>
                               </div>
@@ -2590,7 +2590,7 @@ export function LandingCmsPage() {
                                     placeholder="https://..."
                                     value={card.url || ''}
                                     onChange={(e) => updateHeroCampaignCard(cIdx, 'url', e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                                   />
                                 </div>
                               </div>
@@ -2613,7 +2613,7 @@ export function LandingCmsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <BarChart3 className="size-4 text-teal-600" />
+                          <BarChart3 className="size-4 text-navy-700" />
                           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                             Trust Metrics Counter Bar (4 Item)
                           </h4>
@@ -2655,7 +2655,7 @@ export function LandingCmsPage() {
                               setMessage({ type: 'error', text: 'Gagal menghubungi server untuk sinkronisasi jumlah psikolog.' })
                             }
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-teal-300 rounded-lg text-xs font-semibold text-teal-800 hover:bg-teal-50 transition-colors shadow-2xs cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gold-300 rounded-lg text-xs font-semibold text-navy-800 hover:bg-gold-50 transition-colors shadow-2xs cursor-pointer"
                         >
                           <span>🔄 Sync DB Psikolog</span>
                         </button>
@@ -2707,7 +2707,7 @@ export function LandingCmsPage() {
                             setContent({ ...content, sections: newSections })
                             setMessage({ type: 'success', text: `Sesi terlaksana diubah menjadi: ${milestone}` })
                           }}
-                          className="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-medium text-slate-700 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 transition-colors cursor-pointer text-[11px]"
+                          className="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-medium text-slate-700 hover:border-gold-500 hover:text-navy-700 hover:bg-gold-50 transition-colors cursor-pointer text-[11px]"
                         >
                           {milestone}
                         </button>
@@ -2740,14 +2740,14 @@ export function LandingCmsPage() {
                                 placeholder="Cth: Sesi terlaksana"
                                 value={item.title?.id || ''}
                                 onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'id', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                               <input
                                 type="text"
                                 placeholder="Cth: Sessions delivered"
                                 value={item.title?.en || ''}
                                 onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'en', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                             </div>
                           </div>
@@ -2763,14 +2763,14 @@ export function LandingCmsPage() {
                                 placeholder="Cth: 3.000+"
                                 value={item.description?.id || ''}
                                 onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'id', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                               <input
                                 type="text"
                                 placeholder="Cth: 3,000+"
                                 value={item.description?.en || ''}
                                 onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'en', e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
                               />
                             </div>
                           </div>
@@ -2791,7 +2791,7 @@ export function LandingCmsPage() {
                 <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="size-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center">
+                      <div className="size-8 rounded-xl bg-gold-100 text-navy-800 flex items-center justify-center">
                         <ImageIcon className="size-4" />
                       </div>
                       <div>
@@ -2861,7 +2861,7 @@ export function LandingCmsPage() {
                           type="button"
                           onClick={() => sectionFileInputRef.current?.click()}
                           disabled={uploadingTarget === activeSection.key}
-                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+                          className="px-3 py-1.5 bg-navy-700 hover:bg-navy-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
                         >
                           {uploadingTarget === activeSection.key ? (
                             <>
@@ -2899,7 +2899,7 @@ export function LandingCmsPage() {
                               value={activeSection.media.alt?.id || ''}
                               onChange={(e) => handleSectionMediaAltChange('id', e.target.value)}
                               placeholder="Deskripsi visual untuk aksesibilitas (ID)"
-                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-gold-500"
                             />
                           </div>
                           <div>
@@ -2909,7 +2909,7 @@ export function LandingCmsPage() {
                               value={activeSection.media.alt?.en || ''}
                               onChange={(e) => handleSectionMediaAltChange('en', e.target.value)}
                               placeholder="Visual description for screen reader (EN)"
-                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-gold-500"
                             />
                           </div>
                         </div>
@@ -2933,13 +2933,13 @@ export function LandingCmsPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-slate-700">Headline (Indonesian)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                        <span className="text-[10px] font-bold text-navy-700 bg-gold-50 px-1.5 py-0.5 rounded border border-gold-200">ID</span>
                       </div>
                       <input
                         type="text"
                         value={activeSection?.headline?.id || ''}
                         onChange={(e) => updateSectionCopy('headline', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                       />
                     </div>
                   )}
@@ -2947,13 +2947,13 @@ export function LandingCmsPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-slate-700">Headline (English)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                        <span className="text-[10px] font-bold text-navy-800 bg-navy-50 px-1.5 py-0.5 rounded border border-navy-200">EN</span>
                       </div>
                       <input
                         type="text"
                         value={activeSection?.headline?.en || ''}
                         onChange={(e) => updateSectionCopy('headline', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                       />
                     </div>
                   )}
@@ -2964,13 +2964,13 @@ export function LandingCmsPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-slate-700">Description (Indonesian)</label>
-                        <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">ID</span>
+                        <span className="text-[10px] font-bold text-navy-700 bg-gold-50 px-1.5 py-0.5 rounded border border-gold-200">ID</span>
                       </div>
                       <textarea
                         rows={3}
                         value={activeSection?.description?.id || ''}
                         onChange={(e) => updateSectionCopy('description', 'id', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                       />
                     </div>
                   )}
@@ -2978,13 +2978,13 @@ export function LandingCmsPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-slate-700">Description (English)</label>
-                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">EN</span>
+                        <span className="text-[10px] font-bold text-navy-800 bg-navy-50 px-1.5 py-0.5 rounded border border-navy-200">EN</span>
                       </div>
                       <textarea
                         rows={3}
                         value={activeSection?.description?.en || ''}
                         onChange={(e) => updateSectionCopy('description', 'en', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                       />
                     </div>
                   )}
@@ -3004,7 +3004,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.primaryCta.id || ''}
                           onChange={(e) => updateSectionCustomField('primaryCta', 'id', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -3013,7 +3013,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.primaryCta.en || ''}
                           onChange={(e) => updateSectionCustomField('primaryCta', 'en', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -3027,7 +3027,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.secondaryCta.id || ''}
                           onChange={(e) => updateSectionCustomField('secondaryCta', 'id', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -3036,7 +3036,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.secondaryCta.en || ''}
                           onChange={(e) => updateSectionCustomField('secondaryCta', 'en', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -3050,7 +3050,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.price.id || ''}
                           onChange={(e) => updateSectionCustomField('price', 'id', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -3059,7 +3059,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.price.en || ''}
                           onChange={(e) => updateSectionCustomField('price', 'en', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -3073,7 +3073,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.contact.id || ''}
                           onChange={(e) => updateSectionCustomField('contact', 'id', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -3082,7 +3082,7 @@ export function LandingCmsPage() {
                           type="text"
                           value={activeSection.contact.en || ''}
                           onChange={(e) => updateSectionCustomField('contact', 'en', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -3119,14 +3119,14 @@ export function LandingCmsPage() {
                               placeholder="Title (ID)"
                               value={item.title?.id || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'id', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                             <input
                               type="text"
                               placeholder="Title (EN)"
                               value={item.title?.en || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'title', 'en', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
 
@@ -3136,14 +3136,14 @@ export function LandingCmsPage() {
                               placeholder="Description (ID)"
                               value={item.description?.id || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'id', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                             <textarea
                               rows={2}
                               placeholder="Description (EN)"
                               value={item.description?.en || ''}
                               onChange={(e) => updateRepeaterItem(itemIdx, 'description', 'en', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                             />
                           </div>
 

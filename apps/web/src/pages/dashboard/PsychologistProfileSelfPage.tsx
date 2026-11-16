@@ -296,7 +296,7 @@ export function PsychologistProfileSelfPage() {
     return (
       <div className="flex items-center justify-center p-12 text-slate-500">
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-navy-700 border-t-transparent rounded-full animate-spin" />
           <span>Memuat data profil psikolog...</span>
         </div>
       </div>
@@ -324,7 +324,7 @@ export function PsychologistProfileSelfPage() {
             <div className="pt-2 flex flex-wrap gap-3 justify-center">
               <Link
                 to="/dashboard/users"
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
+                className="px-4 py-2 bg-navy-700 hover:bg-navy-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
               >
                 Atur Relasi di Manajemen Staff
               </Link>
@@ -353,11 +353,11 @@ export function PsychologistProfileSelfPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-teal-100 text-teal-800">
+            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gold-100 text-navy-800">
               {data.status.toUpperCase()}
             </span>
             {data.featured && (
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-navy-100 text-navy-900">
                 Hero Featured
               </span>
             )}
@@ -367,7 +367,7 @@ export function PsychologistProfileSelfPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Panggilan: <strong className="text-slate-700">{data.nickname}</strong> • Slug:{' '}
-            <code className="text-teal-600">/{data.slug}</code>
+            <code className="text-navy-700">/{data.slug}</code>
           </p>
         </div>
 
@@ -427,7 +427,7 @@ export function PsychologistProfileSelfPage() {
                   value={credential}
                   onChange={(e) => setCredential(e.target.value)}
                   placeholder="e.g. M.Psi., Psikolog Klinis"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                 />
               </div>
 
@@ -442,7 +442,7 @@ export function PsychologistProfileSelfPage() {
                   required
                   value={experienceYears}
                   onChange={(e) => setExperienceYears(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                 />
               </div>
             </div>
@@ -457,7 +457,7 @@ export function PsychologistProfileSelfPage() {
                 value={licenseNumber}
                 onChange={(e) => setLicenseNumber(e.target.value)}
                 placeholder="e.g. 1234567890-SIP-PKP"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
               />
               <span className="text-[11px] text-slate-500 mt-1 block">
                 Nomor resmi untuk menjamin kepatuhan regulasi HIMPSI & Kemenkes.
@@ -479,7 +479,7 @@ export function PsychologistProfileSelfPage() {
                   value={bookingUrl}
                   onChange={(e) => setBookingUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                 />
               </div>
 
@@ -492,7 +492,7 @@ export function PsychologistProfileSelfPage() {
                   value={premiumBookingUrl}
                   onChange={(e) => setPremiumBookingUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                 />
               </div>
             </div>
@@ -509,7 +509,7 @@ export function PsychologistProfileSelfPage() {
                     onClick={() => setBioTab('id')}
                     className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
                       bioTab === 'id'
-                        ? 'bg-white text-teal-700 shadow-xs font-bold'
+                        ? 'bg-white text-navy-700 shadow-xs font-bold'
                         : 'text-slate-600'
                     }`}
                   >
@@ -520,7 +520,7 @@ export function PsychologistProfileSelfPage() {
                     onClick={() => setBioTab('en')}
                     className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
                       bioTab === 'en'
-                        ? 'bg-white text-teal-700 shadow-xs font-bold'
+                        ? 'bg-white text-navy-700 shadow-xs font-bold'
                         : 'text-slate-600'
                     }`}
                   >
@@ -536,7 +536,7 @@ export function PsychologistProfileSelfPage() {
                     value={bioId}
                     onChange={(e) => setBioId(e.target.value)}
                     placeholder="Tuliskan latar belakang pendidikan, spesialisasi kasus, dan pendekatan konseling Anda dalam Bahasa Indonesia..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 resize-y"
                   />
                   <span className="text-[11px] text-slate-400 block mt-0.5">
                     Ditampilkan kepada pengguna saat memilih Bahasa Indonesia.
@@ -549,7 +549,7 @@ export function PsychologistProfileSelfPage() {
                     value={bioEn}
                     onChange={(e) => setBioEn(e.target.value)}
                     placeholder="Write your educational background, specialization, and therapy approach in English..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 resize-y"
                   />
                   <span className="text-[11px] text-slate-400 block mt-0.5">
                     Displayed to users when English locale is selected.
@@ -574,7 +574,7 @@ export function PsychologistProfileSelfPage() {
                     value={consultationDuration}
                     onChange={(e) => setConsultationDuration(e.target.value)}
                     placeholder="±60 menit / sesi"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
                 <div>
@@ -585,7 +585,7 @@ export function PsychologistProfileSelfPage() {
                     value={onlineRate}
                     onChange={(e) => setOnlineRate(e.target.value)}
                     placeholder="Contoh: 350000"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
                 <div>
@@ -596,7 +596,7 @@ export function PsychologistProfileSelfPage() {
                     value={offlineRate}
                     onChange={(e) => setOfflineRate(e.target.value)}
                     placeholder="Contoh: 450000"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                   />
                 </div>
               </div>
@@ -618,7 +618,7 @@ export function PsychologistProfileSelfPage() {
                         type="checkbox"
                         checked={item.checked}
                         onChange={(e) => item.onToggle(e.target.checked)}
-                        className="rounded border-slate-300 text-teal-600 focus:ring-teal-500/20"
+                        className="rounded border-slate-300 text-navy-700 focus:ring-gold-500/20"
                       />
                       <span>{item.label}</span>
                     </label>
@@ -651,7 +651,7 @@ export function PsychologistProfileSelfPage() {
                             }))
                           }
                           placeholder="Off / 09:00-17:00 / By Appointment"
-                          className="col-span-5 sm:col-span-7 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          className="col-span-5 sm:col-span-7 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500"
                         />
                         <div className="col-span-4 sm:col-span-3 flex justify-end">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${badge.className}`}>
@@ -671,7 +671,7 @@ export function PsychologistProfileSelfPage() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-xs disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-navy-700 hover:bg-navy-700 text-white font-semibold text-xs rounded-xl transition-colors shadow-xs disabled:opacity-50 flex items-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -694,14 +694,14 @@ export function PsychologistProfileSelfPage() {
 
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-teal-100 text-teal-800 font-bold text-lg flex items-center justify-center shrink-0 border border-teal-200">
+              <div className="w-14 h-14 rounded-2xl bg-gold-100 text-navy-800 font-bold text-lg flex items-center justify-center shrink-0 border border-gold-200">
                 {data.nickname.slice(0, 2).toUpperCase() || 'PS'}
               </div>
               <div className="min-w-0">
                 <h3 className="font-bold text-slate-900 truncate text-sm">
                   {data.name}
                 </h3>
-                <p className="text-xs text-teal-700 font-medium">
+                <p className="text-xs text-navy-700 font-medium">
                   {credential || 'Gelar / Kredensial'}
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -711,7 +711,7 @@ export function PsychologistProfileSelfPage() {
             </div>
 
             <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-              <svg className="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-navy-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{experienceYears} Tahun Pengalaman Praktik</span>
@@ -753,7 +753,7 @@ export function PsychologistProfileSelfPage() {
                 rel="noreferrer"
                 className={`w-full py-2 px-3 text-center text-xs font-semibold rounded-xl block transition-colors ${
                   bookingUrl
-                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-xs'
+                    ? 'bg-navy-700 hover:bg-navy-700 text-white shadow-xs'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 }`}
               >

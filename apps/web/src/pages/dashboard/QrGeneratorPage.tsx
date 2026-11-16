@@ -24,7 +24,7 @@ const emptyDesign = (): Design => ({
 })
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100'
+  'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100'
 
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -200,7 +200,7 @@ export function QrGeneratorPage() {
             )}
           </div>
           <div className="flex flex-wrap gap-2 pt-2">
-            <button className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60 cursor-pointer" disabled={isSaving} onClick={handleSave} type="button">
+            <button className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer" disabled={isSaving} onClick={handleSave} type="button">
               {isSaving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
               {design.id ? 'Simpan perubahan' : 'Simpan QR'}
             </button>

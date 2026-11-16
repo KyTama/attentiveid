@@ -243,7 +243,7 @@ export function ArticlesCmsPage() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={openCreateModal}
-          className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 self-start sm:self-auto cursor-pointer"
+          className="px-4 py-2.5 bg-navy-700 hover:bg-navy-700 text-white font-medium text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 self-start sm:self-auto cursor-pointer"
         >
           <span>+ Tulis Artikel Baru</span>
         </motion.button>
@@ -312,7 +312,7 @@ export function ArticlesCmsPage() {
           </p>
           <button
             onClick={openCreateModal}
-            className="text-xs font-medium text-teal-600 hover:text-teal-700 underline cursor-pointer"
+            className="text-xs font-medium text-navy-700 hover:text-navy-700 underline cursor-pointer"
           >
             Tulis Artikel Sekarang
           </button>
@@ -367,7 +367,7 @@ export function ArticlesCmsPage() {
                             href={`/articles/${art.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors inline-flex items-center gap-1"
+                            className="px-2.5 py-1 text-xs font-medium text-navy-700 bg-gold-50 hover:bg-gold-100 rounded-md transition-colors inline-flex items-center gap-1"
                           >
                             <span>Lihat</span>
                             <span>↗</span>
@@ -411,7 +411,7 @@ export function ArticlesCmsPage() {
                                 await handleAction(art.id, 'submit')
                                 await handleAction(art.id, 'approve')
                               }}
-                              className="px-2.5 py-1 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors cursor-pointer"
+                              className="px-2.5 py-1 text-xs font-medium text-white bg-navy-700 hover:bg-navy-700 rounded-md transition-colors cursor-pointer"
                               title="Langsung publikasikan live tanpa antrian review"
                             >
                               Terbitkan Langsung
@@ -419,7 +419,7 @@ export function ArticlesCmsPage() {
                           ) : (
                             <button
                               onClick={() => handleAction(art.id, 'submit')}
-                              className="px-2.5 py-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors cursor-pointer"
+                              className="px-2.5 py-1 text-xs font-medium text-navy-700 bg-gold-50 hover:bg-gold-100 rounded-md transition-colors cursor-pointer"
                             >
                               Ajukan Review
                             </button>
@@ -567,7 +567,7 @@ export function ArticlesCmsPage() {
                       onChange={(e) => setSlug(e.target.value)}
                       placeholder="contoh-artikel-psikologi"
                       required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                     />
                   </div>
 
@@ -579,7 +579,7 @@ export function ArticlesCmsPage() {
                       <select
                         value={selectedAuthorId}
                         onChange={(e) => setSelectedAuthorId(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                       >
                         {psychologists.map((p) => (
                           <option key={p.id} value={p.id}>
@@ -602,7 +602,7 @@ export function ArticlesCmsPage() {
                       onChange={(e) => setTitleId(e.target.value)}
                       placeholder="Memahami Kecemasan..."
                       required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                     />
                   </div>
                   <div>
@@ -615,7 +615,7 @@ export function ArticlesCmsPage() {
                       onChange={(e) => setTitleEn(e.target.value)}
                       placeholder="Understanding Anxiety..."
                       required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -630,7 +630,7 @@ export function ArticlesCmsPage() {
                       value={summaryId}
                       onChange={(e) => setSummaryId(e.target.value)}
                       placeholder="Ringkasan singkat..."
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                     />
                   </div>
                   <div>
@@ -642,7 +642,7 @@ export function ArticlesCmsPage() {
                       value={summaryEn}
                       onChange={(e) => setSummaryEn(e.target.value)}
                       placeholder="Short summary..."
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -656,7 +656,7 @@ export function ArticlesCmsPage() {
                     value={bodyId}
                     onChange={(e) => setBodyId(e.target.value)}
                     placeholder="Tuliskan isi artikel psikologi..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                   />
                 </div>
 
@@ -669,7 +669,7 @@ export function ArticlesCmsPage() {
                     value={bodyEn}
                     onChange={(e) => setBodyEn(e.target.value)}
                     placeholder="Write article content in English..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                   />
                 </div>
 
@@ -694,7 +694,7 @@ export function ArticlesCmsPage() {
                         type="button"
                         disabled={isSubmitting}
                         onClick={(e) => handleSaveArticle(e, true)}
-                        className="px-4 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-xs transition-colors disabled:opacity-50 font-semibold cursor-pointer"
+                        className="px-4 py-2 text-xs font-medium text-white bg-navy-700 hover:bg-navy-700 rounded-lg shadow-xs transition-colors disabled:opacity-50 font-semibold cursor-pointer"
                       >
                         {isSubmitting ? 'Menerbitkan...' : 'Simpan & Terbitkan Langsung'}
                       </button>

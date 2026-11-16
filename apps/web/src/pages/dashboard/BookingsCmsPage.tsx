@@ -42,11 +42,11 @@ const STATUS_META: Record<
   },
   confirmed: {
     label: 'Confirmed',
-    badgeClass: 'bg-teal-50 text-teal-800 border-teal-200',
+    badgeClass: 'bg-gold-50 text-navy-800 border-gold-200',
   },
   in_session: {
     label: 'In Session',
-    badgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
+    badgeClass: 'bg-navy-50 text-navy-900 border-navy-200',
   },
   completed: {
     label: 'Completed',
@@ -60,7 +60,7 @@ const STATUS_META: Record<
 
 const WEBHOOK_META: Record<string, { label: string; className: string }> = {
   delivered: { label: 'Delivered', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  processing: { label: 'Processing', className: 'bg-sky-50 text-sky-700 border-sky-200' },
+  processing: { label: 'Processing', className: 'bg-navy-50 text-navy-800 border-navy-200' },
   pending: { label: 'Queued', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   failed: { label: 'Failed', className: 'bg-rose-50 text-rose-700 border-rose-200' },
   dead_letter: { label: 'Dead Letter', className: 'bg-red-100 text-red-800 border-red-300' },
@@ -68,8 +68,8 @@ const WEBHOOK_META: Record<string, { label: string; className: string }> = {
 
 const TRANSITION_LABELS: Record<BookingStatus, { label: string; className: string }> = {
   pending: { label: 'Set Pending', className: 'bg-amber-600 hover:bg-amber-700 text-white' },
-  confirmed: { label: 'Konfirmasi Slot', className: 'bg-teal-600 hover:bg-teal-700 text-white' },
-  in_session: { label: 'Mulai Sesi', className: 'bg-sky-600 hover:bg-sky-700 text-white' },
+  confirmed: { label: 'Konfirmasi Slot', className: 'bg-navy-700 hover:bg-navy-700 text-white' },
+  in_session: { label: 'Mulai Sesi', className: 'bg-navy-700 hover:bg-navy-800 text-white' },
   completed: { label: 'Tandai Selesai', className: 'bg-emerald-600 hover:bg-emerald-700 text-white' },
   cancelled: { label: 'Batalkan', className: 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200' },
 }
@@ -322,7 +322,7 @@ export function BookingsCmsPage() {
               onClick={() => setActiveTab('queue')}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'queue'
-                  ? 'bg-teal-50 text-teal-800 shadow-2xs'
+                  ? 'bg-gold-50 text-navy-800 shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -334,7 +334,7 @@ export function BookingsCmsPage() {
               onClick={() => setActiveTab('attribution')}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'attribution'
-                  ? 'bg-teal-50 text-teal-800 shadow-2xs'
+                  ? 'bg-gold-50 text-navy-800 shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -348,7 +348,7 @@ export function BookingsCmsPage() {
               type="button"
               onClick={() => void handleExportCsv()}
               disabled={isExporting || records.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-teal-700 disabled:opacity-50 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-navy-700 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-navy-700 disabled:opacity-50 transition-colors cursor-pointer"
             >
               <Download className="size-3.5" aria-hidden="true" />
               <span>{isExporting ? 'Mengunduh...' : 'Export CSV'}</span>
@@ -383,7 +383,7 @@ export function BookingsCmsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="ATT-... / nama / email / WA"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 py-2 text-xs text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 py-2 text-xs text-slate-900 focus:border-gold-500 focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -396,7 +396,7 @@ export function BookingsCmsPage() {
                   id="booking-filter-status"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 focus:border-gold-500 focus:bg-white focus:outline-none"
                 >
                   <option value="">Semua Status</option>
                   <option value="pending">Pending</option>
@@ -415,7 +415,7 @@ export function BookingsCmsPage() {
                   id="booking-filter-mode"
                   value={modeFilter}
                   onChange={(e) => setModeFilter(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 focus:border-gold-500 focus:bg-white focus:outline-none"
                 >
                   <option value="">Semua Mode</option>
                   <option value="online">Online</option>
@@ -431,7 +431,7 @@ export function BookingsCmsPage() {
                   id="booking-filter-location"
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 focus:border-gold-500 focus:bg-white focus:outline-none"
                 >
                   <option value="">Semua Cabang</option>
                   <option value="TBI">Jakarta Selatan (TBI)</option>
@@ -531,7 +531,7 @@ export function BookingsCmsPage() {
                             key={item.id}
                             onClick={() => handleSelectRecord(item.id)}
                             className={`cursor-pointer transition-colors ${
-                              isSelected ? 'bg-teal-50/70' : 'hover:bg-slate-50/80'
+                              isSelected ? 'bg-gold-50/70' : 'hover:bg-slate-50/80'
                             }`}
                           >
                             <td className="px-4 py-3 align-top">
@@ -613,7 +613,7 @@ export function BookingsCmsPage() {
                 <>
                   <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
-                      <div className="font-mono text-xs font-bold text-teal-700">
+                      <div className="font-mono text-xs font-bold text-navy-700">
                         {selectedRecord.bookingCode}
                       </div>
                       <h2 className="mt-0.5 text-lg font-bold text-slate-900">
@@ -644,7 +644,7 @@ export function BookingsCmsPage() {
                       {selectedRecord.crisisFlagTriggered ? (
                         <ShieldAlert className="size-4 text-red-600 shrink-0" aria-hidden="true" />
                       ) : (
-                        <ShieldCheck className="size-4 text-teal-600 shrink-0" aria-hidden="true" />
+                        <ShieldCheck className="size-4 text-navy-700 shrink-0" aria-hidden="true" />
                       )}
                       <span>Clinical Privacy Wall Aktif</span>
                     </div>
@@ -750,7 +750,7 @@ export function BookingsCmsPage() {
                   {BOOKING_TRANSITIONS[selectedRecord.status].length > 0 && (
                     <div className="space-y-3 border-t border-slate-100 pt-4">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                        <CalendarClock className="size-4 text-teal-600" aria-hidden="true" />
+                        <CalendarClock className="size-4 text-navy-700" aria-hidden="true" />
                         <span>Transisi Status</span>
                       </div>
 
@@ -891,7 +891,7 @@ export function BookingsCmsPage() {
               type="button"
               onClick={() => void loadAttribution()}
               disabled={attrLoading}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-700 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-navy-700 px-4 py-2 text-xs font-semibold text-white hover:bg-navy-700 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className="size-3.5" aria-hidden="true" />
               <span>{attrLoading ? 'Memuat...' : 'Perbarui Laporan'}</span>
@@ -907,9 +907,9 @@ export function BookingsCmsPage() {
                     {attribution.total}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-teal-200 bg-teal-50/40 p-5 shadow-xs">
-                  <div className="text-xs font-semibold text-teal-800">Tercatat UTM / Meta Ads</div>
-                  <div className="mt-2 text-3xl font-bold text-teal-900 tabular-nums">
+                <div className="rounded-2xl border border-gold-200 bg-gold-50/40 p-5 shadow-xs">
+                  <div className="text-xs font-semibold text-navy-800">Tercatat UTM / Meta Ads</div>
+                  <div className="mt-2 text-3xl font-bold text-navy-900 tabular-nums">
                     {attribution.attributed}
                   </div>
                 </div>

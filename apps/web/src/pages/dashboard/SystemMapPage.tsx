@@ -31,7 +31,7 @@ const STATUS_STYLE: Record<MapStatus, { stroke: string; dot: string; chip: strin
   live: { stroke: '#059669', dot: 'bg-emerald-600', chip: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
   code: { stroke: '#d97706', dot: 'bg-amber-500', chip: 'bg-amber-50 text-amber-800 border-amber-200' },
   missing: { stroke: '#e11d48', dot: 'bg-rose-500', chip: 'bg-rose-50 text-rose-800 border-rose-200', dash: '6 5' },
-  proposed: { stroke: '#0284c7', dot: 'bg-sky-500', chip: 'bg-sky-50 text-sky-800 border-sky-200', dash: '3 4' },
+  proposed: { stroke: '#0284c7', dot: 'bg-navy-500', chip: 'bg-navy-50 text-navy-900 border-navy-200', dash: '3 4' },
 }
 
 const ALL_STATUSES: MapStatus[] = ['live', 'code', 'missing', 'proposed']
@@ -247,7 +247,7 @@ export function SystemMapPage() {
               )}
               {selected.route && (
                 <Link
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-navy-50 px-3 py-1.5 text-xs font-semibold text-navy-800 hover:bg-navy-100"
                   to={selected.route}
                 >
                   Buka menu ini <ArrowRight className="size-3.5" aria-hidden="true" />
