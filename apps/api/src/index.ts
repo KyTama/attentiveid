@@ -5,6 +5,8 @@ import { createDrizzleLandingContentSource, createLandingContentRepository } fro
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from './repositories/psychologists.repository';
 import { createArticlesRepository, createDrizzleArticleQuerySource } from './repositories/articles.repository';
 import { createBookingRepository } from './repositories/booking.repository';
+import { createFreeSessionRepository } from './repositories/free-session.repository';
+import { createFreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { processDueBookingOutbox } from './services/booking-outbox';
 import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
