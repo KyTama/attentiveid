@@ -12,7 +12,7 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard': 'beranda home ringkasan statistik dashboard utama',
   '/dashboard/landing': 'beranda homepage hero slide teks bagian faq layanan halaman depan konten',
   '/dashboard/testimonials': 'ulasan review cerita klien testimoni',
-  '/dashboard/featured-products': 'unggulan produk ltbl let there be light social world tanggal mulai selesai masa tampil menu',
+  '/dashboard/featured-products': 'unggulan featured kartu campaign produk ltbl let there be light social world tanggal mulai selesai masa tampil menu',
   '/dashboard/share-previews': 'thumbnail link share bagikan whatsapp preview gambar og judul deskripsi sosial media',
   '/dashboard/psychologists': 'psikolog profil bio foto kutipan featured urutan direktori status aktif nonaktif tim',
   '/dashboard/profile': 'profil saya akun diri sendiri psikolog bio',

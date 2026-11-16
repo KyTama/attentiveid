@@ -21,6 +21,8 @@ import { resolveHeroSlides, type ResolvedHeroSlide } from '@/features/content/he
 import { useSciBriefHeroChips } from '@/features/sci-brief/use-hero-chips'
 import { HeroSlideVisual } from './HeroSlideVisual'
 import { useCampaignDock } from './use-campaign-dock'
+import { featuredProductsToCards } from '@/features/featured/cards'
+import { useFeaturedProducts } from '@/features/featured/use-featured-products'
 
 export interface TrustMetric {
   label: string
@@ -451,6 +453,7 @@ export function HomepageHero() {
     description: string
     cta: string
     url: string
+    comingSoon?: boolean
   }
 
   const defaultCampaignCards: CampaignCardItem[] = [
@@ -505,7 +508,15 @@ export function HomepageHero() {
       })
     : defaultCampaignCards
 
-  const visibleCampaignCards = resolvedCampaignCards.filter((card) => card.visible)
+  // Featured products from the portal (Produk Featured) join the strip after the editable cards.
+  const featuredProducts = useFeaturedProducts()
+  const productCards: CampaignCardItem[] = featuredProductsToCards(
+    featuredProducts,
+    isId,
+    { badge: t('homepage.campaigns.productBadge'), open: t('homepage.campaigns.productCta'), comingSoon: t('homepage.nav.comingSoon') },
+    resolvedCampaignCards.map((card) => card.url),
+  )
+  const visibleCampaignCards = [...resolvedCampaignCards.filter((card) => card.visible), ...productCards]
   const isCampaignsStripVisible = customCampaigns?.visible !== false && visibleCampaignCards.length > 0
   const isFloatingDockEnabled = customCampaigns?.showFloatingDock !== false
 
@@ -836,14 +847,19 @@ export function HomepageHero() {
                 return (
                   <motion.a
                     key={card.id}
-                    href={card.url}
-                    target={card.url.startsWith('http') ? '_blank' : undefined}
-                    rel={card.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    href={card.comingSoon ? undefined : card.url}
+                    target={!card.comingSoon && card.url.startsWith('http') ? '_blank' : undefined}
+                    rel={!card.comingSoon && card.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    aria-disabled={card.comingSoon ? true : undefined}
                     aria-label={`${card.title} - ${card.cta}`}
-                    className={`group relative flex flex-col justify-between rounded-xl border p-5 sm:p-6 shadow-xs transition-all hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer ${themeStyles.card}`}
+                    className={`group relative flex flex-col justify-between rounded-xl border p-5 sm:p-6 shadow-xs transition-all outline-none ${
+                      card.comingSoon
+                        ? 'cursor-default opacity-75'
+                        : 'hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary cursor-pointer'
+                    } ${themeStyles.card}`}
                     transition={INTERACTIVE_SPRING}
-                    whileHover={{ y: -4 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={card.comingSoon ? undefined : { y: -4 }}
+                    whileTap={card.comingSoon ? undefined : { scale: 0.98 }}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <span
@@ -861,19 +877,23 @@ export function HomepageHero() {
                       >
                         {card.title}
                       </h3>
-                      <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
-                        {card.description}
-                      </p>
+                      {card.description && (
+                        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-secondary/80">
+                          {card.description}
+                        </p>
+                      )}
                     </div>
                     <div
                       className={`mt-5 flex items-center justify-between border-t pt-3 text-xs sm:text-sm font-semibold ${themeStyles.footer}`}
                     >
                       <span>{card.cta}</span>
-                      <ArrowUpRight
-                        size={16}
-                        strokeWidth={2.5}
-                        className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      />
+                      {!card.comingSoon && (
+                        <ArrowUpRight
+                          size={16}
+                          strokeWidth={2.5}
+                          className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        />
+                      )}
                     </div>
                   </motion.a>
                 )

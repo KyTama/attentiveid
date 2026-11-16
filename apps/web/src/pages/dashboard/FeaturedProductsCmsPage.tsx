@@ -147,7 +147,7 @@ export function FeaturedProductsCmsPage() {
             Produk Featured
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Produk yang tampil di menu "Unggulan" pada website selama masa featured-nya. Masa tampil hanya terlihat di sini, tidak di halaman pengunjung.
+            Produk yang tampil sebagai kartu di bagian "Featured Campaigns & Portals" pada beranda, setelah kartu Sesi Gratis dan Booking, selama masa featured-nya. Masa tampil hanya terlihat di sini, tidak di halaman pengunjung.
           </p>
         </div>
         <button
