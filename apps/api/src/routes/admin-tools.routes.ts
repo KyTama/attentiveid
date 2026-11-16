@@ -235,10 +235,11 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       return { status: 'success' }
     }, { requireRole: ['admin'], detail: { tags: ['Share previews'], summary: 'Remove a link preview' } })
     // ---- Traffic: admin accounts. QR codes: any signed-in staff account -------------
-    .get('/api/admin/traffic', async () => ({
-      status: 'success',
-      rows: summarizeTraffic(await repository.listTrafficRows(), now()),
-    }), { requireRole: ['admin'], detail: { tags: ['Traffic'], summary: 'Traffic per main page (admins)' } })
+    .get('/api/admin/traffic', async () => {
+      const dayRows = await repository.listTrafficRows()
+      // History is never deleted: `daily` carries every stored day (per page) for the graph.
+      return { status: 'success', rows: summarizeTraffic(dayRows, now()), daily: dayRows }
+    }, { requireRole: ['admin'], detail: { tags: ['Traffic'], summary: 'Traffic per main page (admins)' } })
     .get('/api/admin/qr-codes', async () => ({ status: 'success', qrCodes: await repository.listQrCodes() }),
       { requireRole: QR_ROLES, detail: { tags: ['QR'], summary: 'List saved QR codes' } })
     .post('/api/admin/qr-codes', async ({ body, set }: any) => {

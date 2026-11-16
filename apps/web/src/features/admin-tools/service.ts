@@ -9,6 +9,7 @@ import type {
   QrCodeInput,
   SharePreviewDto,
   SharePreviewInput,
+  TrafficDayRow,
   TrafficRow,
 } from '@attentiveid/shared'
 import { getActiveAuthHeaders } from '../auth/auth-context'
@@ -104,7 +105,10 @@ export const deleteAdminSharePreview = (id: string) =>
 
 // ---- Owner only: traffic + QR ---------------------------------------------
 
-export const getTraffic = async () => (await request<{ rows?: TrafficRow[] }>('/api/admin/traffic', {}, 'Gagal memuat traffic')).rows ?? []
+export const getTraffic = async () => {
+  const json = await request<{ rows?: TrafficRow[]; daily?: TrafficDayRow[] }>('/api/admin/traffic', {}, 'Gagal memuat traffic')
+  return { rows: json.rows ?? [], daily: json.daily ?? [] }
+}
 
 export const listQrCodes = async () => (await request<{ qrCodes?: QrCodeDto[] }>('/api/admin/qr-codes', {}, 'Gagal memuat QR')).qrCodes ?? []
 

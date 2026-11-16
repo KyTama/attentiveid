@@ -87,7 +87,28 @@ describe('qr codes', () => {
   })
 })
 
-import { jakartaDay, summarizeTraffic } from './index'
+import { dailySeries, jakartaDay, summarizeTraffic } from './index'
+
+describe('dailySeries', () => {
+  const now = new Date('2026-11-20T10:00:00Z')
+  const rows = [
+    { path: '/', day: '2026-11-20', views: 5, sessions: 3, lastVisitAt: '2026-11-20T09:00:00Z' },
+    { path: '/faq', day: '2026-11-20', views: 2, sessions: 1, lastVisitAt: '2026-11-20T09:00:00Z' },
+    { path: '/', day: '2026-11-18', views: 4, sessions: 2, lastVisitAt: '2026-11-18T09:00:00Z' },
+    { path: '/', day: '2026-01-01', views: 9, sessions: 9, lastVisitAt: '2026-01-01T09:00:00Z' },
+    { path: '/not-tracked', day: '2026-11-20', views: 99, sessions: 9, lastVisitAt: '2026-11-20T09:00:00Z' },
+  ]
+
+  it('gives one point per day, oldest first, with empty days at zero and old history outside the window', () => {
+    const points = dailySeries(rows, 4, now)
+    expect(points.map((point) => point.day)).toEqual(['2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20'])
+    expect(points.map((point) => point.views)).toEqual([0, 4, 0, 7])
+  })
+
+  it('can look at a single page', () => {
+    expect(dailySeries(rows, 2, now, '/faq').map((point) => point.views)).toEqual([0, 2])
+  })
+})
 
 describe('summarizeTraffic', () => {
   it('sums today, 7, 30 days and total per tracked page, including zero rows', () => {
