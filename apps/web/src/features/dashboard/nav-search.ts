@@ -23,7 +23,7 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/users': 'staff accounts users roles admin password management staff akun pengguna peran admin password manajemen user',
   '/dashboard/free-session': 'free session leads registrants form export sesi gratis leads pendaftar form ekspor',
   '/dashboard/experimental/forms': 'forms experiment form formulir eksperimen',
-  '/dashboard/experimental/traffic': 'traffic visits analytics visitors statistics monitor pages traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
+  '/dashboard/traffic': 'traffic visits analytics visitors statistics monitor pages traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
   '/dashboard/qr-generator': 'qr code barcode logo attentive scan poster print tools qr code barcode logo attentive kode scan poster cetak alat bantu',
   '/dashboard/experimental/system-map': 'system map diagram connections architecture peta sistem diagram koneksi hubungan arsitektur',
 }

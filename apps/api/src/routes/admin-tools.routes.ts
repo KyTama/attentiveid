@@ -12,7 +12,6 @@ import {
   validateSharePreviewInput,
 } from '@attentiveid/shared'
 import { createRoleGuardPlugin } from '../security/role-guard'
-import { isOwnerEmail } from '../security/owner'
 import { saveMediaFile } from '../services/media-storage'
 import type { AuthTokenService, AuthUserRepository } from './auth'
 import type { AdminToolsRepository } from '../repositories/admin-tools.repository'
@@ -88,18 +87,6 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
   })
   const repository = dependencies.repository
   const now = dependencies.now ?? (() => new Date())
-
-  /** Owner-only data (traffic): enforced here on the server, not just hidden in the menu. */
-  const ownerOnly = ({ currentUser, set }: any) => {
-    if (!currentUser) {
-      set.status = 401
-      return { status: 'unauthorized', message: 'Unauthorized.' }
-    }
-    if (!['admin', 'superadmin'].includes(currentUser.role) || !isOwnerEmail(currentUser.email)) {
-      set.status = 403
-      return { status: 'forbidden', message: 'Insufficient permissions.' }
-    }
-  }
 
   return new Elysia({ name: 'admin-tools-routes' })
     .use(roleGuard)
@@ -247,11 +234,11 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       }
       return { status: 'success' }
     }, { requireRole: ['admin'], detail: { tags: ['Share previews'], summary: 'Remove a link preview' } })
-    // ---- Owner only: traffic. QR codes: any signed-in staff account -------------
+    // ---- Traffic: admin accounts. QR codes: any signed-in staff account -------------
     .get('/api/admin/traffic', async () => ({
       status: 'success',
       rows: summarizeTraffic(await repository.listTrafficRows(), now()),
-    }), { beforeHandle: ownerOnly, detail: { tags: ['Traffic'], summary: 'Traffic per main page (owner only)' } })
+    }), { requireRole: ['admin'], detail: { tags: ['Traffic'], summary: 'Traffic per main page (admins)' } })
     .get('/api/admin/qr-codes', async () => ({ status: 'success', qrCodes: await repository.listQrCodes() }),
       { requireRole: QR_ROLES, detail: { tags: ['QR'], summary: 'List saved QR codes' } })
     .post('/api/admin/qr-codes', async ({ body, set }: any) => {
