@@ -13,14 +13,17 @@ const publish = (settings: SiteSettings) => {
 /** Loads the settings once per page load; the defaults are used until (and if never) they arrive. */
 export function loadSiteSettings(force = false): Promise<SiteSettings> {
   if (inflight && !force) return inflight
-  inflight = fetch('/api/content/site-settings')
-    .then((response) => (response.ok ? response.json() : null))
-    .then((json) => {
+  inflight = (async () => {
+    try {
+      const response = await fetch('/api/content/site-settings')
+      const json = response.ok ? await response.json() : null
       const next = mergeSiteSettings(json?.settings)
       publish(next)
       return next
-    })
-    .catch(() => cached)
+    } catch {
+      return cached
+    }
+  })()
   return inflight
 }
 
