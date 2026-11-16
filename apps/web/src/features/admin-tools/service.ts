@@ -75,6 +75,16 @@ export const saveAdminFeaturedProduct = async (id: string | undefined, input: Pa
     )
   ).product
 
+/** Saves the order of all featured cards: ids[0] is shown first. */
+export const reorderAdminFeaturedProducts = async (ids: string[]) =>
+  (
+    await request<{ products?: FeaturedProductAdminDto[] }>(
+      '/api/admin/featured-products/order',
+      { method: 'PUT', body: JSON.stringify({ ids }) },
+      'Gagal menyimpan urutan',
+    )
+  ).products ?? []
+
 export const deleteAdminFeaturedProduct = (id: string) =>
   request<unknown>(`/api/admin/featured-products/${id}`, { method: 'DELETE' }, 'Gagal menghapus produk')
 

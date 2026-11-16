@@ -7,10 +7,11 @@ import {
   type FeaturedProductAdminDto,
   type FeaturedProductState,
 } from '@attentiveid/shared'
-import { Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
 import {
   AdminToolsApiError,
   deleteAdminFeaturedProduct,
+  reorderAdminFeaturedProducts,
   listAdminFeaturedProducts,
   saveAdminFeaturedProduct,
 } from '../../features/admin-tools/service'
@@ -20,6 +21,7 @@ import {
   CARD_THEME_LABELS,
   CARD_THEME_STYLES,
 } from '../../features/featured/card-style'
+import { moveToPosition } from '../../features/psychologists/featured-order'
 
 interface FormState {
   id?: string
@@ -38,7 +40,6 @@ interface FormState {
   startAt: string
   endAt: string
   enabled: boolean
-  sortOrder: string
   slug: string
 }
 
@@ -66,7 +67,6 @@ const emptyForm = (): FormState => ({
   startAt: '',
   endAt: '',
   enabled: true,
-  sortOrder: '0',
   slug: '',
 })
 
@@ -86,7 +86,6 @@ const toForm = (product: FeaturedProductAdminDto): FormState => ({
   startAt: toLocalInput(product.startAt),
   endAt: toLocalInput(product.endAt),
   enabled: product.enabled,
-  sortOrder: String(product.sortOrder),
   slug: product.slug,
 })
 
@@ -152,7 +151,6 @@ export function FeaturedProductsCmsPage() {
         startAt: fromLocalInput(form.startAt),
         endAt: fromLocalInput(form.endAt),
         enabled: form.enabled,
-        sortOrder: Number(form.sortOrder),
       })
       setForm(null)
       setNotice('Produk tersimpan.')
@@ -163,6 +161,30 @@ export function FeaturedProductsCmsPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const [isReordering, setIsReordering] = useState(false)
+
+  const applyOrder = async (ids: string[]) => {
+    const previous = products
+    setProducts(ids.map((id) => previous.find((product) => product.id === id)!).filter(Boolean))
+    setIsReordering(true)
+    setError(null)
+    try {
+      setProducts(await reorderAdminFeaturedProducts(ids))
+      setNotice('Urutan tersimpan.')
+    } catch (caught) {
+      setProducts(previous)
+      setError(caught instanceof Error ? caught.message : 'Gagal menyimpan urutan.')
+    } finally {
+      setIsReordering(false)
+    }
+  }
+
+  const moveCard = (product: FeaturedProductAdminDto, position: number) => {
+    const ids = products.map((item) => item.id)
+    const next = moveToPosition(ids, product.id, position)
+    if (next.join() !== ids.join()) void applyOrder(next)
   }
 
   const handleDelete = async (product: FeaturedProductAdminDto) => {
@@ -184,7 +206,7 @@ export function FeaturedProductsCmsPage() {
             Produk Featured
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Semua kartu di bagian "Featured Campaigns & Portals" pada beranda diatur di sini: tema (termasuk kartu emas), ikon, label, teks tombol, tautan, urutan, dan masa featured. Masa tampil hanya terlihat di sini, tidak di halaman pengunjung.
+            Semua kartu di bagian "Featured Campaigns & Portals" pada beranda diatur di sini: urutan (kartu #1 tampil paling kiri), tema (termasuk kartu emas), ikon, label, teks tombol, tautan, dan masa featured. Masa tampil hanya terlihat di sini, tidak di halaman pengunjung.
           </p>
         </div>
         <button
@@ -221,6 +243,7 @@ export function FeaturedProductsCmsPage() {
             <table className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50 font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3">Urutan</th>
                   <th className="px-4 py-3">Produk</th>
                   <th className="px-4 py-3">Halaman</th>
                   <th className="px-4 py-3">Masa featured</th>
@@ -229,12 +252,47 @@ export function FeaturedProductsCmsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {products.map((product) => {
+                {products.map((product, index) => {
                   const badge = STATE_BADGE[product.state]
                   const start = formatDate(product.startAt)
                   const end = formatDate(product.endAt)
                   return (
                     <tr className="hover:bg-slate-50/50" key={product.id}>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5">
+                          <select
+                            aria-label={`Posisi ${product.title.id}`}
+                            className="rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-gold-500"
+                            disabled={isReordering}
+                            onChange={(e) => moveCard(product, Number(e.target.value))}
+                            value={index + 1}
+                          >
+                            {products.map((_, position) => (
+                              <option key={position} value={position + 1}>
+                                #{position + 1}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            aria-label={`Naikkan ${product.title.id}`}
+                            className="rounded-lg border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                            disabled={isReordering || index === 0}
+                            onClick={() => moveCard(product, index)}
+                            type="button"
+                          >
+                            <ArrowUp className="size-3.5" aria-hidden="true" />
+                          </button>
+                          <button
+                            aria-label={`Turunkan ${product.title.id}`}
+                            className="rounded-lg border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                            disabled={isReordering || index === products.length - 1}
+                            onClick={() => moveCard(product, index + 2)}
+                            type="button"
+                          >
+                            <ArrowDown className="size-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2">
                           <span className={`grid size-7 place-items-center rounded-lg ${CARD_THEME_STYLES[product.theme].iconBox}`}>
@@ -246,8 +304,7 @@ export function FeaturedProductsCmsPage() {
                           <div>
                             <div className="font-semibold text-slate-900">{product.title.id}</div>
                             <div className="text-[11px] text-slate-500">
-                              urutan {product.sortOrder}
-                              {product.badge.id ? ` · ${product.badge.id}` : ''}
+                              {product.badge.id || 'Tanpa label'}
                             </div>
                           </div>
                         </div>
@@ -404,10 +461,6 @@ export function FeaturedProductsCmsPage() {
                 Selesai featured
                 <input className={inputClass} onChange={(e) => update({ endAt: e.target.value })} type="datetime-local" value={form.endAt} />
                 {fieldErrors.endAt && <span className="text-xs text-rose-700">{fieldErrors.endAt}</span>}
-              </label>
-              <label className="text-sm font-medium text-slate-700">
-                Urutan di menu
-                <input className={inputClass} min={0} onChange={(e) => update({ sortOrder: e.target.value })} type="number" value={form.sortOrder} />
               </label>
               <label className="flex items-center gap-2 pt-6 text-sm font-medium text-slate-700">
                 <input checked={form.enabled} onChange={(e) => update({ enabled: e.target.checked })} type="checkbox" />

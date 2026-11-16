@@ -20,6 +20,8 @@ export interface AdminToolsRepository {
   listFeaturedAdmin(now?: Date): Promise<FeaturedProductAdminDto[]>
   createFeatured(input: FeaturedProductInput): Promise<FeaturedProductAdminDto>
   updateFeatured(id: string, input: FeaturedProductInput): Promise<FeaturedProductAdminDto | null>
+  /** Sets the order of every featured card: ids[0] is first. Returns false if ids is not exactly the current set. */
+  reorderFeatured(ids: string[]): Promise<boolean>
   removeFeatured(id: string): Promise<boolean>
   // Share previews
   getSharePreview(path: string): Promise<SharePreviewDto | null>
@@ -121,17 +123,36 @@ export const createAdminToolsRepository = (database: typeof defaultDb = defaultD
   },
 
   async createFeatured(input) {
-    const [row] = await database.insert(featuredProducts).values(featuredValues(input)).returning()
+    // New cards go to the end of the strip.
+    const [last] = await database.select({ max: sql<number>`coalesce(max(${featuredProducts.sortOrder}), -1)` }).from(featuredProducts)
+    const [row] = await database
+      .insert(featuredProducts)
+      .values({ ...featuredValues(input), sortOrder: Number(last?.max ?? -1) + 1 })
+      .returning()
     return toFeaturedAdmin(row, new Date())
   },
 
   async updateFeatured(id, input) {
+    // The order is changed only through reorderFeatured, never by editing a card.
+    const { sortOrder: _ignored, ...values } = featuredValues(input)
     const [row] = await database
       .update(featuredProducts)
-      .set({ ...featuredValues(input), updatedAt: sql`now()` })
+      .set({ ...values, updatedAt: sql`now()` })
       .where(eq(featuredProducts.id, id))
       .returning()
     return row ? toFeaturedAdmin(row, new Date()) : null
+  },
+
+  async reorderFeatured(ids) {
+    return database.transaction(async (tx) => {
+      const current = await tx.select({ id: featuredProducts.id }).from(featuredProducts)
+      const known = new Set(current.map((row) => row.id))
+      if (ids.length !== known.size || new Set(ids).size !== ids.length || !ids.every((id) => known.has(id))) return false
+      for (const [index, id] of ids.entries()) {
+        await tx.update(featuredProducts).set({ sortOrder: index, updatedAt: sql`now()` }).where(eq(featuredProducts.id, id))
+      }
+      return true
+    })
   },
 
   async removeFeatured(id) {
