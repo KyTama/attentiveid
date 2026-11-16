@@ -6,12 +6,28 @@
 export const FEATURED_PRODUCT_STATES = ['active', 'scheduled', 'ended', 'disabled'] as const
 export type FeaturedProductState = typeof FEATURED_PRODUCT_STATES[number]
 
+/** Card looks, same options as the homepage strip's own card editor. */
+export const FEATURED_CARD_THEMES = ['gold', 'navy', 'blue', 'emerald'] as const
+export type FeaturedCardTheme = typeof FEATURED_CARD_THEMES[number]
+
+export const FEATURED_CARD_ICONS = ['gift', 'calendar', 'clipboard', 'sparkles', 'shield', 'message'] as const
+export type FeaturedCardIcon = typeof FEATURED_CARD_ICONS[number]
+
 export interface FeaturedProductInput {
   slug: string
   titleId: string
   titleEn: string
   descriptionId: string
   descriptionEn: string
+  /** Card look and icon on the homepage strip. */
+  theme: FeaturedCardTheme
+  icon: FeaturedCardIcon
+  /** Small label at the top of the card (empty = default "Produk Baru"). */
+  badgeId: string
+  badgeEn: string
+  /** Button text at the bottom of the card (empty = default "Buka" / "Segera Hadir"). */
+  ctaId: string
+  ctaEn: string
   /** Internal path ("/let-there-be-light") or https URL. Empty = "coming soon" (listed, not clickable). */
   url: string
   /** ISO timestamps; null = open-ended. */
@@ -32,6 +48,10 @@ export interface FeaturedProductPublicDto {
   slug: string
   title: { id: string; en: string }
   description: { id: string; en: string }
+  theme: FeaturedCardTheme
+  icon: FeaturedCardIcon
+  badge: { id: string; en: string }
+  cta: { id: string; en: string }
   /** null = coming soon */
   url: string | null
 }
@@ -83,6 +103,20 @@ export const validateFeaturedProductInput = (input: unknown): FeaturedProductVal
   if (descriptionId.length > 200) errors.descriptionId = 'Maks 200 karakter.'
   if (descriptionEn.length > 200) errors.descriptionEn = 'Maks 200 karakter.'
 
+  const themeRaw = asString(raw.theme) || 'blue'
+  if (!(FEATURED_CARD_THEMES as readonly string[]).includes(themeRaw)) errors.theme = 'Pilih salah satu tema kartu.'
+  const iconRaw = asString(raw.icon) || 'sparkles'
+  if (!(FEATURED_CARD_ICONS as readonly string[]).includes(iconRaw)) errors.icon = 'Pilih salah satu ikon.'
+
+  const badgeId = asString(raw.badgeId)
+  const badgeEn = asString(raw.badgeEn) || badgeId
+  if (badgeId.length > 30) errors.badgeId = 'Maks 30 karakter.'
+  if (badgeEn.length > 30) errors.badgeEn = 'Maks 30 karakter.'
+  const ctaId = asString(raw.ctaId)
+  const ctaEn = asString(raw.ctaEn) || ctaId
+  if (ctaId.length > 40) errors.ctaId = 'Maks 40 karakter.'
+  if (ctaEn.length > 40) errors.ctaEn = 'Maks 40 karakter.'
+
   const url = normalizeFeaturedUrl(asString(raw.url))
   if (url === null) errors.url = 'Isi dengan alamat halaman (mis. /let-there-be-light) atau https://...'
 
@@ -110,6 +144,12 @@ export const validateFeaturedProductInput = (input: unknown): FeaturedProductVal
       titleEn,
       descriptionId,
       descriptionEn,
+      theme: themeRaw as FeaturedCardTheme,
+      icon: iconRaw as FeaturedCardIcon,
+      badgeId,
+      badgeEn,
+      ctaId,
+      ctaEn,
       url: url ?? '',
       startAt: start.ok ? start.iso : null,
       endAt: end.ok ? end.iso : null,

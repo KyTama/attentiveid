@@ -3,13 +3,8 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  CalendarCheck2,
-  ClipboardCheck,
-  Gift,
   MapPin,
-  MessageCircle,
   PawPrint,
-  ShieldCheck,
   Sparkles,
 } from 'lucide-react'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -22,6 +17,7 @@ import { useSciBriefHeroChips } from '@/features/sci-brief/use-hero-chips'
 import { HeroSlideVisual } from './HeroSlideVisual'
 import { useCampaignDock } from './use-campaign-dock'
 import { featuredProductsToCards } from '@/features/featured/cards'
+import { CARD_ICONS, CARD_THEME_STYLES } from '@/features/featured/card-style'
 import { useFeaturedProducts } from '@/features/featured/use-featured-products'
 
 export interface TrustMetric {
@@ -508,15 +504,15 @@ export function HomepageHero() {
       })
     : defaultCampaignCards
 
-  // Featured products from the portal (Produk Featured) join the strip after the editable cards.
+  // Every card on the strip comes from the portal (Produk Featured). The editable/default cards above
+  // are only a fallback if the portal data cannot be loaded.
   const featuredProducts = useFeaturedProducts()
-  const productCards: CampaignCardItem[] = featuredProductsToCards(
-    featuredProducts,
-    isId,
-    { badge: t('homepage.campaigns.productBadge'), open: t('homepage.campaigns.productCta'), comingSoon: t('homepage.nav.comingSoon') },
-    resolvedCampaignCards.map((card) => card.url),
-  )
-  const visibleCampaignCards = [...resolvedCampaignCards.filter((card) => card.visible), ...productCards]
+  const productCards: CampaignCardItem[] = featuredProductsToCards(featuredProducts, isId, {
+    badge: t('homepage.campaigns.productBadge'),
+    open: t('homepage.campaigns.productCta'),
+    comingSoon: t('homepage.nav.comingSoon'),
+  })
+  const visibleCampaignCards = productCards.length > 0 ? productCards : resolvedCampaignCards.filter((card) => card.visible)
   const isCampaignsStripVisible = customCampaigns?.visible !== false && visibleCampaignCards.length > 0
   const isFloatingDockEnabled = customCampaigns?.showFloatingDock !== false
 
@@ -798,51 +794,8 @@ export function HomepageHero() {
 
             <div className={`mt-5 grid gap-4 ${campaignGridColsClass}`}>
               {visibleCampaignCards.map((card) => {
-                const themeStyles =
-                  card.theme === 'gold'
-                    ? {
-                        card: 'border-primary/50 bg-gradient-to-b from-white to-[#FDF8EE] hover:border-primary',
-                        badge: 'bg-[#FAF0D7] text-[#8C6013]',
-                        iconBox: 'bg-[#FAF0D7] text-[#8C6013]',
-                        titleHover: 'group-hover:text-[#8C6013]',
-                        footer: 'border-[#E9B949]/20 text-[#8C6013]',
-                      }
-                    : card.theme === 'blue'
-                    ? {
-                        card: 'border-secondary/15 bg-white hover:border-secondary/35',
-                        badge: 'bg-[#EBF3FB] text-[#1E568A]',
-                        iconBox: 'bg-[#EBF3FB] text-[#1E568A]',
-                        titleHover: 'group-hover:text-[#1E568A]',
-                        footer: 'border-secondary/10 text-[#1E568A]',
-                      }
-                    : card.theme === 'emerald'
-                    ? {
-                        card: 'border-emerald-600/20 bg-white hover:border-emerald-600/40',
-                        badge: 'bg-emerald-50 text-emerald-800',
-                        iconBox: 'bg-emerald-50 text-emerald-800',
-                        titleHover: 'group-hover:text-emerald-800',
-                        footer: 'border-secondary/10 text-emerald-800',
-                      }
-                    : {
-                        card: 'border-secondary/15 bg-white hover:border-secondary/35',
-                        badge: 'bg-secondary/10 text-secondary',
-                        iconBox: 'bg-secondary/10 text-secondary',
-                        titleHover: 'group-hover:text-primary',
-                        footer: 'border-secondary/10 text-secondary group-hover:text-primary',
-                      }
-
-                const IconComponent =
-                  card.icon === 'gift'
-                    ? Gift
-                    : card.icon === 'calendar'
-                    ? CalendarCheck2
-                    : card.icon === 'clipboard'
-                    ? ClipboardCheck
-                    : card.icon === 'shield'
-                    ? ShieldCheck
-                    : card.icon === 'message'
-                    ? MessageCircle
-                    : Sparkles
+                const themeStyles = CARD_THEME_STYLES[card.theme] ?? CARD_THEME_STYLES.navy
+                const IconComponent = CARD_ICONS[card.icon] ?? Sparkles
 
                 return (
                   <motion.a

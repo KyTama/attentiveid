@@ -29,6 +29,16 @@ describe('featured products', () => {
     if (!result.ok) expect(Object.keys(result.errors).sort()).toEqual(['endAt', 'url'])
   })
 
+  it('defaults the card look and accepts theme, icon, label and button text', () => {
+    const plain = validateFeaturedProductInput(valid)
+    expect(plain.ok && [plain.value.theme, plain.value.icon, plain.value.badgeId, plain.value.ctaId]).toEqual(['blue', 'sparkles', '', ''])
+    const custom = validateFeaturedProductInput({ ...valid, theme: 'gold', icon: 'gift', badgeId: 'Promo Khusus', ctaId: 'Klaim' })
+    expect(custom.ok && custom.value).toMatchObject({ theme: 'gold', icon: 'gift', badgeId: 'Promo Khusus', badgeEn: 'Promo Khusus', ctaEn: 'Klaim' })
+    const bad = validateFeaturedProductInput({ ...valid, theme: 'pink', icon: 'rocket', badgeId: 'x'.repeat(31) })
+    expect(bad.ok).toBe(false)
+    if (!bad.ok) expect(Object.keys(bad.errors).sort()).toEqual(['badgeEn', 'badgeId', 'icon', 'theme'])
+  })
+
   it('computes disabled / scheduled / active / ended', () => {
     const now = new Date('2026-12-05T00:00:00Z')
     const base = { enabled: true, startAt: null, endAt: null }

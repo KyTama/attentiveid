@@ -32,22 +32,38 @@ describe('traffic table', () => {
 })
 
 describe('Featured products in the campaign strip', () => {
+  const base = {
+    theme: 'blue' as const,
+    icon: 'sparkles' as const,
+    badge: { id: '', en: '' },
+    cta: { id: '', en: '' },
+  }
   const products: FeaturedProductPublicDto[] = [
-    { id: '1', slug: 'ltbl', title: { id: 'Let There Be Light', en: 'Let There Be Light' }, description: { id: 'Pengalaman', en: 'Experience' }, url: '/let-there-be-light' },
-    { id: '2', slug: 'sw', title: { id: 'Your Social World', en: 'Your Social World' }, description: { id: '', en: '' }, url: null },
+    { ...base, id: '1', slug: 'ltbl', title: { id: 'Let There Be Light', en: 'Let There Be Light' }, description: { id: 'Pengalaman', en: 'Experience' }, url: '/let-there-be-light' },
+    { ...base, id: '2', slug: 'sw', theme: 'navy', title: { id: 'Your Social World', en: 'Your Social World' }, description: { id: '', en: '' }, url: null },
+    {
+      id: '3',
+      slug: 'free-session',
+      theme: 'gold',
+      icon: 'gift',
+      badge: { id: 'Promo Khusus', en: 'Limited Offer' },
+      cta: { id: 'Klaim Sesi Gratis', en: 'Claim Free Session' },
+      title: { id: 'First Free Session Consultation', en: 'First Free Session Consultation' },
+      description: { id: 'Klaim sesi privat.', en: 'Claim a private session.' },
+      url: 'https://free-session.attentiveid.com',
+    },
   ]
   const labels = { badge: 'New Product', open: 'Open', comingSoon: 'Coming Soon' }
 
-  it('turns products into cards: live ones link, unfinished ones are Coming Soon', () => {
+  it('uses default label and button text when none are set; live cards link, unfinished ones are Coming Soon', () => {
     const cards = featuredProductsToCards(products, false, labels)
-    expect(cards).toHaveLength(2)
-    expect(cards[0]).toMatchObject({ id: 'product-ltbl', url: '/let-there-be-light', cta: 'Open', comingSoon: false, description: 'Experience' })
-    expect(cards[1]).toMatchObject({ id: 'product-sw', url: '', cta: 'Coming Soon', comingSoon: true })
+    expect(cards[0]).toMatchObject({ id: 'product-ltbl', url: '/let-there-be-light', badge: 'New Product', cta: 'Open', comingSoon: false, description: 'Experience' })
+    expect(cards[1]).toMatchObject({ id: 'product-sw', url: '', cta: 'Coming Soon', comingSoon: true, theme: 'navy' })
   })
 
-  it('uses the Indonesian text and skips a product whose page the strip already has', () => {
+  it('takes theme, icon, label and button text from the portal, per language', () => {
+    expect(featuredProductsToCards(products, false, labels)[2]).toMatchObject({ theme: 'gold', icon: 'gift', badge: 'Limited Offer', cta: 'Claim Free Session' })
+    expect(featuredProductsToCards(products, true, labels)[2]).toMatchObject({ badge: 'Promo Khusus', cta: 'Klaim Sesi Gratis' })
     expect(featuredProductsToCards(products, true, labels)[0].description).toBe('Pengalaman')
-    const cards = featuredProductsToCards(products, false, labels, ['/let-there-be-light'])
-    expect(cards.map((card) => card.id)).toEqual(['product-sw'])
   })
 })
