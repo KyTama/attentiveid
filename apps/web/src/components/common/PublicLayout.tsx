@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation, useNavigationType, useSearchParams } from 'react-router-dom'
 import { IntakeModalProvider, ConsultationIntakeModal, useIntakeModal } from '@/components/intake'
+import { AmbientLights } from './AmbientLights'
 import type { IntakeConcernId } from '@attentiveid/shared'
 
 function PublicIntakeModalWrapper() {
@@ -56,6 +57,7 @@ export function PublicLayout() {
   return (
     <IntakeModalProvider>
       <Outlet />
+      <AmbientLights />
       <PublicIntakeModalWrapper />
     </IntakeModalProvider>
   )
