@@ -55,6 +55,27 @@ const googleOutboxConfig =
           }
         : undefined;
 
+// Free Session form -> Google Sheet ("Report Data Free Session", tab Sheet1). Uses the same Google
+// credentials as the booking sync; the sheet must be editable by that Google account.
+const FREE_SESSION_SHEET_DEFAULT_ID = '1ui7kFznMj7Jh16D7hJXMxnRiZK-SgZQJd2yA6xdpBHM';
+const freeSessionRepository = createFreeSessionRepository(db);
+const freeSessionSheetSync = createFreeSessionSheetSync({
+    repository: freeSessionRepository,
+    config: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN
+        ? {
+              google: {
+                  clientId: env.GOOGLE_CLIENT_ID,
+                  clientSecret: env.GOOGLE_CLIENT_SECRET,
+                  refreshToken: env.GOOGLE_REFRESH_TOKEN,
+                  spreadsheetId: env.FREE_SESSION_SHEET_ID || FREE_SESSION_SHEET_DEFAULT_ID
+              },
+              spreadsheetId: env.FREE_SESSION_SHEET_ID || FREE_SESSION_SHEET_DEFAULT_ID,
+              sheetName: env.FREE_SESSION_SHEET_NAME || 'Sheet1'
+          }
+        : undefined,
+    onError: (error) => console.error('[free-session] Google Sheet sync failed:', error instanceof Error ? error.message : error)
+});
+
 let outboxDraining = false;
 const triggerOutboxDrain = async () => {
     if (outboxDraining) return;
@@ -80,6 +101,8 @@ if (env.N8N_BOOKING_WEBHOOK_URL || googleOutboxConfig) {
 }
 
 const app = createApp({
+    freeSessionRepository,
+    freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',
     landingRepository,
     landingContentRepository: landingRepository,

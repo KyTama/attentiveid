@@ -331,7 +331,7 @@ interface ClaimedDeliveryRow {
 
 let cachedGoogleToken: { cacheKey: string; accessToken: string; expiresAtMs: number } | null = null;
 
-const getGoogleAccessToken = async (
+export const getGoogleAccessToken = async (
     config: GoogleBookingSyncConfig,
     fetchImpl: (url: string, init: RequestInit) => Promise<Response>,
     useCache: boolean
@@ -370,7 +370,7 @@ const getGoogleAccessToken = async (
     return tokenData.access_token;
 };
 
-const formatSheetRange = (sheetName: string, range: string): string => {
+export const formatSheetRange = (sheetName: string, range: string): string => {
     const escaped = sheetName.replace(/'/g, "''");
     return `'${escaped}'!${range}`;
 };

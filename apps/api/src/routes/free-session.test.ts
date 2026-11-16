@@ -4,6 +4,7 @@ import type { FreeSessionRecord, FreeSessionSubmission, UserDto } from '@attenti
 import { createTokenService } from '../security/token-service';
 import type { FreeSessionRepository } from '../repositories/free-session.repository';
 import { createFreeSessionRoutes } from './free-session.routes';
+import type { FreeSessionSheetSync } from '../services/free-session-sheet-sync';
 
 const testJwtSecret = 'test-secret-key-must-be-at-least-32-bytes-long-for-hmac-sha256-security';
 
@@ -48,14 +49,18 @@ const validBody = {
     website: ''
 };
 
-const createFixture = (options: { max?: number; seed?: FreeSessionRecord[] } = {}) => {
+const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; sheetSync?: FreeSessionSheetSync } = {}) => {
     const created: FreeSessionSubmission[] = [];
     const repository: FreeSessionRepository = {
         create: async (submission) => {
             created.push(submission);
             return { id: `id-${created.length}` };
         },
-        listAll: async () => options.seed ?? []
+        listAll: async () => options.seed ?? [],
+        listUnsynced: async () => [],
+        markSynced: async () => {},
+        markFailed: async () => {},
+        sheetStatus: async () => ({ pending: 0, failed: 0 })
     };
     let clock = 1_000_000;
     const app = new Elysia().use(
@@ -63,6 +68,7 @@ const createFixture = (options: { max?: number; seed?: FreeSessionRecord[] } = {
             tokenService,
             userRepository: { findById: async (id: string) => usersById.get(id) ?? null },
             freeSessionRepository: repository,
+            sheetSync: options.sheetSync,
             rateLimit: { max: options.max ?? 5, windowMs: 60_000 },
             now: () => clock
         })
@@ -183,5 +189,65 @@ describe('admin free session report', () => {
         const text = await response.text();
         expect(text.startsWith('﻿"ID"')).toBe(true);
         expect(text).toContain('"Sari"');
+    });
+});
+
+describe('Google Sheet sync', () => {
+    const fakeSync = () => {
+        const runs: string[] = [];
+        const sync: FreeSessionSheetSync = {
+            isConfigured: true,
+            syncPending: async () => {
+                runs.push('sync');
+                return { configured: true, synced: 2, pending: 0, failed: 0, error: null };
+            },
+            status: async () => ({ configured: true, pending: 3, failed: 1, spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/abc/edit' })
+        };
+        return { sync, runs };
+    };
+
+    it('starts a sheet sync after a stored submission, and not for honeypot or invalid submissions', async () => {
+        const { sync, runs } = fakeSync();
+        const { app } = createFixture({ sheetSync: sync });
+        expect((await post(app, validBody)).status).toBe(201);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        expect(runs).toHaveLength(1);
+        await post(app, { ...validBody, website: 'http://spam' });
+        await post(app, { ...validBody, name: '' });
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        expect(runs).toHaveLength(1);
+    });
+
+    it('still saves the submission when the sheet sync fails', async () => {
+        const failing: FreeSessionSheetSync = {
+            isConfigured: true,
+            syncPending: async () => {
+                throw new Error('google down');
+            },
+            status: async () => ({ configured: true, pending: 1, failed: 1, spreadsheetUrl: null })
+        };
+        const { app, created } = createFixture({ sheetSync: failing });
+        expect((await post(app, validBody)).status).toBe(201);
+        expect(created).toHaveLength(1);
+    });
+
+    it('shows the sheet status and runs a manual sync for admins only', async () => {
+        const { sync, runs } = fakeSync();
+        const { app } = createFixture({ sheetSync: sync });
+        const call = (path: string, method: string, token?: string) =>
+            app.handle(new Request(`http://localhost${path}`, { method, headers: token ? { authorization: `Bearer ${token}` } : {} }));
+        expect((await call('/api/admin/free-session/sheet-status', 'GET')).status).toBe(401);
+        expect((await call('/api/admin/free-session/sheet-status', 'GET', psychologistToken)).status).toBe(403);
+        const status = await (await call('/api/admin/free-session/sheet-status', 'GET', adminToken)).json();
+        expect(status.data).toMatchObject({ configured: true, pending: 3, failed: 1 });
+        const result = await (await call('/api/admin/free-session/sync-sheet', 'POST', adminToken)).json();
+        expect(result.data).toMatchObject({ synced: 2 });
+        expect(runs).toHaveLength(1);
+    });
+
+    it('reports not configured when there is no sync set up', async () => {
+        const { app } = createFixture();
+        const response = await app.handle(new Request('http://localhost/api/admin/free-session/sheet-status', { headers: { authorization: `Bearer ${adminToken}` } }));
+        expect((await response.json()).data).toMatchObject({ configured: false });
     });
 });

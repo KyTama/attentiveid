@@ -113,6 +113,13 @@
       "when": 1794819631498,
       "tag": "0015_nico_superadmin",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794826776617,
+      "tag": "0016_free_session_sheet_sync",
+      "breakpoints": true
     }
   ]
 }

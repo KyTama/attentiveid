@@ -7,6 +7,7 @@ import {
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { FreeSessionRepository } from '../repositories/free-session.repository';
+import type { FreeSessionSheetSync } from '../services/free-session-sheet-sync';
 
 export interface FreeSessionRateLimit {
     max: number;
@@ -17,6 +18,8 @@ export interface FreeSessionRoutesDependencies {
     tokenService: Pick<AuthTokenService, 'verifyAccessToken'>;
     userRepository: Pick<AuthUserRepository, 'findById'>;
     freeSessionRepository: FreeSessionRepository;
+    /** Writes submissions to the Google Sheet (optional; without it submissions stay in the database only). */
+    sheetSync?: FreeSessionSheetSync;
     rateLimit?: FreeSessionRateLimit;
     now?: () => number;
 }
@@ -75,6 +78,8 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
             }
 
             const created = await repository.create(result.value);
+            // The visitor never waits for Google; failures stay queued and are retried (next submission or portal button).
+            void dependencies.sheetSync?.syncPending().catch(() => undefined);
             set.status = 201;
             return { status: 'success', data: { id: created.id } };
         }, {
@@ -98,6 +103,22 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
         }, {
             requireRole: 'admin',
             detail: { tags: ['Free Session'], summary: 'List deduplicated free session submissions' }
+        })
+        .get('/api/admin/free-session/sheet-status', async () => {
+            const sync = dependencies.sheetSync;
+            if (!sync) return { status: 'success', data: { configured: false, pending: 0, failed: 0, spreadsheetUrl: null } };
+            return { status: 'success', data: await sync.status() };
+        }, {
+            requireRole: 'admin',
+            detail: { tags: ['Free Session'], summary: 'How many submissions are not in the Google Sheet yet' }
+        })
+        .post('/api/admin/free-session/sync-sheet', async () => {
+            const sync = dependencies.sheetSync;
+            if (!sync) return { status: 'success', data: { configured: false, synced: 0, pending: 0, failed: 0, error: 'Google Sheet sync is not set up.' } };
+            return { status: 'success', data: await sync.syncPending() };
+        }, {
+            requireRole: 'admin',
+            detail: { tags: ['Free Session'], summary: 'Send every submission not yet in the Google Sheet' }
         })
         .get('/api/admin/free-session/export.csv', async ({ set }: any) => {
             const records = dedupeFreeSessionRecords(await repository.listAll());

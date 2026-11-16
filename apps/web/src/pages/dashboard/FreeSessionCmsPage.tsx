@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { keluhanLabel, type FreeSessionRecord } from '@attentiveid/shared'
 import { useAuth } from '../../features/auth/auth-context'
+import { useTx } from '@/features/i18n/use-tx'
 
 interface FreeSessionReport {
   total: number
@@ -12,8 +13,19 @@ interface FreeSessionReport {
 const apiBaseUrl = () =>
   import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
 
+interface SheetStatus {
+  configured: boolean
+  pending: number
+  failed: number
+  spreadsheetUrl: string | null
+}
+
 export function FreeSessionCmsPage() {
   const { accessToken } = useAuth()
+  const { tx } = useTx()
+  const [sheet, setSheet] = useState<SheetStatus | null>(null)
+  const [sheetMessage, setSheetMessage] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
   const [report, setReport] = useState<FreeSessionReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -43,6 +55,41 @@ export function FreeSessionCmsPage() {
       cancelled = true
     }
   }, [authHeaders])
+
+  const loadSheetStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${apiBaseUrl()}/api/admin/free-session/sheet-status`, { headers: authHeaders() })
+      const data = res.ok ? ((await res.json()) as { data?: SheetStatus }).data : undefined
+      if (data && typeof data.configured === 'boolean') setSheet(data)
+    } catch {
+      // the status is informational; the report still works without it
+    }
+  }, [authHeaders])
+
+  useEffect(() => {
+    void loadSheetStatus()
+  }, [loadSheetStatus])
+
+  async function syncSheet() {
+    setIsSyncing(true)
+    setSheetMessage(null)
+    try {
+      const res = await fetch(`${apiBaseUrl()}/api/admin/free-session/sync-sheet`, { method: 'POST', headers: authHeaders() })
+      const json = (await res.json().catch(() => null)) as { data?: { synced: number; pending: number; error: string | null } } | null
+      if (!res.ok || !json?.data) throw new Error(tx('Gagal menjalankan sinkronisasi.', 'Failed to run the sync.'))
+      const { synced, pending, error: syncError } = json.data
+      setSheetMessage(
+        syncError
+          ? tx(`Belum berhasil: ${syncError}`, `Not successful yet: ${syncError}`)
+          : tx(`${synced} baris dikirim ke Google Sheet. Sisa belum terkirim: ${pending}.`, `${synced} rows sent to the Google Sheet. Still not sent: ${pending}.`),
+      )
+      await loadSheetStatus()
+    } catch (err) {
+      setSheetMessage(err instanceof Error ? err.message : tx('Gagal menjalankan sinkronisasi.', 'Failed to run the sync.'))
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   async function downloadCsv() {
     setIsDownloading(true)
@@ -91,6 +138,50 @@ export function FreeSessionCmsPage() {
           {isDownloading ? 'Mengunduh…' : 'Download report .csv'}
         </button>
       </div>
+
+      <section aria-label="Google Sheet" className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-sm text-slate-700">
+          <p className="font-semibold text-slate-900">Google Sheet</p>
+          {sheet === null ? (
+            <p className="text-xs text-slate-500">{tx('Memuat status…', 'Loading status…')}</p>
+          ) : !sheet.configured ? (
+            <p className="text-xs text-amber-700">
+              {tx(
+                'Belum tersambung: kredensial Google belum diatur di server, jadi pendaftar baru hanya tersimpan di database.',
+                'Not connected: the Google credentials are not set on the server, so new sign-ups are only stored in the database.',
+              )}
+            </p>
+          ) : (
+            <p className="text-xs text-slate-600">
+              {sheet.pending === 0
+                ? tx('Semua pendaftar sudah ada di Google Sheet.', 'Every sign-up is in the Google Sheet.')
+                : tx(`${sheet.pending} pendaftar belum ada di Google Sheet${sheet.failed ? ` (${sheet.failed} gagal terkirim)` : ''}.`, `${sheet.pending} sign-ups are not in the Google Sheet yet${sheet.failed ? ` (${sheet.failed} failed to send)` : ''}.`)}{' '}
+              {tx('Pendaftar baru dikirim otomatis.', 'New sign-ups are sent automatically.')}
+              {sheet.spreadsheetUrl ? (
+                <>
+                  {' '}
+                  <a className="font-semibold text-navy-700 underline" href={sheet.spreadsheetUrl} rel="noopener noreferrer" target="_blank">
+                    {tx('Buka sheet', 'Open the sheet')}
+                  </a>
+                </>
+              ) : null}
+            </p>
+          )}
+          {sheetMessage ? (
+            <p className="mt-1 text-xs font-medium text-slate-800" role="status">
+              {sheetMessage}
+            </p>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          onClick={syncSheet}
+          disabled={isSyncing || !sheet?.configured}
+          className="inline-flex items-center justify-center rounded-xl border border-navy-700 px-4 py-2.5 text-xs font-semibold text-navy-700 transition-colors hover:bg-navy-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSyncing ? tx('Mengirim…', 'Sending…') : tx('Kirim yang belum ke Google Sheet', 'Send the missing ones to the Google Sheet')}
+        </button>
+      </section>
 
       {error ? (
         <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700">

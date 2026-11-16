@@ -15,6 +15,8 @@ const EnvSchema = t.Object({
     GOOGLE_REFRESH_TOKEN: t.Optional(t.String()),
     GOOGLE_SHEET_ID: t.Optional(t.String()),
     GOOGLE_SHEET_NAME: t.Optional(t.String()),
+    FREE_SESSION_SHEET_ID: t.Optional(t.String()),
+    FREE_SESSION_SHEET_NAME: t.Optional(t.String()),
     BOOKING_NOTIFY_EMAIL: t.Optional(t.String())
 });
 
