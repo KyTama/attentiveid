@@ -1,9 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { FeaturedProductPublicDto, TrafficRow } from '@attentiveid/shared'
-import '@/i18n'
-import { FeaturedMenu } from '@/components/landing/FeaturedMenu'
+import { featuredProductsToCards } from '@/features/featured/cards'
 import { emptyTrafficFilters, filterAndSortTraffic } from '@/features/admin-tools/traffic-table'
 
 const row = (path: string, today: number, total: number): TrafficRow => ({
@@ -34,31 +31,23 @@ describe('traffic table', () => {
   })
 })
 
-describe('Featured menu', () => {
+describe('Featured products in the campaign strip', () => {
   const products: FeaturedProductPublicDto[] = [
-    { id: '1', slug: 'ltbl', title: { id: 'Let There Be Light', en: 'Let There Be Light' }, description: { id: '', en: '' }, url: '/let-there-be-light' },
+    { id: '1', slug: 'ltbl', title: { id: 'Let There Be Light', en: 'Let There Be Light' }, description: { id: 'Pengalaman', en: 'Experience' }, url: '/let-there-be-light' },
     { id: '2', slug: 'sw', title: { id: 'Your Social World', en: 'Your Social World' }, description: { id: '', en: '' }, url: null },
   ]
+  const labels = { badge: 'New Product', open: 'Open', comingSoon: 'Coming Soon' }
 
-  it('lists products, linking live ones and marking the unfinished one as coming soon', () => {
-    render(
-      <MemoryRouter>
-        <FeaturedMenu products={products} />
-      </MemoryRouter>,
-    )
-    fireEvent.click(screen.getByRole('button', { name: /unggulan|featured/i }))
-    expect(screen.getByRole('link', { name: 'Let There Be Light' })).toHaveAttribute('href', '/let-there-be-light')
-    expect(screen.queryByRole('link', { name: /your social world/i })).not.toBeInTheDocument()
-    expect(screen.getByText('Your Social World')).toBeInTheDocument()
-    expect(screen.getByText(/segera hadir|coming soon/i)).toBeInTheDocument()
+  it('turns products into cards: live ones link, unfinished ones are Coming Soon', () => {
+    const cards = featuredProductsToCards(products, false, labels)
+    expect(cards).toHaveLength(2)
+    expect(cards[0]).toMatchObject({ id: 'product-ltbl', url: '/let-there-be-light', cta: 'Open', comingSoon: false, description: 'Experience' })
+    expect(cards[1]).toMatchObject({ id: 'product-sw', url: '', cta: 'Coming Soon', comingSoon: true })
   })
 
-  it('renders nothing when no product is featured right now', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <FeaturedMenu products={[]} />
-      </MemoryRouter>,
-    )
-    expect(container).toBeEmptyDOMElement()
+  it('uses the Indonesian text and skips a product whose page the strip already has', () => {
+    expect(featuredProductsToCards(products, true, labels)[0].description).toBe('Pengalaman')
+    const cards = featuredProductsToCards(products, false, labels, ['/let-there-be-light'])
+    expect(cards.map((card) => card.id)).toEqual(['product-sw'])
   })
 })

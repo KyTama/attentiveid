@@ -515,7 +515,6 @@
       "products": "Products",
       "ourServices": "Our Services",
       "ourServicesHint": "New pages are currently in design",
-      "featured": "Featured",
       "ourScience": "Our Science",
       "academicArticles": "Academic Articles",
       "scientificBrief": "Scientific Brief",
@@ -588,6 +587,8 @@
       ]
     },
     "campaigns": {
+      "productBadge": "New Product",
+      "productCta": "Open",
       "eyebrow": "Featured Campaigns & Portals",
       "title": "Direct Pathways to the Right Care",
       "description": "Explore our dedicated initiatives and specialized portals — from a free first session to direct psychologist scheduling.",
