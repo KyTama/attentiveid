@@ -34,10 +34,22 @@ export const PAGE_LABELS: Record<string, string> = {
   '/faq': 'Tanya Jawab',
 }
 
-export const pageLabel = (path: string) => PAGE_LABELS[path] ?? path
+export const PAGE_LABELS_EN: Record<string, string> = {
+  '/': 'Home',
+  '/psychologists': 'Psychologists',
+  '/articles': 'Articles',
+  '/sci-brief': 'Sci-Brief',
+  '/free-session': 'Free Session',
+  '/booking': 'Booking',
+  '/let-there-be-light': 'Let There Be Light',
+  '/locations': 'Locations',
+  '/faq': 'FAQ',
+}
+
+export const pageLabel = (path: string, english = false) => (english ? PAGE_LABELS_EN : PAGE_LABELS)[path] ?? path
 
 const matches = (row: TrafficRow, filters: TrafficFilters): boolean => {
-  const haystack = `${pageLabel(row.path)} ${row.path}`.toLowerCase()
+  const haystack = `${pageLabel(row.path)} ${pageLabel(row.path, true)} ${row.path}`.toLowerCase()
   if (filters.search.trim() && !haystack.includes(filters.search.trim().toLowerCase())) return false
   if (filters.page.trim() && !haystack.includes(filters.page.trim().toLowerCase())) return false
   if (filters.minToday !== null && row.today < filters.minToday) return false

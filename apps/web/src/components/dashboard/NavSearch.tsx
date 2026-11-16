@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useTx } from '@/features/i18n/use-tx'
 import { ChevronRight, Search, X } from 'lucide-react'
 import { searchNav, type NavSearchItem } from '../../features/dashboard/nav-search'
 
@@ -12,6 +13,7 @@ interface NavSearchProps {
 
 /** Type-ahead search over the portal menus: suggestions appear as you type, Enter or click opens one. */
 export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearchProps) {
+  const { tx } = useTx()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
@@ -81,7 +83,7 @@ export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearch
           aria-autocomplete="list"
           aria-controls={showPanel ? listId : undefined}
           aria-expanded={showPanel}
-          aria-label="Cari menu portal"
+          aria-label={tx('Cari menu portal', 'Search portal menu')}
           autoComplete="off"
           className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-14 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-gold-500 focus:bg-white focus:ring-2 focus:ring-gold-100"
           onChange={(event) => {
@@ -91,7 +93,7 @@ export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearch
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Cari menu..."
+          placeholder={tx('Cari menu...', 'Search menu...')}
           ref={inputRef}
           role="combobox"
           type="text"
@@ -99,7 +101,7 @@ export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearch
         />
         {query ? (
           <button
-            aria-label="Hapus pencarian"
+            aria-label={tx('Hapus pencarian', 'Clear search')}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
             onClick={() => {
               setQuery('')
@@ -124,7 +126,7 @@ export function NavSearch({ items, onSelect, enableShortcut = false }: NavSearch
         >
           {results.length === 0 ? (
             <li className="px-3 py-3 text-sm text-slate-500" role="presentation">
-              Tidak ada menu untuk "{query.trim()}". Coba kata lain, mis. "booking", "artikel", atau "thumbnail".
+              {tx(`Tidak ada menu untuk "${query.trim()}". Coba kata lain, mis. "booking", "artikel", atau "thumbnail".`, `No menu found for "${query.trim()}". Try another word, e.g. "booking", "article" or "thumbnail".`)}
             </li>
           ) : (
             results.map((item, index) => (

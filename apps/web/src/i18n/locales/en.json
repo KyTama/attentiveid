@@ -1,4 +1,38 @@
 {
+  "dashboard": {
+    "groupContent": "Website Content",
+    "groupTeam": "Team & Psychologists",
+    "groupResearch": "Research & Publications",
+    "groupOperations": "Operations",
+    "groupTools": "Tools",
+    "groupSettings": "Settings",
+    "navOverview": "Overview",
+    "navLanding": "Landing Content",
+    "navTestimonials": "Client Testimonials",
+    "navFeaturedProducts": "Featured Products",
+    "navSharePreviews": "Link Thumbnails",
+    "navPsychologists": "Psychologists",
+    "navProfile": "My Profile",
+    "navArticles": "Articles Management",
+    "navSciBrief": "Sci-Brief",
+    "navBookings": "Reservations & Booking",
+    "navUsers": "Staff Management",
+    "navQrGenerator": "QR Generator",
+    "navExperimental": "Experimental",
+    "navForms": "Forms",
+    "navTraffic": "Traffic Monitor",
+    "navSystemMap": "System Map",
+    "navEvents": "Events",
+    "navFreeSession": "Free Session",
+    "viewPublicSite": "View Public Website",
+    "viewPublicWebsite": "View Public Website",
+    "adminRole": "Administrator Portal",
+    "psychologistRole": "Psychologist Portal",
+    "welcomeMessage": "Welcome"
+  },
+  "auth": {
+    "logout": "Sign Out"
+  },
   "sciBrief": {
     "badge": "Monthly research digest",
     "title": "Sci-Brief",

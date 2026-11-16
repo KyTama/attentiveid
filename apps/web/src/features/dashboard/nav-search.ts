@@ -9,22 +9,22 @@ export interface NavSearchItem {
 
 /** Words that help people find a menu without knowing its exact name. */
 export const NAV_KEYWORDS: Record<string, string> = {
-  '/dashboard': 'beranda home ringkasan statistik dashboard utama',
-  '/dashboard/landing': 'beranda homepage hero slide teks bagian faq layanan halaman depan konten',
-  '/dashboard/testimonials': 'ulasan review cerita klien testimoni',
-  '/dashboard/featured-products': 'unggulan featured kartu campaign produk ltbl let there be light social world tanggal mulai selesai masa tampil menu',
-  '/dashboard/share-previews': 'thumbnail link share bagikan whatsapp preview gambar og judul deskripsi sosial media',
-  '/dashboard/psychologists': 'psikolog profil bio foto kutipan featured urutan direktori status aktif nonaktif tim',
-  '/dashboard/profile': 'profil saya akun diri sendiri psikolog bio',
-  '/dashboard/articles': 'artikel publikasi tulisan jurnal tulis terbit draft',
-  '/dashboard/sci-brief': 'sci brief riset ringkasan bulanan pdf dokumen rilis',
-  '/dashboard/bookings': 'reservasi booking jadwal pemesanan klien antrean konsultasi slot',
-  '/dashboard/users': 'staff akun pengguna peran admin password manajemen user',
-  '/dashboard/free-session': 'sesi gratis leads pendaftar form ekspor',
-  '/dashboard/experimental/forms': 'form formulir eksperimen',
-  '/dashboard/experimental/traffic': 'traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
-  '/dashboard/qr-generator': 'qr code barcode logo attentive kode scan poster cetak alat bantu',
-  '/dashboard/experimental/system-map': 'peta sistem diagram koneksi hubungan arsitektur',
+  '/dashboard': 'home summary statistics main beranda home ringkasan statistik dashboard utama',
+  '/dashboard/landing': 'homepage hero slides text sections faq services front page content beranda homepage hero slide teks bagian faq layanan halaman depan konten',
+  '/dashboard/testimonials': 'reviews client stories testimonials ulasan review cerita klien testimoni',
+  '/dashboard/featured-products': 'featured cards products campaign order start end date schedule icon label gold unggulan featured kartu campaign produk ltbl let there be light social world tanggal mulai selesai masa tampil menu',
+  '/dashboard/share-previews': 'thumbnail link share preview image title description social media whatsapp thumbnail link share bagikan whatsapp preview gambar og judul deskripsi sosial media',
+  '/dashboard/psychologists': 'psychologists profile bio photo quote featured order directory status active inactive team psikolog profil bio foto kutipan featured urutan direktori status aktif nonaktif tim',
+  '/dashboard/profile': 'my profile account own bio profil saya akun diri sendiri psikolog bio',
+  '/dashboard/articles': 'articles publications writing journal publish draft artikel publikasi tulisan jurnal tulis terbit draft',
+  '/dashboard/sci-brief': 'sci brief research monthly summary pdf document release sci brief riset ringkasan bulanan pdf dokumen rilis',
+  '/dashboard/bookings': 'reservation booking schedule appointments clients queue consultation slot reservasi booking jadwal pemesanan klien antrean konsultasi slot',
+  '/dashboard/users': 'staff accounts users roles admin password management staff akun pengguna peran admin password manajemen user',
+  '/dashboard/free-session': 'free session leads registrants form export sesi gratis leads pendaftar form ekspor',
+  '/dashboard/experimental/forms': 'forms experiment form formulir eksperimen',
+  '/dashboard/experimental/traffic': 'traffic visits analytics visitors statistics monitor pages traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
+  '/dashboard/qr-generator': 'qr code barcode logo attentive scan poster print tools qr code barcode logo attentive kode scan poster cetak alat bantu',
+  '/dashboard/experimental/system-map': 'system map diagram connections architecture peta sistem diagram koneksi hubungan arsitektur',
 }
 
 const normalize = (value: string) => value.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').trim()

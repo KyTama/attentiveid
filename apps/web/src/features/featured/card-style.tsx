@@ -65,3 +65,19 @@ export const CARD_ICON_LABELS: Record<FeaturedCardIcon, string> = {
   shield: 'Perisai',
   message: 'Pesan',
 }
+
+export const CARD_THEME_LABELS_EN: Record<FeaturedCardTheme, string> = {
+  gold: 'Gold (promo card)',
+  navy: 'Navy',
+  blue: 'Light blue',
+  emerald: 'Green',
+}
+
+export const CARD_ICON_LABELS_EN: Record<FeaturedCardIcon, string> = {
+  gift: 'Gift',
+  calendar: 'Calendar',
+  clipboard: 'Assessment board',
+  sparkles: 'Sparkle',
+  shield: 'Shield',
+  message: 'Message',
+}

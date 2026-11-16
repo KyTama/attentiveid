@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { UserDto } from '@attentiveid/shared'
 import { AppRoutes } from '../src/App'
+import i18n from '../src/i18n'
 import { AuthProvider } from '../src/features/auth/auth-context'
 import { canAccessExperimental } from '../src/features/experimental/access'
 
@@ -43,12 +44,14 @@ function renderAt(path: string) {
 }
 
 describe('dashboard Experimental section', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('id')
     vi.stubGlobal('fetch', vi.fn())
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks()
+    await i18n.changeLanguage('en')
   })
 
   it('matches the allowlisted email case-insensitively and nothing else', () => {
