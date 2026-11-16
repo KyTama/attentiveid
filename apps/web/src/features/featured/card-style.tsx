@@ -1,4 +1,4 @@
-import { CalendarCheck2, ClipboardCheck, Gift, MessageCircle, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react'
+import { CalendarCheck2, ClipboardCheck, Gift, Heart, Lightbulb, Link2, MessageCircle, ShieldCheck, Sparkles, Star, Sun, type LucideIcon } from 'lucide-react'
 import type { FeaturedCardIcon, FeaturedCardTheme } from '@attentiveid/shared'
 
 /** Look of each card theme in the homepage "Featured Campaigns & Portals" strip. */
@@ -48,6 +48,11 @@ export const CARD_ICONS: Record<FeaturedCardIcon, LucideIcon> = {
   sparkles: Sparkles,
   shield: ShieldCheck,
   message: MessageCircle,
+  lightbulb: Lightbulb,
+  sun: Sun,
+  star: Star,
+  heart: Heart,
+  link: Link2,
 }
 
 export const CARD_THEME_LABELS: Record<FeaturedCardTheme, string> = {
@@ -64,6 +69,11 @@ export const CARD_ICON_LABELS: Record<FeaturedCardIcon, string> = {
   sparkles: 'Kilau',
   shield: 'Perisai',
   message: 'Pesan',
+  lightbulb: 'Lampu',
+  sun: 'Matahari',
+  star: 'Bintang',
+  heart: 'Hati',
+  link: 'Tautan',
 }
 
 export const CARD_THEME_LABELS_EN: Record<FeaturedCardTheme, string> = {
@@ -80,4 +90,9 @@ export const CARD_ICON_LABELS_EN: Record<FeaturedCardIcon, string> = {
   sparkles: 'Sparkle',
   shield: 'Shield',
   message: 'Message',
+  lightbulb: 'Light bulb',
+  sun: 'Sun',
+  star: 'Star',
+  heart: 'Heart',
+  link: 'Link',
 }

@@ -10,7 +10,7 @@ export type FeaturedProductState = typeof FEATURED_PRODUCT_STATES[number]
 export const FEATURED_CARD_THEMES = ['gold', 'navy', 'blue', 'emerald'] as const
 export type FeaturedCardTheme = typeof FEATURED_CARD_THEMES[number]
 
-export const FEATURED_CARD_ICONS = ['gift', 'calendar', 'clipboard', 'sparkles', 'shield', 'message'] as const
+export const FEATURED_CARD_ICONS = ['gift', 'calendar', 'clipboard', 'sparkles', 'shield', 'message', 'lightbulb', 'sun', 'star', 'heart', 'link'] as const
 export type FeaturedCardIcon = typeof FEATURED_CARD_ICONS[number]
 
 export interface FeaturedProductInput {

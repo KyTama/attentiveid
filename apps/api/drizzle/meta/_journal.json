@@ -99,6 +99,13 @@
       "when": 1794808842068,
       "tag": "0013_featured_cards",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794816752795,
+      "tag": "0014_site_settings",
+      "breakpoints": true
     }
   ]
 }

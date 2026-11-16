@@ -1,5 +1,8 @@
 import type {
+  BrowserTabSettings,
   FeaturedProductAdminDto,
+  FloatingBarSettings,
+  SiteSettings,
   FeaturedProductInput,
   FeaturedProductPublicDto,
   QrCodeDto,
@@ -130,3 +133,14 @@ export async function uploadSharePreviewImage(file: File): Promise<string> {
   if (!response.ok) throw new AdminToolsApiError(json?.message || `Gagal mengunggah gambar (${response.status})`)
   return json.imageUrl as string
 }
+
+// ---- Site settings (admin) --------------------------------------------------
+
+export const getAdminSiteSettings = async () =>
+  (await request<{ settings: SiteSettings }>('/api/admin/site-settings', {}, 'Gagal memuat pengaturan')).settings
+
+export const saveFloatingBarSettings = async (input: FloatingBarSettings) =>
+  (await request<{ settings: SiteSettings }>('/api/admin/site-settings/floating-bar', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan bar melayang')).settings
+
+export const saveBrowserTabSettings = async (input: BrowserTabSettings) =>
+  (await request<{ settings: SiteSettings }>('/api/admin/site-settings/browser-tab', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan tab browser')).settings

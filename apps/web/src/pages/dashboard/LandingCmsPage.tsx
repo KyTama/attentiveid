@@ -2206,7 +2206,7 @@ export function LandingCmsPage() {
                   <div className="rounded-xl border border-navy-200 bg-navy-50 p-4 text-xs text-navy-800" role="note">
                     <strong className="font-semibold">Kartu di strip beranda kini diatur di menu "Produk Featured"</strong> (Konten Website &gt; Produk Featured):
                     tema, ikon, label, teks tombol, tautan, urutan, dan masa tampil. Kartu di editor ini hanya dipakai sebagai cadangan jika data portal tidak
-                    terjangkau dan untuk bar cepat di bawah layar (dock). Teks pengantar, tampil/sembunyi strip, dan dock tetap diatur di sini.
+                    terjangkau. Bar cepat di bawah layar (dock) kini diatur di Konten Website &gt; Pengaturan Situs. Teks pengantar dan tampil/sembunyi strip tetap diatur di sini.
                   </div>
                   {/* Info Banner & Global Controls */}
                   <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl space-y-3">

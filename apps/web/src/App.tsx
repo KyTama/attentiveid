@@ -17,10 +17,12 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { PageViewTracker } from './components/common/PageViewTracker'
+import { BrowserTabManager } from './components/common/BrowserTabManager'
 import { FeaturedProductsCmsPage } from './pages/dashboard/FeaturedProductsCmsPage'
 import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
 import { QrGeneratorPage } from './pages/dashboard/QrGeneratorPage'
+import { SiteSettingsPage } from './pages/dashboard/SiteSettingsPage'
 import { SciBriefPage } from './pages/SciBriefPage'
 import { SciBriefDetailPage } from './pages/SciBriefDetailPage'
 import { BookingPage } from './pages/BookingPage'
@@ -50,6 +52,7 @@ export function AppRoutes({
   return (
     <MotionConfig reducedMotion="user">
       <PageViewTracker />
+      <BrowserTabManager />
       <Routes>
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
@@ -143,6 +146,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <FeaturedProductsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="site-settings"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <SiteSettingsPage />
               </ProtectedRoute>
             }
           />
