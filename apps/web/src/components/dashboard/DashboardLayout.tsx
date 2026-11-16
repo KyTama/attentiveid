@@ -287,14 +287,9 @@ export function DashboardLayout() {
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 shrink-0">
         <div className="p-5 border-b border-slate-200/80 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2.5 font-bold text-lg text-slate-900 group">
-            <span className="w-8 h-8 rounded-lg bg-navy-700 text-gold-400 flex items-center justify-center font-bold text-sm shadow-xs group-hover:bg-navy-800 transition-colors">
-              A
-            </span>
-            <div className="flex flex-col">
-              <span className="leading-tight font-bold text-slate-900 tracking-tight">Attentive</span>
-              <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Internal Portal</span>
-            </div>
+          <Link to="/dashboard" className="flex flex-col gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-gold-500" aria-label="Attentive.id Internal Portal">
+            <img alt="Attentive.id" className="h-auto w-36" height="144" src="/images/figma/attentive-logo.webp" width="528" />
+            <span className="text-[10px] font-semibold text-navy-700/70 uppercase tracking-wider">Internal Portal</span>
           </Link>
         </div>
 
@@ -378,7 +373,10 @@ export function DashboardLayout() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                  <span className="font-bold text-slate-900">Attentive Portal</span>
+                  <span className="flex flex-col gap-1">
+                    <img alt="Attentive.id" className="h-auto w-32" height="144" src="/images/figma/attentive-logo.webp" width="528" />
+                    <span className="text-[10px] font-semibold text-navy-700/70 uppercase tracking-wider">Internal Portal</span>
+                  </span>
                   <button
                     onClick={() => setIsMobileOpen(false)}
                     className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"

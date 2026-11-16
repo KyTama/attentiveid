@@ -143,6 +143,14 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
         throw error
       }
     }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Featured'], summary: 'Create a featured product' } })
+    .put('/api/admin/featured-products/order', async ({ body, set }: any) => {
+      const ids = Array.isArray(body?.ids) ? body.ids.filter((id: unknown): id is string => typeof id === 'string') : []
+      if (!(await repository.reorderFeatured(ids))) {
+        set.status = 409
+        return { status: 'conflict', message: 'Daftar kartu berubah. Muat ulang halaman lalu coba lagi.' }
+      }
+      return { status: 'success', products: await repository.listFeaturedAdmin(now()) }
+    }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Featured'], summary: 'Set the order of the featured cards' } })
     .put('/api/admin/featured-products/:id', async ({ params: { id }, body, set }: any) => {
       const parsed = validateFeaturedProductInput(body)
       if (!parsed.ok) {

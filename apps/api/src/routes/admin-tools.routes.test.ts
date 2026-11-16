@@ -29,6 +29,8 @@ const makeRepository = () => {
   const qr: QrCodeDto[] = []
   const rows: TrafficDayRow[] = [{ path: '/', day: '2026-12-05', views: 4, sessions: 2, lastVisitAt: '2026-12-05T01:00:00Z' }]
   const repository = {
+    reorderFeatured: async (ids: string[]) => ids.join() === 'b,a' || ids.join() === 'a,b',
+    listFeaturedAdmin: async () => [],
     listActiveFeatured: async () => [{ id: '1', slug: 'ltbl', title: { id: 'LTBL', en: 'LTBL' }, description: { id: '', en: '' }, theme: 'blue', icon: 'sparkles', badge: { id: '', en: '' }, cta: { id: '', en: '' }, url: '/let-there-be-light' }],
     getSharePreview: async (path: string) => (path === '/free-session' ? { id: 'p', path, title: 'Sesi "Gratis"', description: 'Isi', imageUrl: '/media/x.jpg', updatedAt: 'x' } : null),
     recordPageView: async (path: string, newSession: boolean) => { views.push({ path, newSession }) },
@@ -109,5 +111,18 @@ describe('share image detection', () => {
     expect(detectShareImageType(pad([0x89, 0x50, 0x4e, 0x47]))?.ext).toBe('png')
     expect(detectShareImageType(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0, 0]))?.ext).toBe('webp')
     expect(detectShareImageType(pad([0x3c, 0x73, 0x76, 0x67]))).toBeNull()
+  })
+})
+
+describe('featured order', () => {
+  it('saves a new order for admins and rejects a list that does not match the current cards', async () => {
+    const { repository } = makeRepository()
+    const app = makeApp(repository)
+    const put = (ids: string[], who = otherAdmin) =>
+      app.handle(new Request('http://localhost/api/admin/featured-products/order', { method: 'PUT', headers: { ...bearer(who), 'content-type': 'application/json' }, body: JSON.stringify({ ids }) }))
+    expect((await put(['b', 'a'])).status).toBe(200)
+    expect((await put(['a'])).status).toBe(409)
+    const unauth = await app.handle(new Request('http://localhost/api/admin/featured-products/order', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids: ['a', 'b'] }) }))
+    expect(unauth.status).toBe(401)
   })
 })
