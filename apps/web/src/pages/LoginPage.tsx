@@ -55,7 +55,7 @@ export function LoginPage() {
         <div className="text-center mb-6">
           <img alt="Attentive.id" className="mx-auto mb-4 h-auto w-44" height="144" src="/images/figma/attentive-logo.webp" width="528" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Internal Portal
+            Attentive.id Portal
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             {t('auth.loginSubtitle', 'Sign in to access admin and psychologist workspace.')}
