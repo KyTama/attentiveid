@@ -65,15 +65,15 @@ export function FloatingBarView({ settings, isId, onDismiss, dismissLabel, previ
   return (
     <div className="relative mx-auto w-max max-w-[calc(100vw-1rem)]">
       {top.visible && (
-        <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[58%]">
+        <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[74%]">
           {top.mode === 'image' && top.imageUrl ? (
             <LinkOrSpan
-              className="grid size-11 place-items-center rounded-full border-[3px] border-[#FAF8F3] bg-secondary shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="grid size-10 place-items-center rounded-full border-[3px] border-[#FAF8F3] bg-secondary shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"
               label={pick(top.label)}
               preview={preview}
               url={top.url}
             >
-              <img alt="" className="size-7 object-contain" height={28} src={top.imageUrl} width={28} />
+              <img alt="" className="floating-bar-star size-7 object-contain" height={28} src={top.imageUrl} width={28} />
             </LinkOrSpan>
           ) : (
             <LinkOrSpan
@@ -90,7 +90,7 @@ export function FloatingBarView({ settings, isId, onDismiss, dismissLabel, previ
         </div>
       )}
 
-      <div className="flex items-stretch gap-0.5 rounded-full border border-white/20 bg-secondary/95 px-1.5 pb-1.5 pt-4 shadow-xl backdrop-blur-xl sm:gap-1 sm:px-2 sm:pb-2 sm:pt-[18px]">
+      <div className="flex items-stretch gap-0.5 rounded-full border border-white/20 bg-secondary/95 px-1.5 pb-1.5 pt-2.5 shadow-xl backdrop-blur-xl sm:gap-1 sm:px-2 sm:pb-2 sm:pt-3">
         {items.map((item, index) => {
           const Icon = CARD_ICONS[item.icon]
           return (
