@@ -16,6 +16,11 @@ import { ArticlesPage } from './pages/ArticlesPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
+import { PageViewTracker } from './components/common/PageViewTracker'
+import { FeaturedProductsCmsPage } from './pages/dashboard/FeaturedProductsCmsPage'
+import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
+import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
+import { QrGeneratorPage } from './pages/dashboard/QrGeneratorPage'
 import { SciBriefPage } from './pages/SciBriefPage'
 import { SciBriefDetailPage } from './pages/SciBriefDetailPage'
 import { BookingPage } from './pages/BookingPage'
@@ -44,6 +49,7 @@ export function AppRoutes({
 } = {}) {
   return (
     <MotionConfig reducedMotion="user">
+      <PageViewTracker />
       <Routes>
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
@@ -129,6 +135,38 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <SciBriefCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="featured-products"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <FeaturedProductsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="share-previews"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <SharePreviewsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="experimental/traffic"
+            element={
+              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+                <TrafficMonitorPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="experimental/qr-generator"
+            element={
+              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+                <QrGeneratorPage />
               </ProtectedRoute>
             }
           />

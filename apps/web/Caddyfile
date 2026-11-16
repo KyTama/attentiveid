@@ -9,6 +9,19 @@
 
 	respond /healthz 200
 
+	# Link-preview crawlers (WhatsApp, Facebook, X, Telegram...) do not run JavaScript, so they get a
+	# small page with the per-page thumbnail set in the portal. Normal visitors and Google are unaffected.
+	@linkpreview {
+		method GET HEAD
+		header_regexp ua User-Agent (?i)(facebookexternalhit|facebot|whatsapp|twitterbot|linkedinbot|telegrambot|slackbot|discordbot|skypeuripreview|pinterestbot)
+		not path /api/* /assets/* /media/* /images/* /fonts/* /healthz
+		not path_regexp \.[a-z0-9]+$
+	}
+	handle @linkpreview {
+		rewrite * /api/content/share-html?path={http.request.uri.path}
+		reverse_proxy {$API_UPSTREAM:attentive-api:3000}
+	}
+
 	# sitemap.xml is built by the API from portal data; the static file is the fallback.
 	handle /sitemap.xml {
 		rewrite * /api/content/sitemap.xml

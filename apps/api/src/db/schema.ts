@@ -6,6 +6,8 @@ import {
     boolean,
     check,
     customType,
+    date,
+    doublePrecision,
     index,
     integer,
     pgEnum,
@@ -720,3 +722,60 @@ export const bookingWebhookDeliveriesRelations = relations(bookingWebhookDeliver
         references: [bookings.id]
     })
 }));
+
+/** Featured products listed in the site's Featured menu during their (admin-only) featured period. */
+export const featuredProducts = pgTable('featured_products', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull(),
+    titleId: text('title_id').notNull(),
+    titleEn: text('title_en').notNull(),
+    descriptionId: text('description_id').default('').notNull(),
+    descriptionEn: text('description_en').default('').notNull(),
+    url: text('url').default('').notNull(),
+    startAt: timestamp('start_at', { withTimezone: true, mode: 'string' }),
+    endAt: timestamp('end_at', { withTimezone: true, mode: 'string' }),
+    enabled: boolean('enabled').default(true).notNull(),
+    sortOrder: integer('sort_order').default(0).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('featured_products_slug_unique').on(table.slug),
+    check('featured_products_period_order', sql`${table.startAt} is null or ${table.endAt} is null or ${table.endAt} > ${table.startAt}`)
+]);
+
+/** Link preview (title/description/image shown when a page link is shared), one per page path. */
+export const sharePreviews = pgTable('share_previews', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    path: text('path').notNull(),
+    title: text('title').default('').notNull(),
+    description: text('description').default('').notNull(),
+    imageUrl: text('image_url').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('share_previews_path_unique').on(table.path)
+]);
+
+/** Per-day visit counters for main pages. No visitor data is stored. */
+export const pageViewDaily = pgTable('page_view_daily', {
+    path: text('path').notNull(),
+    day: date('day', { mode: 'string' }).notNull(),
+    views: integer('views').default(0).notNull(),
+    sessions: integer('sessions').default(0).notNull(),
+    lastVisitAt: timestamp('last_visit_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    primaryKey({ columns: [table.path, table.day] })
+]);
+
+/** Saved QR code designs (settings only; the image is generated in the browser). */
+export const qrCodes = pgTable('qr_codes', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    targetUrl: text('target_url').notNull(),
+    foreground: text('foreground').default('#14284B').notNull(),
+    background: text('background').default('#FFFFFF').notNull(),
+    logoDataUrl: text('logo_data_url').default('').notNull(),
+    logoScale: doublePrecision('logo_scale').default(0.2).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});

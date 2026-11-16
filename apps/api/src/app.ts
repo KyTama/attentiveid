@@ -12,6 +12,8 @@ import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
+import { createAdminToolsRoutes } from './routes/admin-tools.routes';
+import { createAdminToolsRepository, type AdminToolsRepository } from './repositories/admin-tools.repository';
 import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
 import { createSitemapRoutes } from './routes/sitemap.routes';
 import { createBookingRepository, type BookingRepository } from './repositories/booking.repository';
@@ -26,6 +28,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
     sciBriefsRepository?: SciBriefsRepository;
+    adminToolsRepository?: AdminToolsRepository;
     bookingRepository?: BookingRepository;
     triggerOutboxDrain?: () => Promise<unknown>;
 };
@@ -174,6 +177,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 sciBriefsRepository: dependencies.sciBriefsRepository || createSciBriefsRepository(dependencies.db),
+            }))
+            .use(createAdminToolsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                repository: dependencies.adminToolsRepository || createAdminToolsRepository(dependencies.db),
+                siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createBookingAdminRoutes({
                 tokenService: dependencies.tokenService,

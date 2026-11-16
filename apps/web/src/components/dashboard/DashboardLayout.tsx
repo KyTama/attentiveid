@@ -15,6 +15,10 @@ import {
   TextCursorInput,
   Network,
   CalendarDays,
+  Star,
+  Share2,
+  BarChart3,
+  QrCode,
   ChevronDown,
   Menu,
   X,
@@ -93,6 +97,18 @@ export function DashboardLayout() {
       show: isAdmin,
     },
     {
+      to: '/dashboard/featured-products',
+      label: t('dashboard.navFeaturedProducts', 'Produk Featured'),
+      icon: <Star className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
+    },
+    {
+      to: '/dashboard/share-previews',
+      label: t('dashboard.navSharePreviews', 'Thumbnail Link'),
+      icon: <Share2 className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
+    },
+    {
       to: '/dashboard/users',
       label: t('dashboard.navUsers', 'Manajemen Staff'),
       icon: <ShieldCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
@@ -108,6 +124,18 @@ export function DashboardLayout() {
           to: '/dashboard/experimental/forms',
           label: t('dashboard.navForms', 'Forms'),
           icon: <TextCursorInput className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/experimental/traffic',
+          label: t('dashboard.navTraffic', 'Traffic Monitor'),
+          icon: <BarChart3 className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/experimental/qr-generator',
+          label: t('dashboard.navQrGenerator', 'QR Generator'),
+          icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
         {

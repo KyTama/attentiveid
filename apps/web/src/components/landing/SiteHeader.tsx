@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { FeaturedMenu, MobileFeatured, useFeaturedProducts } from './FeaturedMenu'
 
 const navItems = [
   { key: 'psychologists', href: '/#psychologists' },
@@ -182,6 +183,7 @@ export function SiteHeader() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const reduceMotion = useReducedMotion()
+  const featuredProducts = useFeaturedProducts()
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (location.pathname === '/' && href.startsWith('/#')) {
@@ -219,6 +221,7 @@ export function SiteHeader() {
             {t('homepage.nav.ourServices')}
           </button>
           <ScienceMenu />
+          <FeaturedMenu products={featuredProducts} />
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
             if (isInternal) {
@@ -312,6 +315,7 @@ export function SiteHeader() {
                   <span>{t('homepage.nav.ourServices')}</span>
                 </button>
                 <MobileScience onNavigate={() => setMenuOpen(false)} />
+                <MobileFeatured onNavigate={() => setMenuOpen(false)} products={featuredProducts} />
                 {navItems.map((item) => {
                   const isInternal = !item.href.includes('#')
                   if (isInternal) {
