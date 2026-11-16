@@ -64,7 +64,7 @@ export function trackPageView(path: string, newSession: boolean): void {
 // ---- Featured products (admin) -------------------------------------------
 
 export const listAdminFeaturedProducts = async () =>
-  (await request<{ products: FeaturedProductAdminDto[] }>('/api/admin/featured-products', {}, 'Gagal memuat produk')).products
+  (await request<{ products?: FeaturedProductAdminDto[] }>('/api/admin/featured-products', {}, 'Gagal memuat produk')).products ?? []
 
 export const saveAdminFeaturedProduct = async (id: string | undefined, input: Partial<FeaturedProductInput>) =>
   (
@@ -81,7 +81,7 @@ export const deleteAdminFeaturedProduct = (id: string) =>
 // ---- Share previews (admin) -----------------------------------------------
 
 export const listAdminSharePreviews = async () =>
-  (await request<{ previews: SharePreviewDto[] }>('/api/admin/share-previews', {}, 'Gagal memuat thumbnail')).previews
+  (await request<{ previews?: SharePreviewDto[] }>('/api/admin/share-previews', {}, 'Gagal memuat thumbnail')).previews ?? []
 
 export const saveAdminSharePreview = async (input: SharePreviewInput) =>
   (await request<{ preview: SharePreviewDto }>('/api/admin/share-previews', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan thumbnail')).preview
@@ -91,9 +91,9 @@ export const deleteAdminSharePreview = (id: string) =>
 
 // ---- Owner only: traffic + QR ---------------------------------------------
 
-export const getTraffic = async () => (await request<{ rows: TrafficRow[] }>('/api/admin/traffic', {}, 'Gagal memuat traffic')).rows
+export const getTraffic = async () => (await request<{ rows?: TrafficRow[] }>('/api/admin/traffic', {}, 'Gagal memuat traffic')).rows ?? []
 
-export const listQrCodes = async () => (await request<{ qrCodes: QrCodeDto[] }>('/api/admin/qr-codes', {}, 'Gagal memuat QR')).qrCodes
+export const listQrCodes = async () => (await request<{ qrCodes?: QrCodeDto[] }>('/api/admin/qr-codes', {}, 'Gagal memuat QR')).qrCodes ?? []
 
 export const saveQrCode = async (id: string | undefined, input: QrCodeInput) =>
   (

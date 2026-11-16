@@ -28,6 +28,8 @@ import { useAuth } from '../../features/auth/auth-context'
 import { LanguageSwitcher } from '../common/LanguageSwitcher'
 import { useTranslation } from 'react-i18next'
 import { canAccessExperimental } from '../../features/experimental/access'
+import { NAV_KEYWORDS, type NavSearchItem } from '../../features/dashboard/nav-search'
+import { NavSearch } from './NavSearch'
 
 type NavLeaf = { to: string; label: string; icon: ReactNode; end?: boolean; show: boolean }
 type NavGroup = { id: string; label: string; icon: ReactNode; show: boolean; children: NavEntry[] }
@@ -55,64 +57,104 @@ export function DashboardLayout() {
       show: true,
     },
     {
-      to: '/dashboard/landing',
-      label: t('dashboard.navLanding', 'Landing Content'),
+      id: 'content',
+      label: t('dashboard.groupContent', 'Konten Website'),
       icon: <LayoutTemplate className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
+      children: [
+        {
+          to: '/dashboard/landing',
+          label: t('dashboard.navLanding', 'Landing Content'),
+          icon: <LayoutTemplate className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/testimonials',
+          label: t('dashboard.navTestimonials', 'Testimoni Klien'),
+          icon: <MessageSquareQuote className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/featured-products',
+          label: t('dashboard.navFeaturedProducts', 'Produk Featured'),
+          icon: <Star className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/share-previews',
+          label: t('dashboard.navSharePreviews', 'Thumbnail Link'),
+          icon: <Share2 className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+      ],
     },
     {
-      to: '/dashboard/testimonials',
-      label: t('dashboard.navTestimonials', 'Testimoni Klien'),
-      icon: <MessageSquareQuote className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
-    },
-    {
-      to: '/dashboard/psychologists',
-      label: t('dashboard.navPsychologists', 'Psychologists'),
+      id: 'team',
+      label: t('dashboard.groupTeam', 'Tim & Psikolog'),
       icon: <Users className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
+      show: true,
+      children: [
+        {
+          to: '/dashboard/psychologists',
+          label: t('dashboard.navPsychologists', 'Psychologists'),
+          icon: <Users className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/profile',
+          label: t('dashboard.navProfile', 'Profil Saya'),
+          icon: <UserCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+      ],
     },
     {
-      to: '/dashboard/bookings',
-      label: t('dashboard.navBookings', 'Reservasi & Booking'),
+      id: 'research',
+      label: t('dashboard.groupResearch', 'Riset & Publikasi'),
+      icon: <BookOpenText className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: true,
+      children: [
+        {
+          to: '/dashboard/articles',
+          label: t('dashboard.navArticles', 'Articles Management'),
+          icon: <FileText className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/sci-brief',
+          label: t('dashboard.navSciBrief', 'Sci-Brief'),
+          icon: <BookOpenText className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+      ],
+    },
+    {
+      id: 'operations',
+      label: t('dashboard.groupOperations', 'Operasional'),
       icon: <CalendarDays className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
+      children: [
+        {
+          to: '/dashboard/bookings',
+          label: t('dashboard.navBookings', 'Reservasi & Booking'),
+          icon: <CalendarDays className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+      ],
     },
     {
-      to: '/dashboard/profile',
-      label: t('dashboard.navProfile', 'Profil Saya'),
-      icon: <UserCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: true,
-    },
-    {
-      to: '/dashboard/articles',
-      label: t('dashboard.navArticles', 'Articles Management'),
-      icon: <FileText className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: true,
-    },
-    {
-      to: '/dashboard/sci-brief',
-      label: t('dashboard.navSciBrief', 'Sci-Brief'),
-      icon: <BookOpenText className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
-    },
-    {
-      to: '/dashboard/featured-products',
-      label: t('dashboard.navFeaturedProducts', 'Produk Featured'),
-      icon: <Star className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
-    },
-    {
-      to: '/dashboard/share-previews',
-      label: t('dashboard.navSharePreviews', 'Thumbnail Link'),
-      icon: <Share2 className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
-    },
-    {
-      to: '/dashboard/users',
-      label: t('dashboard.navUsers', 'Manajemen Staff'),
+      id: 'settings',
+      label: t('dashboard.groupSettings', 'Pengaturan'),
       icon: <ShieldCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: isAdmin,
+      children: [
+        {
+          to: '/dashboard/users',
+          label: t('dashboard.navUsers', 'Manajemen Staff'),
+          icon: <ShieldCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+      ],
     },
     {
       id: 'experimental',
@@ -222,6 +264,17 @@ export function DashboardLayout() {
     )
   }
 
+  // Every visible menu page, with the group(s) it sits under, for the search box.
+  const flattenNav = (entries: NavEntry[], trail: string[] = []): NavSearchItem[] =>
+    entries
+      .filter((entry) => entry.show)
+      .flatMap((entry) =>
+        isGroup(entry)
+          ? flattenNav(entry.children, [...trail, entry.label])
+          : [{ to: entry.to, label: entry.label, trail, keywords: NAV_KEYWORDS[entry.to] ?? '' }],
+      )
+  const searchItems = flattenNav(navEntries)
+
   const renderNav = (onNavigate?: () => void) => navEntries.map((entry) => renderEntry(entry, 0, onNavigate))
 
   const handleLogout = async () => {
@@ -243,6 +296,10 @@ export function DashboardLayout() {
               <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Internal Portal</span>
             </div>
           </Link>
+        </div>
+
+        <div className="border-b border-slate-200/80 p-3">
+          <NavSearch enableShortcut items={searchItems} onSelect={(to) => navigate(to)} />
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -329,6 +386,16 @@ export function DashboardLayout() {
                   >
                     <X className="size-5 stroke-[1.75]" aria-hidden="true" />
                   </button>
+                </div>
+
+                <div className="mb-3">
+                  <NavSearch
+                    items={searchItems}
+                    onSelect={(to) => {
+                      setIsMobileOpen(false)
+                      navigate(to)
+                    }}
+                  />
                 </div>
 
                 <nav className="space-y-1">
