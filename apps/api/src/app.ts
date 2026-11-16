@@ -10,6 +10,7 @@ import { createOverviewRoutes } from './routes/overview.routes';
 import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes';
 import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
+import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
 import { createAdminToolsRoutes } from './routes/admin-tools.routes';
@@ -27,6 +28,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     contentTransitions?: any;
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
+    freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
     adminToolsRepository?: AdminToolsRepository;
     bookingRepository?: BookingRepository;
@@ -172,6 +174,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 freeSessionRepository: dependencies.freeSessionRepository || createFreeSessionRepository(dependencies.db),
+                sheetSync: dependencies.freeSessionSheetSync,
             }))
             .use(createSciBriefsRoutes({
                 tokenService: dependencies.tokenService,

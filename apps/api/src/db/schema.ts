@@ -544,7 +544,11 @@ export const freeSessionSubmissions = pgTable('free_session_submissions', {
     keluhan: text('keluhan').notNull(),
     keluhanDetail: text('keluhan_detail'),
     agreedAt: timestamp('agreed_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    /** When the row was written to the Google Sheet (null = not yet). */
+    sheetSyncedAt: timestamp('sheet_synced_at', { withTimezone: true, mode: 'string' }),
+    /** Last Google Sheet error for this row, cleared on success. */
+    sheetError: text('sheet_error')
 }, (table) => [
     index('free_session_submissions_created_at_idx').on(table.createdAt),
     index('free_session_submissions_phone_idx').on(table.phone),
