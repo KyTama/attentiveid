@@ -5,6 +5,8 @@ import { freeSessionSubmissions } from '../db/schema';
 
 export interface FreeSessionRepository {
     create(submission: FreeSessionSubmission): Promise<{ id: string }>;
+    /** The newest submission with this phone number (0812... and +62 812... match), if any. */
+    findByPhone(phone: string): Promise<{ id: string; createdAt: string } | null>;
     listAll(): Promise<FreeSessionRecord[]>;
     /** Submissions not yet written to the Google Sheet, oldest first. */
     listUnsynced(limit?: number): Promise<FreeSessionRecord[]>;
@@ -25,6 +27,9 @@ const toRecord = (row: typeof freeSessionSubmissions.$inferSelect): FreeSessionR
     keluhanDetail: row.keluhanDetail
 });
 
+/** Digits only, with a leading country code 62 treated as 0 (0812... and +62 812... are the same number). */
+const digits = (value: string) => value.replace(/\D+/g, '').replace(/^62/, '0');
+
 export const createFreeSessionRepository = (db: typeof defaultDb = defaultDb): FreeSessionRepository => ({
     async create(submission) {
         const rows = await db
@@ -40,6 +45,17 @@ export const createFreeSessionRepository = (db: typeof defaultDb = defaultDb): F
             })
             .returning({ id: freeSessionSubmissions.id });
         return { id: rows[0].id };
+    },
+
+    async findByPhone(phone) {
+        const key = digits(phone);
+        const rows = await db
+            .select({ id: freeSessionSubmissions.id, createdAt: freeSessionSubmissions.createdAt })
+            .from(freeSessionSubmissions)
+            .where(sql`regexp_replace(regexp_replace(${freeSessionSubmissions.phone}, '[^0-9]', '', 'g'), '^62', '0') = ${key}`)
+            .orderBy(desc(freeSessionSubmissions.createdAt))
+            .limit(1);
+        return rows[0] ?? null;
     },
 
     async listAll() {

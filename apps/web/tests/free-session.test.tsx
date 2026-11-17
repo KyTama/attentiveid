@@ -124,6 +124,22 @@ describe('/free-session page', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /daftar sesi gratis/i })).toBeEnabled())
   })
 
+  it('announces that the name / phone number is already registered', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ status: 'error', code: 'already_registered', message: 'Nama / nomor telepon sudah terdaftar. Tim kami akan menghubungi kamu lewat WhatsApp.' }),
+    })
+    const user = userEvent.setup()
+    renderPage()
+    await fillValidForm(user)
+    await user.click(screen.getByRole('button', { name: /daftar sesi gratis/i }))
+
+    expect(await screen.findByText(/nama \/ nomor telepon sudah terdaftar/i)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /lanjut ke whatsapp/i })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: /daftar sesi gratis/i })).toBeEnabled())
+  })
+
   it('surfaces the rate limit message from the API', async () => {
     fetchMock.mockResolvedValue({
       ok: false,
