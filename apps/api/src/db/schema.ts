@@ -795,8 +795,6 @@ export const qrCodes = pgTable('qr_codes', {
 // Prayers written on the Let There Be Light page; a random visible one is shown inside the gift.
 export const prayers = pgTable('prayers', {
     id: uuid('id').defaultRandom().primaryKey(),
-    name: text('name'),
-    city: text('city'),
     prayer: text('prayer').notNull(),
     /** Hidden by an admin (or waiting for approval when moderation is manual). */
     hidden: boolean('hidden').default(false).notNull(),

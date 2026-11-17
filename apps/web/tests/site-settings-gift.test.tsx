@@ -52,6 +52,8 @@ describe('Pengaturan Situs > gift section', () => {
     const view = within(section)
 
     // home on by default; articles off; forms and the prayer page are locked off
+    expect(view.queryByRole('checkbox', { name: /sender/i })).toBeNull()
+    expect(view.getByText(/completely anonymous/i)).toBeInTheDocument()
     expect(view.getByRole('checkbox', { name: /^Home/ })).toBeChecked()
     expect(view.getByRole('checkbox', { name: /Articles/ })).not.toBeChecked()
     for (const name of [/Free Session form/, /Booking form/, /Let There Be Light/]) {
@@ -61,7 +63,6 @@ describe('Pengaturan Situs > gift section', () => {
     fireEvent.click(view.getByRole('checkbox', { name: /Articles/ }))
     fireEvent.change(view.getByRole('combobox', { name: /how often/i }), { target: { value: 'always' } })
     fireEvent.change(view.getByRole('combobox', { name: /new prayers from visitors/i }), { target: { value: 'manual' } })
-    fireEvent.click(view.getByRole('checkbox', { name: /sender's name/i }))
     fireEvent.change(view.getByRole('textbox', { name: /Letter text \(English\)/ }), { target: { value: 'Dear friend,\n[Prayer]' } })
     fireEvent.click(view.getByRole('button', { name: /^Save gift$/ }))
 
@@ -71,8 +72,8 @@ describe('Pengaturan Situs > gift section', () => {
     expect(sent.pages['/']).toBe(true)
     expect(sent.frequency).toBe('always')
     expect(sent.moderation).toBe('manual')
-    expect(sent.showName).toBe(false)
-    expect(sent.showCity).toBe(true)
+    expect(sent).not.toHaveProperty('showName')
+    expect(sent).not.toHaveProperty('showCity')
     expect(sent.messageEn).toBe('Dear friend,\n[Prayer]')
     expect(await screen.findByText(/gift settings saved/i)).toBeInTheDocument()
   })

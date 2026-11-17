@@ -22,8 +22,6 @@ import { PrayersCmsPage } from '../src/pages/dashboard/PrayersCmsPage'
 
 const row = (id: string, prayer: string, extra: Partial<PrayerAdminDto> = {}): PrayerAdminDto => ({
   id,
-  name: 'Sari',
-  city: 'Malang',
   prayer,
   hidden: false,
   createdAt: '2026-11-17T03:00:00.000Z',
@@ -35,7 +33,7 @@ describe('PrayersCmsPage', () => {
     await i18n.changeLanguage('en')
     hidden.mockClear()
     removed.mockClear()
-    state.rows = [row('a', 'May your day be calm.'), row('b', 'Rest well tonight.', { hidden: true, name: '', city: '' })]
+    state.rows = [row('a', 'May your day be calm.'), row('b', 'Rest well tonight.', { hidden: true })]
     vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
@@ -67,14 +65,15 @@ describe('PrayersCmsPage', () => {
     await waitFor(() => expect(screen.queryByText('May your day be calm.')).toBeNull())
   })
 
-  it('searches by prayer, name or city', async () => {
+  it('searches the prayers, and shows them as anonymous', async () => {
     render(
       <MemoryRouter>
         <PrayersCmsPage />
       </MemoryRouter>,
     )
     await screen.findByText('May your day be calm.')
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'malang' } })
+    expect(screen.getAllByText(/anonymous/i).length).toBeGreaterThan(0)
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'calm' } })
     expect(screen.getByText('May your day be calm.')).toBeInTheDocument()
     expect(screen.queryByText('Rest well tonight.')).toBeNull()
   })

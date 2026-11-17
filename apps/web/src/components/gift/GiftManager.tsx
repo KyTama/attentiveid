@@ -96,11 +96,11 @@ export function GiftManager() {
     const prayer = await (prayerRef.current ?? fetchGiftPrayer(langRef.current))
     const template = langRef.current === 'en' ? gift.messageEn : gift.messageId
     setLetter({
-      message: renderGiftMessage(template, prayer, { showName: gift.showName, showCity: gift.showCity }),
+      message: renderGiftMessage(template, prayer),
       prayer: prayer.text.trim(),
     })
     setStage('open')
-  }, [gift.messageEn, gift.messageId, gift.showCity, gift.showName])
+  }, [gift.messageEn, gift.messageId])
   const openGiftRef = useRef(openGift)
   useEffect(() => {
     openGiftRef.current = openGift
@@ -218,7 +218,7 @@ export function GiftManager() {
       <GiftQuestion
         onPass={() => {
           setStage('done')
-          navigate('/let-there-be-light')
+          navigate('/')
         }}
         onYes={() => {
           setStage('done')

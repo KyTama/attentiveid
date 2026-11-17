@@ -24,7 +24,7 @@ describe('PrayerLauncher', () => {
     vi.unstubAllGlobals()
   })
 
-  it('opens from the button, checks the prayer, and sends name, city and prayer once even on a double click', async () => {
+  it('opens from the button, checks the prayer, and sends only the prayer once even on a double click', async () => {
     let resolve: (value: unknown) => void = () => {}
     fetchMock.mockReturnValue(new Promise((r) => { resolve = r }))
     const user = userEvent.setup()
@@ -33,6 +33,10 @@ describe('PrayerLauncher', () => {
     await user.click(screen.getByRole('button', { name: /send your prayer to others/i }))
     const dialog = screen.getByRole('dialog')
     expect(dialog).toBeInTheDocument()
+    // anonymous: no name or city is asked for
+    expect(screen.queryByLabelText(/your name/i)).toBeNull()
+    expect(screen.queryByLabelText(/your city/i)).toBeNull()
+    expect(dialog).toHaveTextContent(/completely anonymous/i)
 
     // too short: checked before anything is sent
     await user.type(screen.getByRole('textbox', { name: /your prayer/i }), 'short')
@@ -40,8 +44,6 @@ describe('PrayerLauncher', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
 
-    await user.type(screen.getByLabelText(/your name/i), 'Sari')
-    await user.type(screen.getByLabelText(/your city/i), 'Malang')
     await user.clear(screen.getByRole('textbox', { name: /your prayer/i }))
     await user.type(screen.getByRole('textbox', { name: /your prayer/i }), 'May your day be gentle and bright.')
     const send = screen.getByRole('button', { name: /send prayer/i })
@@ -49,7 +51,7 @@ describe('PrayerLauncher', () => {
     fireEvent.click(send)
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
-    expect(body).toMatchObject({ name: 'Sari', city: 'Malang', prayer: 'May your day be gentle and bright.', website: '' })
+    expect(body).toEqual({ prayer: 'May your day be gentle and bright.', website: '' })
 
     resolve({ ok: true, status: 201, json: async () => ({ status: 'success', data: { pendingApproval: false } }) })
     expect(await screen.findByText(/your prayer is sent/i)).toBeInTheDocument()

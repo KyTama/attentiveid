@@ -649,16 +649,9 @@ export function SiteSettingsPage() {
           {tx(`Tulis ${GIFT_PRAYER_TOKEN} di tempat doa akan muncul.`, `Write ${GIFT_PRAYER_TOKEN} where the prayer should appear.`)}
         </p>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-800">
-            <input checked={giftSettings.showName} className="size-4 accent-navy-700" onChange={(e) => setGiftSettings({ ...giftSettings, showName: e.target.checked })} type="checkbox" />
-            {tx('Tampilkan nama pengirim doa', "Show the prayer sender's name")}
-          </label>
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-800">
-            <input checked={giftSettings.showCity} className="size-4 accent-navy-700" onChange={(e) => setGiftSettings({ ...giftSettings, showCity: e.target.checked })} type="checkbox" />
-            {tx('Tampilkan kota pengirim doa', "Show the prayer sender's city")}
-          </label>
-        </div>
+        <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          {tx('Doa pengunjung sepenuhnya anonim: nama dan kota tidak diminta, tidak disimpan, dan tidak tampil di surat.', 'Visitor prayers are completely anonymous: no name or city is asked for, stored, or shown in the letter.')}
+        </p>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
