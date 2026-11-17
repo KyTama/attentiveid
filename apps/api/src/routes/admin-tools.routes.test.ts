@@ -159,6 +159,23 @@ describe('site settings', () => {
     expect((await put('floating-bar', { ...bar, items: [{ label: { id: '' } }] })).status).toBe(400)
   })
 
+  it('lets admins save the gift settings, rejects a letter without [Prayer], nobody else', async () => {
+    const { repository, saved } = makeRepository()
+    const app = makeApp(repository)
+    const put = (body: unknown, headers: Record<string, string>) =>
+      app.handle(new Request('http://localhost/api/admin/site-settings/gift', { method: 'PUT', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) }))
+    expect((await put({}, {})).status).toBe(401)
+    expect((await put({}, bearer(psychologist))).status).toBe(403)
+    expect((await put({ messageId: 'Halo', messageEn: 'Hello' }, bearer(otherAdmin))).status).toBe(400)
+    const ok = await put({ pages: { '/articles': true, '/booking': true }, frequency: 'always', messageId: 'Halo [Prayer]', messageEn: 'Hi [Prayer]', showCity: false }, bearer(otherAdmin))
+    expect(ok.status).toBe(200)
+    const stored = saved.gift as { frequency: string; showCity: boolean; pages: Record<string, boolean> }
+    expect(stored.frequency).toBe('always')
+    expect(stored.showCity).toBe(false)
+    expect(stored.pages['/articles']).toBe(true)
+    expect(Object.keys(stored.pages)).not.toContain('/booking')
+  })
+
   it('lets admins save the walking cats settings, nobody else', async () => {
     const { repository, saved } = makeRepository()
     const app = makeApp(repository)

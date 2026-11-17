@@ -22,6 +22,7 @@ import { FeaturedProductsCmsPage } from './pages/dashboard/FeaturedProductsCmsPa
 import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
 import { OurServicesPage } from './pages/OurServicesPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
+import { PrayersCmsPage } from './pages/dashboard/PrayersCmsPage'
 import { QrGeneratorPage } from './pages/dashboard/QrGeneratorPage'
 import { SiteSettingsPage } from './pages/dashboard/SiteSettingsPage'
 import { SciBriefPage } from './pages/SciBriefPage'
@@ -176,6 +177,14 @@ export function AppRoutes({
             }
           />
           <Route path="experimental/traffic" element={<Navigate to="/dashboard/traffic" replace />} />
+          <Route
+            path="prayers"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PrayersCmsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="qr-generator"
             element={

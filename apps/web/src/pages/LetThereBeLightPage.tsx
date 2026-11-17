@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createAttendController } from '@/features/let-there-be-light/engine'
 import '@/features/let-there-be-light/let-there-be-light.css'
+import { PrayerLauncher } from '@/components/prayer/PrayerLauncher'
 
 const FONT_LINK_ID = 'attend-ltbl-fonts'
 const GOOGLE_FONTS_HREF =
@@ -73,6 +74,7 @@ export function LetThereBeLightPage() {
           <div ref={cardRef} className="card" aria-live="polite" />
         </main>
       </div>
+      <PrayerLauncher />
     </div>
   )
 }

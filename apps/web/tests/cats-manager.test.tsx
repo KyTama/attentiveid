@@ -23,6 +23,8 @@ const renderAt = (path: string) =>
 
 describe('CatsManager', () => {
   beforeEach(() => {
+    // the visitor has turned the cats on
+    window.localStorage.setItem('attentive-cats', 'on')
     cats = DEFAULT_CATS
     start.mockClear()
     stop.mockClear()
@@ -34,7 +36,14 @@ describe('CatsManager', () => {
     delete window.AttentiveCats
   })
 
-  it('starts the cats on a public page by default', async () => {
+  it('keeps the cats off until the visitor turns them on, even where the admin allows them', async () => {
+    window.localStorage.removeItem('attentive-cats')
+    renderAt('/')
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(start).not.toHaveBeenCalled()
+  })
+
+  it('starts the cats on a public page the visitor turned them on for', async () => {
     renderAt('/psychologists/syazka')
     await waitFor(() => expect(start).toHaveBeenCalledTimes(1))
   })
@@ -72,6 +81,7 @@ describe('CatsManager', () => {
 describe('CatsManager before the settings arrive', () => {
   it('does not start the cats on the default settings while the real ones are still loading', async () => {
     vi.resetModules()
+    window.localStorage.setItem('attentive-cats', 'on')
     vi.doMock('../src/features/site-settings/use-site-settings', () => ({
       useSiteSettings: () => ({ cats: DEFAULT_CATS }),
       loadSiteSettings: () => new Promise(() => {}),

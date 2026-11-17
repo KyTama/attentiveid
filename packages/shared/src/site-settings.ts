@@ -5,6 +5,7 @@
  *  - the walking cats (on/off, and on which pages)
  */
 import { FEATURED_CARD_ICONS, type FeaturedCardIcon } from './featured-product'
+import { DEFAULT_GIFT, validateGift, type GiftSettings } from './gift'
 
 export const FLOATING_BAR_MAX_ITEMS = 4
 
@@ -77,6 +78,7 @@ export interface SiteSettings {
   floatingBar: FloatingBarSettings
   browserTab: BrowserTabSettings
   cats: CatSettings
+  gift: GiftSettings
 }
 
 export const DEFAULT_FLOATING_BAR: FloatingBarSettings = {
@@ -111,6 +113,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   floatingBar: DEFAULT_FLOATING_BAR,
   browserTab: DEFAULT_BROWSER_TAB,
   cats: DEFAULT_CATS,
+  gift: DEFAULT_GIFT,
 }
 
 const asString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
@@ -226,13 +229,20 @@ export const catsAllowedOn = (cats: CatSettings, pathname: string): boolean => {
   return page !== null && cats.pages[page] !== false
 }
 
+const mergeGift = (stored: unknown): GiftSettings => {
+  if (!stored) return DEFAULT_GIFT
+  const checked = validateGift(stored)
+  return checked.ok ? checked.value : DEFAULT_GIFT
+}
+
 /** Fills anything missing/invalid in stored settings with the defaults, so the site never breaks. */
-export const mergeSiteSettings = (stored: { floatingBar?: unknown; browserTab?: unknown; cats?: unknown } | null | undefined): SiteSettings => {
+export const mergeSiteSettings = (stored: { floatingBar?: unknown; browserTab?: unknown; cats?: unknown; gift?: unknown } | null | undefined): SiteSettings => {
   const bar = stored?.floatingBar ? validateFloatingBar(stored.floatingBar) : null
   const tab = stored?.browserTab ? validateBrowserTab(stored.browserTab) : null
   return {
     floatingBar: bar?.ok ? bar.value : DEFAULT_FLOATING_BAR,
     browserTab: tab?.ok ? tab.value : DEFAULT_BROWSER_TAB,
+    gift: mergeGift(stored?.gift),
     cats: stored?.cats ? (validateCats(stored.cats) as { ok: true; value: CatSettings }).value : DEFAULT_CATS,
   }
 }

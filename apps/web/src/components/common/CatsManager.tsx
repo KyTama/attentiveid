@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { catsAllowedOn } from '@attentiveid/shared'
 import { loadSiteSettings, useSiteSettings } from '@/features/site-settings/use-site-settings'
+import { useCatPreference } from '@/features/cats/cat-preference'
 import { guardCatsOverFrames } from './cats-frame-guard'
 
 interface CatsApi {
@@ -41,12 +42,14 @@ const loadCats = (): Promise<CatsApi | null> => {
 const prefersReducedMotion = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
- * Walking cats on the public pages the admin has left on (portal: Pengaturan Situs). They are never shown on the forms or the
- * lights page, and not for visitors who asked their device for less motion.
+ * Walking cats on the public pages the admin has left on (portal: Pengaturan Situs), for visitors who turned them on with the
+ * cat button. They are never shown on the forms or the lights page, and not for visitors who asked their device for less motion.
  */
 export function CatsManager() {
   const { pathname } = useLocation()
   const { cats } = useSiteSettings()
+  // The visitor decides: the admin only says where cats are allowed. Off until the visitor turns them on.
+  const [catsOn] = useCatPreference()
   // Until the real settings have arrived the defaults ("on") are in use: do not start the cats on those, or they would
   // flash in and walk out again on a site where the admin has switched them off.
   const [settingsReady, setSettingsReady] = useState(false)
@@ -57,7 +60,7 @@ export function CatsManager() {
       active = false
     }
   }, [])
-  const wanted = settingsReady && catsAllowedOn(cats, pathname) && !prefersReducedMotion()
+  const wanted = settingsReady && catsOn && catsAllowedOn(cats, pathname) && !prefersReducedMotion()
 
   useEffect(() => {
     if (!wanted) {

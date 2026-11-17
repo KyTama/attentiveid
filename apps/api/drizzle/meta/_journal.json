@@ -120,6 +120,13 @@
       "when": 1794826776617,
       "tag": "0016_free_session_sheet_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794911884080,
+      "tag": "0017_prayers",
+      "breakpoints": true
     }
   ]
 }
