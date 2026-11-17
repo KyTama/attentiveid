@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 import {
   CAT_BLOCKED_PAGES,
   CAT_PAGES,
+  DEFAULT_GIFT,
+  GIFT_BLOCKED_PAGES,
+  GIFT_PAGES,
+  GIFT_PRAYER_TOKEN,
+  type GiftFrequency,
+  type GiftSettings,
   DEFAULT_BROWSER_TAB,
   DEFAULT_CATS,
   DEFAULT_FLOATING_BAR,
@@ -19,6 +25,7 @@ import {
   getAdminSiteSettings,
   saveBrowserTabSettings,
   saveCatSettings,
+  saveGiftSettings,
   saveFloatingBarSettings,
   uploadSharePreviewImage,
 } from '../../features/admin-tools/service'
@@ -37,13 +44,15 @@ export function SiteSettingsPage() {
   const [bar, setBar] = useState<FloatingBarSettings>(clone(DEFAULT_FLOATING_BAR))
   const [tab, setTab] = useState<BrowserTabSettings>(clone(DEFAULT_BROWSER_TAB))
   const [cats, setCats] = useState<CatSettings>(clone(DEFAULT_CATS))
+  const [giftSettings, setGiftSettings] = useState<GiftSettings>(clone(DEFAULT_GIFT))
+  const [giftErrors, setGiftErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [barErrors, setBarErrors] = useState<Record<string, string>>({})
   const [tabErrors, setTabErrors] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState<'bar' | 'tab' | 'cats' | null>(null)
-  const [uploading, setUploading] = useState<'top' | 'favicon' | null>(null)
+  const [saving, setSaving] = useState<'bar' | 'tab' | 'cats' | 'gift' | null>(null)
+  const [uploading, setUploading] = useState<'top' | 'favicon' | 'giftImageUrl' | 'sealFrontUrl' | 'sealBackUrl' | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -53,6 +62,7 @@ export function SiteSettingsPage() {
         setBar(clone(settings.floatingBar))
         setTab(clone(settings.browserTab))
         setCats(clone(settings.cats))
+        setGiftSettings(clone(settings.gift))
       })
       .catch((caught) => !cancelled && setError(caught instanceof Error ? caught.message : tx('Gagal memuat pengaturan.', 'Failed to load the settings.')))
       .finally(() => !cancelled && setIsLoading(false))
@@ -108,6 +118,37 @@ export function SiteSettingsPage() {
       setNotice(tx('Bar melayang tersimpan. Halaman publik memuat pengaturan baru dalam sekitar satu menit.', 'Floating bar saved. Public pages pick up the new settings within about a minute.'))
     } catch (caught) {
       if (caught instanceof AdminToolsApiError) setBarErrors(caught.fieldErrors)
+      setError(caught instanceof Error ? caught.message : tx('Gagal menyimpan.', 'Failed to save.'))
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  const uploadGiftImage = async (file: File | undefined, key: 'giftImageUrl' | 'sealFrontUrl' | 'sealBackUrl') => {
+    if (!file) return
+    setUploading(key)
+    setError(null)
+    try {
+      const url = await uploadSharePreviewImage(file)
+      setGiftSettings((current) => ({ ...current, [key]: url }))
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : tx('Gagal mengunggah gambar.', 'Failed to upload the image.'))
+    } finally {
+      setUploading(null)
+    }
+  }
+
+  const saveGift = async () => {
+    setSaving('gift')
+    setError(null)
+    setGiftErrors({})
+    try {
+      const settings = await saveGiftSettings(giftSettings)
+      setSiteSettings(settings)
+      setGiftSettings(clone(settings.gift))
+      setNotice(tx('Pengaturan hadiah tersimpan. Halaman publik memuat pengaturan baru dalam sekitar satu menit.', 'Gift settings saved. Public pages pick up the new settings within about a minute.'))
+    } catch (caught) {
+      if (caught instanceof AdminToolsApiError) setGiftErrors(caught.fieldErrors)
       setError(caught instanceof Error ? caught.message : tx('Gagal menyimpan.', 'Failed to save.'))
     } finally {
       setSaving(null)
@@ -494,6 +535,144 @@ export function SiteSettingsPage() {
           <button
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
             onClick={() => setCats(clone(DEFAULT_CATS))}
+            type="button"
+          >
+            <RotateCcw className="size-4" aria-hidden="true" />
+            {tx('Kembalikan ke bawaan', 'Reset to default')}
+          </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="gift-heading" className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900" id="gift-heading">
+            {tx('Hadiah untuk pengunjung', 'Gift for visitors')}
+          </h2>
+          <p className="text-xs text-slate-500">
+            {tx(
+              'Hadiah muncul saat pengunjung masuk ke situs. Jika tombol kucing pengunjung menyala, seekor kucing menunjukkan hadiah dan memanggil "Klik aku!"; setelah 3 kali tidak ditanggapi kucing kedua datang dan hadiah membesar bertahap sampai menutupi layar. Jika kucing mati, hadiah langsung membesar bertahap. Isinya surat dengan doa acak dari pengunjung (dikirim lewat halaman Let There Be Light).',
+              'The gift shows when a visitor enters the site. With the visitor\'s cat button on, a cat shows the gift and calls "Click me!"; after 3 unanswered tries a second cat joins and the gift grows step by step until it covers the screen. With cats off, the gift just grows step by step. Inside is a letter with a random prayer from visitors (sent on the Let There Be Light page).',
+            )}
+          </p>
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
+          <input checked={giftSettings.enabled} className="size-4 accent-navy-700" onChange={(e) => setGiftSettings({ ...giftSettings, enabled: e.target.checked })} type="checkbox" />
+          {tx('Nyalakan hadiah di situs', 'Turn the gift on for the site')}
+        </label>
+
+        <fieldset className="space-y-2" disabled={!giftSettings.enabled}>
+          <legend className="mb-1 text-sm font-medium text-slate-700">{tx('Tampil di halaman', 'Show on these pages')}</legend>
+          {GIFT_PAGES.map((page) => (
+            <label className={`flex cursor-pointer items-center gap-3 text-sm ${giftSettings.enabled ? 'text-slate-800' : 'text-slate-400'}`} key={page.path}>
+              <input
+                checked={giftSettings.pages[page.path] === true}
+                className="size-4 accent-navy-700"
+                onChange={(e) => setGiftSettings({ ...giftSettings, pages: { ...giftSettings.pages, [page.path]: e.target.checked } })}
+                type="checkbox"
+              />
+              <span>{isEn ? page.labelEn : page.labelId}</span>
+              <span className="text-xs text-slate-400">{page.path}</span>
+            </label>
+          ))}
+          {GIFT_BLOCKED_PAGES.map((page) => (
+            <label className="flex items-center gap-3 text-sm text-slate-400" key={page.path}>
+              <input checked={false} className="size-4" disabled type="checkbox" />
+              <span>{isEn ? page.labelEn : page.labelId}</span>
+              <span className="text-xs">{page.path} · {tx('selalu mati', 'always off')}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium text-slate-700">
+            {tx('Seberapa sering muncul', 'How often it shows')}
+            <select className={inputClass} onChange={(e) => setGiftSettings({ ...giftSettings, frequency: e.target.value as GiftFrequency })} value={giftSettings.frequency}>
+              <option value="session">{tx('Sekali per kunjungan (sesi browser)', 'Once per visit (browser session)')}</option>
+              <option value="day">{tx('Sekali sehari', 'Once a day')}</option>
+              <option value="always">{tx('Setiap membuka halaman (untuk mencoba)', 'On every page load (for testing)')}</option>
+            </select>
+          </label>
+          <label className="text-sm font-medium text-slate-700">
+            {tx('Doa baru dari pengunjung', 'New prayers from visitors')}
+            <select className={inputClass} onChange={(e) => setGiftSettings({ ...giftSettings, moderation: e.target.value as GiftSettings['moderation'] })} value={giftSettings.moderation}>
+              <option value="auto">{tx('Langsung bisa tampil di hadiah', 'May show in the gift right away')}</option>
+              <option value="manual">{tx('Tampil setelah saya setujui (menu Doa Pengunjung)', 'Show after I approve them (menu Doa Pengunjung)')}</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {(
+            [
+              ['giftImageUrl', tx('Gambar hadiah', 'Gift picture'), tx('Kosong = kotak merah 3D dengan pita kuning.', 'Empty = the 3D red box with a yellow ribbon.')],
+              ['sealFrontUrl', tx('Segel surat (depan)', 'Letter seal (front)'), tx('Kosong = logo Attentive.', 'Empty = the Attentive mark.')],
+              ['sealBackUrl', tx('Segel surat (belakang)', 'Letter seal (back)'), tx('Kosong = logo Let There Be Light.', 'Empty = the Let There Be Light logo.')],
+            ] as const
+          ).map(([key, label, hint]) => (
+            <div className="space-y-2 rounded-xl border border-slate-200 p-3" key={key}>
+              <p className="text-sm font-medium text-slate-700">{label}</p>
+              <div className="flex h-20 items-center justify-center rounded-lg bg-slate-50">
+                {giftSettings[key] ? <img alt="" className="max-h-16 max-w-full object-contain" src={giftSettings[key]} /> : <span className="text-xs text-slate-400">{tx('Bawaan', 'Default')}</span>}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                  {uploading === key ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <ImagePlus className="size-3.5" aria-hidden="true" />}
+                  {tx('Unggah', 'Upload')}
+                  <input accept="image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" onChange={(e) => uploadGiftImage(e.target.files?.[0], key)} type="file" />
+                </label>
+                {giftSettings[key] && (
+                  <button className="text-xs text-slate-500 underline cursor-pointer" onClick={() => setGiftSettings({ ...giftSettings, [key]: '' })} type="button">
+                    {tx('Pakai bawaan', 'Use default')}
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500">{hint}</p>
+              {giftErrors[key] && <span className="text-xs text-rose-700">{giftErrors[key]}</span>}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium text-slate-700">
+            {tx('Teks surat (Indonesia)', 'Letter text (Indonesian)')}
+            <textarea className={`${inputClass} min-h-44`} maxLength={1200} onChange={(e) => setGiftSettings({ ...giftSettings, messageId: e.target.value })} value={giftSettings.messageId} />
+            {giftErrors.messageId && <span className="text-xs text-rose-700">{giftErrors.messageId}</span>}
+          </label>
+          <label className="text-sm font-medium text-slate-700">
+            {tx('Teks surat (English)', 'Letter text (English)')}
+            <textarea className={`${inputClass} min-h-44`} maxLength={1200} onChange={(e) => setGiftSettings({ ...giftSettings, messageEn: e.target.value })} value={giftSettings.messageEn} />
+            {giftErrors.messageEn && <span className="text-xs text-rose-700">{giftErrors.messageEn}</span>}
+          </label>
+        </div>
+        <p className="-mt-3 text-xs text-slate-500">
+          {tx(`Tulis ${GIFT_PRAYER_TOKEN} di tempat doa akan muncul.`, `Write ${GIFT_PRAYER_TOKEN} where the prayer should appear.`)}
+        </p>
+
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-800">
+            <input checked={giftSettings.showName} className="size-4 accent-navy-700" onChange={(e) => setGiftSettings({ ...giftSettings, showName: e.target.checked })} type="checkbox" />
+            {tx('Tampilkan nama pengirim doa', "Show the prayer sender's name")}
+          </label>
+          <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-800">
+            <input checked={giftSettings.showCity} className="size-4 accent-navy-700" onChange={(e) => setGiftSettings({ ...giftSettings, showCity: e.target.checked })} type="checkbox" />
+            {tx('Tampilkan kota pengirim doa', "Show the prayer sender's city")}
+          </label>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer"
+            disabled={saving === 'gift'}
+            onClick={saveGift}
+            type="button"
+          >
+            {saving === 'gift' && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            {tx('Simpan hadiah', 'Save gift')}
+          </button>
+          <button
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+            onClick={() => setGiftSettings(clone(DEFAULT_GIFT))}
             type="button"
           >
             <RotateCcw className="size-4" aria-hidden="true" />

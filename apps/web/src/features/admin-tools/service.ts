@@ -1,6 +1,8 @@
 import type {
   BrowserTabSettings,
   CatSettings,
+  GiftSettings,
+  PrayerAdminDto,
   FeaturedProductAdminDto,
   FloatingBarSettings,
   SiteSettings,
@@ -149,6 +151,18 @@ export const saveFloatingBarSettings = async (input: FloatingBarSettings) =>
 
 export const saveCatSettings = async (input: CatSettings) =>
   (await request<{ settings: SiteSettings }>('/api/admin/site-settings/cats', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan pengaturan kucing')).settings
+
+export const saveGiftSettings = async (input: GiftSettings) =>
+  (await request<{ settings: SiteSettings }>('/api/admin/site-settings/gift', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan pengaturan hadiah')).settings
+
+// ---- Prayers (moderation) ---------------------------------------------------
+
+export const listAdminPrayers = async () => (await request<{ data?: PrayerAdminDto[] }>('/api/admin/prayers', {}, 'Gagal memuat doa')).data ?? []
+
+export const setPrayerHidden = (id: string, hidden: boolean) =>
+  request<unknown>(`/api/admin/prayers/${id}/hidden`, { method: 'PUT', body: JSON.stringify({ hidden }) }, 'Gagal mengubah status doa')
+
+export const deleteAdminPrayer = (id: string) => request<unknown>(`/api/admin/prayers/${id}`, { method: 'DELETE' }, 'Gagal menghapus doa')
 
 export const saveBrowserTabSettings = async (input: BrowserTabSettings) =>
   (await request<{ settings: SiteSettings }>('/api/admin/site-settings/browser-tab', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan tab browser')).settings

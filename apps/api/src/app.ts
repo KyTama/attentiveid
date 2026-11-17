@@ -10,6 +10,8 @@ import { createOverviewRoutes } from './routes/overview.routes';
 import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes';
 import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
+import { createPrayersRoutes } from './routes/prayers.routes';
+import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
@@ -28,6 +30,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     contentTransitions?: any;
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
+    prayersRepository?: PrayersRepository;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
     adminToolsRepository?: AdminToolsRepository;
@@ -175,6 +178,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 freeSessionRepository: dependencies.freeSessionRepository || createFreeSessionRepository(dependencies.db),
                 sheetSync: dependencies.freeSessionSheetSync,
+            }))
+            .use(createPrayersRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                prayersRepository: dependencies.prayersRepository || createPrayersRepository(dependencies.db),
+                adminToolsRepository: dependencies.adminToolsRepository || createAdminToolsRepository(dependencies.db),
             }))
             .use(createSciBriefsRoutes({
                 tokenService: dependencies.tokenService,

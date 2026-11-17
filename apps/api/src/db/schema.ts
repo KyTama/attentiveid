@@ -792,6 +792,19 @@ export const qrCodes = pgTable('qr_codes', {
 });
 
 /** Site-wide settings edited in the portal (floating bar, browser tab...), one JSON value per key. */
+// Prayers written on the Let There Be Light page; a random visible one is shown inside the gift.
+export const prayers = pgTable('prayers', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name'),
+    city: text('city'),
+    prayer: text('prayer').notNull(),
+    /** Hidden by an admin (or waiting for approval when moderation is manual). */
+    hidden: boolean('hidden').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('prayers_created_at_idx').on(table.createdAt)
+]);
+
 export const siteSettings = pgTable('site_settings', {
     key: text('key').primaryKey(),
     value: jsonb('value').notNull(),

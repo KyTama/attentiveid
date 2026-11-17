@@ -19,6 +19,7 @@ import {
   Share2,
   BarChart3,
   QrCode,
+  HeartHandshake,
   SlidersHorizontal,
   ChevronDown,
   Menu,
@@ -160,6 +161,12 @@ export function DashboardLayout() {
           label: t('dashboard.navQrGenerator', 'QR Generator'),
           icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
+        },
+        {
+          to: '/dashboard/prayers',
+          label: t('dashboard.navPrayers', 'Doa Pengunjung'),
+          icon: <HeartHandshake className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
         },
         {
           to: '/dashboard/traffic',
