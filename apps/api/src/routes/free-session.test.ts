@@ -51,10 +51,17 @@ const validBody = {
 
 const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; sheetSync?: FreeSessionSheetSync } = {}) => {
     const created: FreeSessionSubmission[] = [];
+    const createdAtMs: number[] = [];
     const repository: FreeSessionRepository = {
         create: async (submission) => {
             created.push(submission);
+            createdAtMs.push(clock);
             return { id: `id-${created.length}` };
+        },
+        findByPhone: async (phone) => {
+            const key = phone.replace(/\D+/g, '').replace(/^62/, '0');
+            const index = created.findIndex((c) => c.phone.replace(/\D+/g, '').replace(/^62/, '0') === key);
+            return index < 0 ? null : { id: `id-${index + 1}`, createdAt: new Date(createdAtMs[index]).toISOString() };
         },
         listAll: async () => options.seed ?? [],
         listUnsynced: async () => [],
@@ -121,15 +128,15 @@ describe('POST /api/public/free-session', () => {
     it('rate limits per proxy-vouched client address', async () => {
         const { app, created, advance } = createFixture({ max: 2 });
         const headers = { 'x-forwarded-for': 'spoofed, 203.0.113.9' };
-        expect((await post(app, validBody, headers)).status).toBe(201);
-        expect((await post(app, validBody, headers)).status).toBe(201);
-        expect((await post(app, validBody, headers)).status).toBe(429);
+        expect((await post(app, { ...validBody, name: 'Person 1', phone: '081234560001' }, headers)).status).toBe(201);
+        expect((await post(app, { ...validBody, name: 'Person 2', phone: '081234560002' }, headers)).status).toBe(201);
+        expect((await post(app, { ...validBody, name: 'Person 3', phone: '081234560003' }, headers)).status).toBe(429);
         // a spoofed leading entry must not dodge the limit
-        expect((await post(app, validBody, { 'x-forwarded-for': 'other, 203.0.113.9' })).status).toBe(429);
+        expect((await post(app, { ...validBody, name: 'Person 4', phone: '081234560004' }, { 'x-forwarded-for': 'other, 203.0.113.9' })).status).toBe(429);
         // a different real client is unaffected
-        expect((await post(app, validBody, { 'x-forwarded-for': '198.51.100.1' })).status).toBe(201);
+        expect((await post(app, { ...validBody, name: 'Person 5', phone: '081234560005' }, { 'x-forwarded-for': '198.51.100.1' })).status).toBe(201);
         advance(61_000);
-        expect((await post(app, validBody, headers)).status).toBe(201);
+        expect((await post(app, { ...validBody, name: 'Person 6', phone: '081234560006' }, headers)).status).toBe(201);
         expect(created).toHaveLength(4);
     });
 });
@@ -249,5 +256,37 @@ describe('Google Sheet sync', () => {
         const { app } = createFixture();
         const response = await app.handle(new Request('http://localhost/api/admin/free-session/sheet-status', { headers: { authorization: `Bearer ${adminToken}` } }));
         expect((await response.json()).data).toMatchObject({ configured: false });
+    });
+});
+
+describe('double submit guard', () => {
+    it('saves one row when the same person clicks twice at once or a moment later', async () => {
+        const { app, created } = createFixture();
+        const [first, second] = await Promise.all([post(app, validBody), post(app, validBody)]);
+        expect(first.status).toBe(201);
+        expect(second.status).toBe(201);
+        expect(created).toHaveLength(1);
+        expect((await post(app, validBody)).status).toBe(201);
+        expect(created).toHaveLength(1);
+    });
+
+    it('says the name / phone number is already registered when it is used again later', async () => {
+        const { app, created, advance } = createFixture();
+        expect((await post(app, validBody)).status).toBe(201);
+        advance(60_000);
+        // same phone written another way, even with another name
+        const response = await post(app, { ...validBody, name: 'Another Name', phone: '+62 812 3456 7890' });
+        expect(response.status).toBe(409);
+        const json = await response.json();
+        expect(json.code).toBe('already_registered');
+        expect(json.message).toContain('sudah terdaftar');
+        expect(created).toHaveLength(1);
+    });
+
+    it('still saves a different person', async () => {
+        const { app, created } = createFixture();
+        await post(app, validBody);
+        expect((await post(app, { ...validBody, name: 'Someone Else', phone: '0899-1111-2222' })).status).toBe(201);
+        expect(created).toHaveLength(2);
     });
 });

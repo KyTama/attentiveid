@@ -75,6 +75,8 @@ export function FreeSessionPage() {
   const [values, setValues] = useState<FreeSessionFormValues>(emptyValues)
   const [errors, setErrors] = useState<FreeSessionFieldErrors>({})
   const [submitting, setSubmitting] = useState(false)
+  // State updates are not instant, so two quick clicks could both pass `submitting`; a ref blocks the second at once.
+  const submitLock = useRef(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -100,7 +102,7 @@ export function FreeSessionPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (submitting) return
+    if (submitting || submitLock.current) return
     setFormError(null)
 
     const checked = validateFreeSessionSubmission(values)
@@ -110,10 +112,16 @@ export function FreeSessionPage() {
       return
     }
     setErrors({})
+    submitLock.current = true
     setSubmitting(true)
 
-    const result = await submitFreeSession(values)
-    setSubmitting(false)
+    let result: Awaited<ReturnType<typeof submitFreeSession>>
+    try {
+      result = await submitFreeSession(values)
+    } finally {
+      submitLock.current = false
+      setSubmitting(false)
+    }
 
     if (result.status === 'success') {
       setWhatsappUrl(
@@ -131,7 +139,7 @@ export function FreeSessionPage() {
       return
     }
     setFormError(
-      result.status === 'rateLimited'
+      result.status === 'rateLimited' || result.status === 'duplicate'
         ? result.message
         : 'Formulir belum terkirim. Periksa koneksi kamu lalu coba lagi.',
     )

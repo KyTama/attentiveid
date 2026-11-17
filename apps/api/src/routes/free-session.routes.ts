@@ -24,6 +24,13 @@ export interface FreeSessionRoutesDependencies {
     now?: () => number;
 }
 
+/** A repeat of the same phone number within this time is the same click arriving twice, not a second sign-up. */
+const SAME_CLICK_MS = 15 * 1000;
+
+const ALREADY_REGISTERED = 'Nama / nomor telepon sudah terdaftar. Tim kami akan menghubungi kamu lewat WhatsApp. Jika data perlu diubah, hubungi kami lewat WhatsApp.';
+
+class AlreadyRegistered extends Error {}
+
 const DEFAULT_RATE_LIMIT: FreeSessionRateLimit = { max: 5, windowMs: 10 * 60 * 1000 };
 
 // The ingress appends the real client address to X-Forwarded-For, so the last
@@ -44,6 +51,8 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
     const limit = dependencies.rateLimit ?? DEFAULT_RATE_LIMIT;
     const now = dependencies.now ?? Date.now;
     const hits = new Map<string, number[]>();
+    // Sign-ups being saved right now, so two clicks that arrive together share one row.
+    const inFlight = new Map<string, Promise<{ id: string }>>();
 
     const isRateLimited = (key: string) => {
         const cutoff = now() - limit.windowMs;
@@ -77,7 +86,34 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
                 return { status: 'error', errors: result.errors };
             }
 
-            const created = await repository.create(result.value);
+            const personKey = `${result.value.name.trim().toLowerCase().replace(/\s+/g, ' ')}|${result.value.phone.replace(/\D+/g, '').replace(/^62/, '0')}`;
+            let saving = inFlight.get(personKey);
+            if (!saving) {
+                saving = (async () => {
+                    const earlier = await repository.findByPhone(result.value.phone);
+                    if (earlier) {
+                        if (now() - new Date(earlier.createdAt).getTime() <= SAME_CLICK_MS) return { id: earlier.id };
+                        throw new AlreadyRegistered();
+                    }
+                    return repository.create(result.value);
+                })();
+                inFlight.set(personKey, saving);
+                // Keep the entry briefly after saving so a click that lands just after still finds it.
+                void saving.then(
+                    () => setTimeout(() => inFlight.delete(personKey), 3000),
+                    () => inFlight.delete(personKey),
+                );
+            }
+            let created: { id: string };
+            try {
+                created = await saving;
+            } catch (error) {
+                if (error instanceof AlreadyRegistered) {
+                    set.status = 409;
+                    return { status: 'error', code: 'already_registered', message: ALREADY_REGISTERED };
+                }
+                throw error;
+            }
             // The visitor never waits for Google; failures stay queued and are retried (next submission or portal button).
             void dependencies.sheetSync?.syncPending().catch(() => undefined);
             set.status = 201;

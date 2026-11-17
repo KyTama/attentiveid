@@ -20,6 +20,7 @@ export type FreeSessionSubmitResult =
   | { status: 'success' }
   | { status: 'invalid'; errors: FreeSessionFieldErrors }
   | { status: 'rateLimited'; message: string }
+  | { status: 'duplicate'; message: string }
   | { status: 'failed' }
 
 const apiBaseUrl = () =>
@@ -43,6 +44,9 @@ export async function submitFreeSession(values: FreeSessionFormValues): Promise<
       | null
 
     if (response.status === 400 && body?.errors) return { status: 'invalid', errors: body.errors }
+    if (response.status === 409) {
+      return { status: 'duplicate', message: body?.message ?? 'Nama / nomor telepon sudah terdaftar.' }
+    }
     if (response.status === 429) {
       return { status: 'rateLimited', message: body?.message ?? 'Terlalu banyak percobaan. Coba lagi nanti.' }
     }
