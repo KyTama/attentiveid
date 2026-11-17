@@ -37,10 +37,10 @@ export const Products = () => {
     {
       id: "offline",
       title: "Konsultasi Offline",
-      description: "Ruang konsultasi yang aman dan nyaman bersama psikolog profesional di lokasi Attentive (Jakarta/BSD).",
+      description: "Ruang konsultasi yang aman dan nyaman bersama psikolog profesional di lokasi Attentive (Jakarta/BSD/Malang).",
       price: "525.000",
       features: [
-        "Tersedia di Jakarta & BSD",
+        "Tersedia di Jakarta, BSD & Malang",
         "Bertemu langsung dengan psikolog",
         "Lingkungan nyaman dan privat"
       ],

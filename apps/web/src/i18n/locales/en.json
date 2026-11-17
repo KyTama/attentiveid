@@ -85,7 +85,7 @@
       },
       {
         "title": "Flexible and Convenient",
-        "description": "Attentive provides online consultations and in-person sessions in Jakarta and BSD, so you can choose what works best for you."
+        "description": "Attentive provides online consultations and in-person sessions in Jakarta, BSD, and Malang, so you can choose what works best for you."
       },
       {
         "title": "Private and Confidential Space",
@@ -693,7 +693,7 @@
       "step": "Step",
       "steps": [
         { "title": "Find your fit", "description": "Explore support areas or browse psychologist profiles without rushing a decision.", "points": ["Search by what you need", "Compare areas of experience", "Ask us when you are unsure"] },
-        { "title": "Choose how to meet", "description": "Pick an online or in-person format and ask about the available schedule through WhatsApp.", "points": ["Online consultation", "Jakarta and BSD clinics", "Schedule assisted by admin"] },
+        { "title": "Choose how to meet", "description": "Pick an online or in-person format and ask about the available schedule through WhatsApp.", "points": ["Online consultation", "Jakarta, BSD, and Malang clinics", "Schedule assisted by admin"] },
         { "title": "Connect at your pace", "description": "Your first conversation is a space to understand what you want from support and whether the fit feels right.", "points": ["Private and confidential", "Clear next steps", "No pressure to continue"] }
       ]
     },
@@ -714,7 +714,7 @@
       "onlineTitle": "Meet from wherever feels safe",
       "onlineDescription": "Consult through video or voice call with a schedule coordinated around availability.",
       "offlineTitle": "Meet in a calm, private space",
-      "offlineDescription": "In-person sessions are available at Attentive Jakarta and BSD.",
+      "offlineDescription": "In-person sessions are available at Attentive Jakarta, BSD, and Malang.",
       "action": "Ask about schedule and pricing",
       "imageAlt": "An online psychological consultation",
       "imageCaption": "Meet online from a private place that feels comfortable."
@@ -725,7 +725,7 @@
       "items": [
         { "question": "How do I know which psychologist is right for me?", "answer": "Begin with the concern you want to work through, then review each psychologist's experience and approach. If you are still unsure, our admin can help narrow the options through WhatsApp." },
         { "question": "Can I talk to someone even if I am not sure what I need help with?", "answer": "Yes. You do not need a diagnosis or a perfectly defined problem before reaching out. Describing what has been difficult lately is enough to begin." },
-        { "question": "Are sessions available online and in person?", "answer": "Yes. Online consultations are available, and in-person sessions can be arranged at our Jakarta and BSD locations depending on psychologist availability." },
+        { "question": "Are sessions available online and in person?", "answer": "Yes. Online consultations are available, and in-person sessions can be arranged at our Jakarta, BSD, and Malang locations depending on psychologist availability." },
         { "question": "Will my psychologist understand my cultural background and experience?", "answer": "You can review areas of experience in each profile and ask the admin about preferences that matter to you. A comfortable therapeutic relationship is an important part of the process." },
         { "question": "Are sessions private and confidential?", "answer": "Sessions are conducted in a private setting and professional confidentiality applies within the boundaries of psychological practice and applicable safety obligations." },
         { "question": "What happens during the first session?", "answer": "The first session usually focuses on understanding your concerns, goals, relevant background, and what kind of support may be useful. You can also decide whether the connection feels right." }
