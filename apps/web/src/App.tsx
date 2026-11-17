@@ -20,6 +20,7 @@ import { PageViewTracker } from './components/common/PageViewTracker'
 import { BrowserTabManager } from './components/common/BrowserTabManager'
 import { FeaturedProductsCmsPage } from './pages/dashboard/FeaturedProductsCmsPage'
 import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
+import { OurServicesPage } from './pages/OurServicesPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
 import { QrGeneratorPage } from './pages/dashboard/QrGeneratorPage'
 import { SiteSettingsPage } from './pages/dashboard/SiteSettingsPage'
@@ -63,6 +64,7 @@ export function AppRoutes({
           <Route path="articles" element={<ArticlesPage />} />
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
+          <Route path="our-services" element={<OurServicesPage />} />
           <Route path="let-there-be-light" element={<LetThereBeLightPage />} />
           <Route path="sci-brief" element={<SciBriefPage />} />
           <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />

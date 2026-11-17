@@ -375,15 +375,14 @@ describe('homepage', () => {
     expect(screen.getByRole('button', { name: /find your psychologist.*soon/i })).toBeDisabled()
   })
 
-  it('splits header Products menu into Our Services (inert) and Our Science dropdown', async () => {
+  it('splits header Products menu into an Our Services link and Our Science dropdown', async () => {
     const user = userEvent.setup()
     renderHomepage()
 
     expect(screen.queryByRole('button', { name: /^products$|^produk$/i })).not.toBeInTheDocument()
 
-    const ourServices = screen.getByRole('button', { name: /our services/i })
-    expect(ourServices).toHaveAttribute('aria-disabled', 'true')
-    expect(ourServices).not.toHaveAttribute('href')
+    const ourServices = screen.getByRole('link', { name: /our services/i })
+    expect(ourServices).toHaveAttribute('href', '/our-services')
 
     const ourScience = screen.getByRole('button', { name: /our science/i })
     await user.click(ourScience)
@@ -396,7 +395,7 @@ describe('homepage', () => {
 
     await user.click(screen.getByRole('button', { name: /open navigation menu/i }))
     const mobileDrawer = document.getElementById('homepage-mobile-menu')!
-    expect(mobileDrawer.querySelector('button[aria-disabled="true"]')).toHaveTextContent('Our Services')
+    expect(mobileDrawer.querySelector('a[href="/our-services"]')).toHaveTextContent('Our Services')
     const mobileScienceToggle = Array.from(mobileDrawer.querySelectorAll('button')).find((btn) =>
       btn.textContent?.includes('Our Science'),
     )!
@@ -409,8 +408,8 @@ describe('homepage', () => {
       await i18n.changeLanguage('id')
     })
 
-    const layananButtons = await screen.findAllByRole('button', { name: /layanan kami/i })
-    expect(layananButtons[0]).toHaveAttribute('aria-disabled', 'true')
+    const layananLinks = await screen.findAllByRole('link', { name: /layanan kami/i })
+    expect(layananLinks[0]).toHaveAttribute('href', '/our-services')
     const desktopScienceId = screen.getAllByRole('button', { name: /riset kami/i })[0]
     await user.click(desktopScienceId)
     const desktopMenuId = desktopScienceId.getAttribute('aria-controls')!
@@ -419,7 +418,7 @@ describe('homepage', () => {
     expect(desktopMenuIdEl.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Ringkasan Ilmiah')
     expect(desktopMenuIdEl.querySelector('[aria-disabled="true"]')).toHaveTextContent(/Laboratorium.*Segera Hadir/)
 
-    expect(mobileDrawer.querySelector('button[aria-disabled="true"]')).toHaveTextContent('Layanan kami')
+    expect(mobileDrawer.querySelector('a[href="/our-services"]')).toHaveTextContent('Layanan kami')
     expect(mobileDrawer.querySelector('a[href="/articles"]')).toHaveTextContent('Artikel Ilmiah')
     expect(mobileDrawer.querySelector('a[href="/sci-brief"]')).toHaveTextContent('Ringkasan Ilmiah')
     expect(mobileDrawer.querySelector('div[aria-disabled="true"]')).toHaveTextContent(/Laboratorium.*Segera Hadir/)

@@ -209,15 +209,12 @@ export function SiteHeader() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
-          <button
-            aria-disabled="true"
-            className="rounded-md py-1 text-sm font-medium text-secondary/55 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            onClick={(event) => event.preventDefault()}
-            title={t('homepage.nav.ourServicesHint')}
-            type="button"
+          <Link
+            className="rounded-md py-1 text-sm font-medium text-secondary transition-colors hover:text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            to="/our-services"
           >
             {t('homepage.nav.ourServices')}
-          </button>
+          </Link>
           <ScienceMenu />
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
@@ -302,15 +299,13 @@ export function SiteHeader() {
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6">
               <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/80 p-1.5 shadow-2xs">
-                <button
-                  aria-disabled="true"
-                  className="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left text-base font-semibold text-secondary/50 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  onClick={(event) => event.preventDefault()}
-                  title={t('homepage.nav.ourServicesHint')}
-                  type="button"
+                <Link
+                  className="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  onClick={() => setMenuOpen(false)}
+                  to="/our-services"
                 >
                   <span>{t('homepage.nav.ourServices')}</span>
-                </button>
+                </Link>
                 <MobileScience onNavigate={() => setMenuOpen(false)} />
                 {navItems.map((item) => {
                   const isInternal = !item.href.includes('#')

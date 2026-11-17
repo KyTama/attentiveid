@@ -549,6 +549,7 @@
       "label": "Primary navigation",
       "products": "Products",
       "ourServices": "Our Services",
+      "ourServicesOpen": "Open in a new tab",
       "ourServicesHint": "New pages are currently in design",
       "ourScience": "Our Science",
       "academicArticles": "Academic Articles",
