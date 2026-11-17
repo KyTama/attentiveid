@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { catsAllowedOn } from '@attentiveid/shared'
 import { useSiteSettings } from '@/features/site-settings/use-site-settings'
+import { guardCatsOverFrames } from './cats-frame-guard'
 
 interface CatsApi {
   start: (options?: { root?: string | Element; topbar?: string }) => boolean | void
@@ -54,13 +55,17 @@ export function CatsManager() {
       return
     }
     let cancelled = false
+    let unguard: (() => void) | null = null
     void loadCats().then((api) => {
       // The visitor may have moved on while the script was loading (the effect then ran again and cancelled this one).
-      if (cancelled || !api || api.running()) return
-      api.start({ root: document.body, topbar: 'header' })
+      if (cancelled || !api) return
+      if (!api.running()) api.start({ root: document.body, topbar: 'header' })
+      // Over an embedded frame (Layanan kami) the page cannot see the mouse: keep the cats playable there.
+      unguard = guardCatsOverFrames(api)
     })
     return () => {
       cancelled = true
+      unguard?.()
     }
   }, [wanted])
 
