@@ -158,4 +158,20 @@ describe('site settings', () => {
     expect((await put('floating-bar', bar)).status).toBe(200)
     expect((await put('floating-bar', { ...bar, items: [{ label: { id: '' } }] })).status).toBe(400)
   })
+
+  it('lets admins save the walking cats settings, nobody else', async () => {
+    const { repository, saved } = makeRepository()
+    const app = makeApp(repository)
+    const put = (body: unknown, headers: Record<string, string>) =>
+      app.handle(new Request('http://localhost/api/admin/site-settings/cats', { method: 'PUT', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) }))
+    expect((await put({ enabled: false }, {})).status).toBe(401)
+    expect((await put({ enabled: false }, bearer(psychologist))).status).toBe(403)
+    expect((await put({ enabled: true, pages: { '/articles': false, '/booking': true } }, bearer(otherAdmin))).status).toBe(200)
+    const stored = saved.cats as { enabled: boolean; pages: Record<string, boolean> }
+    expect(stored.enabled).toBe(true)
+    expect(stored.pages['/articles']).toBe(false)
+    expect(stored.pages['/']).toBe(true)
+    // forms are never a setting, even if sent
+    expect(Object.keys(stored.pages)).not.toContain('/booking')
+  })
 })

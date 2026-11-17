@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
+  CAT_BLOCKED_PAGES,
+  CAT_PAGES,
   DEFAULT_BROWSER_TAB,
+  DEFAULT_CATS,
   DEFAULT_FLOATING_BAR,
   FEATURED_CARD_ICONS,
   FLOATING_BAR_MAX_ITEMS,
   type BrowserTabSettings,
+  type CatSettings,
   type FeaturedCardIcon,
   type FloatingBarItem,
   type FloatingBarSettings,
@@ -14,6 +18,7 @@ import {
   AdminToolsApiError,
   getAdminSiteSettings,
   saveBrowserTabSettings,
+  saveCatSettings,
   saveFloatingBarSettings,
   uploadSharePreviewImage,
 } from '../../features/admin-tools/service'
@@ -31,12 +36,13 @@ export function SiteSettingsPage() {
   const { tx, isEn } = useTx()
   const [bar, setBar] = useState<FloatingBarSettings>(clone(DEFAULT_FLOATING_BAR))
   const [tab, setTab] = useState<BrowserTabSettings>(clone(DEFAULT_BROWSER_TAB))
+  const [cats, setCats] = useState<CatSettings>(clone(DEFAULT_CATS))
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [barErrors, setBarErrors] = useState<Record<string, string>>({})
   const [tabErrors, setTabErrors] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState<'bar' | 'tab' | null>(null)
+  const [saving, setSaving] = useState<'bar' | 'tab' | 'cats' | null>(null)
   const [uploading, setUploading] = useState<'top' | 'favicon' | null>(null)
 
   useEffect(() => {
@@ -46,6 +52,7 @@ export function SiteSettingsPage() {
         if (cancelled) return
         setBar(clone(settings.floatingBar))
         setTab(clone(settings.browserTab))
+        setCats(clone(settings.cats))
       })
       .catch((caught) => !cancelled && setError(caught instanceof Error ? caught.message : tx('Gagal memuat pengaturan.', 'Failed to load the settings.')))
       .finally(() => !cancelled && setIsLoading(false))
@@ -101,6 +108,21 @@ export function SiteSettingsPage() {
       setNotice(tx('Bar melayang tersimpan. Halaman publik memuat pengaturan baru dalam sekitar satu menit.', 'Floating bar saved. Public pages pick up the new settings within about a minute.'))
     } catch (caught) {
       if (caught instanceof AdminToolsApiError) setBarErrors(caught.fieldErrors)
+      setError(caught instanceof Error ? caught.message : tx('Gagal menyimpan.', 'Failed to save.'))
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  const saveCats = async () => {
+    setSaving('cats')
+    setError(null)
+    try {
+      const settings = await saveCatSettings(cats)
+      setSiteSettings(settings)
+      setCats(clone(settings.cats))
+      setNotice(tx('Pengaturan kucing tersimpan. Halaman publik memuat pengaturan baru dalam sekitar satu menit.', 'Cat settings saved. Public pages pick up the new settings within about a minute.'))
+    } catch (caught) {
       setError(caught instanceof Error ? caught.message : tx('Gagal menyimpan.', 'Failed to save.'))
     } finally {
       setSaving(null)
@@ -413,6 +435,65 @@ export function SiteSettingsPage() {
           <button
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
             onClick={() => setTab(clone(DEFAULT_BROWSER_TAB))}
+            type="button"
+          >
+            <RotateCcw className="size-4" aria-hidden="true" />
+            {tx('Kembalikan ke bawaan', 'Reset to default')}
+          </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="cats-heading" className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900" id="cats-heading">
+            {tx('Kucing jalan-jalan', 'Walking cats')}
+          </h2>
+          <p className="text-xs text-slate-500">
+            {tx('Delapan kucing 3D yang berjalan di halaman publik dan bisa diajak main. Bawaan: menyala di semua halaman di bawah, kecuali formulir dan Let There Be Light. Pengunjung yang mengaktifkan "kurangi gerakan" di perangkatnya tidak melihat kucing.', 'Eight 3D cats that walk around the public pages and can be played with. Default: on for every page below, except the forms and Let There Be Light. Visitors who ask their device for reduced motion do not see them.')}
+          </p>
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
+          <input checked={cats.enabled} className="size-4 accent-navy-700" onChange={(e) => setCats({ ...cats, enabled: e.target.checked })} type="checkbox" />
+          {tx('Nyalakan kucing di situs', 'Turn the cats on for the site')}
+        </label>
+
+        <fieldset className="space-y-2" disabled={!cats.enabled}>
+          <legend className="mb-1 text-sm font-medium text-slate-700">{tx('Tampil di halaman', 'Show on these pages')}</legend>
+          {CAT_PAGES.map((page) => (
+            <label className={`flex cursor-pointer items-center gap-3 text-sm ${cats.enabled ? 'text-slate-800' : 'text-slate-400'}`} key={page.path}>
+              <input
+                checked={cats.pages[page.path] !== false}
+                className="size-4 accent-navy-700"
+                onChange={(e) => setCats({ ...cats, pages: { ...cats.pages, [page.path]: e.target.checked } })}
+                type="checkbox"
+              />
+              <span>{isEn ? page.labelEn : page.labelId}</span>
+              <span className="text-xs text-slate-400">{page.path}</span>
+            </label>
+          ))}
+          {CAT_BLOCKED_PAGES.map((page) => (
+            <label className="flex items-center gap-3 text-sm text-slate-400" key={page.path}>
+              <input checked={false} className="size-4" disabled type="checkbox" />
+              <span>{isEn ? page.labelEn : page.labelId}</span>
+              <span className="text-xs">{page.path} · {tx('selalu mati', 'always off')}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="flex items-center gap-2 rounded-xl bg-navy-700 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60 cursor-pointer"
+            disabled={saving === 'cats'}
+            onClick={saveCats}
+            type="button"
+          >
+            {saving === 'cats' && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            {tx('Simpan kucing', 'Save cats')}
+          </button>
+          <button
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+            onClick={() => setCats(clone(DEFAULT_CATS))}
             type="button"
           >
             <RotateCcw className="size-4" aria-hidden="true" />

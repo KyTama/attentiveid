@@ -2,6 +2,7 @@
  * Site settings edited in the portal (menu: Pengaturan Situs):
  *  - the floating quick bar at the bottom of the public pages
  *  - the browser tab (title and icon)
+ *  - the walking cats (on/off, and on which pages)
  */
 import { FEATURED_CARD_ICONS, type FeaturedCardIcon } from './featured-product'
 
@@ -47,9 +48,35 @@ export interface BrowserTabSettings {
   faviconUrl: string
 }
 
+/** Pages where the walking cats can be switched on or off. Sub pages (an article, a profile...) follow their section. */
+export const CAT_PAGES = [
+  { path: '/', labelId: 'Beranda', labelEn: 'Home' },
+  { path: '/our-services', labelId: 'Layanan kami', labelEn: 'Our services' },
+  { path: '/psychologists', labelId: 'Psikolog (daftar dan profil)', labelEn: 'Psychologists (list and profiles)' },
+  { path: '/articles', labelId: 'Artikel (daftar dan isi artikel)', labelEn: 'Articles (list and article pages)' },
+  { path: '/sci-brief', labelId: 'Sci-Brief (daftar dan edisi)', labelEn: 'Sci-Brief (list and issues)' },
+] as const
+
+/** Never shown with cats: the forms (so nothing distracts or blocks a form) and the lights page, which has its own effect. */
+export const CAT_BLOCKED_PAGES = [
+  { path: '/free-session', labelId: 'Formulir Sesi Gratis', labelEn: 'Free Session form' },
+  { path: '/booking', labelId: 'Formulir Booking', labelEn: 'Booking form' },
+  { path: '/let-there-be-light', labelId: 'Let There Be Light', labelEn: 'Let There Be Light' },
+] as const
+
+export type CatPagePath = typeof CAT_PAGES[number]['path']
+
+export interface CatSettings {
+  /** Master switch. */
+  enabled: boolean
+  /** Per page; a page missing from here counts as on. */
+  pages: Record<CatPagePath, boolean>
+}
+
 export interface SiteSettings {
   floatingBar: FloatingBarSettings
   browserTab: BrowserTabSettings
+  cats: CatSettings
 }
 
 export const DEFAULT_FLOATING_BAR: FloatingBarSettings = {
@@ -75,9 +102,15 @@ export const DEFAULT_BROWSER_TAB: BrowserTabSettings = {
   faviconUrl: '',
 }
 
+export const DEFAULT_CATS: CatSettings = {
+  enabled: true,
+  pages: Object.fromEntries(CAT_PAGES.map((page) => [page.path, true])) as Record<CatPagePath, boolean>,
+}
+
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   floatingBar: DEFAULT_FLOATING_BAR,
   browserTab: DEFAULT_BROWSER_TAB,
+  cats: DEFAULT_CATS,
 }
 
 const asString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
@@ -171,12 +204,35 @@ export const validateBrowserTab = (input: unknown): SettingsValidation<BrowserTa
   return { ok: true, value: { titleId, titleEn, faviconUrl } }
 }
 
+export const validateCats = (input: unknown): SettingsValidation<CatSettings> => {
+  const raw = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
+  const pagesRaw = (raw.pages && typeof raw.pages === 'object' ? raw.pages : {}) as Record<string, unknown>
+  const pages = Object.fromEntries(CAT_PAGES.map((page) => [page.path, pagesRaw[page.path] !== false])) as Record<CatPagePath, boolean>
+  return { ok: true, value: { enabled: raw.enabled !== false, pages } }
+}
+
+/** The page a path belongs to for the cats, or null when cats never appear there (forms, lights page, portal, unknown pages). */
+export const catPageFor = (pathname: string): CatPagePath | null => {
+  const path = pathname.split(/[?#]/)[0].toLowerCase().replace(/\/+$/, '') || '/'
+  if (path === '/') return '/'
+  const section = `/${path.split('/')[1]}`
+  return (CAT_PAGES as readonly { path: string }[]).some((page) => page.path === section) ? (section as CatPagePath) : null
+}
+
+/** Should the cats walk on this page right now? Forms and the lights page are always "no". */
+export const catsAllowedOn = (cats: CatSettings, pathname: string): boolean => {
+  if (!cats.enabled) return false
+  const page = catPageFor(pathname)
+  return page !== null && cats.pages[page] !== false
+}
+
 /** Fills anything missing/invalid in stored settings with the defaults, so the site never breaks. */
-export const mergeSiteSettings = (stored: { floatingBar?: unknown; browserTab?: unknown } | null | undefined): SiteSettings => {
+export const mergeSiteSettings = (stored: { floatingBar?: unknown; browserTab?: unknown; cats?: unknown } | null | undefined): SiteSettings => {
   const bar = stored?.floatingBar ? validateFloatingBar(stored.floatingBar) : null
   const tab = stored?.browserTab ? validateBrowserTab(stored.browserTab) : null
   return {
     floatingBar: bar?.ok ? bar.value : DEFAULT_FLOATING_BAR,
     browserTab: tab?.ok ? tab.value : DEFAULT_BROWSER_TAB,
+    cats: stored?.cats ? (validateCats(stored.cats) as { ok: true; value: CatSettings }).value : DEFAULT_CATS,
   }
 }
