@@ -13,6 +13,8 @@ export interface OutboxPayloadBuildInput {
     bookingCode: string;
     submittedAt: string;
     normalized: NormalizedBookingSubmission;
+    serviceNameSnapshot?: string | null;
+    variantNameSnapshot?: string | null;
     baseRate: number;
     assessmentFee: number;
     totalRate: number;
@@ -71,6 +73,8 @@ export interface BookingWebhookPayload {
         age: number | null;
         gender: string | null;
         serviceType: string;
+        serviceNameSnapshot?: string | null;
+        variantNameSnapshot?: string | null;
         concernId: string | null;
         concernCategory: string | null;
         clientCategory: string | null;
@@ -147,9 +151,16 @@ export const buildBookingWebhookPayload = (input: OutboxPayloadBuildInput): Book
     const psychChoiceLabel = PSYCH_CHOICE_LABELS[normalized.psychologistChoice];
     const submittedWib = formatWibTimestamp(input.submittedAt);
 
+    const serviceLabel = input.serviceNameSnapshot
+        ? `${input.serviceNameSnapshot}${input.variantNameSnapshot ? ` (${input.variantNameSnapshot})` : ''}`
+        : null;
+    const rateLabel = input.serviceNameSnapshot && !input.serviceNameSnapshot.toLowerCase().includes('konseling')
+        ? 'Tarif Layanan'
+        : 'Tarif Psikolog';
+
     const priceLines: string[] = [];
     if (input.baseRate > 0) {
-        priceLines.push(`Tarif Psikolog: Rp ${input.baseRate.toLocaleString('id-ID')}`);
+        priceLines.push(`${rateLabel}: Rp ${input.baseRate.toLocaleString('id-ID')}`);
         if (input.assessmentFee > 0) {
             priceLines.push(`Biaya Asesmen Awal: Rp ${input.assessmentFee.toLocaleString('id-ID')}`);
         }
@@ -163,6 +174,7 @@ export const buildBookingWebhookPayload = (input: OutboxPayloadBuildInput): Book
         `Kode Booking: ${input.bookingCode}`,
         `Nama Lengkap: ${normalized.name}`,
         `Status Konsultasi: ${clientStatusLabel}`,
+        ...(serviceLabel ? [`Layanan / Paket: ${serviceLabel}`] : []),
         `Nomor WhatsApp: ${normalized.whatsapp} (${normalized.whatsappE164})`,
         `Email: ${normalized.email}`,
         `Negara / Kota: ${normalized.countryRegion || dash}`,
@@ -239,6 +251,8 @@ export const buildBookingWebhookPayload = (input: OutboxPayloadBuildInput): Book
             age: normalized.age,
             gender: normalized.gender,
             serviceType: normalized.serviceType,
+            serviceNameSnapshot: input.serviceNameSnapshot ?? null,
+            variantNameSnapshot: input.variantNameSnapshot ?? null,
             concernId: normalized.concernId,
             concernCategory: normalized.concernCategory,
             clientCategory: normalized.clientCategory,

@@ -839,6 +839,8 @@ export interface BookingWhatsAppMessageInput {
   whatsapp: string
   email: string
   clientStatus: BookingClientStatus
+  serviceLabel?: string | null
+  variantLabel?: string | null
   concernLabel?: string | null
   consultationMode: BookingConsultationMode
   location?: BookingPhysicalBranch | null
@@ -858,6 +860,9 @@ export function buildBookingWhatsAppMessage(input: BookingWhatsAppMessageInput):
   const modeDisplay = input.consultationMode === 'online'
     ? 'Online'
     : `Offline${branchText ? ` — ${branchText}` : ''}`
+  const formattedService = input.serviceLabel
+    ? `${input.serviceLabel}${input.variantLabel ? ` (${input.variantLabel})` : ''}`
+    : null
 
   const lines = [
     input.lang === 'id'
@@ -873,6 +878,7 @@ export function buildBookingWhatsAppMessage(input: BookingWhatsAppMessageInput):
         ? (input.lang === 'id' ? 'Klien Baru' : 'New Client')
         : (input.lang === 'id' ? 'Klien Lama' : 'Returning Client')
     }`,
+    ...(formattedService ? [`${input.lang === 'id' ? 'Layanan' : 'Service'}: ${formattedService}`] : []),
     ...(input.concernLabel ? [`${input.lang === 'id' ? 'Kebutuhan' : 'Concern'}: ${input.concernLabel}`] : []),
     `${input.lang === 'id' ? 'Mode' : 'Mode'}: ${modeDisplay}`,
     `${input.lang === 'id' ? 'Pilihan Psikolog' : 'Psychologist Choice'}: ${input.psychChoiceLabel}`,
@@ -959,6 +965,8 @@ export interface BookingSubmissionInput {
   age?: number | null
   gender?: string
   serviceType?: string
+  serviceSlug?: string | null
+  variantSlug?: string | null
   concernId?: AnyBookingConcernId
   concernCategory?: string
   clientCategory?: IntakeClientCategory
@@ -998,6 +1006,8 @@ export interface NormalizedBookingSubmission {
   age: number | null
   gender: string | null
   serviceType: string
+  serviceSlug: string | null
+  variantSlug: string | null
   concernId: AnyBookingConcernId | null
   concernCategory: string | null
   clientCategory: IntakeClientCategory | null
@@ -1040,6 +1050,19 @@ const trimOrNull = (val: unknown, maxLen = 500): string | null => {
   const trimmed = val.trim()
   if (!trimmed) return null
   return trimmed.slice(0, maxLen)
+}
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+const normalizeCatalogSlug = (val: unknown): { value: string | null; valid: boolean } => {
+  if (val === undefined || val === null) return { value: null, valid: true }
+  if (typeof val !== 'string') return { value: null, valid: false }
+  const trimmed = val.trim().toLowerCase()
+  if (!trimmed) return { value: null, valid: true }
+  if (trimmed.length > 120 || !SLUG_PATTERN.test(trimmed)) {
+    return { value: null, valid: false }
+  }
+  return { value: trimmed, valid: true }
 }
 
 export function validateBookingSubmission(
@@ -1153,6 +1176,16 @@ export function validateBookingSubmission(
     errors.scheduleOption1 = 'Minimal satu pilihan jadwal wajib diisi.'
   }
 
+  const normalizedServiceSlug = normalizeCatalogSlug(input.serviceSlug)
+  if (!normalizedServiceSlug.valid) {
+    errors.serviceSlug = 'Slug layanan tidak valid.'
+  }
+
+  const normalizedVariantSlug = normalizeCatalogSlug(input.variantSlug)
+  if (!normalizedVariantSlug.valid) {
+    errors.variantSlug = 'Slug varian layanan tidak valid.'
+  }
+
   if (Object.keys(errors).length > 0 || !clientStatus || !name || !whatsapp || !email || !consultationMode || !psychologistChoice || !scheduleOption1) {
     return { ok: false, errors }
   }
@@ -1174,6 +1207,8 @@ export function validateBookingSubmission(
       age,
       gender,
       serviceType: trimOrNull(input.serviceType, 80) ?? 'Personal',
+      serviceSlug: normalizedServiceSlug.value,
+      variantSlug: normalizedVariantSlug.value,
       concernId,
       concernCategory: resolvedConcernCategory,
       clientCategory,

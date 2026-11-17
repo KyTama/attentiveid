@@ -18,6 +18,7 @@ RUN bun run build:api && \
     bun build src/db/migrate.ts --outfile=dist/migrate.js --target=bun && \
     bun build src/db/seed-landing.ts --outfile=dist/seed-landing.js --target=bun && \
     bun build src/db/seed-psychologists.ts --outfile=dist/seed-psychologists.js --target=bun && \
+    bun build src/db/seed-services.ts --outfile=dist/seed-services.js --target=bun && \
     bun build src/db/seed-users.ts --outfile=dist/seed-users.js --target=bun
 
 FROM oven/bun:1.4.0-alpine AS runtime
@@ -28,7 +29,7 @@ ENV PORT=3000
 ENV MIGRATIONS_DIR=/app/apps/api/drizzle
 ENV MEDIA_DIR=/app/apps/api/uploads/media
 
-RUN mkdir -p /app/apps/api/uploads/media/psychologists /app/apps/api/uploads/media/landing && \
+RUN mkdir -p /app/apps/api/uploads/media/psychologists /app/apps/api/uploads/media/landing /app/apps/api/uploads/media/services/cards /app/apps/api/uploads/media/services/reports && \
     chown -R bun:bun /app/apps/api/uploads
 
 COPY --from=build --chown=bun:bun /app/apps/api/dist ./dist

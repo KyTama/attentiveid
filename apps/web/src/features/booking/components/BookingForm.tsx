@@ -27,8 +27,11 @@ import {
   type BookingPsychologistChoice,
   type IntakeClientCategory,
   type IntakeGenderPreference,
+  type PublicServiceDetail,
+  type PublicServiceVariant,
 } from '@attentiveid/shared'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { fetchPublicServiceDetail } from '@/features/services/service'
 import { captureAttribution, type Attribution } from '../attribution'
 import { BOOKING_TEXT, TERMS_CONTENT, type BookingLang } from '../booking-i18n'
 import { fetchBookingPsychologists, submitPublicBooking } from '../service'
@@ -57,6 +60,8 @@ declare global {
 }
 
 export interface BookingPrefillParams {
+  serviceSlug?: string
+  variantSlug?: string
   psychologistSlug?: string
   concernId?: string
   mode?: string
@@ -65,6 +70,8 @@ export interface BookingPrefillParams {
 }
 
 export interface BookingFormData {
+  serviceSlug: string
+  variantSlug: string
   clientStatus: BookingClientStatus | ''
   name: string
   whatsapp: string
@@ -107,6 +114,8 @@ export interface BookingFormData {
 }
 
 const INITIAL_DATA: BookingFormData = {
+  serviceSlug: '',
+  variantSlug: '',
   clientStatus: '',
   name: '',
   whatsapp: '',
@@ -174,6 +183,19 @@ function buildInitialState(prefill?: BookingPrefillParams): { data: BookingFormD
   }
 
   if (prefill) {
+    if (prefill.serviceSlug) {
+      const normalizedSvc = prefill.serviceSlug.trim().toLowerCase()
+      if (baseData.serviceSlug !== normalizedSvc) {
+        baseStep = 1
+        baseData.psychChoice = ''
+        baseData.psychologist = ''
+        baseData.psychologistSlug = ''
+        baseData.psychologistName = ''
+        baseData.psychologistRate = 0
+      }
+      baseData.serviceSlug = normalizedSvc
+      baseData.variantSlug = prefill.variantSlug ? prefill.variantSlug.trim().toLowerCase() : ''
+    }
     const normalizedConcern = normalizeBookingConcernId(prefill.concernId)
     if (normalizedConcern) {
       baseData.concern = normalizedConcern
@@ -223,8 +245,145 @@ export function BookingForm({
   const [catalog, setCatalog] = useState<BookingPsychologistCatalogItem[]>([])
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [selectedService, setSelectedService] = useState<PublicServiceDetail | null>(null)
 
   const t = BOOKING_TEXT[lang]
+
+  useEffect(() => {
+    if (!data.serviceSlug) {
+      setSelectedService(null)
+      return
+    }
+    let cancelled = false
+    fetchPublicServiceDetail(data.serviceSlug, lang)
+      .then((detail) => {
+        if (!cancelled) setSelectedService(detail)
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedService(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [data.serviceSlug, lang])
+
+  const activeVariant = useMemo<PublicServiceVariant | null>(() => {
+    if (!selectedService || selectedService.variants.length === 0) return null
+    if (data.variantSlug) {
+      const found = selectedService.variants.find((v) => v.slug === data.variantSlug)
+      if (found) return found
+    }
+    return selectedService.variants[0] ?? null
+  }, [selectedService, data.variantSlug])
+
+  const isFixedVariantService = selectedService?.pricingModel === 'fixed_variant'
+  const fixedVariantRate = useMemo(() => {
+    if (!isFixedVariantService || !activeVariant || activeVariant.priceOnRequest) return null
+    return activeVariant.pricing.promoAmount ?? activeVariant.pricing.minAmount ?? 0
+  }, [isFixedVariantService, activeVariant])
+
+  const serviceAppliesNewClientFee = selectedService ? selectedService.appliesNewClientFee : true
+  const hasServicePsychologists = !selectedService || selectedService.eligiblePsychologists.length > 0
+
+  // Sync service defaults & constraints (modality, branch, concern, clientCategory, auto-recommended when no providers)
+  useEffect(() => {
+    if (!selectedService) return
+    setData((prev) => {
+      let changed = false
+      const next = { ...prev }
+      const defaultConcern = normalizeBookingConcernId(selectedService.bookingPreset.defaultConcernId)
+      if (!prev.concern && defaultConcern) {
+        next.concern = defaultConcern
+        changed = true
+      }
+      if (
+        selectedService.bookingPreset.defaultClientCategory
+        && prev.clientCategory === 'individual'
+        && selectedService.bookingPreset.defaultClientCategory !== 'individual'
+      ) {
+        next.clientCategory = selectedService.bookingPreset.defaultClientCategory as IntakeClientCategory
+        changed = true
+      }
+      if (activeVariant && !prev.variantSlug) {
+        next.variantSlug = activeVariant.slug
+        changed = true
+      }
+      if (activeVariant?.modalities.length === 1) {
+        const onlyMode = activeVariant.modalities[0]!
+        if (prev.mode !== onlyMode) {
+          next.mode = onlyMode
+          changed = true
+        }
+      }
+      if (activeVariant?.branch && prev.location !== activeVariant.branch) {
+        next.location = activeVariant.branch
+        if (!next.mode) next.mode = 'offline'
+        changed = true
+      }
+      if (!hasServicePsychologists && prev.psychChoice !== 'recommended') {
+        next.psychChoice = 'recommended'
+        next.psychologist = ''
+        next.psychologistSlug = ''
+        next.psychologistName = ''
+        next.psychologistRate = 0
+        changed = true
+      }
+      return changed ? next : prev
+    })
+  }, [selectedService, activeVariant, hasServicePsychologists])
+
+  const effectiveCatalog = useMemo<BookingPsychologistCatalogItem[]>(() => {
+    if (!selectedService) return catalog
+    if (selectedService.eligiblePsychologists.length === 0) return []
+
+    const bySlug = new Map(catalog.map((item) => [item.slug, item]))
+    return selectedService.eligiblePsychologists.map((opt) => {
+      const live = bySlug.get(opt.slug)
+      if (live) return live
+      return {
+        id: opt.id,
+        slug: opt.slug,
+        name: opt.name,
+        nickname: opt.nickname,
+        credential: opt.credential,
+        tier: opt.tier,
+        primaryBranch: (opt.primaryBranch as BookingPsychologistCatalogItem['primaryBranch']) || 'tbi',
+        acceptingNewClients: true,
+        featured: false,
+        featuredOrder: null,
+        experienceYears: opt.experienceYears,
+        supportArea: 'psychologyScientist',
+        specializations: {
+          id: opt.note ? [opt.note] : [],
+          en: opt.note ? [opt.note] : [],
+        },
+        ...(opt.media
+          ? {
+              media: {
+                url: opt.media.url,
+                width: opt.media.width,
+                height: opt.media.height,
+                alt: { id: opt.media.alt, en: opt.media.alt },
+              },
+            }
+          : {}),
+        consultationDuration: '60 menit',
+        onlineRate: opt.onlineRate,
+        offlineRate: opt.offlineRate,
+        availableOnline: opt.availableOnline,
+        availableTbi: opt.availableTbi,
+        availableBsd: opt.availableBsd,
+        availableMalang: opt.availableMalang,
+        scheduleMon: 'by Appointment',
+        scheduleTue: 'by Appointment',
+        scheduleWed: 'by Appointment',
+        scheduleThu: 'by Appointment',
+        scheduleFri: 'by Appointment',
+        scheduleSat: 'OFF',
+        scheduleSun: 'OFF',
+      }
+    })
+  }, [selectedService, catalog])
 
   const loadCatalog = useCallback(async (mode?: string, location?: string) => {
     setCatalogLoading(true)
@@ -246,15 +405,20 @@ export function BookingForm({
     void loadCatalog(data.mode || undefined, data.mode === 'offline' ? data.location || undefined : undefined)
   }, [data.mode, data.location, loadCatalog])
 
-  // Auto-resolve URL-prefilled psychologist slug against live catalog
+  // Auto-resolve URL-prefilled psychologist slug against live/service catalog
   useEffect(() => {
-    if (!data.psychologistSlug || data.psychologist || catalog.length === 0) return
-    const matched = catalog.find((p) => p.slug === data.psychologistSlug)
+    if (!data.psychologistSlug || data.psychologist || effectiveCatalog.length === 0) return
+    const matched = effectiveCatalog.find((p) => p.slug === data.psychologistSlug)
     if (!matched) return
 
     const effectiveMode: BookingConsultationMode =
       data.mode || (matched.availableOnline ? 'online' : 'offline')
-    const rate = effectiveMode === 'offline' ? matched.offlineRate ?? 0 : matched.onlineRate ?? 0
+    const rate =
+      fixedVariantRate !== null
+        ? fixedVariantRate
+        : effectiveMode === 'offline'
+          ? matched.offlineRate ?? 0
+          : matched.onlineRate ?? 0
 
     setData((prev) => ({
       ...prev,
@@ -272,7 +436,7 @@ export function BookingForm({
       psychScheduleSat: matched.scheduleSat ?? '',
       psychScheduleSun: matched.scheduleSun ?? '',
     }))
-  }, [catalog, data.psychologistSlug, data.psychologist, data.mode])
+  }, [effectiveCatalog, data.psychologistSlug, data.psychologist, data.mode, fixedVariantRate])
 
   useEffect(() => {
     if (step === 7) return
@@ -491,7 +655,9 @@ export function BookingForm({
         countryRegion: `${data.country} / ${cityLabelId}`,
         age: data.age ? Number.parseInt(data.age, 10) : undefined,
         gender: data.gender || undefined,
-        serviceType: 'Personal',
+        serviceType: selectedService?.name ?? 'Personal',
+        serviceSlug: selectedService?.slug ?? (data.serviceSlug || undefined),
+        variantSlug: activeVariant?.slug ?? (data.variantSlug || undefined),
         concernId: data.concern || undefined,
         concernCategory: selectedConcernObj ? selectedConcernObj.title.id : undefined,
         clientCategory: data.clientCategory || undefined,
@@ -547,6 +713,8 @@ export function BookingForm({
         whatsapp: data.whatsapp,
         email: data.email,
         clientStatus: data.clientStatus,
+        serviceLabel: selectedService?.name ?? null,
+        variantLabel: activeVariant?.name ?? null,
         concernLabel: selectedConcernObj ? selectedConcernObj.title[lang] : null,
         consultationMode: data.mode,
         location: data.mode === 'offline' ? (data.location as BookingPhysicalBranch) || null : null,
@@ -655,6 +823,47 @@ export function BookingForm({
           />
         </div>
 
+        {selectedService && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#ead8ae] bg-[#fffcf4] px-4 py-3 text-[13px] shadow-2xs">
+            <div className="min-w-0">
+              <div className="text-[10.5px] font-extrabold uppercase tracking-[0.09em] text-[#8c6a22]">
+                {t.selectedServiceBannerLabel}
+              </div>
+              <div className="mt-0.5 font-extrabold text-[#1c2b51]">
+                {selectedService.name}
+                {activeVariant ? ` — ${activeVariant.name}` : ''}
+              </div>
+              {fixedVariantRate !== null && (
+                <div className="mt-0.5 text-xs font-bold tabular-nums text-[#8c6a22]">
+                  {formatCurrency(fixedVariantRate)}
+                  {activeVariant &&
+                  activeVariant.pricing.promoAmount !== null &&
+                  activeVariant.pricing.minAmount !== null &&
+                  activeVariant.pricing.promoAmount < activeVariant.pricing.minAmount ? (
+                    <span className="ml-2 text-[#7a869c] line-through">
+                      {formatCurrency(activeVariant.pricing.minAmount)}
+                    </span>
+                  ) : null}
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedService(null)
+                setData((prev) => ({
+                  ...prev,
+                  serviceSlug: '',
+                  variantSlug: '',
+                }))
+              }}
+              className="cursor-pointer text-xs font-bold text-[#6f7884] underline hover:text-[#1c2b51]"
+            >
+              {t.clearSelectedService}
+            </button>
+          </div>
+        )}
+
         <AnimatePresence>
           {errorMsg && (
             <motion.div
@@ -702,7 +911,7 @@ export function BookingForm({
                   next={next}
                   prev={prev}
                   lang={lang}
-                  catalog={catalog}
+                  catalog={effectiveCatalog}
                   catalogLoading={catalogLoading}
                   catalogError={catalogError}
                   onRetryCatalog={() =>
@@ -710,6 +919,10 @@ export function BookingForm({
                   }
                   onSelectPsychologist={applySelectedPsychologist}
                   onClearPsychologist={clearSelectedPsychologist}
+                  selectedService={selectedService}
+                  activeVariant={activeVariant}
+                  appliesNewClientFee={serviceAppliesNewClientFee}
+                  fixedRateOverride={fixedVariantRate}
                 />
               )}
               {step === 4 && <Step4 data={data} set={set} t={t} next={next} prev={prev} lang={lang} />}
@@ -729,6 +942,10 @@ export function BookingForm({
                   cityLabel={cityLabelCurrent}
                   fmtSchedule={fmtScheduleReview}
                   isNewClient={isNewClient}
+                  appliesNewClientFee={serviceAppliesNewClientFee}
+                  selectedService={selectedService}
+                  activeVariant={activeVariant}
+                  fixedRateOverride={fixedVariantRate}
                 />
               )}
               {step === 7 && (
@@ -1018,6 +1235,10 @@ function Step3({
   onRetryCatalog,
   onSelectPsychologist,
   onClearPsychologist,
+  selectedService,
+  activeVariant,
+  appliesNewClientFee,
+  fixedRateOverride,
 }: {
   data: BookingFormData
   set: SetFn
@@ -1031,9 +1252,23 @@ function Step3({
   onRetryCatalog: () => void
   onSelectPsychologist: (meta: SelectedPsychologistMeta | null) => void
   onClearPsychologist: () => void
+  selectedService: PublicServiceDetail | null
+  activeVariant: PublicServiceVariant | null
+  appliesNewClientFee: boolean
+  fixedRateOverride: number | null
 }) {
   const isNewClient = data.clientStatus === 'new'
-  const branches: {
+  const allowedModalities =
+    activeVariant && activeVariant.modalities.length > 0
+      ? activeVariant.modalities
+      : selectedService && selectedService.modalities.length > 0
+        ? selectedService.modalities
+        : (['online', 'offline'] as const)
+  const allowOnline = allowedModalities.includes('online')
+  const allowOffline = allowedModalities.includes('offline')
+  const hasServicePsychologists = !selectedService || selectedService.eligiblePsychologists.length > 0
+
+  const allBranches: {
     value: BookingPhysicalBranch
     name: string
     address: string
@@ -1059,6 +1294,10 @@ function Step3({
     },
   ]
 
+  const branches = activeVariant?.branch
+    ? allBranches.filter((b) => b.value === activeVariant.branch)
+    : allBranches
+
   return (
     <>
       <StepHeader eyebrow={t.sessionPref} title={t.sessionTitle} lead={t.sessionLead} />
@@ -1068,29 +1307,33 @@ function Step3({
             {t.method} <span className="text-[#d8a74d] font-black">*</span>
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <RadioChoice
-              name="mode"
-              value="online"
-              checked={data.mode === 'online'}
-              onChange={(v) => {
-                set('mode', v as BookingConsultationMode)
-                set('location', '')
-                onClearPsychologist()
-              }}
-              title="Online"
-              desc={t.onlineDesc}
-            />
-            <RadioChoice
-              name="mode"
-              value="offline"
-              checked={data.mode === 'offline'}
-              onChange={(v) => {
-                set('mode', v as BookingConsultationMode)
-                onClearPsychologist()
-              }}
-              title="Offline"
-              desc={t.offlineDesc}
-            />
+            {allowOnline && (
+              <RadioChoice
+                name="mode"
+                value="online"
+                checked={data.mode === 'online'}
+                onChange={(v) => {
+                  set('mode', v as BookingConsultationMode)
+                  set('location', '')
+                  onClearPsychologist()
+                }}
+                title="Online"
+                desc={t.onlineDesc}
+              />
+            )}
+            {allowOffline && (
+              <RadioChoice
+                name="mode"
+                value="offline"
+                checked={data.mode === 'offline'}
+                onChange={(v) => {
+                  set('mode', v as BookingConsultationMode)
+                  onClearPsychologist()
+                }}
+                title="Offline"
+                desc={t.offlineDesc}
+              />
+            )}
           </div>
         </div>
 
@@ -1153,116 +1396,133 @@ function Step3({
           {t.psychologist}
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#f8f2e5] border border-[#ead8ae]">
-          <span className="inline-block mb-2 px-2 py-1 rounded-full bg-[#d8a74d] text-[#1c2b51] text-[10px] font-black tracking-[.08em] uppercase">
-            {t.recommended}
-          </span>
-          <h3 className="text-[#1c2b51] text-[15px] font-bold">{t.matchingTitle}</h3>
-          <p className="mt-1.5 text-[#666057] text-[13px] leading-relaxed">{t.matchingText}</p>
-        </div>
-
-        <div className="mt-5">
-          <span className="block mb-2 text-[13.5px] font-bold text-[#1c2b51]">
-            {t.psychChoice} <span className="text-[#d8a74d] font-black">*</span>
-          </span>
-          <div className="space-y-3">
-            <RadioChoice
-              name="psych"
-              value="recommended"
-              checked={data.psychChoice === 'recommended'}
-              onChange={(v) => {
-                set('psychChoice', v as BookingPsychologistChoice)
-                onClearPsychologist()
-              }}
-              title={t.matchMe}
-              desc={t.matchMeDesc}
-            />
-            <RadioChoice
-              name="psych"
-              value="previous"
-              checked={data.psychChoice === 'previous'}
-              onChange={(v) => {
-                set('psychChoice', v as BookingPsychologistChoice)
-                onClearPsychologist()
-              }}
-              title={t.previousPsych}
-              desc={t.previousPsychDesc}
-              hidden={data.clientStatus !== 'returning'}
-            />
-            <RadioChoice
-              name="psych"
-              value="self"
-              checked={data.psychChoice === 'self'}
-              onChange={(v) => {
-                set('psychChoice', v as BookingPsychologistChoice)
-                onClearPsychologist()
-              }}
-              title={t.chooseMyself}
-              desc={t.chooseMyselfDesc}
-            />
+        {!hasServicePsychologists ? (
+          <div className="p-4 rounded-2xl bg-[#f8f2e5] border border-[#ead8ae]">
+            <span className="inline-block mb-2 px-2 py-1 rounded-full bg-[#d8a74d] text-[#1c2b51] text-[10px] font-black tracking-[.08em] uppercase">
+              {t.recommended}
+            </span>
+            <h3 className="text-[#1c2b51] text-[15px] font-bold">{t.fixedVariantTeamTitle}</h3>
+            <p className="mt-1.5 text-[#666057] text-[13px] leading-relaxed">{t.fixedVariantTeamDesc}</p>
           </div>
-        </div>
-
-        {data.psychChoice === 'previous' && (
-          <div className="mt-4">
-            <FormField id="previous-psychologist" label={t.previousPsychSelect} required>
-              <SelectInput
-                id="previous-psychologist"
-                value={data.psychologist}
-                onChange={(v) => {
-                  const p = catalog.find((ps) => ps.id === v)
-                  if (!p) {
-                    onSelectPsychologist(null)
-                    return
-                  }
-                  const rate = (data.mode === 'offline' ? p.offlineRate : p.onlineRate) ?? 0
-                  onSelectPsychologist({
-                    id: p.id,
-                    slug: p.slug,
-                    name: p.name,
-                    rate,
-                    availableMalang: p.availableMalang,
-                    primaryBranch: p.primaryBranch,
-                    scheduleMon: p.scheduleMon,
-                    scheduleTue: p.scheduleTue,
-                    scheduleWed: p.scheduleWed,
-                    scheduleThu: p.scheduleThu,
-                    scheduleFri: p.scheduleFri,
-                    scheduleSat: p.scheduleSat,
-                    scheduleSun: p.scheduleSun,
-                  })
-                }}
-                options={[
-                  { value: '', label: catalogLoading ? t.loadingPsychologists : t.previousPsychSelect },
-                  ...catalog.map((p) => ({ value: p.id, label: p.name })),
-                ]}
-              />
-            </FormField>
-          </div>
-        )}
-
-        {data.psychChoice === 'self' && (
+        ) : (
           <>
-            {isNewClient && (
-              <div className="mt-4 p-3.5 rounded-[14px] bg-[#fef3c7] border border-[#f0d580] text-[13px] text-[#92710a] leading-relaxed">
-                {t.assessmentBanner}
+            <div className="p-4 rounded-2xl bg-[#f8f2e5] border border-[#ead8ae]">
+              <span className="inline-block mb-2 px-2 py-1 rounded-full bg-[#d8a74d] text-[#1c2b51] text-[10px] font-black tracking-[.08em] uppercase">
+                {t.recommended}
+              </span>
+              <h3 className="text-[#1c2b51] text-[15px] font-bold">{t.matchingTitle}</h3>
+              <p className="mt-1.5 text-[#666057] text-[13px] leading-relaxed">{t.matchingText}</p>
+            </div>
+
+            <div className="mt-5">
+              <span className="block mb-2 text-[13.5px] font-bold text-[#1c2b51]">
+                {t.psychChoice} <span className="text-[#d8a74d] font-black">*</span>
+              </span>
+              <div className="space-y-3">
+                <RadioChoice
+                  name="psych"
+                  value="recommended"
+                  checked={data.psychChoice === 'recommended'}
+                  onChange={(v) => {
+                    set('psychChoice', v as BookingPsychologistChoice)
+                    onClearPsychologist()
+                  }}
+                  title={t.matchMe}
+                  desc={t.matchMeDesc}
+                />
+                <RadioChoice
+                  name="psych"
+                  value="previous"
+                  checked={data.psychChoice === 'previous'}
+                  onChange={(v) => {
+                    set('psychChoice', v as BookingPsychologistChoice)
+                    onClearPsychologist()
+                  }}
+                  title={t.previousPsych}
+                  desc={t.previousPsychDesc}
+                  hidden={data.clientStatus !== 'returning'}
+                />
+                <RadioChoice
+                  name="psych"
+                  value="self"
+                  checked={data.psychChoice === 'self'}
+                  onChange={(v) => {
+                    set('psychChoice', v as BookingPsychologistChoice)
+                    onClearPsychologist()
+                  }}
+                  title={t.chooseMyself}
+                  desc={t.chooseMyselfDesc}
+                />
+              </div>
+            </div>
+
+            {data.psychChoice === 'previous' && (
+              <div className="mt-4">
+                <FormField id="previous-psychologist" label={t.previousPsychSelect} required>
+                  <SelectInput
+                    id="previous-psychologist"
+                    value={data.psychologist}
+                    onChange={(v) => {
+                      const p = catalog.find((ps) => ps.id === v)
+                      if (!p) {
+                        onSelectPsychologist(null)
+                        return
+                      }
+                      const rate =
+                        fixedRateOverride !== null
+                          ? fixedRateOverride
+                          : (data.mode === 'offline' ? p.offlineRate : p.onlineRate) ?? 0
+                      onSelectPsychologist({
+                        id: p.id,
+                        slug: p.slug,
+                        name: p.name,
+                        rate,
+                        availableMalang: p.availableMalang,
+                        primaryBranch: p.primaryBranch,
+                        scheduleMon: p.scheduleMon,
+                        scheduleTue: p.scheduleTue,
+                        scheduleWed: p.scheduleWed,
+                        scheduleThu: p.scheduleThu,
+                        scheduleFri: p.scheduleFri,
+                        scheduleSat: p.scheduleSat,
+                        scheduleSun: p.scheduleSun,
+                      })
+                    }}
+                    options={[
+                      { value: '', label: catalogLoading ? t.loadingPsychologists : t.previousPsychSelect },
+                      ...catalog.map((p) => ({ value: p.id, label: p.name })),
+                    ]}
+                  />
+                </FormField>
               </div>
             )}
-            <PsychologistPicker
-              lang={lang}
-              mode={data.mode}
-              psychologists={catalog}
-              loading={catalogLoading}
-              loadError={catalogError}
-              onRetry={onRetryCatalog}
-              selectedId={data.psychologist}
-              selectedSlug={data.psychologistSlug}
-              onSelect={onSelectPsychologist}
-              isNewClient={isNewClient}
-              concernId={mapBookingConcernToIntakeConcern(data.concern) ?? undefined}
-              clientCategory={data.clientCategory}
-              genderPreference={data.genderPreference}
-            />
+
+            {data.psychChoice === 'self' && (
+              <>
+                {isNewClient && appliesNewClientFee && (
+                  <div className="mt-4 p-3.5 rounded-[14px] bg-[#fef3c7] border border-[#f0d580] text-[13px] text-[#92710a] leading-relaxed">
+                    {t.assessmentBanner}
+                  </div>
+                )}
+                <PsychologistPicker
+                  lang={lang}
+                  mode={data.mode}
+                  psychologists={catalog}
+                  loading={catalogLoading}
+                  loadError={catalogError}
+                  onRetry={onRetryCatalog}
+                  selectedId={data.psychologist}
+                  selectedSlug={data.psychologistSlug}
+                  onSelect={onSelectPsychologist}
+                  isNewClient={isNewClient}
+                  appliesNewClientFee={appliesNewClientFee}
+                  fixedRateOverride={fixedRateOverride}
+                  concernId={mapBookingConcernToIntakeConcern(data.concern) ?? undefined}
+                  clientCategory={data.clientCategory}
+                  genderPreference={data.genderPreference}
+                />
+              </>
+            )}
           </>
         )}
 
@@ -1413,6 +1673,10 @@ function Step6({
   cityLabel,
   fmtSchedule,
   isNewClient,
+  appliesNewClientFee,
+  selectedService,
+  activeVariant,
+  fixedRateOverride,
 }: {
   data: BookingFormData
   set: SetFn
@@ -1427,14 +1691,27 @@ function Step6({
   cityLabel: string
   fmtSchedule: (d: string, ti: string) => string
   isNewClient: boolean
+  appliesNewClientFee: boolean
+  selectedService: PublicServiceDetail | null
+  activeVariant: PublicServiceVariant | null
+  fixedRateOverride: number | null
 }) {
-  const baseRate = data.psychologistRate || 0
-  const assessmentFee = isNewClient && baseRate > 0 ? BOOKING_ASSESSMENT_FEE : 0
+  const baseRate = fixedRateOverride !== null ? fixedRateOverride : (data.psychologistRate || 0)
+  const showNewClientFee = isNewClient && appliesNewClientFee
+  const assessmentFee = showNewClientFee && baseRate > 0 ? BOOKING_ASSESSMENT_FEE : 0
   const totalRate = baseRate + assessmentFee
   const countryLabel =
     COUNTRIES.find((c) => c.value === data.country)?.[lang === 'en' ? 'labelEn' : 'labelId'] ?? data.country
 
   const rows: [string, string][] = [
+    ...(selectedService
+      ? [
+          [
+            t.summaryService,
+            `${selectedService.name}${activeVariant ? ` — ${activeVariant.name}` : ''}`,
+          ] as [string, string],
+        ]
+      : []),
     [t.summaryStatus, data.clientStatus === 'new' ? t.statusNew : t.statusReturning],
     [t.summaryName, data.name],
     [t.summaryWhatsapp, data.whatsapp],
@@ -1452,8 +1729,8 @@ function Step6({
   const priceRows: [string, string][] =
     baseRate > 0
       ? [
-          [t.summaryPsychRate, formatCurrency(baseRate)],
-          ...(isNewClient ? [[t.summaryAssessment, formatCurrency(assessmentFee)] as [string, string]] : []),
+          [fixedRateOverride !== null ? t.summaryServiceRate : t.summaryPsychRate, formatCurrency(baseRate)],
+          ...(showNewClientFee ? [[t.summaryAssessment, formatCurrency(assessmentFee)] as [string, string]] : []),
           [t.summaryTotal, formatCurrency(totalRate)],
         ]
       : []

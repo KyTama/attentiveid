@@ -16,6 +16,11 @@ import {
 import { db as defaultDb } from '../db';
 import * as schema from '../db/schema';
 import { escapeLikePattern } from './psychologists.repository';
+import {
+    createServicesRepository,
+    type ResolvedBookingServiceSelection,
+    type ServicesRepository
+} from './services.repository';
 import { buildBookingWebhookPayload } from '../services/booking-outbox';
 
 const BOOKING_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -247,8 +252,11 @@ const buildAdminFilterConditions = (query: BookingAdminListQuery) => {
 };
 
 export const createBookingRepository = (
-    database: PostgresJsDatabase<typeof schema> = defaultDb
-): BookingRepository => ({
+    database: PostgresJsDatabase<typeof schema> = defaultDb,
+    options: { servicesRepository?: Pick<ServicesRepository, 'resolveBookingServiceSelection'> } = {}
+): BookingRepository => {
+    const servicesRepository = options.servicesRepository ?? createServicesRepository(database);
+    return ({
     async listBookingPsychologists(query) {
         const conditions: any[] = [
             eq(schema.psychologists.status, 'active'),
@@ -451,12 +459,27 @@ export const createBookingRepository = (
 
     async createSubmission(input) {
         return database.transaction(async (tx) => {
+            let resolvedService: ResolvedBookingServiceSelection | null = null;
+            if (input.serviceSlug) {
+                const serviceResolution = await servicesRepository.resolveBookingServiceSelection({
+                    serviceSlug: input.serviceSlug,
+                    variantSlug: input.variantSlug,
+                    consultationMode: input.consultationMode,
+                    location: input.location,
+                    tx
+                });
+                if (!serviceResolution.ok) {
+                    return serviceResolution;
+                }
+                resolvedService = serviceResolution;
+            }
+
             let resolvedPsychId: string | null = null;
             let resolvedPsychSlug: string | null = null;
             let resolvedPsychName: string | null = input.selectedPsychologistName;
             let primaryBranch: BookingPhysicalBranch | 'online_only' | 'multiple' | null = null;
             let availableMalang = false;
-            let baseRate = 0;
+            let baseRate = resolvedService?.fixedBaseRate ?? 0;
 
             const wantsSpecificPsychologist = input.psychologistChoice === 'self' || input.psychologistChoice === 'previous';
             const lookupKey = input.psychologistId && UUID_PATTERN.test(input.psychologistId)
@@ -506,23 +529,36 @@ export const createBookingRepository = (
                     return { ok: false, status: 409, message: 'Psikolog sedang tidak menerima klien baru.' };
                 }
 
-                if (input.consultationMode === 'online') {
-                    if (!match.availableOnline || match.onlineRate === null) {
-                        return { ok: false, status: 400, message: 'Psikolog ini tidak tersedia untuk sesi online.' };
+                if (
+                    resolvedService
+                    && resolvedService.eligiblePsychologistIds.length > 0
+                    && !resolvedService.eligiblePsychologistIds.includes(match.id)
+                ) {
+                    return { ok: false, status: 400, message: 'Psikolog ini tidak tersedia untuk layanan yang dipilih.' };
+                }
+
+                const usesFixedOrNonCounselingPricing =
+                    resolvedService !== null && resolvedService.pricingModel !== 'psychologist_rate';
+
+                if (!usesFixedOrNonCounselingPricing) {
+                    if (input.consultationMode === 'online') {
+                        if (!match.availableOnline || match.onlineRate === null) {
+                            return { ok: false, status: 400, message: 'Psikolog ini tidak tersedia untuk sesi online.' };
+                        }
+                        baseRate = match.onlineRate;
+                    } else {
+                        const branchAvailable = input.location === 'tbi'
+                            ? match.availableTbi
+                            : input.location === 'bsd'
+                                ? match.availableBsd
+                                : input.location === 'malang'
+                                    ? match.availableMalang
+                                    : false;
+                        if (!branchAvailable || match.offlineRate === null) {
+                            return { ok: false, status: 400, message: 'Psikolog ini tidak praktik di cabang yang dipilih.' };
+                        }
+                        baseRate = match.offlineRate;
                     }
-                    baseRate = match.onlineRate;
-                } else {
-                    const branchAvailable = input.location === 'tbi'
-                        ? match.availableTbi
-                        : input.location === 'bsd'
-                            ? match.availableBsd
-                            : input.location === 'malang'
-                                ? match.availableMalang
-                                : false;
-                    if (!branchAvailable || match.offlineRate === null) {
-                        return { ok: false, status: 400, message: 'Psikolog ini tidak praktik di cabang yang dipilih.' };
-                    }
-                    baseRate = match.offlineRate;
                 }
 
                 resolvedPsychId = match.id;
@@ -532,7 +568,8 @@ export const createBookingRepository = (
                 availableMalang = match.availableMalang;
             }
 
-            const assessmentFee = input.clientStatus === 'new' ? BOOKING_ASSESSMENT_FEE : 0;
+            const appliesNewClientFee = resolvedService ? resolvedService.appliesNewClientFee : true;
+            const assessmentFee = input.clientStatus === 'new' && appliesNewClientFee ? BOOKING_ASSESSMENT_FEE : 0;
             const totalRate = baseRate + assessmentFee;
             const bookingCode = generateBookingCode();
 
@@ -552,7 +589,10 @@ export const createBookingRepository = (
                     countryRegion: input.countryRegion,
                     age: input.age,
                     gender: input.gender,
-                    serviceType: input.serviceType,
+                    serviceType: resolvedService?.serviceNameSnapshot ?? input.serviceType,
+                    serviceId: resolvedService?.serviceId ?? null,
+                    serviceVariantId: resolvedService?.serviceVariantId ?? null,
+                    serviceNameSnapshot: resolvedService?.serviceNameSnapshot ?? null,
                     concernId: input.concernId,
                     concernCategory: input.concernCategory,
                     clientCategory: input.clientCategory,
@@ -607,10 +647,13 @@ export const createBookingRepository = (
                 submittedAt: created.submittedAt,
                 normalized: {
                     ...input,
+                    serviceType: resolvedService?.serviceNameSnapshot ?? input.serviceType,
                     psychologistId: resolvedPsychId,
                     psychologistSlug: resolvedPsychSlug,
                     selectedPsychologistName: resolvedPsychName
                 },
+                serviceNameSnapshot: resolvedService?.serviceNameSnapshot ?? null,
+                variantNameSnapshot: resolvedService?.variantNameSnapshot ?? null,
                 baseRate,
                 assessmentFee,
                 totalRate,
@@ -900,4 +943,5 @@ export const createBookingRepository = (
             byAd: [...adMap.values()].sort(sortDesc)
         };
     }
-});
+    });
+};

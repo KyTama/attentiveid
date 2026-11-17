@@ -5,6 +5,8 @@ import { createDrizzleLandingContentSource, createLandingContentRepository } fro
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from './repositories/psychologists.repository';
 import { createArticlesRepository, createDrizzleArticleQuerySource } from './repositories/articles.repository';
 import { createBookingRepository } from './repositories/booking.repository';
+import { createServicesRepository } from './repositories/services.repository';
+import { createServicesInternalRepository } from './repositories/services-internal.repository';
 import { processDueBookingOutbox } from './services/booking-outbox';
 import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
@@ -37,7 +39,9 @@ const articlesRepository = createArticlesRepository(createDrizzleArticleQuerySou
 const contentTransitions = createContentTransitions(createDrizzleContentTransitionDatabase(db));
 
 const landingRepository = createLandingContentRepository(createDrizzleLandingContentSource(db));
-const bookingRepository = createBookingRepository(db);
+const servicesRepository = createServicesRepository(db);
+const servicesInternalRepository = createServicesInternalRepository(db);
+const bookingRepository = createBookingRepository(db, { servicesRepository });
 
 const googleOutboxConfig =
     env.GOOGLE_CLIENT_ID &&
@@ -92,6 +96,8 @@ const app = createApp({
     tokenService,
     verifyPassword,
     bookingRepository,
+    servicesRepository,
+    servicesInternalRepository,
     triggerOutboxDrain,
     db
 })

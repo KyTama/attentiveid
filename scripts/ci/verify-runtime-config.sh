@@ -36,6 +36,7 @@ for (const [serviceName, command] of Object.entries({
   migrate: ["bun", "run", "dist/migrate.js"],
   "seed-landing": ["bun", "run", "dist/seed-landing.js"],
   "seed-psychologists": ["bun", "run", "dist/seed-psychologists.js"],
+  "seed-services": ["bun", "run", "dist/seed-services.js"],
 })) {
   const service = config.services[serviceName];
   if (!service) throw new Error(`${serviceName} maintenance job is required`);
@@ -77,17 +78,19 @@ grep -Eq '^PREVIEW_HMAC_SECRET=.{32,}$' "$root_dir/tests/fixtures/deploy/host-se
 grep -Fq 'src/db/migrate.ts --outfile=dist/migrate.js' "$root_dir/apps/api/Dockerfile"
 grep -Fq 'src/db/seed-landing.ts --outfile=dist/seed-landing.js' "$root_dir/apps/api/Dockerfile"
 grep -Fq 'src/db/seed-psychologists.ts --outfile=dist/seed-psychologists.js' "$root_dir/apps/api/Dockerfile"
+grep -Fq 'src/db/seed-services.ts --outfile=dist/seed-services.js' "$root_dir/apps/api/Dockerfile"
 grep -Fq 'COPY --from=build --chown=bun:bun /app/apps/api/drizzle ./drizzle' "$root_dir/apps/api/Dockerfile"
 grep -Fq 'ENV MIGRATIONS_DIR=/app/apps/api/drizzle' "$root_dir/apps/api/Dockerfile"
 grep -Fq -- '--profile maintenance' "$root_dir/scripts/deploy/deploy.sh"
 grep -Fq 'run --rm --no-deps migrate' "$root_dir/scripts/deploy/deploy.sh"
-if grep -Eq 'seed-landing|seed-psychologists|--upsert|--force' "$root_dir/scripts/deploy/deploy.sh"; then
+if grep -Eq 'seed-landing|seed-psychologists|seed-services|--upsert|--force' "$root_dir/scripts/deploy/deploy.sh"; then
     printf 'Deployment script must not automatically seed or reseed VPS databases\n' >&2
     exit 1
 fi
 grep -Fq 'dist/migrate.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'dist/seed-landing.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'dist/seed-psychologists.js' "$root_dir/scripts/ci/smoke-images.sh"
+grep -Fq 'dist/seed-services.js' "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq "API landing content" "$root_dir/scripts/ci/smoke-images.sh"
 grep -Fq 'Web image contains a localhost API fallback' "$root_dir/scripts/ci/smoke-images.sh"
 

@@ -8,6 +8,12 @@ import {
   PSYCHOLOGIST_LIFECYCLE_STATES,
   PSYCHOLOGIST_SUPPORT_AREAS,
   PSYCHOLOGIST_TIERS,
+  SERVICE_LIFECYCLE_STATUSES,
+  SERVICE_PRICING_MODELS,
+  SERVICE_PROGRAM_STATUSES,
+  SERVICE_PROGRAM_TYPES,
+  SERVICE_TYPES,
+  SERVICE_VISIBILITIES,
   USER_ROLES,
   USER_STATUSES,
 } from '../../../../packages/shared/src'
@@ -18,6 +24,7 @@ import {
   articleRevisions,
   articleStatusEnum,
   articles,
+  bookings,
   landingAggregates,
   landingItemTranslations,
   landingItems,
@@ -40,6 +47,33 @@ import {
   psychologistSupportAreas,
   psychologistTierEnum,
   psychologists,
+  serviceAuditLogs,
+  serviceCategories,
+  serviceCategoryTranslations,
+  serviceDataIssues,
+  serviceDeliverables,
+  serviceFaqs,
+  serviceInternalCosts,
+  serviceLifecycleStatusEnum,
+  serviceOpsSettings,
+  servicePricingModelEnum,
+  serviceProgramPrices,
+  serviceProgramStatusEnum,
+  serviceProgramTranslations,
+  serviceProgramTypeEnum,
+  servicePrograms,
+  servicePsychologists,
+  servicePublicPrices,
+  serviceReferenceLinks,
+  serviceReferences,
+  serviceSubgroupTranslations,
+  serviceSubgroups,
+  serviceTranslations,
+  serviceTypeEnum,
+  serviceVariantTranslations,
+  serviceVariants,
+  serviceVisibilityEnum,
+  services,
   userRefreshTokens,
   userRoleEnum,
   userStatusEnum,
@@ -86,6 +120,12 @@ describe('content domain schema', () => {
     expect(landingRevisionStatusEnum.enumValues).toEqual(['draft', 'published', 'superseded'])
     expect(userRoleEnum.enumValues).toEqual([...USER_ROLES])
     expect(userStatusEnum.enumValues).toEqual([...USER_STATUSES])
+    expect(serviceTypeEnum.enumValues).toEqual([...SERVICE_TYPES])
+    expect(serviceLifecycleStatusEnum.enumValues).toEqual([...SERVICE_LIFECYCLE_STATUSES])
+    expect(serviceVisibilityEnum.enumValues).toEqual([...SERVICE_VISIBILITIES])
+    expect(servicePricingModelEnum.enumValues).toEqual([...SERVICE_PRICING_MODELS])
+    expect(serviceProgramTypeEnum.enumValues).toEqual([...SERVICE_PROGRAM_TYPES])
+    expect(serviceProgramStatusEnum.enumValues).toEqual([...SERVICE_PROGRAM_STATUSES])
   })
 
   it('stores production user accounts and token rotation metadata with UUID primary keys', () => {
@@ -278,6 +318,7 @@ describe('content domain schema', () => {
       'psychologist_id',
       'landing_revision_id',
       'article_revision_id',
+      'service_id',
       'role',
       'position',
       'detached_at',
@@ -310,6 +351,21 @@ describe('content domain schema', () => {
       [articleReviews, 'id'],
       [mediaObjects, 'id'],
       [mediaAttachments, 'id'],
+      [serviceCategories, 'id'],
+      [serviceCategoryTranslations, 'id'],
+      [serviceSubgroups, 'id'],
+      [serviceSubgroupTranslations, 'id'],
+      [services, 'id'],
+      [serviceTranslations, 'id'],
+      [serviceVariants, 'id'],
+      [serviceVariantTranslations, 'id'],
+      [servicePublicPrices, 'id'],
+      [servicePrograms, 'id'],
+      [serviceProgramTranslations, 'id'],
+      [serviceProgramPrices, 'id'],
+      [serviceDeliverables, 'id'],
+      [serviceFaqs, 'id'],
+      [serviceReferences, 'id'],
     ]
 
     for (const [table, identityName] of identityColumns) {
@@ -342,6 +398,71 @@ describe('content domain schema', () => {
       articleRevisions,
       articleReviews,
       mediaAttachments,
+      serviceCategoryTranslations,
+      serviceSubgroups,
+      serviceSubgroupTranslations,
+      services,
+      serviceTranslations,
+      serviceVariants,
+      serviceVariantTranslations,
+      servicePublicPrices,
+      serviceProgramTranslations,
+      serviceProgramPrices,
+      servicePsychologists,
+      serviceDeliverables,
+      serviceFaqs,
+      serviceReferenceLinks,
+      serviceInternalCosts,
+      serviceAuditLogs,
     ])
+  })
+
+  it('enforces physical financial privacy wall on public service tables and booking service links', () => {
+    expect(columnNamesFor(services)).toEqual(expect.arrayContaining([
+      'slug',
+      'service_type',
+      'pricing_model',
+      'status',
+      'visibility',
+      'applies_new_client_fee',
+    ]))
+    expect(columnNamesFor(bookings)).toEqual(expect.arrayContaining([
+      'service_id',
+      'service_variant_id',
+      'service_name_snapshot',
+    ]))
+
+    const priceColumns = columnNamesFor(servicePublicPrices)
+    expect(priceColumns).toEqual([
+      'id',
+      'variant_id',
+      'amount',
+      'amount_max',
+      'effective_date',
+      'created_at',
+      'updated_at',
+    ])
+    const forbiddenFinancialPattern = /fee|biaya|margin|asumsi|historis|usulan|kind|internal_note|drive_note|zite/i
+    expect(priceColumns.some((name) => forbiddenFinancialPattern.test(name))).toBe(false)
+    expect(columnNamesFor(serviceProgramPrices).some((name) => forbiddenFinancialPattern.test(name))).toBe(false)
+    expect(columnNamesFor(services).some((name) => /internal_note|drive_note|margin|asumsi|zite/i.test(name))).toBe(false)
+    expect(columnNamesFor(serviceInternalCosts)).toEqual(expect.arrayContaining([
+      'service_id',
+      'variant_id',
+      'psychologist_id',
+      'record_kind',
+      'record_status',
+      'amount',
+    ]))
+    expect(columnNamesFor(serviceDataIssues)).toEqual(expect.arrayContaining([
+      'code',
+      'issue_type',
+      'status',
+      'resolution',
+    ]))
+    expect(columnNamesFor(serviceOpsSettings)).toEqual(expect.arrayContaining([
+      'margin_threshold',
+      'assumptions_json',
+    ]))
   })
 })

@@ -85,6 +85,20 @@
       "when": 1794680445137,
       "tag": "0011_booking_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794801199387,
+      "tag": "0012_public_services_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794850000000,
+      "tag": "0013_internal_services_ops",
+      "breakpoints": true
     }
   ]
 }

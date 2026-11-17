@@ -19,6 +19,10 @@ import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { SciBriefPage } from './pages/SciBriefPage'
 import { SciBriefDetailPage } from './pages/SciBriefDetailPage'
 import { BookingPage } from './pages/BookingPage'
+import { ServicesPage } from './pages/ServicesPage'
+import { ServiceDetailPage } from './pages/ServiceDetailPage'
+import { ServiceDemoPage } from './pages/ServiceDemoPage'
+import { ServicesCmsPage } from './pages/dashboard/ServicesCmsPage'
 import { captureAttribution } from './features/booking/attribution'
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage'
 import { LandingCmsPage } from './pages/dashboard/LandingCmsPage'
@@ -59,6 +63,12 @@ export function AppRoutes({
           <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />
         </Route>
 
+        {/* Standalone Services Catalog & Detail Experience (Navy Topbar, No Landing Header/Footer) */}
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/services/demo" element={<ServiceDemoPage />} />
+        <Route path="/services/:slug/demo" element={<ServiceDemoPage />} />
+        <Route path="/services/:slug" element={<ServiceDetailPage />} />
+
         {/* Native Consultation Booking Wizard (No Public Navbar/Footer Chrome) */}
         <Route path="/booking" element={<BookingPage />} />
 
@@ -76,6 +86,14 @@ export function AppRoutes({
           }
         >
           <Route index element={<DashboardOverviewPage />} />
+          <Route
+            path="services"
+            element={
+              <ProtectedRoute allowedRoles={['superadmin']}>
+                <ServicesCmsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="landing"
             element={
@@ -179,6 +197,9 @@ function App() {
   const { i18n } = useTranslation()
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/services/demo')) {
+      return
+    }
     captureAttribution()
   }, [])
 

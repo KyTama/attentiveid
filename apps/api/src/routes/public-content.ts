@@ -6,6 +6,7 @@ import type {
     PsychologistListQuery,
     PsychologistPublicProjection
 } from '../repositories/psychologists.repository';
+import type { ServicesRepository } from '../repositories/services.repository';
 
 const previewCookieName = 'attentive_landing_preview';
 
@@ -53,6 +54,7 @@ export interface PublicContentDependencies {
     frontendOrigin: string;
     landingRepository: LandingRepository;
     psychologistsRepository: PsychologistsRepository;
+    servicesRepository?: Pick<ServicesRepository, 'listPublicCatalog' | 'getPublicBySlug'>;
     previewCapabilities: PreviewCapabilities;
     previewSessions: PreviewSessions;
     accessLog?: (entry: { method: string; path: string; body: '[REDACTED]' | null }) => void;
@@ -153,6 +155,36 @@ export const createPublicContentRoutes = (dependencies: PublicContentDependencie
     ), {
         params: t.Object({ slug: t.String({ minLength: 1, maxLength: 160 }) }, { additionalProperties: false }),
         query: t.Object({ locale: localeSchema }, { additionalProperties: false })
+    })
+    .get('/api/content/services', async ({ query, set }) => {
+        if (!dependencies.servicesRepository) {
+            set.status = 503;
+            return { status: 'unavailable' as const };
+        }
+        return {
+            status: 'found' as const,
+            catalog: await dependencies.servicesRepository.listPublicCatalog(query.locale ?? 'id')
+        };
+    }, {
+        query: t.Object({ locale: t.Optional(localeSchema) }, { additionalProperties: false })
+    })
+    .get('/api/content/services/:slug', async ({ params, query, set }) => {
+        if (!dependencies.servicesRepository) {
+            set.status = 503;
+            return { status: 'unavailable' as const };
+        }
+        const service = await dependencies.servicesRepository.getPublicBySlug(params.slug, query.locale ?? 'id');
+        if (!service) {
+            set.status = 404;
+            return { status: 'notFound' as const };
+        }
+        return {
+            status: 'found' as const,
+            service
+        };
+    }, {
+        params: t.Object({ slug: t.String({ minLength: 1, maxLength: 160 }) }, { additionalProperties: false }),
+        query: t.Object({ locale: t.Optional(localeSchema) }, { additionalProperties: false })
     })
     .post('/api/preview/landing/session', async ({ body, request, set }) => {
         dependencies.accessLog?.({ method: request.method, path: new URL(request.url).pathname, body: '[REDACTED]' });

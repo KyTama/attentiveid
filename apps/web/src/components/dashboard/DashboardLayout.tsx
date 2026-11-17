@@ -16,6 +16,7 @@ import {
   Network,
   CalendarDays,
   ChevronDown,
+  Layers,
   Menu,
   X,
   LogOut,
@@ -40,6 +41,7 @@ export function DashboardLayout() {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
+  const isSuperadmin = user?.role === 'superadmin'
   const showExperimental = isAdmin && canAccessExperimental(user?.email)
 
   const navEntries: NavEntry[] = [
@@ -49,6 +51,12 @@ export function DashboardLayout() {
       label: t('dashboard.navOverview', 'Overview'),
       icon: <LayoutDashboard className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: true,
+    },
+    {
+      to: '/dashboard/services',
+      label: t('dashboard.navServices', 'Produk & Keuangan'),
+      icon: <Layers className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isSuperadmin,
     },
     {
       to: '/dashboard/landing',

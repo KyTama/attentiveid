@@ -68,6 +68,8 @@ interface PsychologistPickerProps {
   selectedSlug: string
   onSelect: (meta: SelectedPsychologistMeta | null) => void
   isNewClient: boolean
+  appliesNewClientFee?: boolean
+  fixedRateOverride?: number | null
   concernId?: IntakeConcernId | ''
   clientCategory?: IntakeClientCategory | ''
   genderPreference?: IntakeGenderPreference | ''
@@ -84,6 +86,8 @@ export function PsychologistPicker({
   selectedSlug,
   onSelect,
   isNewClient,
+  appliesNewClientFee = true,
+  fixedRateOverride = null,
   concernId,
   clientCategory,
   genderPreference,
@@ -217,8 +221,9 @@ export function PsychologistPicker({
         const isSelected = selectedId === p.id || (selectedSlug !== '' && selectedSlug === p.slug)
         const isExpanded = expandedId === p.id
         const isRecommendedMatch = matchedIds.has(p.slug)
-        const baseRate = mode === 'offline' ? p.offlineRate : p.onlineRate
-        const displayRate = isNewClient && baseRate != null ? baseRate + BOOKING_ASSESSMENT_FEE : baseRate
+        const baseRate = fixedRateOverride !== null ? fixedRateOverride : (mode === 'offline' ? p.offlineRate : p.onlineRate)
+        const showNewClientFee = isNewClient && appliesNewClientFee
+        const displayRate = showNewClientFee && baseRate != null ? baseRate + BOOKING_ASSESSMENT_FEE : baseRate
         const meta = tierMeta(p.tier)
 
         const locations: string[] = []
@@ -347,14 +352,14 @@ export function PsychologistPicker({
                       <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <span className="font-semibold text-[#1c2b51]">{t.availableAt}:</span> {locations.join(', ')}
                     </div>
-                    {p.onlineRate != null && (
+                    {fixedRateOverride === null && p.onlineRate != null && (
                       <div className="flex items-center gap-1.5 text-[#6f7884]">
                         <Monitor className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                         <span className="font-semibold text-[#1c2b51]">{t.rateOnline}:</span>{' '}
                         <span className="tabular-nums">{formatCurrency(p.onlineRate)}</span>
                       </div>
                     )}
-                    {p.offlineRate != null && (
+                    {fixedRateOverride === null && p.offlineRate != null && (
                       <div className="flex items-center gap-1.5 text-[#6f7884]">
                         <Building2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                         <span className="font-semibold text-[#1c2b51]">{t.rateOffline}:</span>{' '}
@@ -363,10 +368,10 @@ export function PsychologistPicker({
                     )}
                   </div>
 
-                  {isNewClient && baseRate != null && (
+                  {showNewClientFee && baseRate != null && (
                     <div className="mt-3 p-3 rounded-xl bg-[#fdf8ed] border border-[#ead8ae]">
                       <div className="flex justify-between text-[12px] text-[#6f7884]">
-                        <span>{t.baseRateLabel}</span>
+                        <span>{fixedRateOverride !== null ? t.summaryServiceRate : t.baseRateLabel}</span>
                         <span className="font-semibold text-[#1c2b51] tabular-nums">{formatCurrency(baseRate)}</span>
                       </div>
                       <div className="flex justify-between text-[12px] text-[#6f7884] mt-1">

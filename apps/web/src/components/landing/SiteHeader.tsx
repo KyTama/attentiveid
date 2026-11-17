@@ -143,6 +143,95 @@ function MobileScience({ onNavigate }: { onNavigate: () => void }) {
   )
 }
 
+function ServicesMenu() {
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.resolvedLanguage?.startsWith('en') ?? false
+  const [open, setOpen] = useState(false)
+  const closeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const menuId = useId()
+  const reduceMotion = useReducedMotion()
+
+  const cancelClose = () => {
+    if (closeTimeout.current) {
+      clearTimeout(closeTimeout.current)
+      closeTimeout.current = null
+    }
+  }
+
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimeout.current = setTimeout(() => setOpen(false), 120)
+  }
+
+  const itemClass =
+    'block whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium text-secondary/80 transition-colors hover:bg-secondary/5 hover:text-secondary outline-none focus-visible:bg-secondary/5 focus-visible:text-secondary'
+
+  return (
+    <div
+      className="relative flex items-center gap-0.5"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') setOpen(false)
+      }}
+      onMouseEnter={() => {
+        cancelClose()
+        setOpen(true)
+      }}
+      onMouseLeave={scheduleClose}
+    >
+      <Link
+        className="rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        onClick={() => setOpen(false)}
+        to="/services"
+      >
+        {t('homepage.nav.ourServices')}
+      </Link>
+      <button
+        aria-controls={menuId}
+        aria-expanded={open}
+        aria-label={isEn ? 'Services submenu' : 'Submenu layanan'}
+        className="inline-flex h-6 w-5 cursor-pointer items-center justify-center rounded text-secondary/65 transition-colors hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        <ChevronDown aria-hidden="true" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`} size={14} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2"
+            exit={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : -4 }}
+            id={menuId}
+            initial={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : -4 }}
+            transition={INTERACTIVE_SPRING}
+          >
+            <ul className="min-w-60 rounded-xl border border-secondary/10 bg-white p-1.5 shadow-lg">
+              <li>
+                <Link className={itemClass} onClick={() => setOpen(false)} to="/services">
+                  {isEn ? 'Services & Assessment Catalog' : 'Katalog Layanan & Asesmen'}
+                </Link>
+              </li>
+              <li>
+                <Link className={itemClass} onClick={() => setOpen(false)} to="/services/demo">
+                  {isEn ? 'Cognitive Tasks & AAA-50 Demo' : 'Demo Tugas Kognitif & AAA-50'}
+                </Link>
+              </li>
+              <li>
+                <Link className={itemClass} onClick={() => setOpen(false)} to="/services?assistant=1">
+                  {isEn ? 'Help Me Choose a Service' : 'Bantu Pilih Layanan'}
+                </Link>
+              </li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 function LanguageToggle() {
   const { i18n, t } = useTranslation()
   const isEnglish = i18n.resolvedLanguage?.startsWith('en') ?? true
@@ -209,15 +298,7 @@ export function SiteHeader() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
-          <button
-            aria-disabled="true"
-            className="rounded-md py-1 text-sm font-medium text-secondary/55 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            onClick={(event) => event.preventDefault()}
-            title={t('homepage.nav.ourServicesHint')}
-            type="button"
-          >
-            {t('homepage.nav.ourServices')}
-          </button>
+          <ServicesMenu />
           <ScienceMenu />
           {navItems.map((item) => {
             const isInternal = !item.href.includes('#')
@@ -302,15 +383,22 @@ export function SiteHeader() {
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6">
               <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/80 p-1.5 shadow-2xs">
-                <button
-                  aria-disabled="true"
-                  className="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left text-base font-semibold text-secondary/50 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  onClick={(event) => event.preventDefault()}
-                  title={t('homepage.nav.ourServicesHint')}
-                  type="button"
+                <Link
+                  className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  onClick={() => setMenuOpen(false)}
+                  to="/services"
                 >
                   <span>{t('homepage.nav.ourServices')}</span>
-                </button>
+                  <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
+                </Link>
+                <Link
+                  className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-secondary/80 transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  onClick={() => setMenuOpen(false)}
+                  to="/services/demo"
+                >
+                  <span>{t('homepage.nav.cognitiveDemo', 'Demo Kognitif & AAA-50')}</span>
+                  <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
+                </Link>
                 <MobileScience onNavigate={() => setMenuOpen(false)} />
                 {navItems.map((item) => {
                   const isInternal = !item.href.includes('#')

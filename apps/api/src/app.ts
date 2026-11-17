@@ -15,8 +15,14 @@ import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
 import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
 import { createSitemapRoutes } from './routes/sitemap.routes';
 import { createBookingRepository, type BookingRepository } from './repositories/booking.repository';
+import { createServicesRepository, type ServicesRepository } from './repositories/services.repository';
+import {
+    createServicesInternalRepository,
+    type ServicesInternalRepository
+} from './repositories/services-internal.repository';
 import { createBookingPublicRoutes } from './routes/booking-public.routes';
 import { createBookingAdminRoutes } from './routes/booking-admin.routes';
+import { createServicesAdminRoutes } from './routes/services-admin.routes';
 import { getMediaFilePath } from './services/media-storage';
 
 export type AppDependencies = PublicContentDependencies & Partial<AuthDependencies> & {
@@ -27,11 +33,14 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     freeSessionRepository?: FreeSessionRepository;
     sciBriefsRepository?: SciBriefsRepository;
     bookingRepository?: BookingRepository;
+    servicesRepository?: ServicesRepository;
+    servicesInternalRepository?: ServicesInternalRepository;
     triggerOutboxDrain?: () => Promise<unknown>;
 };
 
 export const createApp = (dependencies: AppDependencies) => {
-    const bookingRepository = dependencies.bookingRepository ?? createBookingRepository(dependencies.db);
+    const servicesRepository = dependencies.servicesRepository ?? createServicesRepository(dependencies.db);
+    const bookingRepository = dependencies.bookingRepository ?? createBookingRepository(dependencies.db, { servicesRepository });
 
     const baseApp = new Elysia()
         // Swagger documentation
@@ -58,7 +67,10 @@ export const createApp = (dependencies: AppDependencies) => {
         }))
         // Enable CORS for frontend
         .use(cors({ origin: dependencies.frontendOrigin, credentials: true }))
-        .use(createPublicContentRoutes(dependencies))
+        .use(createPublicContentRoutes({
+            ...dependencies,
+            servicesRepository
+        }))
         .use(createSitemapRoutes({ db: dependencies.db, siteOrigin: dependencies.frontendOrigin }))
         .use(createBookingPublicRoutes({
             bookingRepository,
@@ -180,6 +192,13 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 bookingRepository,
                 triggerOutboxDrain: dependencies.triggerOutboxDrain
+            }))
+            .use(createServicesAdminRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                servicesInternalRepository: dependencies.servicesInternalRepository
+                    || createServicesInternalRepository(dependencies.db),
+                db: dependencies.db
             }));
     }
 

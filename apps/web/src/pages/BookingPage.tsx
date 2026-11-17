@@ -54,12 +54,14 @@ export function BookingPage() {
   )
 
   const prefill = useMemo<BookingPrefillParams>(() => {
+    const serviceSlug = searchParams.get('service') || undefined
+    const variantSlug = searchParams.get('variant') || undefined
     const psychologistSlug = searchParams.get('psychologist') || undefined
     const concernId = searchParams.get('concern') || undefined
     const mode = searchParams.get('mode') || undefined
     const location = searchParams.get('location') || undefined
     const clientStatus = searchParams.get('client') || undefined
-    return { psychologistSlug, concernId, mode, location, clientStatus }
+    return { serviceSlug, variantSlug, psychologistSlug, concernId, mode, location, clientStatus }
   }, [searchParams])
 
   useEffect(() => {

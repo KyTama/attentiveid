@@ -2,6 +2,7 @@ export interface SitemapSource {
   psychologistSlugs: string[]
   articleSlugs: string[]
   sciBriefSlugs: string[]
+  serviceSlugs?: string[]
 }
 
 interface SitemapEntry {
@@ -12,6 +13,7 @@ interface SitemapEntry {
 
 const STATIC_ENTRIES: SitemapEntry[] = [
   { path: '/', changefreq: 'daily', priority: '1.0' },
+  { path: '/services', changefreq: 'daily', priority: '0.9' },
   { path: '/psychologists', changefreq: 'daily', priority: '0.9' },
   { path: '/articles', changefreq: 'weekly', priority: '0.8' },
   { path: '/sci-brief', changefreq: 'monthly', priority: '0.7' },
@@ -25,6 +27,7 @@ export const buildSitemapXml = (origin: string, source: SitemapSource): string =
   const base = origin.replace(/\/+$/, '')
   const entries: SitemapEntry[] = [
     ...STATIC_ENTRIES,
+    ...(source.serviceSlugs ?? []).map((slug) => ({ path: `/services/${slug}`, changefreq: 'weekly' as const, priority: '0.8' })),
     ...source.psychologistSlugs.map((slug) => ({ path: `/psychologists/${slug}`, changefreq: 'weekly' as const, priority: '0.8' })),
     ...source.articleSlugs.map((slug) => ({ path: `/articles/${slug}`, changefreq: 'monthly' as const, priority: '0.6' })),
     ...source.sciBriefSlugs.map((slug) => ({ path: `/sci-brief/${slug}`, changefreq: 'monthly' as const, priority: '0.6' })),

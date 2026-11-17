@@ -26,6 +26,12 @@ import {
     PSYCHOLOGIST_LIFECYCLE_STATES,
     PSYCHOLOGIST_SUPPORT_AREAS,
     PSYCHOLOGIST_TIERS,
+    SERVICE_LIFECYCLE_STATUSES,
+    SERVICE_PRICING_MODELS,
+    SERVICE_PROGRAM_STATUSES,
+    SERVICE_PROGRAM_TYPES,
+    SERVICE_TYPES,
+    SERVICE_VISIBILITIES,
     USER_ROLES,
     USER_STATUSES,
     WEBHOOK_DELIVERY_STATUSES
@@ -46,6 +52,12 @@ export const userRoleEnum = pgEnum('user_role', USER_ROLES);
 export const userStatusEnum = pgEnum('user_status', USER_STATUSES);
 export const bookingStatusEnum = pgEnum('booking_status', BOOKING_STATUSES);
 export const webhookDeliveryStatusEnum = pgEnum('webhook_delivery_status', WEBHOOK_DELIVERY_STATUSES);
+export const serviceTypeEnum = pgEnum('service_type', SERVICE_TYPES);
+export const serviceLifecycleStatusEnum = pgEnum('service_lifecycle_status', SERVICE_LIFECYCLE_STATUSES);
+export const serviceVisibilityEnum = pgEnum('service_visibility', SERVICE_VISIBILITIES);
+export const servicePricingModelEnum = pgEnum('service_pricing_model', SERVICE_PRICING_MODELS);
+export const serviceProgramTypeEnum = pgEnum('service_program_type', SERVICE_PROGRAM_TYPES);
+export const serviceProgramStatusEnum = pgEnum('service_program_status', SERVICE_PROGRAM_STATUSES);
 
 
 const auditTimestamps = {
@@ -370,6 +382,7 @@ export const mediaAttachments = pgTable('media_attachments', {
     psychologistId: uuid('psychologist_id').references(() => psychologists.id, { onDelete: 'restrict' }),
     landingRevisionId: uuid('landing_revision_id').references(() => landingRevisions.id, { onDelete: 'restrict' }),
     articleRevisionId: uuid('article_revision_id').references(() => articleRevisions.id, { onDelete: 'restrict' }),
+    serviceId: uuid('service_id').references((): AnyPgColumn => services.id, { onDelete: 'restrict' }),
     role: text('role').notNull(),
     position: integer('position').default(0).notNull(),
     detachedAt: timestamp('detached_at', { withTimezone: true, mode: 'string' }),
@@ -377,7 +390,7 @@ export const mediaAttachments = pgTable('media_attachments', {
 }, (table) => [
     check(
         'media_attachments_exactly_one_owner',
-        sql`num_nonnulls(${table.psychologistId}, ${table.landingRevisionId}, ${table.articleRevisionId}) = 1`
+        sql`num_nonnulls(${table.psychologistId}, ${table.landingRevisionId}, ${table.articleRevisionId}, ${table.serviceId}) = 1`
     ),
     check('media_attachments_non_negative_position', sql`${table.position} >= 0`),
     uniqueIndex('media_attachments_psychologist_role_position_unique')
@@ -389,6 +402,9 @@ export const mediaAttachments = pgTable('media_attachments', {
     uniqueIndex('media_attachments_article_role_position_unique')
         .on(table.articleRevisionId, table.role, table.position)
         .where(sql`${table.articleRevisionId} is not null and ${table.detachedAt} is null`),
+    uniqueIndex('media_attachments_service_role_position_unique')
+        .on(table.serviceId, table.role, table.position)
+        .where(sql`${table.serviceId} is not null and ${table.detachedAt} is null`),
     index('media_attachments_media_object_idx').on(table.mediaObjectId)
 ]);
 
@@ -526,6 +542,10 @@ export const mediaAttachmentsRelations = relations(mediaAttachments, ({ one }) =
     articleRevision: one(articleRevisions, {
         fields: [mediaAttachments.articleRevisionId],
         references: [articleRevisions.id]
+    }),
+    service: one(services, {
+        fields: [mediaAttachments.serviceId],
+        references: [services.id]
     })
 }));
 
@@ -614,6 +634,9 @@ export const bookings = pgTable('bookings', {
     age: integer('age'),
     gender: text('gender'),
     serviceType: text('service_type').default('Personal').notNull(),
+    serviceId: uuid('service_id').references((): AnyPgColumn => services.id, { onDelete: 'set null' }),
+    serviceVariantId: uuid('service_variant_id').references((): AnyPgColumn => serviceVariants.id, { onDelete: 'set null' }),
+    serviceNameSnapshot: text('service_name_snapshot'),
     concernId: text('concern_id'),
     concernCategory: text('concern_category'),
     clientCategory: text('client_category'),
@@ -650,6 +673,7 @@ export const bookings = pgTable('bookings', {
     index('bookings_email_normalized_idx').on(table.emailNormalized),
     index('bookings_whatsapp_e164_idx').on(table.whatsappE164),
     index('bookings_client_user_id_idx').on(table.clientUserId),
+    index('bookings_service_id_idx').on(table.serviceId),
     index('bookings_utm_campaign_idx').on(table.utmCampaign),
     index('bookings_campaign_id_idx').on(table.campaignId),
     check('bookings_client_status_valid', sql`${table.clientStatus} in ('new', 'returning')`),
@@ -720,3 +744,313 @@ export const bookingWebhookDeliveriesRelations = relations(bookingWebhookDeliver
         references: [bookings.id]
     })
 }));
+
+/**
+ * Public Services Catalog (Phase 1) — Physical Table Isolation:
+ * Stores ONLY public-safe catalog metadata and client-facing prices.
+ * Internal fees, operational costs, margins, and historical/proposed prices
+ * never exist in these tables.
+ */
+export const serviceCategories = pgTable('service_categories', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull(),
+    position: integer('position').default(0).notNull(),
+    isFree: boolean('is_free').default(false).notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_categories_slug_unique').on(table.slug),
+    check('service_categories_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceCategoryTranslations = pgTable('service_category_translations', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    categoryId: uuid('category_id').notNull().references(() => serviceCategories.id, { onDelete: 'restrict' }),
+    locale: contentLocaleEnum('locale').notNull(),
+    name: text('name').notNull()
+}, (table) => [
+    unique('service_category_translations_category_locale_unique').on(table.categoryId, table.locale)
+]);
+
+export const serviceSubgroups = pgTable('service_subgroups', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    categoryId: uuid('category_id').references(() => serviceCategories.id, { onDelete: 'restrict' }),
+    slug: text('slug').notNull(),
+    position: integer('position').default(0).notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_subgroups_slug_unique').on(table.slug),
+    check('service_subgroups_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceSubgroupTranslations = pgTable('service_subgroup_translations', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    subgroupId: uuid('subgroup_id').notNull().references(() => serviceSubgroups.id, { onDelete: 'restrict' }),
+    locale: contentLocaleEnum('locale').notNull(),
+    name: text('name').notNull(),
+    note: text('note')
+}, (table) => [
+    unique('service_subgroup_translations_subgroup_locale_unique').on(table.subgroupId, table.locale)
+]);
+
+export const services = pgTable('services', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull(),
+    categoryId: uuid('category_id').notNull().references(() => serviceCategories.id, { onDelete: 'restrict' }),
+    subgroupId: uuid('subgroup_id').references(() => serviceSubgroups.id, { onDelete: 'restrict' }),
+    serviceType: serviceTypeEnum('service_type').default('layanan').notNull(),
+    pricingModel: servicePricingModelEnum('pricing_model').notNull(),
+    status: serviceLifecycleStatusEnum('status').default('draft').notNull(),
+    visibility: serviceVisibilityEnum('visibility').default('public').notNull(),
+    appliesNewClientFee: boolean('applies_new_client_fee').default(false).notNull(),
+    isAssessment: boolean('is_assessment').default(false).notNull(),
+    isFeaturedSpotlight: boolean('is_featured_spotlight').default(false).notNull(),
+    position: integer('position').default(0).notNull(),
+    externalUrl: text('external_url'),
+    defaultConcernId: text('default_concern_id'),
+    defaultClientCategory: text('default_client_category'),
+    audiencesJson: text('audiences_json').default('[]').notNull(),
+    demoConfigJson: text('demo_config_json'),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('services_slug_unique').on(table.slug),
+    index('services_public_catalog_idx').on(table.status, table.visibility, table.position),
+    check('services_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceTranslations = pgTable('service_translations', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    locale: contentLocaleEnum('locale').notNull(),
+    name: text('name').notNull(),
+    fullName: text('full_name'),
+    badge: text('badge'),
+    shortSummary: text('short_summary'),
+    benefit: text('benefit'),
+    introduction: text('introduction'),
+    targetAudience: text('target_audience'),
+    whatIsMeasured: text('what_is_measured'),
+    durationInfo: text('duration_info'),
+    locationInfo: text('location_info'),
+    processStepsJson: text('process_steps_json').default('[]').notNull(),
+    termsJson: text('terms_json').default('[]').notNull(),
+    resultsExplanation: text('results_explanation'),
+    scientificBasis: text('scientific_basis'),
+    citationSummary: text('citation_summary'),
+    assessmentPurpose: text('assessment_purpose'),
+    assessmentAspects: text('assessment_aspects'),
+    assessmentAgeRange: text('assessment_age_range'),
+    assessmentMethod: text('assessment_method'),
+    assessmentPrep: text('assessment_prep'),
+    assessmentOutputFormat: text('assessment_output_format'),
+    assessmentDimensionsJson: text('assessment_dimensions_json').default('[]').notNull(),
+    assessmentReportType: text('assessment_report_type'),
+    assessmentInterpretation: text('assessment_interpretation'),
+    assessmentRecommendations: text('assessment_recommendations'),
+    assessmentTurnaround: text('assessment_turnaround')
+}, (table) => [
+    unique('service_translations_service_locale_unique').on(table.serviceId, table.locale)
+]);
+
+export const serviceVariants = pgTable('service_variants', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    slug: text('slug').notNull(),
+    position: integer('position').default(0).notNull(),
+    status: serviceLifecycleStatusEnum('status').default('draft').notNull(),
+    visibility: serviceVisibilityEnum('visibility').default('public').notNull(),
+    modalitiesJson: text('modalities_json').default('[]').notNull(),
+    branch: text('branch'),
+    priceOnRequest: boolean('price_on_request').default(false).notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_variants_slug_unique').on(table.slug),
+    index('service_variants_service_status_idx').on(table.serviceId, table.status, table.visibility, table.position),
+    check('service_variants_branch_valid', sql`${table.branch} is null or ${table.branch} in ('tbi', 'bsd', 'malang')`),
+    check('service_variants_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceVariantTranslations = pgTable('service_variant_translations', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    variantId: uuid('variant_id').notNull().references(() => serviceVariants.id, { onDelete: 'restrict' }),
+    locale: contentLocaleEnum('locale').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    unitLabel: text('unit_label'),
+    ageRangeLabel: text('age_range_label'),
+    durationLabel: text('duration_label')
+}, (table) => [
+    unique('service_variant_translations_variant_locale_unique').on(table.variantId, table.locale)
+]);
+
+export const servicePublicPrices = pgTable('service_public_prices', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    variantId: uuid('variant_id').notNull().references(() => serviceVariants.id, { onDelete: 'restrict' }),
+    amount: integer('amount').notNull(),
+    amountMax: integer('amount_max'),
+    effectiveDate: text('effective_date'),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_public_prices_variant_unique').on(table.variantId),
+    check('service_public_prices_non_negative_amount', sql`${table.amount} >= 0`),
+    check('service_public_prices_valid_amount_max', sql`${table.amountMax} is null or ${table.amountMax} >= ${table.amount}`)
+]);
+
+export const servicePrograms = pgTable('service_programs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull(),
+    programType: serviceProgramTypeEnum('program_type').default('harga').notNull(),
+    status: serviceProgramStatusEnum('status').default('draft').notNull(),
+    startsOn: text('starts_on').notNull(),
+    endsOn: text('ends_on').notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_programs_slug_unique').on(table.slug),
+    index('service_programs_status_dates_idx').on(table.status, table.startsOn, table.endsOn)
+]);
+
+export const serviceProgramTranslations = pgTable('service_program_translations', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    programId: uuid('program_id').notNull().references(() => servicePrograms.id, { onDelete: 'restrict' }),
+    locale: contentLocaleEnum('locale').notNull(),
+    name: text('name').notNull(),
+    badge: text('badge')
+}, (table) => [
+    unique('service_program_translations_program_locale_unique').on(table.programId, table.locale)
+]);
+
+export const serviceProgramPrices = pgTable('service_program_prices', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    programId: uuid('program_id').notNull().references(() => servicePrograms.id, { onDelete: 'restrict' }),
+    variantId: uuid('variant_id').notNull().references(() => serviceVariants.id, { onDelete: 'restrict' }),
+    promoAmount: integer('promo_amount').notNull(),
+    noteId: text('note_id'),
+    noteEn: text('note_en'),
+    ...auditTimestamps
+}, (table) => [
+    unique('service_program_prices_program_variant_unique').on(table.programId, table.variantId),
+    check('service_program_prices_non_negative_amount', sql`${table.promoAmount} >= 0`)
+]);
+
+export const servicePsychologists = pgTable('service_psychologists', {
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    psychologistId: uuid('psychologist_id').notNull().references(() => psychologists.id, { onDelete: 'restrict' }),
+    position: integer('position').default(0).notNull(),
+    noteId: text('note_id'),
+    noteEn: text('note_en')
+}, (table) => [
+    primaryKey({ name: 'service_psychologists_pk', columns: [table.serviceId, table.psychologistId] }),
+    check('service_psychologists_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceDeliverables = pgTable('service_deliverables', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    position: integer('position').default(0).notNull(),
+    variantSlugsJson: text('variant_slugs_json').default('[]').notNull(),
+    textId: text('text_id').notNull(),
+    textEn: text('text_en').notNull()
+}, (table) => [
+    unique('service_deliverables_service_position_unique').on(table.serviceId, table.position),
+    check('service_deliverables_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceFaqs = pgTable('service_faqs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    position: integer('position').default(0).notNull(),
+    questionId: text('question_id').notNull(),
+    questionEn: text('question_en').notNull(),
+    answerId: text('answer_id').notNull(),
+    answerEn: text('answer_en').notNull()
+}, (table) => [
+    unique('service_faqs_service_position_unique').on(table.serviceId, table.position),
+    check('service_faqs_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+export const serviceReferences = pgTable('service_references', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    code: text('code').notNull(),
+    citationText: text('citation_text').notNull(),
+    doiUrl: text('doi_url')
+}, (table) => [
+    uniqueIndex('service_references_code_unique').on(table.code)
+]);
+
+export const serviceReferenceLinks = pgTable('service_reference_links', {
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    referenceId: uuid('reference_id').notNull().references(() => serviceReferences.id, { onDelete: 'restrict' }),
+    position: integer('position').default(0).notNull()
+}, (table) => [
+    primaryKey({ name: 'service_reference_links_pk', columns: [table.serviceId, table.referenceId] }),
+    check('service_reference_links_non_negative_position', sql`${table.position} >= 0`)
+]);
+
+/**
+ * Superadmin Internal Financial & Operations Ledger (Phase 3) — Physically Isolated:
+ * Never joined or queried by public catalog endpoints. Stores provider fee splits,
+ * direct operational costs, and historical/proposed price records strictly behind superadmin auth.
+ */
+export const serviceInternalCosts = pgTable('service_internal_costs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    legacyId: text('legacy_id'),
+    serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
+    variantId: uuid('variant_id').references(() => serviceVariants.id, { onDelete: 'restrict' }),
+    psychologistId: uuid('psychologist_id').references(() => psychologists.id, { onDelete: 'restrict' }),
+    recordKind: text('record_kind').notNull(),
+    recordStatus: text('record_status').notNull(),
+    amount: integer('amount'),
+    amountMax: integer('amount_max'),
+    unitLabel: text('unit_label'),
+    effectiveDate: text('effective_date'),
+    label: text('label'),
+    note: text('note'),
+    sourceMetaJson: text('source_meta_json').default('{}').notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_internal_costs_legacy_id_unique').on(table.legacyId),
+    index('service_internal_costs_service_variant_idx').on(table.serviceId, table.variantId, table.recordKind, table.recordStatus),
+    check('service_internal_costs_kind_valid', sql`${table.recordKind} in ('harga', 'fee', 'biaya', 'promo')`),
+    check('service_internal_costs_status_valid', sql`${table.recordStatus} in ('berlaku', 'usulan', 'historis')`),
+    check('service_internal_costs_non_negative_amount', sql`${table.amount} is null or ${table.amount} >= 0`)
+]);
+
+export const serviceDataIssues = pgTable('service_data_issues', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    code: text('code').notNull(),
+    issueType: text('issue_type').notNull(),
+    title: text('title').notNull(),
+    detail: text('detail').notNull(),
+    status: text('status').default('Terbuka').notNull(),
+    resolution: text('resolution'),
+    refsJson: text('refs_json').default('[]').notNull(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true, mode: 'string' }),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_data_issues_code_unique').on(table.code),
+    check('service_data_issues_type_valid', sql`${table.issueType} in ('Perlu Verifikasi', 'Perlu Dilengkapi')`),
+    check('service_data_issues_status_valid', sql`${table.status} in ('Terbuka', 'Selesai')`)
+]);
+
+export const serviceOpsSettings = pgTable('service_ops_settings', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    singletonKey: boolean('singleton_key').default(true).notNull(),
+    marginThreshold: integer('margin_threshold').default(30).notNull(),
+    assumptionsJson: text('assumptions_json').default('{}').notNull(),
+    ...auditTimestamps
+}, (table) => [
+    uniqueIndex('service_ops_settings_singleton_unique').on(table.singletonKey),
+    check('service_ops_settings_threshold_valid', sql`${table.marginThreshold} >= 0 and ${table.marginThreshold} <= 100`)
+]);
+
+export const serviceAuditLogs = pgTable('service_audit_logs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'restrict' }),
+    actorEmail: text('actor_email').notNull(),
+    action: text('action').notNull(),
+    entityType: text('entity_type').notNull(),
+    entitySlug: text('entity_slug'),
+    summary: text('summary').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('service_audit_logs_created_idx').on(table.createdAt)
+]);

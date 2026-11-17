@@ -50,8 +50,10 @@ for runner in \
     dist/migrate.js \
     dist/seed-landing.js \
     dist/seed-psychologists.js \
+    dist/seed-services.js \
     dist/seed-landing.js \
-    dist/seed-psychologists.js; do
+    dist/seed-psychologists.js \
+    dist/seed-services.js; do
     docker run --rm \
         --network "$network" \
         --read-only \
