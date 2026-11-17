@@ -319,12 +319,12 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
     const facts = isId
       ? [
           { title: '15+ thn', sub: 'berpraktik sejak 2010' },
-          { title: 'UN · IOM', sub: 'dukungan psikososial Asia-Pasifik' },
+          { title: 'International experienced', sub: 'dukungan psikososial bagi pekerja kemanusiaan untuk UN-IOM Asia Pacific Regional' },
           { title: 'Trauma-informed', sub: 'Brainspotting · DBT Art therapy' },
         ]
       : [
           { title: '15+ yrs', sub: 'practicing since 2010' },
-          { title: 'UN · IOM', sub: 'psychosocial support across Asia-Pacific' },
+          { title: 'International experienced', sub: 'psychosocial support for humanitarian workers for UN-IOM Asia Pacific Regional' },
           { title: 'Trauma-informed', sub: 'Brainspotting · DBT Art therapy' },
         ]
 
