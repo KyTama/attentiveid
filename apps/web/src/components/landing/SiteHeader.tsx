@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
+import { CatToggle } from '@/components/common/CatToggle'
 
 const navItems = [
   { key: 'psychologists', href: '/#psychologists' },
@@ -244,7 +245,10 @@ export function SiteHeader() {
 
         {/* Desktop Actions & Single Primary CTA */}
         <div className="hidden items-center gap-4 lg:flex">
-          <LanguageToggle />
+          <div className="flex items-center gap-2">
+            <CatToggle />
+            <LanguageToggle />
+          </div>
 
           <motion.a
             href="https://booking.attentiveid.com/"
@@ -261,7 +265,10 @@ export function SiteHeader() {
 
         {/* Mobile Header Controls */}
         <div className="flex items-center gap-2 lg:hidden">
-          <LanguageToggle />
+          <div className="flex items-center gap-2">
+            <CatToggle />
+            <LanguageToggle />
+          </div>
           <motion.button
             aria-controls="homepage-mobile-menu"
             aria-expanded={menuOpen}
