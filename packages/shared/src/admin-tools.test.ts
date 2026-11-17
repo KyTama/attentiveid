@@ -160,3 +160,28 @@ describe('site settings', () => {
     expect(mergeSiteSettings({ floatingBar: { items: 'nope', top: { mode: 'link', label: {} } } }).floatingBar).toEqual(DEFAULT_FLOATING_BAR)
   })
 })
+
+import { catPageFor, catsAllowedOn, DEFAULT_CATS, mergeSiteSettings, validateCats } from './index'
+
+describe('walking cats settings', () => {
+  it('is on for every page by default, but never on the forms or the lights page', () => {
+    expect(mergeSiteSettings(null).cats).toEqual(DEFAULT_CATS)
+    for (const path of ['/', '/our-services', '/psychologists', '/psychologists/syazka', '/articles/some-article', '/sci-brief/2026-11', '/Articles/']) {
+      expect(catsAllowedOn(DEFAULT_CATS, path)).toBe(true)
+    }
+    for (const path of ['/free-session', '/booking', '/let-there-be-light', '/portal-gate', '/dashboard/qr-generator', '/nope']) {
+      expect(catsAllowedOn(DEFAULT_CATS, path)).toBe(false)
+    }
+    expect(catPageFor('/psychologists/syazka?x=1')).toBe('/psychologists')
+  })
+
+  it('can be turned off for the whole site or for one page, and ignores unknown pages in saved data', () => {
+    const off = validateCats({ enabled: false })
+    expect(off.ok && catsAllowedOn(off.value, '/')).toBe(false)
+    const some = validateCats({ pages: { '/articles': false, '/free-session': true, '/anything': true } })
+    expect(some.ok && catsAllowedOn(some.value, '/articles/x')).toBe(false)
+    expect(some.ok && catsAllowedOn(some.value, '/')).toBe(true)
+    expect(some.ok && Object.keys(some.value.pages)).not.toContain('/free-session')
+    expect(some.ok && catsAllowedOn(some.value, '/free-session')).toBe(false)
+  })
+})

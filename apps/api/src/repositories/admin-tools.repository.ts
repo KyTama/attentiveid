@@ -19,7 +19,7 @@ import { featuredProducts, pageViewDaily, qrCodes, sharePreviews, siteSettings }
 export interface AdminToolsRepository {
   // Site settings (floating bar, browser tab)
   getSiteSettings(): Promise<SiteSettings>
-  saveSiteSetting(key: 'floatingBar' | 'browserTab', value: unknown): Promise<void>
+  saveSiteSetting(key: 'floatingBar' | 'browserTab' | 'cats', value: unknown): Promise<void>
   // Featured products
   listActiveFeatured(now?: Date): Promise<FeaturedProductPublicDto[]>
   listFeaturedAdmin(now?: Date): Promise<FeaturedProductAdminDto[]>
@@ -117,7 +117,7 @@ const toQr = (row: typeof qrCodes.$inferSelect): QrCodeDto => ({
 export const createAdminToolsRepository = (database: typeof defaultDb = defaultDb): AdminToolsRepository => ({
   async getSiteSettings() {
     const rows = await database.select().from(siteSettings)
-    const byKey = Object.fromEntries(rows.map((row) => [row.key, row.value])) as { floatingBar?: unknown; browserTab?: unknown }
+    const byKey = Object.fromEntries(rows.map((row) => [row.key, row.value])) as { floatingBar?: unknown; browserTab?: unknown; cats?: unknown }
     return mergeSiteSettings(byKey)
   },
 

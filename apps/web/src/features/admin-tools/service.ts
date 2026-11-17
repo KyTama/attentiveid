@@ -1,5 +1,6 @@
 import type {
   BrowserTabSettings,
+  CatSettings,
   FeaturedProductAdminDto,
   FloatingBarSettings,
   SiteSettings,
@@ -145,6 +146,9 @@ export const getAdminSiteSettings = async () =>
 
 export const saveFloatingBarSettings = async (input: FloatingBarSettings) =>
   (await request<{ settings: SiteSettings }>('/api/admin/site-settings/floating-bar', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan bar melayang')).settings
+
+export const saveCatSettings = async (input: CatSettings) =>
+  (await request<{ settings: SiteSettings }>('/api/admin/site-settings/cats', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan pengaturan kucing')).settings
 
 export const saveBrowserTabSettings = async (input: BrowserTabSettings) =>
   (await request<{ settings: SiteSettings }>('/api/admin/site-settings/browser-tab', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan tab browser')).settings

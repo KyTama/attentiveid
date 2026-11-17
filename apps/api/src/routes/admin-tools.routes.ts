@@ -6,6 +6,7 @@ import {
   normalizeTrackedPath,
   summarizeTraffic,
   validateBrowserTab,
+  validateCats,
   validateFeaturedProductInput,
   validateFloatingBar,
   validateQrCodeInput,
@@ -196,6 +197,12 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       await repository.saveSiteSetting('browserTab', parsed.value)
       return { status: 'success', settings: await repository.getSiteSettings() }
     }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Site settings'], summary: 'Save the browser tab title and icon' } })
+    .put('/api/admin/site-settings/cats', async ({ body }: any) => {
+      const parsed = validateCats(body)
+      if (!parsed.ok) return { status: 'badRequest' }
+      await repository.saveSiteSetting('cats', parsed.value)
+      return { status: 'success', settings: await repository.getSiteSettings() }
+    }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Site settings'], summary: 'Save the walking cats settings (on/off and pages)' } })
     // ---- Admin: share previews ---------------------------------------------
     .get('/api/admin/share-previews', async () => ({ status: 'success', previews: await repository.listSharePreviews() }),
       { requireRole: ['admin'], detail: { tags: ['Share previews'], summary: 'List link previews' } })
