@@ -1,36 +1,27 @@
 /**
  * Prayers visitors write for each other on the Let There Be Light page. A random one is shown inside the gift.
- * Nothing but what the visitor typed is stored: an optional first name and city, and the prayer.
+ * Prayers are anonymous: only the text the visitor typed is stored. No name, no city, nothing that identifies them.
  */
 
 export const PRAYER_MIN = 10
 export const PRAYER_MAX = 400
-export const PRAYER_NAME_MAX = 60
-export const PRAYER_CITY_MAX = 60
 
 export interface PrayerInput {
-  name: string
-  city: string
   prayer: string
 }
 
 export interface PrayerPublicDto {
   text: string
-  /** Empty when the visitor left it out. */
-  name: string
-  city: string
 }
 
 export interface PrayerAdminDto {
   id: string
-  name: string
-  city: string
   prayer: string
   hidden: boolean
   createdAt: string
 }
 
-export type PrayerField = 'name' | 'city' | 'prayer'
+export type PrayerField = 'prayer'
 
 export type PrayerValidation = { ok: true; value: PrayerInput } | { ok: false; errors: Partial<Record<PrayerField, string>> }
 
@@ -41,8 +32,6 @@ const clean = (value: unknown) => (typeof value === 'string' ? value.replace(/[ 
 
 export const validatePrayerInput = (input: unknown): PrayerValidation => {
   const raw = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
-  const name = clean(raw.name).replace(/\n/g, ' ')
-  const city = clean(raw.city).replace(/\n/g, ' ')
   const prayer = clean(raw.prayer)
   const errors: Partial<Record<PrayerField, string>> = {}
 
@@ -50,13 +39,9 @@ export const validatePrayerInput = (input: unknown): PrayerValidation => {
   else if (prayer.length > PRAYER_MAX) errors.prayer = `Doa maksimal ${PRAYER_MAX} karakter.`
   else if (CONTACT_LIKE.test(prayer)) errors.prayer = 'Jangan menulis tautan, email, atau nomor telepon di dalam doa.'
 
-  if (name.length > PRAYER_NAME_MAX) errors.name = `Nama maksimal ${PRAYER_NAME_MAX} karakter.`
-  else if (CONTACT_LIKE.test(name)) errors.name = 'Nama tidak boleh berisi tautan, email, atau nomor telepon.'
-  if (city.length > PRAYER_CITY_MAX) errors.city = `Kota maksimal ${PRAYER_CITY_MAX} karakter.`
-  else if (CONTACT_LIKE.test(city)) errors.city = 'Kota tidak boleh berisi tautan, email, atau nomor telepon.'
-
   if (Object.keys(errors).length > 0) return { ok: false, errors }
-  return { ok: true, value: { name, city, prayer } }
+  // anything else in the request (such as a name or a city) is ignored on purpose
+  return { ok: true, value: { prayer } }
 }
 
 /** Shown when nobody has written a prayer yet (or the list could not be loaded), so a gift is never empty. */
@@ -73,5 +58,5 @@ export const FALLBACK_PRAYERS: ReadonlyArray<{ id: string; en: string }> = [
 
 export const fallbackPrayerFor = (lang: 'id' | 'en', random: () => number = Math.random): PrayerPublicDto => {
   const pick = FALLBACK_PRAYERS[Math.floor(random() * FALLBACK_PRAYERS.length)] ?? FALLBACK_PRAYERS[0]
-  return { text: lang === 'en' ? pick.en : pick.id, name: '', city: '' }
+  return { text: lang === 'en' ? pick.en : pick.id }
 }

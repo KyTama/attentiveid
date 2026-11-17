@@ -43,7 +43,7 @@ const createFixture = (options: { moderation?: 'auto' | 'manual'; max?: number }
     const repository: PrayersRepository = {
         create: async (input: PrayerInput, o) => {
             const id = `p-${rows.length + 1}`;
-            rows.push({ id, name: input.name, city: input.city, prayer: input.prayer, hidden: o.hidden, createdAt: new Date(clock).toISOString(), createdMs: clock });
+            rows.push({ id, prayer: input.prayer, hidden: o.hidden, createdAt: new Date(clock).toISOString(), createdMs: clock });
             return { id };
         },
         findRecentSameText: async (prayer, sinceMs) => {
@@ -53,7 +53,7 @@ const createFixture = (options: { moderation?: 'auto' | 'manual'; max?: number }
         random: async (): Promise<PrayerPublicDto | null> => {
             const visible = rows.filter((row) => !row.hidden);
             const row = visible[0];
-            return row ? { text: row.prayer, name: row.name, city: row.city } : null;
+            return row ? { text: row.prayer } : null;
         },
         listAdmin: async () => rows.map(({ createdMs: _ignored, ...row }) => row),
         setHidden: async (id, hidden) => {
@@ -92,29 +92,30 @@ const send = (app: TestApp, path: string, method: string, body?: unknown, header
 const post = (app: TestApp, body: unknown, headers: Record<string, string> = {}) => send(app, '/api/public/prayers', 'POST', body, headers);
 const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
 
-const valid = { name: 'Sari', city: 'Malang', prayer: 'Semoga harimu tenang dan penuh cahaya.' };
+const valid = { prayer: 'Semoga harimu tenang dan penuh cahaya.' };
 
 describe('POST /api/public/prayers', () => {
-    it('stores a valid prayer and serves it from the random endpoint', async () => {
+    it('stores a valid prayer and serves it from the random endpoint, with nothing about the sender', async () => {
         const { app, rows } = createFixture();
-        const response = await post(app, valid);
+        // a name and a city sent along are ignored, not stored
+        const response = await post(app, { ...valid, name: 'Sari', city: 'Malang' });
         expect(response.status).toBe(201);
         expect(rows).toHaveLength(1);
-        expect(rows[0]).toMatchObject({ name: 'Sari', city: 'Malang', hidden: false });
+        expect(rows[0]).toMatchObject({ prayer: valid.prayer, hidden: false });
+        expect(Object.keys(rows[0])).not.toContain('name');
+        expect(Object.keys(rows[0])).not.toContain('city');
         const random = await send(app, '/api/public/prayers/random', 'GET');
         expect(random.headers.get('cache-control')).toBe('no-store');
-        expect((await random.json()).data).toEqual({ text: valid.prayer, name: 'Sari', city: 'Malang' });
+        expect((await random.json()).data).toEqual({ text: valid.prayer });
     });
 
-    it('takes a prayer without a name or city, and rejects bad ones', async () => {
+    it('rejects bad prayers', async () => {
         const { app, rows } = createFixture();
-        expect((await post(app, { prayer: 'Semoga kamu selalu dikelilingi kebaikan.' })).status).toBe(201);
-        expect(rows[0]).toMatchObject({ name: '', city: '' });
         expect((await post(app, { prayer: 'pendek' })).status).toBe(400);
         const spam = await post(app, { prayer: 'Beli murah di https://spam.example sekarang juga' });
         expect(spam.status).toBe(400);
         expect((await spam.json()).errors.prayer).toBeTruthy();
-        expect(rows).toHaveLength(1);
+        expect(rows).toHaveLength(0);
     });
 
     it('silently drops honeypot sign-ups and saves the same prayer sent twice once', async () => {

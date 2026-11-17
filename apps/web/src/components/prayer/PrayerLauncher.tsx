@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { HeartHandshake, X } from 'lucide-react'
-import { PRAYER_CITY_MAX, PRAYER_MAX, PRAYER_MIN, PRAYER_NAME_MAX, validatePrayerInput, type PrayerField } from '@attentiveid/shared'
+import { PRAYER_MAX, PRAYER_MIN, validatePrayerInput, type PrayerField } from '@attentiveid/shared'
 import { useTx } from '@/features/i18n/use-tx'
 import { submitPrayer, type PrayerFormValues } from '@/features/prayer/service'
 
-const emptyValues: PrayerFormValues = { name: '', city: '', prayer: '', website: '' }
+const emptyValues: PrayerFormValues = { prayer: '', website: '' }
 
 const fieldClass =
   'w-full rounded-xl border border-white/20 bg-white/8 px-3.5 py-2.5 text-[15px] text-white placeholder:text-white/45 outline-none transition-colors focus:border-[#d6a74d] focus:bg-white/12 focus-visible:ring-2 focus-visible:ring-[#d6a74d]/50'
@@ -25,7 +25,7 @@ export function PrayerLauncher() {
   const [done, setDone] = useState<{ pendingApproval: boolean } | null>(null)
   // Two fast clicks must send one prayer: state updates are not instant, a ref is.
   const lock = useRef(false)
-  const firstFieldRef = useRef<HTMLInputElement>(null)
+  const firstFieldRef = useRef<HTMLTextAreaElement>(null)
 
   // The ?prayer=1 flag has done its job once the form is open.
   useEffect(() => {
@@ -140,36 +140,11 @@ export function PrayerLauncher() {
                   </h2>
                   <p className="mt-1 text-[13px] leading-relaxed text-white/65">
                     {tx(
-                      'Doamu bisa dibaca orang lain yang sedang lelah, di dalam hadiah di situs ini. Tulis dengan hangat. Jangan menulis tautan, email, atau nomor telepon.',
-                      'Your prayer may be read by someone who is tired, inside the gift on this site. Write it warmly. Please do not write links, e-mails or phone numbers.',
+                      'Doamu bisa dibaca orang lain yang sedang lelah, di dalam hadiah di situs ini. Doa ini sepenuhnya anonim: kami tidak meminta dan tidak menyimpan nama atau kotamu. Tulis dengan hangat, tanpa tautan, email, atau nomor telepon.',
+                      'Your prayer may be read by someone who is tired, inside the gift on this site. It is completely anonymous: we do not ask for or keep your name or city. Write it warmly, without links, e-mails or phone numbers.',
                     )}
                   </p>
                 </div>
-
-                <label className="block text-sm font-medium text-white/85">
-                  {tx('Namamu (boleh dikosongkan)', 'Your name (optional)')}
-                  <input
-                    autoComplete="given-name"
-                    className={`${fieldClass} mt-1`}
-                    maxLength={PRAYER_NAME_MAX}
-                    onChange={(event) => update('name', event.target.value)}
-                    ref={firstFieldRef}
-                    value={values.name}
-                  />
-                  {errors.name ? <span className="mt-1 block text-xs text-rose-300" role="alert">{errors.name}</span> : null}
-                </label>
-
-                <label className="block text-sm font-medium text-white/85">
-                  {tx('Kotamu (boleh dikosongkan)', 'Your city (optional)')}
-                  <input
-                    autoComplete="address-level2"
-                    className={`${fieldClass} mt-1`}
-                    maxLength={PRAYER_CITY_MAX}
-                    onChange={(event) => update('city', event.target.value)}
-                    value={values.city}
-                  />
-                  {errors.city ? <span className="mt-1 block text-xs text-rose-300" role="alert">{errors.city}</span> : null}
-                </label>
 
                 <label className="block text-sm font-medium text-white/85">
                   {tx('Doamu', 'Your prayer')}
@@ -179,6 +154,7 @@ export function PrayerLauncher() {
                     className={`${fieldClass} mt-1 min-h-32 resize-y`}
                     maxLength={PRAYER_MAX}
                     onChange={(event) => update('prayer', event.target.value)}
+                    ref={firstFieldRef}
                     placeholder={tx('Semoga hari ini terasa lebih ringan untukmu…', 'May today feel a little lighter for you…')}
                     value={values.prayer}
                   />

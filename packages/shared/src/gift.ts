@@ -40,8 +40,6 @@ export interface GiftSettings {
   /** Letter text. [Prayer] is replaced by the prayer. */
   messageId: string
   messageEn: string
-  showName: boolean
-  showCity: boolean
   /** auto: a new prayer can be shown at once; manual: an admin approves it first. */
   moderation: 'auto' | 'manual'
 }
@@ -69,8 +67,6 @@ export const DEFAULT_GIFT: GiftSettings = {
   sealBackUrl: '',
   messageId: DEFAULT_GIFT_MESSAGE_ID,
   messageEn: DEFAULT_GIFT_MESSAGE_EN,
-  showName: true,
-  showCity: true,
   moderation: 'auto',
 }
 
@@ -120,8 +116,6 @@ export const validateGift = (input: unknown): GiftValidation => {
       sealBackUrl,
       messageId,
       messageEn,
-      showName: raw.showName !== false,
-      showCity: raw.showCity !== false,
       moderation: raw.moderation === 'manual' ? 'manual' : 'auto',
     },
   }
@@ -141,13 +135,6 @@ export const giftAllowedOn = (gift: GiftSettings, pathname: string): boolean => 
   return page !== null && gift.pages[page] === true
 }
 
-/** The letter text with the prayer (and, when the admin allows, the sender's name and city) put in. */
-export const renderGiftMessage = (
-  template: string,
-  prayer: { text: string; name?: string; city?: string },
-  options: { showName: boolean; showCity: boolean },
-): string => {
-  const parts = [options.showName ? (prayer.name ?? '').trim() : '', options.showCity ? (prayer.city ?? '').trim() : ''].filter(Boolean)
-  const signature = parts.length > 0 ? `\n— ${parts.join(', ')}` : ''
-  return template.split(GIFT_PRAYER_TOKEN).join(`${prayer.text.trim()}${signature}`)
-}
+/** The letter text with the prayer put in. Prayers are anonymous: nothing about the sender is added. */
+export const renderGiftMessage = (template: string, prayer: { text: string }): string =>
+  template.split(GIFT_PRAYER_TOKEN).join(prayer.text.trim())

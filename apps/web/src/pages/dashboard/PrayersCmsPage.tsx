@@ -38,7 +38,7 @@ export function PrayersCmsPage() {
     return prayers.filter((item) => {
       if (filter === 'visible' && item.hidden) return false
       if (filter === 'hidden' && !item.hidden) return false
-      return !term || `${item.prayer} ${item.name} ${item.city}`.toLowerCase().includes(term)
+      return !term || item.prayer.toLowerCase().includes(term)
     })
   }, [prayers, search, filter])
 
@@ -109,7 +109,7 @@ export function PrayersCmsPage() {
           <input
             className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100"
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={tx('Cari doa, nama, atau kota...', 'Search prayer, name or city...')}
+            placeholder={tx('Cari doa...', 'Search prayers...')}
             type="search"
             value={search}
           />
@@ -148,7 +148,7 @@ export function PrayersCmsPage() {
                 <div className="min-w-0 flex-1">
                   <p className={`whitespace-pre-line text-sm leading-relaxed ${item.hidden ? 'text-slate-500' : 'text-slate-900'}`}>{item.prayer}</p>
                   <p className="mt-1.5 text-xs text-slate-500">
-                    {[item.name || tx('Tanpa nama', 'No name'), item.city || tx('Tanpa kota', 'No city')].join(' · ')} ·{' '}
+                    {tx('Anonim', 'Anonymous')} ·{' '}
                     {new Date(item.createdAt).toLocaleString(isEn ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
                     {item.hidden && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-800">{tx('Disembunyikan', 'Hidden')}</span>}
                   </p>

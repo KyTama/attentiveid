@@ -16,8 +16,6 @@ export interface PrayersRepository {
 
 const toAdmin = (row: typeof prayers.$inferSelect): PrayerAdminDto => ({
     id: row.id,
-    name: row.name ?? '',
-    city: row.city ?? '',
     prayer: row.prayer,
     hidden: row.hidden,
     createdAt: row.createdAt
@@ -27,7 +25,7 @@ export const createPrayersRepository = (db: typeof defaultDb = defaultDb): Praye
     async create(input, options) {
         const rows = await db
             .insert(prayers)
-            .values({ name: input.name || null, city: input.city || null, prayer: input.prayer, hidden: options.hidden })
+            .values({ prayer: input.prayer, hidden: options.hidden })
             .returning({ id: prayers.id });
         return { id: rows[0].id };
     },
@@ -44,13 +42,13 @@ export const createPrayersRepository = (db: typeof defaultDb = defaultDb): Praye
 
     async random() {
         const rows = await db
-            .select({ prayer: prayers.prayer, name: prayers.name, city: prayers.city })
+            .select({ prayer: prayers.prayer })
             .from(prayers)
             .where(eq(prayers.hidden, false))
             .orderBy(sql`random()`)
             .limit(1);
         const row = rows[0];
-        return row ? { text: row.prayer, name: row.name ?? '', city: row.city ?? '' } : null;
+        return row ? { text: row.prayer } : null;
     },
 
     async listAdmin(limit = 300) {

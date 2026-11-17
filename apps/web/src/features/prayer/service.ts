@@ -1,8 +1,6 @@
 import { fallbackPrayerFor, type PrayerField, type PrayerPublicDto } from '@attentiveid/shared'
 
 export interface PrayerFormValues {
-  name: string
-  city: string
   prayer: string
   /** Honeypot: real people never see or fill this. */
   website: string

@@ -11,7 +11,7 @@ vi.mock('../src/features/site-settings/use-site-settings', () => ({
   loadSiteSettings: () => Promise.resolve({ gift, cats: DEFAULT_CATS }),
 }))
 vi.mock('../src/features/prayer/service', () => ({
-  fetchGiftPrayer: () => Promise.resolve({ text: 'Semoga kamu tenang.', name: 'Sari', city: 'Malang' }),
+  fetchGiftPrayer: () => Promise.resolve({ text: 'Semoga kamu tenang.' }),
 }))
 
 import { GiftManager } from '../src/components/gift/GiftManager'
@@ -80,41 +80,44 @@ describe('GiftManager (cats off)', () => {
     const letter = screen.getByRole('dialog')
     expect(letter).toHaveTextContent('Hi there!')
     expect(letter).toHaveTextContent('Semoga kamu tenang.')
-    expect(letter).toHaveTextContent('— Sari, Malang')
+    expect(letter).not.toHaveTextContent('Sari')
+    expect(letter).not.toHaveTextContent('Malang')
     expect(letter).not.toHaveTextContent('[Prayer]')
 
     fireEvent.click(screen.getByRole('button', { name: /close the letter/i }))
     await flush(10)
     expect(screen.getByRole('heading', { name: /send your prayer to other/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /yes, take me there/i }))
+    expect(screen.getByRole('button', { name: /^yes$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^i'll pass for now$/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^yes$/i }))
     await flush(10)
     expect(screen.getByTestId('where')).toHaveTextContent('/let-there-be-light?prayer=1')
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  it('opens when the small gift is clicked, and the "not now" answer also goes to the prayer page', async () => {
-    renderAt('/')
+  it('opens when the small gift is clicked, and passing goes back to the home page', async () => {
+    renderAt('/articles/some-article')
     await flush(10)
     fireEvent.click(screen.getByRole('button', { name: /open your gift/i }))
     await flush(10)
     fireEvent.click(screen.getByRole('button', { name: /close the letter/i }))
     await flush(10)
-    fireEvent.click(screen.getByRole('button', { name: /i'll pass for now/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^i'll pass for now$/i }))
     await flush(10)
-    expect(screen.getByTestId('where')).toHaveTextContent('/let-there-be-light')
-    expect(screen.getByTestId('where')).not.toHaveTextContent('prayer=1')
+    expect(screen.getByTestId('where')).toHaveTextContent(/^\/$/)
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  it('hides the name and city when the admin says so, and uses the admin letter text', async () => {
-    gift = { ...DEFAULT_GIFT, showName: false, showCity: false, messageEn: 'Dear friend,\n[Prayer]\nBye' }
+  it('uses the admin letter text and adds nothing about the sender', async () => {
+    gift = { ...DEFAULT_GIFT, messageEn: 'Dear friend,\n[Prayer]\nBye' }
     renderAt('/')
     await flush(10)
     fireEvent.click(screen.getByRole('button', { name: /open your gift/i }))
     await flush(10)
     const letter = screen.getByRole('dialog')
     expect(letter).toHaveTextContent('Dear friend,')
-    expect(letter).not.toHaveTextContent('Sari')
-    expect(letter).not.toHaveTextContent('Malang')
+    expect(letter).toHaveTextContent('Semoga kamu tenang.')
+    expect(letter).not.toHaveTextContent('—')
   })
 
   it('is not shown on pages that are off, on forms, or on the prayer page, and not twice in one session', async () => {

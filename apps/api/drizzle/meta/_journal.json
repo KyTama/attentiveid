@@ -127,6 +127,13 @@
       "when": 1794911884080,
       "tag": "0017_prayers",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794916604430,
+      "tag": "0018_prayers_anonymous",
+      "breakpoints": true
     }
   ]
 }

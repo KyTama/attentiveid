@@ -167,11 +167,10 @@ describe('site settings', () => {
     expect((await put({}, {})).status).toBe(401)
     expect((await put({}, bearer(psychologist))).status).toBe(403)
     expect((await put({ messageId: 'Halo', messageEn: 'Hello' }, bearer(otherAdmin))).status).toBe(400)
-    const ok = await put({ pages: { '/articles': true, '/booking': true }, frequency: 'always', messageId: 'Halo [Prayer]', messageEn: 'Hi [Prayer]', showCity: false }, bearer(otherAdmin))
+    const ok = await put({ pages: { '/articles': true, '/booking': true }, frequency: 'always', messageId: 'Halo [Prayer]', messageEn: 'Hi [Prayer]' }, bearer(otherAdmin))
     expect(ok.status).toBe(200)
-    const stored = saved.gift as { frequency: string; showCity: boolean; pages: Record<string, boolean> }
+    const stored = saved.gift as { frequency: string; pages: Record<string, boolean> }
     expect(stored.frequency).toBe('always')
-    expect(stored.showCity).toBe(false)
     expect(stored.pages['/articles']).toBe(true)
     expect(Object.keys(stored.pages)).not.toContain('/booking')
   })
