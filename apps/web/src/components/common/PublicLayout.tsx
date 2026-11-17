@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigationType, useSearchParams } from 'react-r
 import { IntakeModalProvider, ConsultationIntakeModal, useIntakeModal } from '@/components/intake'
 import { AmbientLights } from './AmbientLights'
 import { CatsManager } from './CatsManager'
-import { CatToggle } from './CatToggle'
 import { GiftManager } from '@/components/gift/GiftManager'
 import type { IntakeConcernId } from '@attentiveid/shared'
 
@@ -62,7 +61,6 @@ export function PublicLayout() {
       <Outlet />
       <AmbientLights />
       <CatsManager />
-      <CatToggle />
       <GiftManager />
       <PublicIntakeModalWrapper />
     </IntakeModalProvider>
