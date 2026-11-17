@@ -85,7 +85,7 @@
       },
       {
         "title": "Fleksibel dan Nyaman",
-        "description": "Attentive menyediakan layanan konsultasi secara online maupun tatap muka di Jakarta dan BSD, sehingga Anda dapat memilih sesi yang paling sesuai dengan kebutuhan."
+        "description": "Attentive menyediakan layanan konsultasi secara online maupun tatap muka di Jakarta, BSD, dan Malang, sehingga Anda dapat memilih sesi yang paling sesuai dengan kebutuhan."
       },
       {
         "title": "Ruang Penuh Privasi",
@@ -693,7 +693,7 @@
       "step": "Langkah",
       "steps": [
         { "title": "Temukan kecocokanmu", "description": "Jelajahi area dukungan atau profil psikolog tanpa perlu terburu-buru mengambil keputusan.", "points": ["Cari berdasarkan kebutuhan", "Bandingkan area pengalaman", "Tanya kami saat masih ragu"] },
-        { "title": "Pilih cara bertemu", "description": "Pilih format online atau tatap muka dan tanyakan jadwal melalui WhatsApp.", "points": ["Konsultasi online", "Klinik Jakarta dan BSD", "Penjadwalan dibantu admin"] },
+        { "title": "Pilih cara bertemu", "description": "Pilih format online atau tatap muka dan tanyakan jadwal melalui WhatsApp.", "points": ["Konsultasi online", "Klinik Jakarta, BSD, dan Malang", "Penjadwalan dibantu admin"] },
         { "title": "Terhubung sesuai ritmemu", "description": "Percakapan pertama membantu memahami tujuanmu dan apakah hubungan terapeutiknya terasa tepat.", "points": ["Privat dan rahasia", "Langkah lanjutan yang jelas", "Tanpa tekanan untuk melanjutkan"] }
       ]
     },
@@ -714,7 +714,7 @@
       "onlineTitle": "Bertemu dari tempat yang terasa aman",
       "onlineDescription": "Konsultasi melalui video atau suara dengan jadwal yang dikoordinasikan sesuai ketersediaan.",
       "offlineTitle": "Bertemu di ruang yang tenang dan privat",
-      "offlineDescription": "Sesi tatap muka tersedia di Attentive Jakarta dan BSD.",
+      "offlineDescription": "Sesi tatap muka tersedia di Attentive Jakarta, BSD, dan Malang.",
       "action": "Tanya jadwal dan biaya",
       "imageAlt": "Konsultasi psikologi secara online",
       "imageCaption": "Bertemu secara online dari tempat privat yang terasa nyaman."
