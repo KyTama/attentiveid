@@ -6,6 +6,7 @@ import { DEFAULT_CATS, type CatSettings } from '@attentiveid/shared'
 let cats: CatSettings = DEFAULT_CATS
 vi.mock('../src/features/site-settings/use-site-settings', () => ({
   useSiteSettings: () => ({ cats }),
+  loadSiteSettings: () => Promise.resolve({ cats }),
 }))
 
 import { CatsManager } from '../src/components/common/CatsManager'
@@ -65,5 +66,28 @@ describe('CatsManager', () => {
     renderAt('/')
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(start).not.toHaveBeenCalled()
+  })
+})
+
+describe('CatsManager before the settings arrive', () => {
+  it('does not start the cats on the default settings while the real ones are still loading', async () => {
+    vi.resetModules()
+    vi.doMock('../src/features/site-settings/use-site-settings', () => ({
+      useSiteSettings: () => ({ cats: DEFAULT_CATS }),
+      loadSiteSettings: () => new Promise(() => {}),
+    }))
+    const { CatsManager: Pending } = await import('../src/components/common/CatsManager')
+    const startFn = vi.fn(() => true)
+    window.AttentiveCats = { start: startFn, stop: vi.fn(), running: () => false }
+    window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Pending />
+      </MemoryRouter>,
+    )
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(startFn).not.toHaveBeenCalled()
+    delete window.AttentiveCats
+    vi.doUnmock('../src/features/site-settings/use-site-settings')
   })
 })

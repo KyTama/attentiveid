@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { catsAllowedOn } from '@attentiveid/shared'
-import { useSiteSettings } from '@/features/site-settings/use-site-settings'
+import { loadSiteSettings, useSiteSettings } from '@/features/site-settings/use-site-settings'
 import { guardCatsOverFrames } from './cats-frame-guard'
 
 interface CatsApi {
@@ -47,7 +47,17 @@ const prefersReducedMotion = () => typeof window.matchMedia === 'function' && wi
 export function CatsManager() {
   const { pathname } = useLocation()
   const { cats } = useSiteSettings()
-  const wanted = catsAllowedOn(cats, pathname) && !prefersReducedMotion()
+  // Until the real settings have arrived the defaults ("on") are in use: do not start the cats on those, or they would
+  // flash in and walk out again on a site where the admin has switched them off.
+  const [settingsReady, setSettingsReady] = useState(false)
+  useEffect(() => {
+    let active = true
+    void loadSiteSettings().then(() => active && setSettingsReady(true))
+    return () => {
+      active = false
+    }
+  }, [])
+  const wanted = settingsReady && catsAllowedOn(cats, pathname) && !prefersReducedMotion()
 
   useEffect(() => {
     if (!wanted) {
