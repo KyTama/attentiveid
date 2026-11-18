@@ -14,7 +14,6 @@ export function OurServicesPage() {
   const { t, i18n } = useTranslation()
   const lang: 'id' | 'en' = (i18n.language || 'id').startsWith('en') ? 'en' : 'id'
   const frameRef = useRef<HTMLIFrameElement>(null)
-  const [height, setHeight] = useState<number | null>(null)
   // The first address keeps the language it was opened with; later changes go by message so the frame does not reload.
   const [initialSrc] = useState(() => ourServicesUrl(lang))
 
@@ -34,19 +33,6 @@ export function OurServicesPage() {
     sendLang()
   }, [sendLang])
 
-  // The catalog reports how tall its content is, so the page scrolls once instead of twice.
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== OUR_SERVICES_ORIGIN || event.source !== frameRef.current?.contentWindow) return
-      const data = event.data as { type?: string; height?: unknown } | null
-      if (data?.type === 'attentive-services-height' && typeof data.height === 'number' && Number.isFinite(data.height)) {
-        setHeight(Math.min(Math.max(Math.ceil(data.height), 480), 20000))
-      }
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [])
-
   return (
     <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
@@ -61,7 +47,9 @@ export function OurServicesPage() {
           ref={frameRef}
           referrerPolicy="strict-origin-when-cross-origin"
           src={initialSrc}
-          style={{ height: height ?? 'calc(100dvh - 4.5rem)', minHeight: 640 }}
+          // As tall as the window under the header, not as tall as the content: the catalog keeps its chat assistant and other
+          // floating buttons pinned to the bottom of the frame, so a frame as tall as the whole page would hide them far below.
+          style={{ height: 'calc(100dvh - 4.5rem)', minHeight: 480 }}
           title={t('homepage.nav.ourServices')}
         />
         <div className="flex justify-center px-4 py-4">
