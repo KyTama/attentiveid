@@ -33,20 +33,16 @@ describe('our services page', () => {
     expect(screen.getAllByRole('link', { name: /open in a new tab/i })[0]).toHaveAttribute('href', `${OUR_SERVICES_ORIGIN}/?lang=en`)
   })
 
-  it('sizes the frame from the height the catalog reports, from its own origin only', async () => {
+  it('keeps the frame as tall as the window, so the catalog chat assistant stays in view, whatever height the catalog reports', async () => {
     const view = renderPage()
     const frame = view.container.querySelector('iframe') as HTMLIFrameElement
     const source = {}
     Object.defineProperty(frame, 'contentWindow', { value: source, configurable: true })
-
-    await act(async () => {
-      window.dispatchEvent(new MessageEvent('message', { data: { type: 'attentive-services-height', height: 2400 }, origin: 'https://evil.example', source: source as any }))
-    })
-    expect(frame.style.height).not.toBe('2400px')
+    expect(frame.style.height).toBe('calc(100dvh - 4.5rem)')
 
     await act(async () => {
       window.dispatchEvent(new MessageEvent('message', { data: { type: 'attentive-services-height', height: 2400 }, origin: OUR_SERVICES_ORIGIN, source: source as any }))
     })
-    expect(frame.style.height).toBe('2400px')
+    expect(frame.style.height).toBe('calc(100dvh - 4.5rem)')
   })
 })
