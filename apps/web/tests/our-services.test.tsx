@@ -11,6 +11,32 @@ const renderPage = () =>
     </MemoryRouter>,
   )
 
+describe('our services page: opening a service directly', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('id')
+  })
+
+  it('opens the service named after the # in the address inside the frame, and keeps it in the new-tab link', () => {
+    const view = render(
+      <MemoryRouter initialEntries={['/our-services#detail-p-konseling-dewasa']}>
+        <OurServicesPage />
+      </MemoryRouter>,
+    )
+    const frame = view.container.querySelector('iframe') as HTMLIFrameElement
+    expect(frame.getAttribute('src')).toBe(`${OUR_SERVICES_ORIGIN}/?lang=id#detail-p-konseling-dewasa`)
+    expect(screen.getAllByRole('link', { name: /tab baru/i })[0]).toHaveAttribute('href', `${OUR_SERVICES_ORIGIN}/?lang=id#detail-p-konseling-dewasa`)
+  })
+
+  it('ignores an odd fragment', () => {
+    const view = render(
+      <MemoryRouter initialEntries={['/our-services#"><script>']}>
+        <OurServicesPage />
+      </MemoryRouter>,
+    )
+    expect((view.container.querySelector('iframe') as HTMLIFrameElement).getAttribute('src')).toBe(`${OUR_SERVICES_ORIGIN}/?lang=id`)
+  })
+})
+
 describe('our services page', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('id')

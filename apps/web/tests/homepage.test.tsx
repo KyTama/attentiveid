@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -102,22 +102,25 @@ describe('homepage', () => {
     }
   })
 
-  it('shows all six support choices with smart deep-links to directory filters', async () => {
+  it('shows all six care areas, each linking to its service on the services page, without a "plan your consultation" link', async () => {
     renderHomepage()
 
     const links = screen.getAllByRole('link', { name: /learn more:/i })
     expect(links).toHaveLength(6)
     const expectedHrefs = [
-      '/psychologists?support=adultClinical',
-      '/psychologists?support=educational',
-      '/psychologists?q=relationship',
-      '/psychologists?support=childAdolescent',
-      '/psychologists?q=family',
-      '/psychologists?q=career',
+      '/our-services#detail-p-konseling-dewasa',
+      '/our-services#layanan-asesmen',
+      '/our-services#detail-p-konseling-couple',
+      '/our-services#detail-p-konseling-anak',
+      '/our-services#detail-p-konseling-family',
+      '/our-services#cari-karier',
     ]
     links.forEach((link, index) => {
       expect(link).toHaveAttribute('href', expectedHrefs[index])
     })
+    // the cards no longer carry their own "Plan your consultation" link: the services page shows how to book
+    const section = document.getElementById('support') as HTMLElement
+    expect(within(section).queryByRole('link', { name: /plan your consultation/i })).toBeNull()
     expect(screen.getByRole('heading', { name: /child and adolescent support/i })).toBeInTheDocument()
     await screen.findByRole('link', { name: /view syazka's profile/i })
   })

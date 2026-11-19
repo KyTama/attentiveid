@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
+import { careAreaServiceLink } from '@/features/our-services/links'
 import type { IntakeConcernId } from '@attentiveid/shared'
 
 const topicToIntakeConcern: Record<string, IntakeConcernId> = {
@@ -12,15 +13,6 @@ const topicToIntakeConcern: Record<string, IntakeConcernId> = {
   family: 'relationship_family',
   assessment: 'general_assessment',
   career: 'career_burnout',
-}
-
-const topicToDirectoryQuery: Record<string, { en: string; id: string }> = {
-  adult: { en: '/psychologists?support=adultClinical', id: '/psychologists?support=adultClinical' },
-  relationships: { en: '/psychologists?q=relationship', id: '/psychologists?q=relasi' },
-  child: { en: '/psychologists?support=childAdolescent', id: '/psychologists?support=childAdolescent' },
-  family: { en: '/psychologists?q=family', id: '/psychologists?q=keluarga' },
-  assessment: { en: '/psychologists?support=educational', id: '/psychologists?support=educational' },
-  career: { en: '/psychologists?q=career', id: '/psychologists?q=karir' },
 }
 
 const topicToAssetNumber: Record<string, number> = {
@@ -77,8 +69,7 @@ interface SupportTopic {
 }
 
 export function SupportExplorer() {
-  const { i18n, t } = useTranslation()
-  const locale = i18n.resolvedLanguage === 'id' ? 'id' : 'en'
+  const { t } = useTranslation()
   const managed = useLandingSection('supportExplorer')
   const topics: SupportTopic[] = managed
     ? [...managed.section.items]
@@ -132,20 +123,14 @@ export function SupportExplorer() {
                     <h3 className="mt-4 text-xl font-bold leading-snug text-secondary">{topic.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed font-[450] text-secondary/85">{topic.description}</p>
                   </div>
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 pt-4">
-                    <a
-                      href="https://booking.attentiveid.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-11 items-center text-xs font-bold text-secondary underline decoration-primary underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                    >
-                      {t('intakeDialog.title')}
-                    </a>
+                  <div className="mt-6 border-t border-secondary/10 pt-4">
+                    {/* The services site shows the packages, prices and psychologists for this area. */}
                     <Link
-                      className="inline-flex min-h-11 items-center text-xs font-bold text-secondary/90 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      to={topicToDirectoryQuery[topic.id]?.[locale] ?? '/psychologists'}
+                      className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-secondary underline decoration-primary underline-offset-4 outline-none hover:text-secondary/90 focus-visible:ring-2 focus-visible:ring-primary"
+                      to={careAreaServiceLink(topic.id)}
                     >
                       {t('homepage.support.action')}
+                      <span aria-hidden="true">→</span>
                       <span className="sr-only">: {topic.title}</span>
                     </Link>
                   </div>
