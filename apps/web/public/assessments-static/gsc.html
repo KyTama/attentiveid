@@ -979,7 +979,7 @@ const DKEY='attentive-gsc-dev';let DEV=false; /* developer mode is off on the li
 function logoTap(){} /* the hidden developer switch is removed on the live site */
 const blank=()=>({v:22,seed:[],step:0,rs:0,profile:{name:'',age:'',sex:'',edu:'',email:'',wa:'',consent:false},deck:[],di:0,deckOpen:false,help:true,pi:0,qp:0,revealed:false,cmp:{},cmpLog:[],order:null,resp:{},goals:[],rank:{},map:[],prog:{},rel:{},qi:0,t0:null,t1:null,id:null,send:{state:'idle',err:''}});
 let S=blank();const ui={arm:null,sheet:null,sum:false,map:{filter:'all',labels:true,sel:null,tools:null}};
-function save(){store.set(KEY,JSON.stringify({...S,savedAt:Date.now()}))}
+function save(){if(S.send&&S.send.state==='ok')return; /* after a successful send nothing is kept on this device */store.set(KEY,JSON.stringify({...S,savedAt:Date.now()}))}
 function load(){try{const o=JSON.parse(store.get(KEY)||'null');if(o&&!(typeof o.savedAt==='number'&&Date.now()-o.savedAt<86400000)){store.del(KEY)}else if(o&&o.v===22&&Array.isArray(o.goals))S={...blank(),...o}}catch(e){}}
 const G=id=>S.goals.find(g=>g.id===id);
 function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}

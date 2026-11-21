@@ -116,10 +116,15 @@ export function AssessmentsCmsPage() {
             {instrument === 'mhcu' ? tx('Hasil MHCU', 'MHCU results') : tx('Hasil Goal System Compass', 'Goal System Compass results')}
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
-            {tx(
-              'Hasil Mental Health Check-Up dari halaman Asesmen. Ini data kesehatan: buka hanya bila perlu, jangan dibagikan, dan jangan diekspor ke tempat umum. Hasil sebaiknya ditinjau psikolog sebelum dirilis.',
-              'Mental Health Check-Up results from the Assessments page. This is health data: open it only when needed, do not share it and do not export it anywhere public. A psychologist should review a result before it is released.',
-            )}
+            {instrument === 'mhcu'
+              ? tx(
+                  'Hasil Mental Health Check-Up dari halaman Asesmen. Ini data kesehatan: buka hanya bila perlu, jangan dibagikan, dan jangan diekspor ke tempat umum. Hasil sebaiknya ditinjau psikolog sebelum dirilis.',
+                  'Mental Health Check-Up results from the Assessments page. This is health data: open it only when needed, do not share it and do not export it anywhere public. A psychologist should review a result before it is released.',
+                )
+              : tx(
+                  'Sesi Goal System Compass dari halaman Asesmen. Ini data pribadi: buka hanya bila perlu dan jangan dibagikan. Analisis dan laporan dikerjakan di Konsol Konselor.',
+                  'Goal System Compass sessions from the Assessments page. This is personal data: open it only when needed and do not share it. The analysis and report are done in the Counselor Console.',
+                )}
           </p>
         </div>
         <button
@@ -179,8 +184,8 @@ export function AssessmentsCmsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {isLoading ? (
             <p className="flex items-center gap-2 p-6 text-sm text-slate-500">
               <Loader2 aria-hidden="true" className="size-4 animate-spin" /> {tx('Memuat...', 'Loading...')}
@@ -215,13 +220,13 @@ export function AssessmentsCmsPage() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
           {!detail ? (
             <p className="text-sm text-slate-500">{tx('Pilih satu hasil di kiri untuk melihat skor dan menulis catatan.', 'Choose a result on the left to see the scores and write a note.')}</p>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0 break-words [overflow-wrap:anywhere]">
                   <h2 className="text-lg font-bold text-slate-900">{detail.name}</h2>
                   <p className="text-xs text-slate-500">
                     {detail.code} · {detail.age} {tx('tahun', 'years')} · {detail.sex ?? '–'} · {detail.lang.toUpperCase()}
