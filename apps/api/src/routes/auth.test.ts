@@ -130,7 +130,11 @@ const createTestApp = () => {
         }
     };
 
-    const verifyPassword = async (password: string) => password === 'ValidPassword123!';
+    const verifiedAgainst: string[] = [];
+    const verifyPassword = async (password: string, hash?: string) => {
+        verifiedAgainst.push(String(hash));
+        return password === 'ValidPassword123!';
+    };
 
     const app = createApp({
         frontendOrigin: 'http://localhost:5173',
@@ -141,7 +145,7 @@ const createTestApp = () => {
         verifyPassword
     });
 
-    return { app, tokenService, memoryStore };
+    return { app, tokenService, memoryStore, verifiedAgainst };
 };
 
 describe('auth API routes (/api/auth)', () => {
@@ -269,5 +273,69 @@ describe('auth API routes (/api/auth)', () => {
 
         expect(logoutResponse.status).toBe(200);
         await expect(tokenService.verifyRefreshToken(refreshCookieValue)).rejects.toThrow('Refresh token invalid or expired.');
+    });
+
+    test('POST /api/auth/login locks an e-mail after repeated wrong passwords (HTTP 429 + Retry-After), per client address', async () => {
+        const { app } = createTestApp();
+        const attempt = (email: string, password: string, ip = '198.51.100.7') => app.handle(new Request('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-forwarded-for': ip },
+            body: JSON.stringify({ email, password })
+        }));
+
+        for (let i = 0; i < 5; i += 1) expect((await attempt('admin@attentive.id', 'nope')).status).toBe(401);
+        const locked = await attempt('admin@attentive.id', 'ValidPassword123!');
+        expect(locked.status).toBe(429);
+        expect(Number(locked.headers.get('retry-after'))).toBeGreaterThan(0);
+        // the right password does not get around the lock while it lasts, and no token is issued
+        expect(((await locked.json()) as { accessToken?: string }).accessToken).toBeUndefined();
+        // other accounts are not affected
+        expect((await attempt('someone-else@attentive.id', 'x', '198.51.100.8')).status).toBe(401);
+    });
+
+    test('POST /api/auth/login checks a password against a stand-in hash when the account does not exist or is inactive', async () => {
+        const { app, verifiedAgainst } = createTestApp();
+        const attempt = (email: string) => app.handle(new Request('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: 'whatever-password' })
+        }));
+        expect((await attempt('nobody@attentive.id')).status).toBe(401);
+        expect((await attempt('inactive@attentive.id')).status).toBe(401);
+        expect(verifiedAgainst).toHaveLength(2);
+        expect(verifiedAgainst.every((hash) => hash.startsWith('$argon2id$'))).toBe(true);
+    });
+
+    test('a refresh token that was already rotated and is shown again signs that user out everywhere', async () => {
+        const { app, tokenService } = createTestApp();
+        const loginResponse = await app.handle(new Request('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: 'admin@attentive.id', password: 'ValidPassword123!' })
+        }));
+        const stolen = /attentive_refresh=([^;]+)/.exec(loginResponse.headers.get('set-cookie') ?? '')![1];
+        const refreshWith = (token: string) => app.handle(new Request('http://localhost:3000/api/auth/refresh', {
+            method: 'POST',
+            headers: { cookie: `attentive_refresh=${token}` }
+        }));
+
+        const rotated = await refreshWith(stolen);
+        expect(rotated.status).toBe(200);
+        const current = /attentive_refresh=([^;]+)/.exec(rotated.headers.get('set-cookie') ?? '')![1];
+
+        // within the short grace window a replay is only refused (a second tab or a retry looks the same)
+        expect((await refreshWith(stolen)).status).toBe(401);
+        await expect(tokenService.verifyRefreshToken(current)).resolves.toBeDefined();
+
+        // later, the old token shows up again: the current one is revoked too
+        const realNow = Date.now;
+        Date.now = () => realNow() + 60_000;
+        try {
+            expect((await refreshWith(stolen)).status).toBe(401);
+        } finally {
+            Date.now = realNow;
+        }
+        await expect(tokenService.verifyRefreshToken(current)).rejects.toThrow();
+        expect((await refreshWith(current)).status).toBe(401);
     });
 });

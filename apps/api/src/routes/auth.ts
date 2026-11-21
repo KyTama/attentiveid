@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import type { UserDto, UserRole, UserStatus } from '@attentiveid/shared';
-import type { JwtAccessTokenPayload, RefreshTokenRecord } from '../security/token-service';
+import { RefreshTokenReuseError, type JwtAccessTokenPayload, type RefreshTokenRecord } from '../security/token-service';
+import { clientAddress, createLoginThrottle, type LoginThrottle } from '../security/login-throttle';
 
 export interface AuthUserRepository {
     findByEmail(email: string): Promise<{
@@ -25,31 +26,57 @@ export interface AuthTokenService {
     issueRefreshToken(userId: string, ttlSeconds?: number): Promise<{ refreshToken: string; expiresAt: string }>;
     verifyRefreshToken(token: string): Promise<RefreshTokenRecord>;
     revokeRefreshToken(token: string): Promise<void>;
+    /** Signs the user out everywhere (used when a used refresh token is replayed). */
+    revokeAllRefreshTokens?(userId: string): Promise<void>;
 }
 
 export interface AuthDependencies {
     userRepository: AuthUserRepository;
     tokenService: AuthTokenService;
     verifyPassword(password: string, hash: string): Promise<boolean>;
+    /** Limits wrong-password attempts; a default one is used when not given. */
+    loginThrottle?: LoginThrottle;
 }
 
 const refreshCookieName = 'attentive_refresh';
 
-export const createAuthRoutes = (dependencies: AuthDependencies) => new Elysia({ name: 'auth-routes' })
-    .post('/api/auth/login', async ({ body, cookie: { [refreshCookieName]: refreshCookie }, set }) => {
+// A real argon2id hash of a random string nobody knows. Checking a password against it when the e-mail is unknown or the
+// account is not active makes that answer take as long as a real one, so response time does not reveal which e-mails exist.
+const UNKNOWN_USER_HASH = '$argon2id$v=19$m=65536,t=3,p=1$GWLWBKb5kj4Rt7Jz82qn76yGyDJ1OZ56E0jCMMGIkb8$FBo/fn57T1xfPAX+AqrvJrqOkIL/y+btAjYTB4AMk24';
+
+// A refresh token used again within this time of its rotation is most likely a second tab or a retry, not theft.
+const REUSE_GRACE_MS = 15_000;
+
+export const createAuthRoutes = (dependencies: AuthDependencies) => {
+    const throttle = dependencies.loginThrottle ?? createLoginThrottle();
+    return new Elysia({ name: 'auth-routes' })
+    .post('/api/auth/login', async ({ body, headers, cookie: { [refreshCookieName]: refreshCookie }, set }) => {
         const email = body.email.trim().toLowerCase();
+        const address = clientAddress(headers);
+
+        const gate = throttle.check(address, email);
+        if (!gate.allowed) {
+            set.status = 429;
+            set.headers['retry-after'] = String(gate.retryAfterSeconds);
+            return { status: 'error', message: 'Terlalu banyak percobaan masuk. Coba lagi beberapa menit lagi.' };
+        }
+
         const user = await dependencies.userRepository.findByEmail(email);
 
         if (!user || user.status !== 'active') {
+            await dependencies.verifyPassword(body.password, UNKNOWN_USER_HASH);
+            throttle.recordFailure(address, email);
             set.status = 401;
             return { status: 'unauthorized', message: 'Invalid email or password.' };
         }
 
         const validPassword = await dependencies.verifyPassword(body.password, user.passwordHash);
         if (!validPassword) {
+            throttle.recordFailure(address, email);
             set.status = 401;
             return { status: 'unauthorized', message: 'Invalid email or password.' };
         }
+        throttle.recordSuccess(email);
 
         await dependencies.userRepository.updateLastLogin(user.id);
 
@@ -131,7 +158,15 @@ export const createAuthRoutes = (dependencies: AuthDependencies) => new Elysia({
                 expiresAt: accessExpiresAt,
                 user
             };
-        } catch {
+        } catch (error) {
+            // A token that was already used is shown again: it may have been copied. Sign that user out everywhere.
+            if (error instanceof RefreshTokenReuseError && Date.now() - Date.parse(error.revokedAt) > REUSE_GRACE_MS) {
+                try {
+                    await dependencies.tokenService.revokeAllRefreshTokens?.(error.userId);
+                } catch {
+                    // the request is refused either way
+                }
+            }
             refreshCookie.remove();
             set.status = 401;
             return { status: 'unauthorized', message: 'Invalid or expired refresh token.' };
@@ -184,3 +219,4 @@ export const createAuthRoutes = (dependencies: AuthDependencies) => new Elysia({
             description: 'Verifies Bearer access token and returns authenticated user DTO.'
         }
     });
+};

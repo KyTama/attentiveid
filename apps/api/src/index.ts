@@ -124,11 +124,15 @@ const app = createApp({
     .listen({
         hostname: '0.0.0.0',
         port: Number(env.PORT) || 3000,
+        // Bun accepts 128 MB by default. The biggest legitimate request is an image upload (5 MB), so cap it well below that.
+        maxRequestBodySize: 8 * 1024 * 1024,
     });
 
 console.log(
     `🦊 AttentiveId API is running at ${app.server?.hostname}:${app.server?.port}`
 );
-console.log(`📚 Swagger docs available at http://localhost:${app.server?.port}/swagger`);
+if (process.env.NODE_ENV !== 'production') {
+    console.log(`📚 Swagger docs available at http://localhost:${app.server?.port}/swagger`);
+}
 
 export type { App };

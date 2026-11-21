@@ -1,10 +1,11 @@
 import { Elysia, t } from 'elysia';
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc, isNull } from 'drizzle-orm';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import { hashPassword } from '../repositories/users.repository';
 import { db as defaultDb } from '../db';
-import { users, psychologists } from '../db/schema';
+import { users, psychologists, userRefreshTokens } from '../db/schema';
+import { canAssignRole, canManageAccount, MIN_STAFF_PASSWORD_LENGTH } from '../security/user-management-policy';
 
 export interface UsersManagementDependencies {
     tokenService: Pick<AuthTokenService, 'verifyAccessToken'>;
@@ -18,6 +19,19 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
         userRepository: dependencies.userRepository,
     });
     const db = dependencies.db || defaultDb;
+
+    /** Ends every sign-in of this account (its refresh tokens stop working), e.g. after a password reset or a suspension. */
+    const signOutEverywhere = async (userId: string) => {
+        await db
+            .update(userRefreshTokens)
+            .set({ revokedAt: new Date().toISOString() })
+            .where(and(eq(userRefreshTokens.userId, userId), isNull(userRefreshTokens.revokedAt)));
+    };
+
+    const findTarget = async (id: string) => {
+        const [row] = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.id, id)).limit(1);
+        return row ?? null;
+    };
 
     return new Elysia({ name: 'users-management-routes' })
         .use(roleGuard)
@@ -51,7 +65,12 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
         )
         .post(
             '/api/admin/users',
-            async ({ body, set }: any) => {
+            async ({ body, set, currentUser }: any) => {
+                const roleCheck = canAssignRole(currentUser, body.role);
+                if (!roleCheck.ok) {
+                    set.status = roleCheck.status;
+                    return { status: 'forbidden', message: roleCheck.message };
+                }
                 const email = body.email.trim().toLowerCase();
 
                 // Check existing
@@ -100,7 +119,7 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
                 body: t.Object({
                     email: t.String(),
                     name: t.String(),
-                    password: t.String({ minLength: 8 }),
+                    password: t.String({ minLength: MIN_STAFF_PASSWORD_LENGTH, maxLength: 128 }),
                     role: t.Union([t.Literal('superadmin'), t.Literal('admin'), t.Literal('psychologist')]),
                     psychologistId: t.Optional(t.Nullable(t.String()))
                 })
@@ -108,7 +127,17 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
         )
         .patch(
             '/api/admin/users/:id/status',
-            async ({ params, body, set }: any) => {
+            async ({ params, body, set, currentUser }: any) => {
+                const target = await findTarget(params.id);
+                if (!target) {
+                    set.status = 404;
+                    return { status: 'error', message: 'Pengguna tidak ditemukan.' };
+                }
+                const decision = canManageAccount(currentUser, target, 'status');
+                if (!decision.ok) {
+                    set.status = decision.status;
+                    return { status: decision.status === 403 ? 'forbidden' : 'error', message: decision.message };
+                }
                 const updated = await db
                     .update(users)
                     .set({
@@ -122,6 +151,7 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
                     set.status = 404;
                     return { status: 'error', message: 'Pengguna tidak ditemukan.' };
                 }
+                if (body.status === 'suspended') await signOutEverywhere(params.id);
 
                 return {
                     status: 'success',
@@ -138,7 +168,17 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
         )
         .post(
             '/api/admin/users/:id/reset-password',
-            async ({ params, body, set }: any) => {
+            async ({ params, body, set, currentUser }: any) => {
+                const target = await findTarget(params.id);
+                if (!target) {
+                    set.status = 404;
+                    return { status: 'error', message: 'Pengguna tidak ditemukan.' };
+                }
+                const decision = canManageAccount(currentUser, target, 'reset-password');
+                if (!decision.ok) {
+                    set.status = decision.status;
+                    return { status: decision.status === 403 ? 'forbidden' : 'error', message: decision.message };
+                }
                 const newHash = await hashPassword(body.password);
 
                 const updated = await db
@@ -154,6 +194,8 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
                     set.status = 404;
                     return { status: 'error', message: 'Pengguna tidak ditemukan.' };
                 }
+                // the old password may be in someone else's hands: end every sign-in made with it
+                await signOutEverywhere(params.id);
 
                 return {
                     status: 'success',
@@ -163,7 +205,7 @@ export const createUsersManagementRoutes = (dependencies: UsersManagementDepende
             {
                 requireRole: 'admin',
                 body: t.Object({
-                    password: t.String({ minLength: 8 })
+                    password: t.String({ minLength: MIN_STAFF_PASSWORD_LENGTH, maxLength: 128 })
                 })
             }
         );

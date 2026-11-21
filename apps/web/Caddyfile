@@ -9,6 +9,23 @@
 
 	respond /healthz 200
 
+	# Security headers for every page and file.
+	#  - HSTS: browsers only ever use https for this site (no includeSubDomains: other subdomains are run by other teams).
+	#  - CSP: scripts and styles only from this site, plus the few outside services the site really uses: the Meta pixel on the
+	#    booking page, Google Fonts on the Let There Be Light page, and the services site shown inside /our-services.
+	#    'unsafe-inline' stays for scripts/styles because the page has small inline scripts and React sets inline styles;
+	#    objects, <base> tags, form posts to other sites and framing of this site are all closed.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self), usb=(), interest-cohort=()"
+		Cross-Origin-Opener-Policy "same-origin-allow-popups"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://www.facebook.com https://connect.facebook.net; frame-src https://ourservices.attentiveid.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		-Server
+	}
+
 	# Link-preview crawlers (WhatsApp, Facebook, X, Telegram...) do not run JavaScript, so they get a
 	# small page with the per-page thumbnail set in the portal. Normal visitors and Google are unaffected.
 	@linkpreview {

@@ -619,7 +619,7 @@ export function SiteSettingsPage() {
                 <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
                   {uploading === key ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <ImagePlus className="size-3.5" aria-hidden="true" />}
                   {tx('Unggah', 'Upload')}
-                  <input accept="image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" onChange={(e) => uploadGiftImage(e.target.files?.[0], key)} type="file" />
+                  <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => uploadGiftImage(e.target.files?.[0], key)} type="file" />
                 </label>
                 {giftSettings[key] && (
                   <button className="text-xs text-slate-500 underline cursor-pointer" onClick={() => setGiftSettings({ ...giftSettings, [key]: '' })} type="button">

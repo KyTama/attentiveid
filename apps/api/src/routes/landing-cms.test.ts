@@ -42,6 +42,21 @@ const userRepository = {
   findById: async (id: string) => usersDb.get(id) ?? null,
 }
 
+// A tiny but real WebP header (VP8X) of the given size: uploads must be real images now.
+const makeWebp = (width: number, height: number) => {
+  const bytes = new Uint8Array(32)
+  bytes.set([0x52, 0x49, 0x46, 0x46], 0) // RIFF
+  bytes.set([24, 0, 0, 0], 4)
+  bytes.set([0x57, 0x45, 0x42, 0x50], 8) // WEBP
+  bytes.set([0x56, 0x50, 0x38, 0x58], 12) // VP8X
+  bytes.set([10, 0, 0, 0], 16)
+  const w = width - 1
+  const h = height - 1
+  bytes.set([w & 255, (w >> 8) & 255, (w >> 16) & 255], 24)
+  bytes.set([h & 255, (h >> 8) & 255, (h >> 16) & 255], 27)
+  return bytes
+}
+
 describe('landing CMS API routes (/api/admin/landing)', () => {
   const mockDb: any = {
     select: () => ({
@@ -380,7 +395,7 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
   it('POST /api/admin/landing/upload-image uploads image and returns media reference', async () => {
     const { accessToken } = tokenService.issueAccessToken(adminUser)
     const formData = new FormData()
-    const mockFile = new File(['fake webp content for landing'], 'hero.webp', { type: 'image/webp' })
+    const mockFile = new File([makeWebp(1600, 900)], 'hero.webp', { type: 'image/webp' })
     formData.append('file', mockFile)
     formData.append('sectionKey', 'hero')
     formData.append('slug', 'consultation-hero')
@@ -402,6 +417,20 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
     expect(json.media.reference).toBe('media/landing/consultation-hero.webp')
     expect(json.media.width).toBe(1600)
     expect(json.media.height).toBe(900)
+  })
+
+  it('POST /api/admin/landing/upload-image rejects a file that only claims to be an image', async () => {
+    const { accessToken } = tokenService.issueAccessToken(adminUser)
+    const formData = new FormData()
+    formData.append('file', new File(['<script>alert(1)</script>'], 'evil.webp', { type: 'image/webp' }))
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/landing/upload-image', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      })
+    )
+    expect(res.status).toBe(400)
   })
 
   it('POST /api/admin/landing/upload-image rejects file larger than 5 MB with 413', async () => {
