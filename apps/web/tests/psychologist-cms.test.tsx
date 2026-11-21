@@ -134,4 +134,153 @@ describe('Psychologist CMS Page Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Semua/ }))
     expect(await screen.findByText('Urutan Featured')).toBeDefined()
   })
+
+  it('allows consecutive photo replacements including re-selecting the same file and updates saved media reference', async () => {
+    let savedMediaRef = 'media/psychologists/syazka.webp'
+    let uploadCount = 0
+
+    class MockImage {
+      naturalWidth = 600
+      naturalHeight = 750
+      onload: (() => void) | null = null
+      onerror: (() => void) | null = null
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.())
+      }
+    }
+    vi.stubGlobal('Image', MockImage as any)
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(() => `blob:mock-${++uploadCount}`)
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+
+    const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      if (url.includes('/api/auth/refresh')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: 'success',
+            accessToken: 'valid.jwt.token',
+            user: adminUser,
+          }),
+        })
+      }
+      if (url.includes('/api/admin/psychologists/upload-photo') && init?.method === 'POST') {
+        const ref = `media/psychologists/syazka-v${uploadCount}.webp`
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: 'success',
+            message: 'Foto profil psikolog berhasil diunggah!',
+            media: {
+              id: `media-${uploadCount}`,
+              reference: ref,
+              width: 600,
+              height: 750,
+              alt: { id: 'Syazka', en: 'Syazka' },
+            },
+          }),
+        })
+      }
+      if (url.endsWith('/api/admin/psychologists/psych-001') && init?.method === 'PUT') {
+        const body = JSON.parse(String(init.body || '{}'))
+        savedMediaRef = body.media?.reference || savedMediaRef
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: 'success',
+            psychologist: {
+              ...mockPsychologistsList[0],
+              media: {
+                reference: savedMediaRef,
+                width: 600,
+                height: 750,
+                alt: { id: 'Syazka', en: 'Syazka' },
+              },
+            },
+          }),
+        })
+      }
+      if (url.endsWith('/api/admin/psychologists/psych-001')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: 'success',
+            psychologist: {
+              ...mockPsychologistsList[0],
+              shortBio: { id: 'Short', en: 'Short' },
+              biography: { id: 'Bio ID', en: 'Bio EN' },
+              availabilityMessage: { id: 'Tersedia', en: 'Available' },
+              specializations: [{ id: 'spec-0', label: { id: 'Konseling', en: 'Counseling' } }],
+              media: {
+                reference: savedMediaRef,
+                width: 600,
+                height: 750,
+                alt: { id: 'Syazka', en: 'Syazka' },
+              },
+            },
+          }),
+        })
+      }
+      if (url.includes('/api/admin/psychologists')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: 'success',
+            psychologists: [
+              {
+                ...mockPsychologistsList[0],
+                media: {
+                  reference: savedMediaRef,
+                  width: 600,
+                  height: 750,
+                  alt: { id: 'Syazka', en: 'Syazka' },
+                },
+              },
+            ],
+            total: 1,
+          }),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ status: 'success' }),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard/psychologists']}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    const editButtons = await screen.findAllByRole('button', { name: 'Edit' })
+    fireEvent.click(editButtons[0])
+
+    await screen.findByText('Edit Profil Psikolog')
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    expect(fileInput).toBeTruthy()
+
+    const firstFile = new File(['img-1'], 'photo.webp', { type: 'image/webp' })
+    fireEvent.change(fileInput, { target: { files: [firstFile] } })
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.filter(([u]) => String(u).includes('/upload-photo'))).toHaveLength(1)
+    })
+    expect(fileInput.value).toBe('')
+
+    // Second upload (consecutive replacement while modal is open)
+    const secondFile = new File(['img-2'], 'photo2.webp', { type: 'image/webp' })
+    fireEvent.change(fileInput, { target: { files: [secondFile] } })
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.filter(([u]) => String(u).includes('/upload-photo'))).toHaveLength(2)
+    })
+    expect(fileInput.value).toBe('')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Simpan Profil Psikolog' }))
+
+    await waitFor(() => {
+      expect(savedMediaRef).toBe('media/psychologists/syazka-v2.webp')
+    })
+  })
 })

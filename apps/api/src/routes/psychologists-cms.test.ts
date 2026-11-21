@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'bun:test'
+import { afterAll, describe, expect, it } from 'bun:test'
+import fs from 'node:fs'
+import path from 'node:path'
 import { Elysia } from 'elysia'
 import type { FullPsychologistMutation, UserDto } from '@attentiveid/shared'
 import { createTokenService } from '../security/token-service'
@@ -391,7 +393,7 @@ describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
     expect(Array.isArray(json.psychologists)).toBe(true)
   })
 
-  it('POST /api/admin/psychologists/upload-photo uploads photo and returns media reference', async () => {
+  it('POST /api/admin/psychologists/upload-photo uploads photo and returns distinct versioned media references on consecutive uploads', async () => {
     const { accessToken } = tokenService.issueAccessToken(superadminUser)
     const formData = new FormData()
     // Create a 1x1 valid webp or mock file
@@ -414,9 +416,30 @@ describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.status).toBe('success')
-    expect(json.media.reference).toBe('media/psychologists/test-doc.webp')
+    expect(json.media.reference).toMatch(/^media\/psychologists\/test-doc-[a-z0-9-]+\.webp$/)
     expect(json.media.width).toBe(600)
     expect(json.media.height).toBe(750)
+
+    const formData2 = new FormData()
+    formData2.append('file', new File([makeWebp(600, 750)], 'test-photo-2.webp', { type: 'image/webp' }))
+    formData2.append('slug', 'test-doc')
+    formData2.append('name', 'Dr. Test')
+    formData2.append('width', '600')
+    formData2.append('height', '750')
+
+    const res2 = await app.handle(
+      new Request('http://localhost/api/admin/psychologists/upload-photo', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData2,
+      })
+    )
+    expect(res2.status).toBe(200)
+    const json2 = await res2.json()
+    expect(json2.media.reference).toMatch(/^media\/psychologists\/test-doc-[a-z0-9-]+\.webp$/)
+    expect(json2.media.reference).not.toBe(json.media.reference)
   })
 
   it('POST /api/admin/psychologists/upload-photo rejects a file that only claims to be an image', async () => {
@@ -519,5 +542,19 @@ describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
     )
     expect(res.status).toBe(200)
     expect((await res.json()).psychologist.conversationQuote).toEqual({ id: 'Kutipan saya', en: 'My quote' })
+  })
+
+  afterAll(() => {
+    for (const rootCandidate of [process.cwd(), path.resolve(import.meta.dir, '../../../..')]) {
+      for (const relDir of ['apps/web/public/media/psychologists', 'apps/web/dist/media/psychologists']) {
+        const dir = path.resolve(rootCandidate, relDir)
+        if (!fs.existsSync(dir)) continue
+        for (const entry of fs.readdirSync(dir)) {
+          if (entry.startsWith('test-doc-') && entry.endsWith('.webp')) {
+            fs.unlinkSync(path.join(dir, entry))
+          }
+        }
+      }
+    }
   })
 })

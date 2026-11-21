@@ -262,7 +262,16 @@ export function SharePreviewsCmsPage() {
                 <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                   {isUploading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <ImagePlus className="size-4" aria-hidden="true" />}
                   {tx('Unggah gambar', 'Upload image')}
-                  <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => handleUpload(e.target.files?.[0])} type="file" />
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      e.target.value = ''
+                      handleUpload(file)
+                    }}
+                    type="file"
+                  />
                 </label>
                 {form.imageUrl && (
                   <button className="text-sm text-slate-500 underline cursor-pointer" onClick={() => update({ imageUrl: '' })} type="button">

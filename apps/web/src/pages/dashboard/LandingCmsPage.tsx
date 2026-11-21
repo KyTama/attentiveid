@@ -842,28 +842,35 @@ export function LandingCmsPage() {
           { headers: getAuthHeaders() }
         )
 
-        const newSections = [...content.sections]
-        newSections[activeSectionIndex] = {
-          ...activeSection,
-          media: {
-            reference: res.media.reference,
-            width: res.media.width,
-            height: res.media.height,
-            alt: res.media.alt,
-          },
-        }
-        setContent({ ...content, sections: newSections })
+        setContent((prev) => {
+          if (!prev) return prev
+          const newSections = [...prev.sections]
+          const targetSection = newSections[activeSectionIndex]
+          if (!targetSection) return prev
+          newSections[activeSectionIndex] = {
+            ...targetSection,
+            media: {
+              reference: res.media.reference,
+              width: res.media.width,
+              height: res.media.height,
+              alt: res.media.alt,
+            },
+          }
+          return { ...prev, sections: newSections }
+        })
         setUploadSuccess(`Gambar section "${activeSection.key}" berhasil diunggah!`)
       } catch (err: unknown) {
         setUploadError(err instanceof Error ? err.message : 'Gagal mengunggah gambar section.')
       } finally {
         setUploadingTarget(null)
+        URL.revokeObjectURL(objectUrl)
       }
     }
 
     img.onerror = () => {
       setUploadingTarget(null)
       setUploadError('Gagal memproses file gambar.')
+      URL.revokeObjectURL(objectUrl)
     }
 
     img.src = objectUrl
@@ -934,30 +941,38 @@ export function LandingCmsPage() {
           { headers: getAuthHeaders() }
         )
 
-        const newItems = [...(activeSection.items || [])]
-        newItems[itemIdx] = {
-          ...newItems[itemIdx],
-          media: {
-            reference: res.media.reference,
-            width: res.media.width,
-            height: res.media.height,
-            alt: res.media.alt,
-          },
-        }
-        const newSections = [...content.sections]
-        newSections[activeSectionIndex] = { ...activeSection, items: newItems }
-        setContent({ ...content, sections: newSections })
+        setContent((prev) => {
+          if (!prev) return prev
+          const newSections = [...prev.sections]
+          const targetSection = newSections[activeSectionIndex]
+          if (!targetSection) return prev
+          const newItems = [...(targetSection.items || [])]
+          if (!newItems[itemIdx]) return prev
+          newItems[itemIdx] = {
+            ...newItems[itemIdx],
+            media: {
+              reference: res.media.reference,
+              width: res.media.width,
+              height: res.media.height,
+              alt: res.media.alt,
+            },
+          }
+          newSections[activeSectionIndex] = { ...targetSection, items: newItems }
+          return { ...prev, sections: newSections }
+        })
         setUploadSuccess(`Gambar item #${itemIdx + 1} berhasil diunggah!`)
       } catch (err: unknown) {
         setUploadError(err instanceof Error ? err.message : 'Gagal mengunggah gambar item.')
       } finally {
         setUploadingTarget(null)
+        URL.revokeObjectURL(objectUrl)
       }
     }
 
     img.onerror = () => {
       setUploadingTarget(null)
       setUploadError('Gagal memproses file gambar.')
+      URL.revokeObjectURL(objectUrl)
     }
 
     img.src = objectUrl
@@ -1015,26 +1030,49 @@ export function LandingCmsPage() {
           { headers: getAuthHeaders() }
         )
 
-        const slideItems = getMergedHeroSlideItems()
+        setContent((prev) => {
+          if (!prev) return prev
+          const targetSection = prev.sections[activeSectionIndex]
+          if (!targetSection) return prev
+          const defaults = getDefaultHeroSlideItems()
+          const currentSlides = Array.isArray((targetSection as any).slideItems) && (targetSection as any).slideItems.length > 0
+            ? [...(targetSection as any).slideItems]
+            : defaults
+          const slideItems = defaults.map((def, idx) => {
+            const cur = currentSlides[idx] || {}
+            return {
+              ...def,
+              ...cur,
+              visible: cur.visible !== undefined ? cur.visible : def.visible,
+              headline: cur.headline || def.headline,
+              description: cur.description || def.description,
+              primaryCta: cur.primaryCta || def.primaryCta,
+              primaryCtaUrl: cur.primaryCtaUrl || def.primaryCtaUrl,
+              secondaryCta: cur.secondaryCta || def.secondaryCta,
+              secondaryCtaUrl: cur.secondaryCtaUrl || def.secondaryCtaUrl,
+              media: idx === 0 ? (cur.media || (targetSection as any).media || def.media) : (cur.media || def.media),
+            }
+          })
 
-        slideItems[slideIndex] = {
-          ...slideItems[slideIndex],
-          media: res.media,
-        }
+          slideItems[slideIndex] = {
+            ...slideItems[slideIndex],
+            media: res.media,
+          }
 
-        const newSections = [...content.sections]
-        const updatedHero: any = {
-          ...activeSection,
-          slideItems,
-        }
+          const newSections = [...prev.sections]
+          const updatedHero: any = {
+            ...targetSection,
+            slideItems,
+          }
 
-        if (slideIndex === 0) {
-          updatedHero.media = res.media
-          updatedHero.slides = [res.media]
-        }
+          if (slideIndex === 0) {
+            updatedHero.media = res.media
+            updatedHero.slides = [res.media]
+          }
 
-        newSections[activeSectionIndex] = updatedHero
-        setContent({ ...content, sections: newSections })
+          newSections[activeSectionIndex] = updatedHero
+          return { ...prev, sections: newSections }
+        })
         setUploadSuccess(`Foto untuk Slide #${slideIndex + 1} berhasil diperbarui!`)
       } catch (err: unknown) {
         setUploadError(err instanceof Error ? err.message : 'Gagal mengunggah foto slide.')
@@ -1844,8 +1882,10 @@ export function LandingCmsPage() {
                             accept="image/webp,image/png,image/jpeg"
                             className="hidden"
                             onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleSlidePhotoUpload(safeHeroSlideIndex, e.target.files[0])
+                              const file = e.target.files?.[0]
+                              e.target.value = ''
+                              if (file) {
+                                handleSlidePhotoUpload(safeHeroSlideIndex, file)
                               }
                             }}
                           />
@@ -2855,8 +2895,10 @@ export function LandingCmsPage() {
                         accept="image/webp,image/png,image/jpeg"
                         className="hidden"
                         onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            handleSectionImageUpload(e.target.files[0])
+                          const file = e.target.files?.[0]
+                          e.target.value = ''
+                          if (file) {
+                            handleSectionImageUpload(file)
                           }
                         }}
                       />
@@ -3162,8 +3204,10 @@ export function LandingCmsPage() {
                                 accept="image/webp,image/png,image/jpeg"
                                 className="hidden"
                                 onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    handleItemImageUpload(itemIdx, e.target.files[0])
+                                  const file = e.target.files?.[0]
+                                  e.target.value = ''
+                                  if (file) {
+                                    handleItemImageUpload(itemIdx, file)
                                   }
                                 }}
                               />

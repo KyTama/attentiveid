@@ -215,6 +215,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 repository: dependencies.adminToolsRepository || createAdminToolsRepository(dependencies.db),
+                psychologistsRepository: dependencies.psychologistsRepository,
                 siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createBookingAdminRoutes({

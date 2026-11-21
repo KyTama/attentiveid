@@ -251,12 +251,26 @@ export function PsychologistsCmsPage() {
 
   // Media Upload State
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewBlobUrlRef = useRef<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAdvancedMedia, setShowAdvancedMedia] = useState(false)
+
+  const revokePreviewBlobUrl = useCallback(() => {
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current)
+      previewBlobUrlRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      revokePreviewBlobUrl()
+    }
+  }, [revokePreviewBlobUrl])
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
@@ -397,6 +411,7 @@ export function PsychologistsCmsPage() {
   }
 
   const handleOpenCreateModal = () => {
+    revokePreviewBlobUrl()
     setFormState(defaultFormState)
     setPreviewUrl(null)
     setIsUploading(false)
@@ -410,6 +425,7 @@ export function PsychologistsCmsPage() {
   }
 
   const handleOpenEditModal = async (item: AdminPsychologistItem) => {
+    revokePreviewBlobUrl()
     setIsLoading(true)
     setFormError(null)
     setFormSuccess(null)
@@ -481,6 +497,8 @@ export function PsychologistsCmsPage() {
   }
 
   const handlePhotoUpload = async (file: File) => {
+    if (isUploading) return
+
     if (!file.type.startsWith('image/')) {
       setUploadError('Hanya file gambar (WebP, PNG, JPG) yang diperbolehkan.')
       return
@@ -493,7 +511,10 @@ export function PsychologistsCmsPage() {
       return
     }
 
+    const previousPreview = previewUrl
     const objectUrl = URL.createObjectURL(file)
+    revokePreviewBlobUrl()
+    previewBlobUrlRef.current = objectUrl
     setPreviewUrl(objectUrl)
     setIsUploading(true)
     setUploadError(null)
@@ -533,6 +554,10 @@ export function PsychologistsCmsPage() {
         }))
         setUploadSuccess(true)
       } catch (err: unknown) {
+        if (previewBlobUrlRef.current === objectUrl) {
+          revokePreviewBlobUrl()
+          setPreviewUrl(previousPreview)
+        }
         setUploadError(err instanceof Error ? err.message : 'Gagal mengunggah foto profil.')
       } finally {
         setIsUploading(false)
@@ -540,6 +565,10 @@ export function PsychologistsCmsPage() {
     }
 
     img.onerror = () => {
+      if (previewBlobUrlRef.current === objectUrl) {
+        revokePreviewBlobUrl()
+        setPreviewUrl(previousPreview)
+      }
       setIsUploading(false)
       setUploadError('Gagal membaca data gambar.')
     }
@@ -550,6 +579,7 @@ export function PsychologistsCmsPage() {
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(false)
+    if (isUploading) return
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handlePhotoUpload(e.dataTransfer.files[0])
     }
@@ -1230,7 +1260,7 @@ export function PsychologistsCmsPage() {
 
                         {/* Hover Overlay with Upload Trigger */}
                         <div
-                          onClick={() => fileInputRef.current?.click()}
+                          onClick={() => !isUploading && fileInputRef.current?.click()}
                           className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 text-white cursor-pointer p-4 text-center"
                         >
                           <Camera className="w-8 h-8" />
@@ -1257,8 +1287,10 @@ export function PsychologistsCmsPage() {
                           accept="image/webp,image/png,image/jpeg"
                           className="hidden"
                           onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              handlePhotoUpload(e.target.files[0])
+                            const file = e.target.files?.[0]
+                            e.target.value = ''
+                            if (file) {
+                              handlePhotoUpload(file)
                             }
                           }}
                         />
@@ -1290,7 +1322,7 @@ export function PsychologistsCmsPage() {
                           }}
                           onDragLeave={() => setIsDragOver(false)}
                           onDrop={handleFileDrop}
-                          onClick={() => fileInputRef.current?.click()}
+                          onClick={() => !isUploading && fileInputRef.current?.click()}
                           className={`p-3 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${
                             isDragOver
                               ? 'border-gold-500 bg-gold-50/50'
@@ -1310,7 +1342,7 @@ export function PsychologistsCmsPage() {
                         {uploadSuccess && (
                           <div className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-lg p-2 flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                            Foto berhasil diunggah & tersimpan
+                            Foto berhasil diunggah. Klik &quot;Simpan Profil Psikolog&quot; untuk menerapkan.
                           </div>
                         )}
                         {uploadError && (

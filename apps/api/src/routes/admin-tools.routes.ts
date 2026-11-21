@@ -18,10 +18,26 @@ import { saveMediaFile } from '../services/media-storage'
 import type { AuthTokenService, AuthUserRepository } from './auth'
 import type { AdminToolsRepository } from '../repositories/admin-tools.repository'
 
+export interface PsychologistShareLookup {
+  getBySlug(slug: string, locale: 'id' | 'en'): Promise<
+    | {
+        status: 'found'
+        psychologist: {
+          name: string
+          shortBio?: string
+          biography: string
+          media?: { url: string }
+        }
+      }
+    | { status: 'unavailable' | 'notFound' }
+  >
+}
+
 export interface AdminToolsRoutesDependencies {
   tokenService: Pick<AuthTokenService, 'verifyAccessToken'>
   userRepository: Pick<AuthUserRepository, 'findById'>
   repository: AdminToolsRepository
+  psychologistsRepository?: PsychologistShareLookup
   /** Public site origin, e.g. https://attentiveid.com */
   siteOrigin: string
   now?: () => Date
@@ -99,7 +115,20 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
     }, { detail: { tags: ['Featured'], summary: 'Featured products running right now' } })
     .get('/api/content/share-html', async ({ query, set }: any) => {
       const path = normalizeSharePath(String(query.path ?? '/')) ?? '/'
-      const preview = await repository.getSharePreview(path)
+      let preview: { title: string; description: string; imageUrl: string } | null = await repository.getSharePreview(path)
+      const psychMatch = path.match(/^\/psychologists?\/([a-z0-9][a-z0-9_-]*)$/)
+      if (psychMatch && dependencies.psychologistsRepository) {
+        const lookup = await dependencies.psychologistsRepository.getBySlug(psychMatch[1], 'id')
+        if (lookup.status === 'found') {
+          const psych = lookup.psychologist
+          const directoryImage = psych.media?.url || ''
+          preview = {
+            title: preview?.title || `${psych.name} — Attentive.id`,
+            description: preview?.description || psych.shortBio || psych.biography || DEFAULT_DESCRIPTION,
+            imageUrl: directoryImage || preview?.imageUrl || DEFAULT_SHARE_IMAGE,
+          }
+        }
+      }
       set.headers['content-type'] = 'text/html; charset=utf-8'
       set.headers['cache-control'] = 'public, max-age=300'
       return buildSharePreviewHtml(dependencies.siteOrigin, path, preview)

@@ -10,7 +10,7 @@ import type { AuthTokenService, AuthUserRepository } from './auth'
 import { db as defaultDb } from '../db'
 import * as schema from '../db/schema'
 import { extractImageDimensions } from '../services/image-metadata'
-import { saveMediaFile } from '../services/media-storage'
+import { buildVersionedMediaFilename, saveMediaFile } from '../services/media-storage'
 
 export interface PsychologistsCmsRoutesDependencies {
   tokenService: Pick<AuthTokenService, 'verifyAccessToken'>
@@ -334,7 +334,7 @@ export const createPsychologistsCmsRoutes = (dependencies: PsychologistsCmsRoute
 
           const rawSlug = (body.slug || body.name || 'psychologist').trim().toLowerCase()
           const safeSlug = rawSlug.replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'psychologist'
-          const filename = `${safeSlug}.${ext}`
+          const filename = buildVersionedMediaFilename(safeSlug, ext)
           const objectKey = `media/psychologists/${filename}`
 
           // Save media safely via centralized storage helper

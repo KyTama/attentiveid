@@ -429,7 +429,18 @@ export function SciBriefCmsPage() {
                   <Upload className="size-3.5" aria-hidden="true" />
                   {form.documentName || pendingFile ? 'Ganti PDF' : 'Pilih PDF'}
                 </button>
-                <input accept="application/pdf,.pdf" className="sr-only" onChange={(event) => chooseFile(event.target.files?.[0])} ref={fileInputRef} tabIndex={-1} type="file" />
+                <input
+                  accept="application/pdf,.pdf"
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    event.target.value = ''
+                    chooseFile(file)
+                  }}
+                  ref={fileInputRef}
+                  tabIndex={-1}
+                  type="file"
+                />
                 <span className="text-xs text-slate-600">
                   {pendingFile
                     ? `${pendingFile.name} (akan diunggah saat disimpan)`

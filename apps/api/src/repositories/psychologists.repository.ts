@@ -799,7 +799,19 @@ export const createDrizzlePsychologistQuerySource = (
                     .limit(1);
 
                 let mediaObjectId = existingMedia?.id;
-                if (!mediaObjectId) {
+                if (mediaObjectId) {
+                    await tx.update(schema.mediaObjects)
+                        .set({
+                            width: input.media.width,
+                            height: input.media.height,
+                            altId: input.media.alt.id,
+                            altEn: input.media.alt.en,
+                            lifecycle: 'active',
+                            orphanedAt: null,
+                            updatedAt: new Date().toISOString()
+                        })
+                        .where(eq(schema.mediaObjects.id, mediaObjectId));
+                } else {
                     const [newMedia] = await tx.insert(schema.mediaObjects)
                         .values({
                             objectKey: input.media.reference,

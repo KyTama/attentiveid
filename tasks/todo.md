@@ -1,15 +1,14 @@
-# Task: Port "Attend — Let there be light" to `/let-there-be-light`
+# Task: Fix consecutive photo replacement bug (Psychologists CMS & Media Uploads)
 
-> **Branch:** `feat/let-there-be-light`
-> **Workspace:** `/Users/kytama/Projects/Neo-Attentive/attentiveid-let-there-be-light`
-> **Approach:** Option A — Hybrid Native React Route (`/let-there-be-light`) with Scoped CSS & Modular TypeScript Engine
-
----
+## Root Causes Identified
+1. **Deterministic upload filenames + 24h `/media/*` HTTP cache**: `POST /api/admin/psychologists/upload-photo` and `POST /api/admin/landing/upload-image` always overwrite `${safeSlug}.${ext}`, producing the exact same URL (`/media/.../${safeSlug}.${ext}`). Because `apps/web/Caddyfile` serves `/media/*` with `Cache-Control: public, max-age=86400, stale-while-revalidate=604800`, replacing a photo a second time displays the stale cached image despite a success notification.
+2. **Unreset `<input type="file">` elements**: Upload file inputs across `PsychologistsCmsPage`, `LandingCmsPage`, `SharePreviewsCmsPage`, `SiteSettingsPage`, `QrGeneratorPage`, and `SciBriefCmsPage` do not clear `e.target.value = ''`, preventing `onChange` from firing when re-selecting the same filename.
+3. **Upload state & stale-closure polish**: `PsychologistsCmsPage` leaks `blob:` object URLs, doesn't revert preview on upload failure, allows concurrent clicks while uploading, and `saveAdmin` in `psychologists.repository.ts` skips updating `media_objects` metadata when an existing `objectKey` is referenced. `LandingCmsPage` uses stale `content` closures after async image uploads.
 
 ## Action Items
-- [x] **1. Analyze source & inspect assets:** Audit `Attend - Let there be light.html`, verify `Caddyfile` routing constraints, and stage `96x96` gold mark asset at `apps/web/public/images/brand/attend-mark.png`.
-- [x] **2. Extract data, copy & types (`script.ts`):** Port bilingual clinical ladders (`TASKS`, `PATH`, `CHECK_AFTER`, `NODES`, `PRAYER`, `WISH`, `UI`, `DEEP`, state/storage helpers) with strict TypeScript types.
-- [x] **3. Extract WebGL, Particle & Audio engines (`sky.ts`, `dust.ts`, `sound.ts`):** Port the 5-octave `fbm` WebGL shader, 2D dust/ember/firefly canvas renderer (with null-context safety), and Web Audio pentatonic chimes with full cleanup/dispose support.
-- [x] **4. Build scoped CSS & imperative stage engine (`let-there-be-light.css`, `engine.ts`):** Scope all theme tokens/animations to `.attend-root` and `.attend-root.lit`, preserve 600ms press-and-hold physics, fit-scaling, word blur reveal, crisis triage, and `#tablet*` kiosk auto-reset with zero global leaks on unmount.
-- [x] **5. Wire React page & route (`LetThereBeLightPage.tsx`, `App.tsx`):** Mount the controller cleanly under `<Route path="let-there-be-light" element={<LetThereBeLightPage />} />` in `PublicLayout`, inject `Cormorant Garamond` + `Instrument Sans` stylesheet on mount, manage `document.title`/`lang`, and clean up on unmount.
-- [x] **6. Verify (`vitest`, `lint`, `build:web`, knowledge graph):** Add comprehensive unit + route integration tests (`apps/web/tests/let-there-be-light.test.tsx`), run full web tests, lint, production build, and update `code-review-graph`.
+- [x] **1. Versioned unique filenames on media upload:** Add `buildVersionedMediaFilename` in `apps/api/src/services/media-storage.ts` and use it in `apps/api/src/routes/psychologists-cms.ts` (`upload-photo`) and `apps/api/src/routes/landing-cms.ts` (`upload-image`).
+- [x] **2. Sync `media_objects` metadata on save:** Update `apps/api/src/repositories/psychologists.repository.ts` (`saveAdmin`) so existing `media_objects` records also receive updated dimensions/alt/active lifecycle when saved.
+- [x] **3. Reset file inputs & fix upload state/closures in frontend:** Clear `e.target.value = ''` on all dashboard file inputs (`PsychologistsCmsPage.tsx`, `LandingCmsPage.tsx`, `SharePreviewsCmsPage.tsx`, `SiteSettingsPage.tsx`, `QrGeneratorPage.tsx`, `SciBriefCmsPage.tsx`), fix blob URL lifecycle/error rollback/concurrent click guard in `PsychologistsCmsPage.tsx`, and use functional state updates in `LandingCmsPage.tsx`.
+- [x] **4. Add regression tests & update existing tests:** Update/add tests in `apps/api/src/routes/psychologists-cms.test.ts`, `apps/api/src/routes/landing-cms.test.ts`, and `apps/web/tests/psychologist-cms.test.tsx` covering consecutive photo uploads with distinct references and re-selecting the same file.
+- [x] **5. Verify & update knowledge graph:** Run API tests, web tests, lint, and web+api build; rebuild `code-review-graph`; record lesson in `tasks/lessons.md`.
+- [x] **6. Harden JPEG/WebP dimension parsing & sync psychologist profile share thumbnail:** Harden `extractImageDimensions` in `apps/api/src/services/image-metadata.ts` for real-world JPEG/WebP headers, wire `psychologistsRepository` into `/api/content/share-html` (`apps/api/src/routes/admin-tools.routes.ts` & `apps/api/src/app.ts`) so `/psychologists/:slug` and `/psychologist/:slug` use the psychologist's directory photo for link previews, and add unit/route tests.

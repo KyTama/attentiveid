@@ -1,6 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+/**
+ * Builds a unique, cache-busting filename for uploaded media assets so
+ * consecutive replacements produce distinct URLs and never serve stale cached bytes.
+ */
+export function buildVersionedMediaFilename(slug: string, ext: string): string {
+  const cleanSlug = slug
+    .replace(/[^a-z0-9_-]/gi, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[_-]+|[_-]+$/g, '')
+    .slice(0, 80)
+    .toLowerCase() || 'media';
+  const cleanExt = ext.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'webp';
+  const version = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 6)}`;
+  return `${cleanSlug}-${version}.${cleanExt}`;
+}
+
 export interface SaveMediaOptions {
   subDir: 'psychologists' | 'landing' | string;
   filename: string;

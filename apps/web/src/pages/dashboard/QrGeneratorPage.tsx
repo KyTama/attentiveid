@@ -203,7 +203,16 @@ export function QrGeneratorPage() {
               <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <ImagePlus className="size-4" aria-hidden="true" />
                 {tx('Unggah logo sendiri', 'Upload your own logo')}
-                <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => handleLogo(e.target.files?.[0])} type="file" />
+                <input
+                  accept="image/png,image/jpeg,image/webp"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    handleLogo(file)
+                  }}
+                  type="file"
+                />
               </label>
               <button
                 aria-pressed={!design.logoDataUrl}

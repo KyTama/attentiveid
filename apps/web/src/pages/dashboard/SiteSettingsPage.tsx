@@ -294,7 +294,16 @@ export function SiteSettingsPage() {
               <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 {uploading === 'top' ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <ImagePlus className="size-4" aria-hidden="true" />}
                 {tx('Unggah logo', 'Upload logo')}
-                <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => upload(e.target.files?.[0], 'top')} type="file" />
+                <input
+                  accept="image/png,image/jpeg,image/webp"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    upload(file, 'top')
+                  }}
+                  type="file"
+                />
               </label>
               <button className="text-sm text-slate-500 underline cursor-pointer" onClick={() => patchTop({ imageUrl: DEFAULT_FLOATING_BAR.top.imageUrl })} type="button">
                 {tx('Pakai logo bawaan (Attend)', 'Use the default logo (Attend)')}
@@ -452,7 +461,16 @@ export function SiteSettingsPage() {
           <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
             {uploading === 'favicon' ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <ImagePlus className="size-4" aria-hidden="true" />}
             {tx('Unggah ikon tab', 'Upload tab icon')}
-            <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => upload(e.target.files?.[0], 'favicon')} type="file" />
+            <input
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                e.target.value = ''
+                upload(file, 'favicon')
+              }}
+              type="file"
+            />
           </label>
           {tab.faviconUrl && (
             <button className="text-sm text-slate-500 underline cursor-pointer" onClick={() => setTab({ ...tab, faviconUrl: '' })} type="button">
@@ -619,7 +637,16 @@ export function SiteSettingsPage() {
                 <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
                   {uploading === key ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <ImagePlus className="size-3.5" aria-hidden="true" />}
                   {tx('Unggah', 'Upload')}
-                  <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => uploadGiftImage(e.target.files?.[0], key)} type="file" />
+                  <input
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      e.target.value = ''
+                      uploadGiftImage(file, key)
+                    }}
+                    type="file"
+                  />
                 </label>
                 {giftSettings[key] && (
                   <button className="text-xs text-slate-500 underline cursor-pointer" onClick={() => setGiftSettings({ ...giftSettings, [key]: '' })} type="button">

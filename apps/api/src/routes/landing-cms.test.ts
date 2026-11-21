@@ -414,9 +414,31 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.status).toBe('success')
-    expect(json.media.reference).toBe('media/landing/consultation-hero.webp')
+    expect(json.media.reference).toMatch(/^media\/landing\/consultation-hero-[a-z0-9-]+\.webp$/)
     expect(json.media.width).toBe(1600)
     expect(json.media.height).toBe(900)
+
+    // Consecutive replacement for the same section/slug must produce a distinct URL so cached media is never stale
+    const formData2 = new FormData()
+    formData2.append('file', new File([makeWebp(1600, 900)], 'hero-2.webp', { type: 'image/webp' }))
+    formData2.append('sectionKey', 'hero')
+    formData2.append('slug', 'consultation-hero')
+    formData2.append('width', '1600')
+    formData2.append('height', '900')
+
+    const res2 = await app.handle(
+      new Request('http://localhost/api/admin/landing/upload-image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData2,
+      })
+    )
+    expect(res2.status).toBe(200)
+    const json2 = await res2.json()
+    expect(json2.media.reference).toMatch(/^media\/landing\/consultation-hero-[a-z0-9-]+\.webp$/)
+    expect(json2.media.reference).not.toBe(json.media.reference)
   })
 
   it('POST /api/admin/landing/upload-image rejects a file that only claims to be an image', async () => {
@@ -537,13 +559,14 @@ describe('landing CMS API routes (/api/admin/landing)', () => {
 
   afterAll(() => {
     for (const rootCandidate of [process.cwd(), path.resolve(import.meta.dir, '../../../..')]) {
-      const testFile = path.resolve(rootCandidate, 'apps/web/public/media/landing/consultation-hero.webp')
-      if (fs.existsSync(testFile)) {
-        fs.unlinkSync(testFile)
-      }
-      const distTestFile = path.resolve(rootCandidate, 'apps/web/dist/media/landing/consultation-hero.webp')
-      if (fs.existsSync(distTestFile)) {
-        fs.unlinkSync(distTestFile)
+      for (const relDir of ['apps/web/public/media/landing', 'apps/web/dist/media/landing']) {
+        const dir = path.resolve(rootCandidate, relDir)
+        if (!fs.existsSync(dir)) continue
+        for (const entry of fs.readdirSync(dir)) {
+          if (entry.startsWith('consultation-hero') && entry.endsWith('.webp')) {
+            fs.unlinkSync(path.join(dir, entry))
+          }
+        }
       }
     }
   })

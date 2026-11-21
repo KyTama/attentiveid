@@ -159,3 +159,16 @@
   1. Remove all automatic seed runs (`seed-landing` and `seed-psychologists --upsert`) from `scripts/deploy/deploy.sh` so deployments only run `migrate`.
   2. Keep `seed-landing` and `seed-psychologists` under `profiles: [maintenance]` in `compose.production.yml` strictly for manual operator execution when needed.
   3. Add a negative CI contract check in `scripts/ci/verify-runtime-config.sh` rejecting `seed-landing`, `seed-psychologists`, `--upsert`, or `--force` in `deploy.sh`.
+
+---
+
+## Lesson: Consecutive Media Replacement Under Cached `/media/*` & File Input Reuse (2026-11-21)
+
+- **Symptom:** Uploading/replacing a photo works once, then replacing it again either does nothing (when re-selecting the same file path) or reports success while continuing to show the old image.
+- **Root Causes:**
+  1. `POST /api/admin/psychologists/upload-photo` and `POST /api/admin/landing/upload-image` wrote to deterministic `${safeSlug}.${ext}` paths, returning identical URLs across replacements while `apps/web/Caddyfile` serves `/media/*` with `Cache-Control: public, max-age=86400, stale-while-revalidate=604800`.
+  2. Dashboard `<input type="file">` handlers did not reset `e.target.value = ''`, preventing `onChange` from firing when the same filename is picked again.
+- **Rules:**
+  1. Always generate a unique versioned filename (`buildVersionedMediaFilename(slug, ext)`) for uploaded CMS media so every replacement produces a distinct URL, bypasses stale HTTP/CDN caches, and keeps historical revision attachments immutable.
+  2. Always clear `e.target.value = ''` immediately after reading `e.target.files?.[0]` in file input `onChange` handlers.
+  3. In async React upload handlers (`LandingCmsPage`, `PsychologistsCmsPage`), use functional state updaters (`setContent((prev) => ...)`), track and revoke `blob:` URLs, and revert preview state on upload failure.

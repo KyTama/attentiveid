@@ -10,7 +10,7 @@ import { createAdminCapability } from '../services/authorization-capability'
 import type { AuthTokenService, AuthUserRepository } from './auth'
 import * as schema from '../db/schema'
 import { extractImageDimensions } from '../services/image-metadata'
-import { saveMediaFile } from '../services/media-storage'
+import { buildVersionedMediaFilename, saveMediaFile } from '../services/media-storage'
 
 const getDefaultDb = () => {
   const { db } = require('../db')
@@ -298,7 +298,7 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
             : ''
           const rawSlug = (body.slug || body.name || `${safeSectionKey}${itemSuffix}`).trim().toLowerCase()
           const safeSlug = rawSlug.replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || safeSectionKey
-          const filename = `${safeSlug}.${ext}`
+          const filename = buildVersionedMediaFilename(safeSlug, ext)
           const objectKey = `media/landing/${filename}`
 
           // Save media safely via centralized storage helper

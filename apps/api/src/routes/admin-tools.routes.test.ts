@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { Elysia } from 'elysia'
 import type { QrCodeDto, TrafficDayRow, UserDto } from '@attentiveid/shared'
 import { createTokenService } from '../security/token-service'
-import { buildSharePreviewHtml, createAdminToolsRoutes } from './admin-tools.routes'
+import { buildSharePreviewHtml, createAdminToolsRoutes, type PsychologistShareLookup } from './admin-tools.routes'
 import type { AdminToolsRepository } from '../repositories/admin-tools.repository'
 
 const secret = 'test-secret-key-must-be-at-least-32-bytes-long-for-hmac-sha256-security'
@@ -45,8 +45,8 @@ const makeRepository = () => {
   return { repository, views, qr, saved }
 }
 
-const makeApp = (repository: AdminToolsRepository) =>
-  new Elysia().use(createAdminToolsRoutes({ tokenService, userRepository, repository, siteOrigin: 'https://attentiveid.com', now: () => NOW }))
+const makeApp = (repository: AdminToolsRepository, psychologistsRepository?: PsychologistShareLookup) =>
+  new Elysia().use(createAdminToolsRoutes({ tokenService, userRepository, repository, psychologistsRepository, siteOrigin: 'https://attentiveid.com', now: () => NOW }))
 
 describe('public endpoints', () => {
   it('lists active featured products', async () => {
@@ -76,6 +76,33 @@ describe('public endpoints', () => {
     expect(custom).toContain('og:image" content="https://attentiveid.com/media/x.jpg"')
     const fallback = buildSharePreviewHtml('https://attentiveid.com/', '/faq', null)
     expect(fallback).toContain('https://attentiveid.com/images/og-attentive-logo.jpg')
+  })
+
+  it('uses the psychologist directory photo for /psychologists/:slug and /psychologist/:slug share previews', async () => {
+    const { repository } = makeRepository()
+    const psychLookup: PsychologistShareLookup = {
+      getBySlug: async (slug) =>
+        slug === 'haykal'
+          ? {
+              status: 'found',
+              psychologist: {
+                name: 'Haykal Putra, M.Psi., Psikolog',
+                shortBio: 'Psikolog klinis dewasa.',
+                biography: 'Bio lengkap.',
+                media: { url: '/media/psychologists/haykal-v2.jpg' },
+              },
+            }
+          : { status: 'notFound' },
+    }
+    const app = makeApp(repository, psychLookup)
+
+    for (const sharePath of ['/psychologists/haykal', '/psychologist/haykal']) {
+      const html = await (await app.handle(new Request(`http://localhost/api/content/share-html?path=${encodeURIComponent(sharePath)}`))).text()
+      expect(html).toContain('og:title" content="Haykal Putra, M.Psi., Psikolog — Attentive.id"')
+      expect(html).toContain('og:description" content="Psikolog klinis dewasa."')
+      expect(html).toContain('og:image" content="https://attentiveid.com/media/psychologists/haykal-v2.jpg"')
+      expect(html).toContain('twitter:image" content="https://attentiveid.com/media/psychologists/haykal-v2.jpg"')
+    }
   })
 })
 
