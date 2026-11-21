@@ -74,16 +74,23 @@ export function ArticlesCmsPage() {
     async function loadPsychologists() {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-        const res = await fetch(`${baseUrl}/api/admin/psychologists`, {
-          headers: getAuthHeaders(),
-        })
-        if (res.ok) {
+        // The list is paged (20 by default, 100 at most per request): read every page, so nobody is missing from the author choice.
+        const everyone: Array<{ id: string; name: string }> = []
+        for (let offset = 0; offset < 2000; offset += 100) {
+          const res = await fetch(`${baseUrl}/api/admin/psychologists?limit=100&offset=${offset}`, {
+            headers: getAuthHeaders(),
+          })
+          if (!res.ok) break
           const data = await res.json()
-          if (data.status === 'success' && data.psychologists?.length > 0) {
-            setPsychologists(data.psychologists)
-            setSelectedAuthorId(data.psychologists[0].id)
-            return
-          }
+          if (data.status !== 'success' || !Array.isArray(data.psychologists)) break
+          everyone.push(...data.psychologists)
+          if (data.psychologists.length < 100 || everyone.length >= (data.total ?? 0)) break
+        }
+        if (everyone.length > 0) {
+          const sorted = [...everyone].sort((a, b) => a.name.localeCompare(b.name, 'id'))
+          setPsychologists(sorted)
+          setSelectedAuthorId(sorted[0].id)
+          return
         }
       } catch {
         // Fallback
