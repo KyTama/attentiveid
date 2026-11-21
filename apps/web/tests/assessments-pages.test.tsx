@@ -48,3 +48,20 @@ describe('the MHCU form page file', () => {
     expect(html).toContain("removeItem('mhcu_draft'); } catch(e){} d = null;")
   })
 })
+
+describe('nothing is kept on the device after a successful send', () => {
+  const read = (name: string) => readFileSync(resolve(process.cwd(), `public/assessments-static/${name}`), 'utf8')
+
+  it('MHCU stops writing its draft once the answers are sent', () => {
+    expect(read('mhcu.html')).toContain('function store(){ if (S.done) return;')
+  })
+
+  it('Goal System Compass stops saving its state once the answers are sent', () => {
+    expect(read('gsc.html')).toContain("function save(){if(S.send&&S.send.state==='ok')return;")
+  })
+
+  it('long names wrap on the MHCU review step and the counselor console table scrolls on phones', () => {
+    expect(read('mhcu.html')).toContain('dl.kv > *, .rv td { min-width:0; overflow-wrap:anywhere; }')
+    expect(read('gsc-konselor.html')).toContain('@media(max-width:560px){.ct{display:block;overflow-x:auto')
+  })
+})
