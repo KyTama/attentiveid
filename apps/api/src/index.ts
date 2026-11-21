@@ -7,6 +7,8 @@ import { createArticlesRepository, createDrizzleArticleQuerySource } from './rep
 import { createBookingRepository } from './repositories/booking.repository';
 import { createFreeSessionRepository } from './repositories/free-session.repository';
 import { createFreeSessionSheetSync } from './services/free-session-sheet-sync';
+import { createAssessmentsRepository } from './repositories/assessments.repository';
+import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { processDueBookingOutbox } from './services/booking-outbox';
 import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
@@ -102,7 +104,28 @@ if (env.N8N_BOOKING_WEBHOOK_URL || googleOutboxConfig) {
     outboxTimer.unref();
 }
 
+// Assessments (Mental Health Check-Up...) -> a PRIVATE Google Sheet. Only runs when ASSESSMENTS_SHEET_ID is set.
+const assessmentsRepository = createAssessmentsRepository(db);
+const assessmentsSheetSync = createAssessmentsSheetSync({
+    repository: assessmentsRepository,
+    config: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN && env.ASSESSMENTS_SHEET_ID
+        ? {
+              google: {
+                  clientId: env.GOOGLE_CLIENT_ID,
+                  clientSecret: env.GOOGLE_CLIENT_SECRET,
+                  refreshToken: env.GOOGLE_REFRESH_TOKEN,
+                  spreadsheetId: env.ASSESSMENTS_SHEET_ID
+              },
+              spreadsheetId: env.ASSESSMENTS_SHEET_ID,
+              mhcuSheetName: env.ASSESSMENTS_MHCU_SHEET_NAME || 'MHCU'
+          }
+        : undefined,
+    onError: (error) => console.error('[assessments] Google Sheet sync failed:', error instanceof Error ? error.message : error)
+});
+
 const app = createApp({
+    assessmentsRepository,
+    assessmentsSheetSync,
     freeSessionRepository,
     freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',

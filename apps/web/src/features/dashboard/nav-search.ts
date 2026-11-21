@@ -24,6 +24,7 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/free-session': 'free session leads registrants form export sesi gratis leads pendaftar form ekspor',
   '/dashboard/experimental/forms': 'forms experiment form formulir eksperimen',
   '/dashboard/traffic': 'traffic visits analytics visitors statistics monitor pages traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
+  '/dashboard/assessments': 'assessments mhcu mental health check up results scores psychologist review release hasil asesmen skor skrining kesehatan mental peninjauan rilis',
   '/dashboard/prayers': 'prayers doa pengunjung moderation hide approve gift hadiah let there be light kirim doa moderasi sembunyikan setujui',
   '/dashboard/qr-generator': 'qr code barcode logo attentive scan poster print tools qr code barcode logo attentive kode scan poster cetak alat bantu',
   '/dashboard/experimental/system-map': 'system map diagram connections architecture peta sistem diagram koneksi hubungan arsitektur',

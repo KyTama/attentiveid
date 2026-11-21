@@ -11,6 +11,9 @@ import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes'
 import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
+import { createAssessmentsRoutes } from './routes/assessments.routes';
+import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
+import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
@@ -31,6 +34,8 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
     prayersRepository?: PrayersRepository;
+    assessmentsRepository?: AssessmentsRepository;
+    assessmentsSheetSync?: AssessmentsSheetSync;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
     adminToolsRepository?: AdminToolsRepository;
@@ -194,6 +199,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 prayersRepository: dependencies.prayersRepository || createPrayersRepository(dependencies.db),
                 adminToolsRepository: dependencies.adminToolsRepository || createAdminToolsRepository(dependencies.db),
+            }))
+            .use(createAssessmentsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
+                sheetSync: dependencies.assessmentsSheetSync,
             }))
             .use(createSciBriefsRoutes({
                 tokenService: dependencies.tokenService,
