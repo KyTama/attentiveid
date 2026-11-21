@@ -225,10 +225,10 @@ describe('staff endpoints', () => {
     it('are closed to visitors and open to staff', async () => {
         const { app } = createFixture();
         await submit(app, body());
-        expect((await send(app, '/api/admin/assessments/mhcu', 'GET')).status).toBe(401);
+        expect((await send(app, '/api/admin/assessment-lists/mhcu', 'GET')).status).toBe(401);
         expect((await send(app, `/api/admin/assessments/${idOf(1)}`, 'GET')).status).toBe(401);
         expect((await send(app, `/api/admin/assessments/${idOf(1)}/review`, 'PUT', { status: 'reviewed' })).status).toBe(401);
-        const list = await send(app, '/api/admin/assessments/mhcu', 'GET', undefined, bearer(psychologistToken));
+        const list = await send(app, '/api/admin/assessment-lists/mhcu', 'GET', undefined, bearer(psychologistToken));
         expect(list.status).toBe(200);
         expect((await list.json()).data).toHaveLength(1);
         const one = await send(app, `/api/admin/assessments/${idOf(1)}`, 'GET', undefined, bearer(psychologistToken));
@@ -250,7 +250,7 @@ describe('staff endpoints', () => {
     it('never serves the staff list or a record from a cache, and treats a made-up id as not found', async () => {
         const { app } = createFixture();
         await submit(app, body());
-        const list = await send(app, '/api/admin/assessments/mhcu', 'GET', undefined, bearer(psychologistToken));
+        const list = await send(app, '/api/admin/assessment-lists/mhcu', 'GET', undefined, bearer(psychologistToken));
         expect(list.headers.get('cache-control')).toBe('no-store');
         const odd = await send(app, "/api/admin/assessments/x'%20or%201=1", 'GET', undefined, bearer(psychologistToken));
         expect(odd.status).toBe(404);
@@ -270,5 +270,50 @@ describe('staff endpoints', () => {
         const { app } = createFixture();
         expect((await send(app, '/api/admin/assessments/sync', 'POST', {}, bearer(psychologistToken))).status).toBe(403);
         expect((await send(app, '/api/admin/assessments/sync', 'POST', {}, bearer(adminToken))).status).toBe(200);
+    });
+});
+
+const gscBody = (overrides: Record<string, unknown> = {}) => ({
+    id: 'GSC-261121-AB12',
+    ts: '2026-11-21T03:00:00Z',
+    lang: 'id',
+    profile: { name: 'Rina Pratiwi', age: 29, sex: 'Perempuan', edu: 'D4/S1', email: 'rina@example.com', wa: '6281234567890' },
+    minutes: 14,
+    brief: { core: 'Karier', n: 8 },
+    goals: ['Naik jabatan', 'Lebih sehat', 'Tabungan', 'Waktu keluarga', 'Belajar', 'Hobi'],
+    code: 'H4sIAAAAAAAAA-3QQQqAIBAF0KuMa2cqQXQBr9AiXDJkKFIrNb7C_',
+    ...overrides
+});
+const submitGsc = (app: TestApp, payload: unknown, headers: Record<string, string> = {}) => send(app, '/api/public/assessments/gsc', 'POST', payload, headers);
+
+describe('Goal System Compass', () => {
+    it('stores a session for staff and answers with the code only', async () => {
+        const { app, rows } = createFixture();
+        const response = await submitGsc(app, gscBody());
+        expect(response.status).toBe(201);
+        const json = await response.json();
+        expect(json).toMatchObject({ ok: true, code: expect.stringContaining('AT-') });
+        expect(JSON.stringify(json)).not.toContain('H4sI');
+        expect(rows[0]).toMatchObject({ instrument: 'gsc', track: 'mandiri', status: 'new', level: null, researchConsent: false });
+        expect((rows[0].answers as { code: string }).code).toContain('H4sI');
+    });
+
+    it('treats the same session sent again as one, ignores the honeypot and refuses bad data', async () => {
+        const { app, rows } = createFixture();
+        await submitGsc(app, gscBody());
+        await submitGsc(app, gscBody());
+        expect(rows).toHaveLength(1);
+        expect((await submitGsc(app, gscBody({ website: 'x', id: 'GSC-other' }))).status).toBe(201);
+        expect(rows).toHaveLength(1);
+        expect((await submitGsc(app, gscBody({ code: 'not valid!' }))).status).toBe(400);
+        expect((await submitGsc(app, gscBody(), { 'content-length': String(5 * 1024 * 1024) })).status).toBe(413);
+    });
+
+    it('lists both assessments for staff by name and knows only those two', async () => {
+        const { app } = createFixture();
+        await submitGsc(app, gscBody());
+        expect((await send(app, '/api/admin/assessment-lists/gsc', 'GET')).status).toBe(401);
+        expect((await send(app, '/api/admin/assessment-lists/gsc', 'GET', undefined, bearer(psychologistToken))).status).toBe(200);
+        expect((await send(app, '/api/admin/assessment-lists/other', 'GET', undefined, bearer(psychologistToken))).status).toBe(404);
     });
 });

@@ -11,7 +11,7 @@ describe('/assessments', () => {
     await i18n.changeLanguage('en')
   })
 
-  it('lists the assessments: the check-up opens the form page, the other one is marked coming soon', async () => {
+  it('lists the assessments: each assessment opens its own form page', async () => {
     render(
       <MemoryRouter initialEntries={['/assessments']}>
         <AppRoutes />
@@ -19,10 +19,10 @@ describe('/assessments', () => {
     )
     expect(await screen.findByRole('heading', { name: /get to know yourself better/i })).toBeInTheDocument()
     // a plain link (full page load): the form is its own page, not a route of the single-page app
-    expect(screen.getByRole('link', { name: /start/i })).toHaveAttribute('href', '/assessments/mhcu')
+    expect(screen.getAllByRole('link', { name: /start/i })[0]).toHaveAttribute('href', '/assessments/mhcu')
     expect(screen.getByText(/mental health check-up \(mhcu\)/i)).toBeInTheDocument()
     expect(screen.getByText(/goal system compass/i)).toBeInTheDocument()
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /start/i })).toHaveLength(2)
   })
 })
 

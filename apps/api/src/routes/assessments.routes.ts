@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { scoreMhcu, validateMhcuSubmission } from '@attentiveid/shared';
+import { scoreMhcu, validateGscSubmission, validateMhcuSubmission } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { AssessmentsRepository, AssessmentStatus } from '../repositories/assessments.repository';
@@ -28,6 +28,8 @@ const PER_EMAIL_LIMIT: AssessmentsRateLimit = { max: 4, windowMs: 24 * 60 * 60 *
 const DUPLICATE_WINDOW_MS = 30 * 60 * 1000;
 /** The form sends a few KB; anything much larger is not a person filling it in. */
 const MAX_BODY_BYTES = 64 * 1024;
+/** A Goal System Compass session carries the whole goals map (packed) next to the profile. */
+const MAX_GSC_BODY_BYTES = 160 * 1024;
 const STATUSES: readonly AssessmentStatus[] = ['new', 'reviewed', 'released'];
 /** A status staff may set. 'new' is only the starting state. */
 const SETTABLE: readonly AssessmentStatus[] = ['reviewed', 'released'];
@@ -146,12 +148,74 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             body: t.Any(),
             detail: { tags: ['Assessments'], summary: 'Submit the Mental Health Check-Up (public)' }
         })
-        .get('/api/admin/assessments/mhcu', async ({ query, set }: any) => {
+        .post('/api/public/assessments/gsc', async ({ body, headers, set }: any) => {
+            // Honeypot (the page has no such field, so any value means a script filled it in).
+            if (body && typeof body === 'object' && typeof body.website === 'string' && body.website !== '') {
+                set.status = 201;
+                return { ok: true, status: 'success', code: 'AT-GSC-PENDING' };
+            }
+            const declared = Number(headers['content-length']);
+            if (Number.isFinite(declared) && declared > MAX_GSC_BODY_BYTES) {
+                set.status = 413;
+                return { ok: false, status: 'error', error: 'Data terlalu besar. / Request too large.' };
+            }
+            const tooMany = () => {
+                set.status = 429;
+                return { ok: false, status: 'error', error: 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi. / Too many attempts, please try again in a few minutes.' };
+            };
+            if (isRateLimited(`gsc-ip:${clientKey(headers)}`) || isRateLimited('gsc-all', GLOBAL_LIMIT)) return tooMany();
+            const parsed = validateGscSubmission(body);
+            if (!parsed.ok) {
+                set.status = 400;
+                return { ok: false, status: 'error', error: parsed.error };
+            }
+            const value = parsed.value;
+            if (isRateLimited(`gsc-email:${value.email.toLowerCase()}`, PER_EMAIL_LIMIT)) return tooMany();
+            try {
+                const created = await repository.create(
+                    {
+                        instrument: 'gsc',
+                        lang: value.lang,
+                        track: 'mandiri',
+                        consentVersion: 'GSC-2026.11',
+                        researchConsent: false,
+                        guardian: value.age < 18,
+                        consentAck: [],
+                        name: value.name,
+                        sex: value.sex || null,
+                        age: value.age,
+                        phone: value.phone,
+                        email: value.email,
+                        // The packed session is what the counselor console opens; the brief is only for the staff list.
+                        answers: { clientId: value.clientId, goals: value.goals, code: value.code },
+                        scores: { brief: value.brief, edu: value.edu, minutes: value.minutes },
+                        level: null,
+                        durationSec: value.minutes === null ? null : value.minutes * 60
+                    },
+                    { dedupeMs: DUPLICATE_WINDOW_MS }
+                );
+                if (!created.duplicate) sync();
+                set.status = 201;
+                return { ok: true, status: 'success', code: created.code };
+            } catch (error) {
+                logFailure('submit-gsc', error);
+                set.status = 503;
+                return { ok: false, status: 'error', error: SERVER_ERROR };
+            }
+        }, {
+            body: t.Any(),
+            detail: { tags: ['Assessments'], summary: 'Submit the Goal System Compass (public)' }
+        })
+        .get('/api/admin/assessment-lists/:instrument', async ({ params, query, set }: any) => {
+            if (params.instrument !== 'mhcu' && params.instrument !== 'gsc') {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
             const status = STATUSES.includes(query?.status) ? (query.status as AssessmentStatus) : undefined;
             try {
                 // A failed copy to the Google Sheet is tried again whenever staff open the list.
                 sync();
-                return { status: 'success', data: await repository.list('mhcu', { status }) };
+                return { status: 'success', data: await repository.list(params.instrument, { status }) };
             } catch (error) {
                 logFailure('list', error);
                 set.status = 503;
@@ -159,7 +223,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             }
         }, {
             requireRole: ['admin', 'psychologist'],
-            detail: { tags: ['Assessments'], summary: 'List Mental Health Check-Up submissions (staff)' }
+            detail: { tags: ['Assessments'], summary: 'List submissions of one assessment (staff)' }
         })
         .get('/api/admin/assessments/:id', async ({ params, set }: any) => {
             if (!UUID.test(params.id)) {

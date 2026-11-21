@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, Search, X } from 'lucide-react'
 import {
   getAssessment,
-  listMhcuSubmissions,
+  listSubmissions,
+  type AssessmentInstrument,
   reviewAssessment,
   type AssessmentDetail,
   type AssessmentListItem,
@@ -34,6 +35,7 @@ export function AssessmentsCmsPage() {
   const [items, setItems] = useState<AssessmentListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [instrument, setInstrument] = useState<AssessmentInstrument>('mhcu')
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const [detail, setDetail] = useState<AssessmentDetail | null>(null)
@@ -43,7 +45,7 @@ export function AssessmentsCmsPage() {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      setItems(await listMhcuSubmissions())
+      setItems(await listSubmissions(instrument))
       setError(null)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : tx('Gagal memuat data.', 'Failed to load the data.'))
@@ -51,9 +53,10 @@ export function AssessmentsCmsPage() {
       setIsLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [instrument])
 
   useEffect(() => {
+    setDetail(null)
     void load()
   }, [load])
 
@@ -110,7 +113,7 @@ export function AssessmentsCmsPage() {
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl" data-route-heading tabIndex={-1}>
-            {tx('Hasil MHCU', 'MHCU results')}
+            {instrument === 'mhcu' ? tx('Hasil MHCU', 'MHCU results') : tx('Hasil Goal System Compass', 'Goal System Compass results')}
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
             {tx(
@@ -135,6 +138,20 @@ export function AssessmentsCmsPage() {
           {error}
         </div>
       )}
+
+      <div aria-label={tx('Jenis asesmen', 'Assessment')} className="flex w-fit overflow-hidden rounded-lg border border-slate-200 text-sm font-semibold" role="group">
+        {(['mhcu', 'gsc'] as AssessmentInstrument[]).map((value) => (
+          <button
+            aria-pressed={instrument === value}
+            className={`cursor-pointer px-4 py-2 ${instrument === value ? 'bg-navy-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            key={value}
+            onClick={() => setInstrument(value)}
+            type="button"
+          >
+            {value === 'mhcu' ? 'MHCU' : 'Goal System Compass'}
+          </button>
+        ))}
+      </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative block w-full max-w-sm">
@@ -228,7 +245,39 @@ export function AssessmentsCmsPage() {
                 </div>
               )}
 
-              <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
+              {detail.instrument === 'gsc' && (
+                <div className="space-y-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+                  <p>
+                    <b>{tx('Pendidikan', 'Education')}:</b> {String(detail.scores.edu ?? '–')} · <b>{tx('Waktu isi', 'Time taken')}:</b>{' '}
+                    {asNumber(detail.scores.minutes) === null ? '–' : `${detail.scores.minutes} ${tx('menit', 'min')}`}
+                  </p>
+                  {Array.isArray((detail.answers as unknown as { goals?: string[] }).goals) && (
+                    <ul className="list-disc pl-5">
+                      {(detail.answers as unknown as { goals: string[] }).goals.map((goal, index) => (
+                        <li key={index}>{goal}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs text-slate-500">
+                    {tx(
+                      'Peta tujuan, analisis, dan laporan dikerjakan di Konsol Konselor. Catatan di konsol tersimpan di peramban ini saja, bukan di server.',
+                      'The goals map, analysis and report are done in the Counselor Console. Notes made there are kept in this browser only, not on the server.',
+                    )}
+                  </p>
+                  <button
+                    className="cursor-pointer rounded-xl bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                    onClick={() => {
+                      const packed = (detail.answers as unknown as { code?: string }).code
+                      if (packed) window.open(`/assessments/goal-compass/konselor#d=${packed}`, '_blank', 'noopener,noreferrer')
+                    }}
+                    type="button"
+                  >
+                    {tx('Buka di Konsol Konselor', 'Open in the Counselor Console')}
+                  </button>
+                </div>
+              )}
+
+              <dl className={`grid grid-cols-2 gap-2 text-sm sm:grid-cols-5 ${detail.instrument === 'gsc' ? 'hidden' : ''}`}>
                 {[
                   ['MHI', fmt(detail.scores.mhi)],
                   ['DI', fmt(detail.scores.di)],

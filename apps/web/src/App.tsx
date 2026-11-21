@@ -79,6 +79,8 @@ export function AppRoutes({
           <Route path="assessments" element={<AssessmentsPage />} />
           {/* The form itself is a standalone page the web server serves; this keeps the address working in development. */}
           <Route path="assessments/mhcu" element={<StaticFormRedirect to="/assessments-static/mhcu.html" />} />
+          <Route path="assessments/goal-compass" element={<StaticFormRedirect to="/assessments-static/gsc.html" />} />
+          <Route path="assessments/goal-compass/konselor" element={<StaticFormRedirect to={`/assessments-static/gsc-konselor.html${window.location.hash}`} />} />
           <Route path="let-there-be-light" element={<LetThereBeLightPage />} />
           <Route path="sci-brief" element={<SciBriefPage />} />
           <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />
