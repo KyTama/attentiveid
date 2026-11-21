@@ -139,7 +139,10 @@ export const createArticleRoutes = (dependencies: ArticleRoutesDependencies) => 
         }
 
         try {
-          let authorPsychologistId = body.ownerPsychologistId || currentUser.psychologistId
+          // A psychologist can only write as themselves; choosing another author is for admins.
+          let authorPsychologistId = currentUser.role === 'psychologist'
+            ? currentUser.psychologistId
+            : (body.ownerPsychologistId || currentUser.psychologistId)
           if (!authorPsychologistId && currentUser.role === 'admin' && dependencies.db) {
             const [firstPsychologist] = await dependencies.db.select({ id: schema.psychologists.id })
               .from(schema.psychologists)

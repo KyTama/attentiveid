@@ -40,6 +40,19 @@ export interface TokenServiceOptions {
     constantTimeCompare?: (left: Uint8Array, right: Uint8Array) => boolean;
 }
 
+/** A refresh token that was already used (rotated or revoked) was presented again: it may have been stolen. */
+export class RefreshTokenReuseError extends Error {
+    readonly userId: string;
+    readonly revokedAt: string;
+
+    constructor(userId: string, revokedAt: string) {
+        super('Refresh token invalid or expired.');
+        this.name = 'RefreshTokenReuseError';
+        this.userId = userId;
+        this.revokedAt = revokedAt;
+    }
+}
+
 const identifierPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 export const requireJwtSecret = (value: string | undefined): string => {
@@ -185,11 +198,19 @@ export const createTokenService = (options: TokenServiceOptions) => {
             const tokenHash = hashRefreshToken(rawToken);
             const record = await options.store.findByHash(tokenHash);
 
-            if (!record || record.revokedAt !== null || Date.parse(record.expiresAt) <= now().getTime()) {
+            if (record && record.revokedAt !== null) {
+                throw new RefreshTokenReuseError(record.userId, record.revokedAt);
+            }
+            if (!record || Date.parse(record.expiresAt) <= now().getTime()) {
                 throw new Error('Refresh token invalid or expired.');
             }
 
             return record;
+        },
+
+        /** Signs the user out everywhere: every refresh token of the user stops working. */
+        async revokeAllRefreshTokens(userId: string): Promise<void> {
+            await options.store.revokeAllForUser(userId, now().toISOString());
         },
 
         async revokeRefreshToken(rawToken: string): Promise<void> {

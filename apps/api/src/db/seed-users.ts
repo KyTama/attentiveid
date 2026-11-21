@@ -3,118 +3,62 @@ import postgres from 'postgres'
 import { eq } from 'drizzle-orm'
 import * as schema from './schema'
 import { hashPassword, normalizeEmail } from '../repositories/users.repository'
+import { resolveSeedPassword } from './seed-password'
 
-const databaseUrl = process.env.DATABASE_URL
-if (!databaseUrl) {
-  console.error('DATABASE_URL is required to seed users.')
-  process.exit(1)
-}
-
-const client = postgres(databaseUrl, { max: 1 })
-const db = drizzle(client, { schema })
-
+/**
+ * Creates the first superadmin accounts when they do not exist yet. This repository is public, so no password is written
+ * here: it is read from SEED_SUPERADMIN_PASSWORD (at least 14 characters). Accounts that already exist are NOT changed:
+ * a password is never reset by this script, and no default or demo accounts are created.
+ */
 export const seedUsers = async () => {
-  const legacyAdminEmail = normalizeEmail('admin@attentive.id')
-  const legacyPsychEmail = normalizeEmail('psychologist@attentive.id')
-  const kytamaEmail = normalizeEmail('kytama@attentiveid.com')
-  const haykalEmail = normalizeEmail('haykal@attentiveid.com')
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    console.error('DATABASE_URL is required to seed users.')
+    process.exit(1)
+  }
+  const client = postgres(databaseUrl, { max: 1 })
+  const db = drizzle(client, { schema })
 
-  const defaultPassword = 'Password123!'
-  const superPassword = '@Password6969'
-  const defaultPasswordHash = await hashPassword(defaultPassword)
-  const superPasswordHash = await hashPassword(superPassword)
+  const production = process.env.NODE_ENV === 'production'
+  const { password, generated } = resolveSeedPassword(process.env.SEED_SUPERADMIN_PASSWORD, {
+    production,
+    label: 'SEED_SUPERADMIN_PASSWORD',
+  })
+  const passwordHash = await hashPassword(password)
 
-  // Find Haykal psychologist record if available
   const [haykalPsych] = await db.select({ id: schema.psychologists.id, name: schema.psychologists.name })
     .from(schema.psychologists)
     .where(eq(schema.psychologists.slug, 'haykal'))
     .limit(1)
 
-  // 1. Seed / Upsert KyTama as Superadmin
-  const existingKytama = await db.select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.email, kytamaEmail))
-    .limit(1)
+  const accounts = [
+    { email: normalizeEmail('kytama@attentiveid.com'), name: 'KyTama', psychologistId: null as string | null },
+    { email: normalizeEmail('haykal@attentiveid.com'), name: haykalPsych?.name || 'Dr. Haykal Hafizul Arifin', psychologistId: haykalPsych?.id || null },
+  ]
 
-  if (existingKytama.length === 0) {
+  for (const account of accounts) {
+    const [existing] = await db.select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.email, account.email))
+      .limit(1)
+    if (existing) {
+      console.log(`- ${account.email} already exists: left unchanged.`)
+      continue
+    }
     await db.insert(schema.users).values({
-      email: kytamaEmail,
-      name: 'KyTama',
-      passwordHash: superPasswordHash,
+      email: account.email,
+      name: account.name,
+      passwordHash,
       role: 'superadmin',
       status: 'active',
+      psychologistId: account.psychologistId,
     })
-    console.log(`✓ Seeded superadmin user: ${kytamaEmail} (password: ${superPassword})`)
-  } else {
-    await db.update(schema.users).set({
-      role: 'superadmin',
-      passwordHash: superPasswordHash,
-      status: 'active',
-      updatedAt: new Date().toISOString()
-    }).where(eq(schema.users.id, existingKytama[0].id))
-    console.log(`✓ Updated existing user to superadmin: ${kytamaEmail}`)
+    console.log(`✓ Created superadmin ${account.email}.`)
   }
 
-  // 2. Seed / Upsert Haykal as Superadmin
-  const existingHaykal = await db.select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.email, haykalEmail))
-    .limit(1)
-
-  if (existingHaykal.length === 0) {
-    await db.insert(schema.users).values({
-      email: haykalEmail,
-      name: haykalPsych?.name || 'Dr. Haykal Hafizul Arifin',
-      passwordHash: superPasswordHash,
-      role: 'superadmin',
-      status: 'active',
-      psychologistId: haykalPsych?.id || null,
-    })
-    console.log(`✓ Seeded superadmin user: ${haykalEmail} (password: ${superPassword})`)
-  } else {
-    await db.update(schema.users).set({
-      role: 'superadmin',
-      passwordHash: superPasswordHash,
-      status: 'active',
-      psychologistId: haykalPsych?.id || null,
-      updatedAt: new Date().toISOString()
-    }).where(eq(schema.users.id, existingHaykal[0].id))
-    console.log(`✓ Updated existing user to superadmin: ${haykalEmail}`)
-  }
-
-  // 3. Seed legacy admin
-  const existingAdmin = await db.select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.email, legacyAdminEmail))
-    .limit(1)
-
-  if (existingAdmin.length === 0) {
-    await db.insert(schema.users).values({
-      email: legacyAdminEmail,
-      name: 'Attentive Admin',
-      passwordHash: defaultPasswordHash,
-      role: 'admin',
-      status: 'active',
-    })
-    console.log(`✓ Seeded admin user: ${legacyAdminEmail}`)
-  }
-
-  // 4. Seed legacy psychologist
-  const existingPsych = await db.select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.email, legacyPsychEmail))
-    .limit(1)
-
-  if (existingPsych.length === 0) {
-    await db.insert(schema.users).values({
-      email: legacyPsychEmail,
-      name: haykalPsych?.name || 'Dr. Psychologist',
-      passwordHash: defaultPasswordHash,
-      role: 'psychologist',
-      status: 'active',
-      psychologistId: haykalPsych?.id || null,
-    })
-    console.log(`✓ Seeded psychologist user: ${legacyPsychEmail}`)
+  if (generated) {
+    // only possible outside production: a throw-away password for a local database
+    console.log(`Local database only: generated password for the new accounts: ${password}`)
   }
 
   await client.end()
@@ -122,7 +66,7 @@ export const seedUsers = async () => {
 
 if (import.meta.main) {
   seedUsers().catch((err) => {
-    console.error('Failed to seed users:', err)
+    console.error('Failed to seed users:', err instanceof Error ? err.message : err)
     process.exit(1)
   })
 }

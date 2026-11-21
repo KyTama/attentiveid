@@ -277,6 +277,10 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
           }
 
           const detected = extractImageDimensions(buffer)
+          if (!detected) {
+            set.status = 400
+            return { status: 'badRequest', message: 'File harus berupa gambar JPG, PNG, atau WebP yang valid.' }
+          }
 
           const width = detected?.width || (body.width ? Number(body.width) : 1200)
           const height = detected?.height || (body.height ? Number(body.height) : 800)

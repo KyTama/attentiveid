@@ -139,6 +139,21 @@ const mockDb = {
   })
 }
 
+// A tiny but real WebP header (VP8X) of the given size: uploads must be real images now.
+const makeWebp = (width: number, height: number) => {
+  const bytes = new Uint8Array(32)
+  bytes.set([0x52, 0x49, 0x46, 0x46], 0) // RIFF
+  bytes.set([24, 0, 0, 0], 4)
+  bytes.set([0x57, 0x45, 0x42, 0x50], 8) // WEBP
+  bytes.set([0x56, 0x50, 0x38, 0x58], 12) // VP8X
+  bytes.set([10, 0, 0, 0], 16)
+  const w = width - 1
+  const h = height - 1
+  bytes.set([w & 255, (w >> 8) & 255, (w >> 16) & 255], 24)
+  bytes.set([h & 255, (h >> 8) & 255, (h >> 16) & 255], 27)
+  return bytes
+}
+
 describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
   const app = new Elysia().use(
     createPsychologistsCmsRoutes({
@@ -380,7 +395,7 @@ describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
     const { accessToken } = tokenService.issueAccessToken(superadminUser)
     const formData = new FormData()
     // Create a 1x1 valid webp or mock file
-    const mockFile = new File(['mock content here'], 'test-photo.webp', { type: 'image/webp' })
+    const mockFile = new File([makeWebp(600, 750)], 'test-photo.webp', { type: 'image/webp' })
     formData.append('file', mockFile)
     formData.append('slug', 'test-doc')
     formData.append('name', 'Dr. Test')
@@ -402,6 +417,21 @@ describe('Psychologists CMS API routes (/api/admin/psychologists)', () => {
     expect(json.media.reference).toBe('media/psychologists/test-doc.webp')
     expect(json.media.width).toBe(600)
     expect(json.media.height).toBe(750)
+  })
+
+  it('POST /api/admin/psychologists/upload-photo rejects a file that only claims to be an image', async () => {
+    const { accessToken } = tokenService.issueAccessToken(superadminUser)
+    const formData = new FormData()
+    formData.append('file', new File(['<svg onload=alert(1)>'], 'evil.webp', { type: 'image/webp' }))
+    formData.append('slug', 'evil')
+    const res = await app.handle(
+      new Request('http://localhost/api/admin/psychologists/upload-photo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      })
+    )
+    expect(res.status).toBe(400)
   })
 
   it('POST /api/admin/psychologists/upload-photo rejects file larger than 5 MB with 413', async () => {

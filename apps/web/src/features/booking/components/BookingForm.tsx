@@ -49,6 +49,7 @@ import {
 } from './FormPrimitives'
 import { PsychologistPicker, type SelectedPsychologistMeta } from './PsychologistPicker'
 import { BrandDatePicker, TimePicker } from './SchedulePicker'
+import { parseDraft, serializeDraft } from '../draft-storage'
 
 declare global {
   interface Window {
@@ -158,8 +159,13 @@ function buildInitialState(prefill?: BookingPrefillParams): { data: BookingFormD
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     const stepRaw = window.localStorage.getItem(STEP_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<BookingFormData>
+    const parsed = parseDraft<BookingFormData>(raw)
+    if (raw && !parsed) {
+      // expired, damaged or saved by an older version (which kept health details): forget it
+      window.localStorage.removeItem(STORAGE_KEY)
+      window.localStorage.removeItem(STEP_KEY)
+    }
+    if (parsed) {
       baseData = {
         ...INITIAL_DATA,
         ...parsed,
@@ -277,7 +283,7 @@ export function BookingForm({
   useEffect(() => {
     if (step === 7) return
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      window.localStorage.setItem(STORAGE_KEY, serializeDraft(data))
       window.localStorage.setItem(STEP_KEY, String(step))
     } catch {
       // ignore storage errors

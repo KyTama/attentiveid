@@ -41,9 +41,19 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
 export const createApp = (dependencies: AppDependencies) => {
     const bookingRepository = dependencies.bookingRepository ?? createBookingRepository(dependencies.db);
 
+    const production = process.env.NODE_ENV === 'production';
+
     const baseApp = new Elysia()
-        // Swagger documentation
-        .use(swagger({
+        // Security headers on every API response (the API only serves JSON, files and small meta pages).
+        .onAfterHandle({ as: 'global' }, ({ set }) => {
+            set.headers['x-content-type-options'] = 'nosniff';
+            set.headers['referrer-policy'] = 'no-referrer';
+            set.headers['content-security-policy'] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+            set.headers['cross-origin-resource-policy'] = 'same-site';
+            set.headers['permissions-policy'] = 'camera=(), microphone=(), geolocation=(), payment=()';
+        })
+        // API documentation lists every endpoint: only on a developer machine, not in production.
+        .use(production ? new Elysia() : swagger({
             documentation: {
                 info: {
                     title: 'AttentiveId API',
