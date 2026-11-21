@@ -1009,9 +1009,15 @@ export const UserDtoSchema = Type.Object({
   status: UserStatusSchema,
   psychologistId: NullableIdentifierSchema,
   lastLoginAt: NullableTimestampSchema,
+  /** Minutes of inactivity before sign-out (default 15). Optional so older records and fixtures stay valid. */
+  idleTimeoutMinutes: Type.Optional(Type.Integer({ minimum: 5, maximum: 120 })),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
 }, { additionalProperties: false })
+
+export const IDLE_TIMEOUT_DEFAULT_MINUTES = 15
+export const IDLE_TIMEOUT_MIN_MINUTES = 5
+export const IDLE_TIMEOUT_MAX_MINUTES = 120
 
 export const CreateUserMutationSchema = Type.Object({
   email: EmailSchema,

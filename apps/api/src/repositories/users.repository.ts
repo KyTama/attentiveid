@@ -18,6 +18,7 @@ export interface UserRow {
     status: UserStatus;
     psychologistId: string | null;
     lastLoginAt: string | null;
+    idleTimeoutMinutes?: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -61,6 +62,7 @@ export const sanitizeUserDto = (row: UserRow): UserDto => ({
     status: row.status,
     psychologistId: row.psychologistId,
     lastLoginAt: row.lastLoginAt,
+    ...(row.idleTimeoutMinutes === undefined ? {} : { idleTimeoutMinutes: row.idleTimeoutMinutes }),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt
 });

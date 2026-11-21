@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "idle_timeout_minutes" integer DEFAULT 15 NOT NULL;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_idle_timeout_range" CHECK ("users"."idle_timeout_minutes" between 5 and 120);

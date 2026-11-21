@@ -12,6 +12,7 @@ import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
 import { createAssessmentsRoutes } from './routes/assessments.routes';
+import { createAccountSettingsRoutes } from './routes/account-settings.routes';
 import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
@@ -199,6 +200,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 prayersRepository: dependencies.prayersRepository || createPrayersRepository(dependencies.db),
                 adminToolsRepository: dependencies.adminToolsRepository || createAdminToolsRepository(dependencies.db),
+            }))
+            .use(createAccountSettingsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                db: dependencies.db,
             }))
             .use(createAssessmentsRoutes({
                 tokenService: dependencies.tokenService,
