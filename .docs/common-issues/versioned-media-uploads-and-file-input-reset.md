@@ -17,3 +17,4 @@
 2. **Reset file inputs**: Clear `e.target.value = ''` immediately after reading `e.target.files?.[0]` in every file input `onChange` handler.
 3. **Complete JPEG marker scanning**: Skip `0xFF` fill bytes and standalone markers (`0x00`, `0x01`, `0xD0–0xD9`) before reading 2-byte segment lengths, and support all JPEG SOF markers with bounds checks.
 4. **Directory-backed profile share images**: Resolve `/psychologists/:slug` (and `/psychologist/:slug`) thumbnails in `/api/content/share-html` from `psychologistsRepository.getBySlug`.
+5. **Safe VPS storage reclamation**: On photo replacement in `saveAdmin` (`psychologists.repository.ts`) and via periodic `sweepAbandonedVersionedMedia` (`media-cleanup.ts`), remove unreferenced versioned files from disk (`deleteVersionedMediaFile`) only after DB commit while never touching seeded baseline assets (`isVersionedMediaObjectKey`).

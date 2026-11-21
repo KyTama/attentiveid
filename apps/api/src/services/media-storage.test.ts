@@ -1,7 +1,14 @@
 import { describe, expect, it, afterEach } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getMediaStorageDir, saveMediaFile, getMediaFilePath } from './media-storage';
+import {
+  buildVersionedMediaFilename,
+  deleteVersionedMediaFile,
+  getMediaFilePath,
+  getMediaStorageDir,
+  isVersionedMediaObjectKey,
+  saveMediaFile,
+} from './media-storage';
 
 describe('Media Storage Service', () => {
   const originalMediaDir = process.env.MEDIA_DIR;
@@ -69,5 +76,41 @@ describe('Media Storage Service', () => {
 
     // Clean up
     fs.rmSync(testDir, { recursive: true, force: true });
+  });
+
+  it('reclaims replaced versioned uploads while never deleting seeded baseline files', async () => {
+    const testDir = path.resolve('/tmp/test-media-cleanup');
+    process.env.MEDIA_DIR = testDir;
+
+    const versionedFilename = buildVersionedMediaFilename('_Dr. Test_', 'jpg');
+    expect(versionedFilename).toMatch(/^dr-test-[a-z0-9]+-[a-f0-9]{6}\.jpg$/);
+
+    const versionedKey = `media/psychologists/${versionedFilename}`;
+    expect(isVersionedMediaObjectKey(versionedKey)).toBe(true);
+    expect(isVersionedMediaObjectKey('media/psychologists/haykal.webp')).toBe(false);
+    expect(isVersionedMediaObjectKey('media/psychologists/default.webp')).toBe(false);
+
+    await saveMediaFile({
+      subDir: 'psychologists',
+      filename: versionedFilename,
+      buffer: Buffer.from('old-versioned-photo'),
+    });
+    await saveMediaFile({
+      subDir: 'psychologists',
+      filename: 'baseline-sample.webp',
+      buffer: Buffer.from('seeded-baseline-photo'),
+    });
+
+    expect(deleteVersionedMediaFile(versionedKey)).toBe(true);
+    expect(getMediaFilePath(`psychologists/${versionedFilename}`)).toBeNull();
+
+    expect(deleteVersionedMediaFile('media/psychologists/baseline-sample.webp')).toBe(false);
+    expect(getMediaFilePath('psychologists/baseline-sample.webp')).not.toBeNull();
+
+    fs.rmSync(testDir, { recursive: true, force: true });
+    for (const rootCandidate of [process.cwd(), path.resolve(import.meta.dir, '../../../..')]) {
+      const distBaseline = path.resolve(rootCandidate, 'apps/web/dist/media/psychologists/baseline-sample.webp');
+      if (fs.existsSync(distBaseline)) fs.unlinkSync(distBaseline);
+    }
   });
 });

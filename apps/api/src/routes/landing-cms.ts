@@ -11,6 +11,7 @@ import type { AuthTokenService, AuthUserRepository } from './auth'
 import * as schema from '../db/schema'
 import { extractImageDimensions } from '../services/image-metadata'
 import { buildVersionedMediaFilename, saveMediaFile } from '../services/media-storage'
+import { sweepAbandonedVersionedMedia } from '../services/media-cleanup'
 
 const getDefaultDb = () => {
   const { db } = require('../db')
@@ -307,6 +308,9 @@ export const createLandingCmsRoutes = (dependencies: LandingCmsRoutesDependencie
             filename,
             buffer
           })
+
+          // Best-effort sweep of abandoned unsaved versioned uploads older than 1h
+          void sweepAbandonedVersionedMedia(db)
 
           const altId = body.altId || `Gambar ${body.sectionKey || 'landing'} Attentive.id`
           const altEn = body.altEn || `Attentive.id ${body.sectionKey || 'landing'} illustration`

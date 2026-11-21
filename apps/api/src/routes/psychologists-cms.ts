@@ -11,6 +11,7 @@ import { db as defaultDb } from '../db'
 import * as schema from '../db/schema'
 import { extractImageDimensions } from '../services/image-metadata'
 import { buildVersionedMediaFilename, saveMediaFile } from '../services/media-storage'
+import { sweepAbandonedVersionedMedia } from '../services/media-cleanup'
 
 export interface PsychologistsCmsRoutesDependencies {
   tokenService: Pick<AuthTokenService, 'verifyAccessToken'>
@@ -343,6 +344,9 @@ export const createPsychologistsCmsRoutes = (dependencies: PsychologistsCmsRoute
             filename,
             buffer
           })
+
+          // Best-effort sweep of abandoned unsaved versioned uploads older than 1h
+          void sweepAbandonedVersionedMedia(db)
 
           const altId = body.altId || `Foto profil ${body.name || safeSlug}`
           const altEn = body.altEn || `Profile photo of ${body.name || safeSlug}`

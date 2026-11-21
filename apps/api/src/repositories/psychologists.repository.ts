@@ -11,6 +11,7 @@ import {
     type PsychologistPublicLookup
 } from '@attentiveid/shared';
 import * as schema from '../db/schema';
+import { deleteVersionedMediaFile, isVersionedMediaObjectKey } from '../services/media-storage';
 
 type ContentLocale = typeof CONTENT_LOCALES[number];
 type PsychologistStatus = typeof schema.psychologistLifecycleStatusEnum.enumValues[number];
@@ -624,7 +625,8 @@ export const createDrizzlePsychologistQuerySource = (
     },
 
     async savePsychologist(id, input) {
-        return await database.transaction(async (tx) => {
+        const replacedVersionedKeys: string[] = [];
+        const canonical = await database.transaction(async (tx) => {
             let psychologistId = id;
             if (psychologistId) {
                 await tx.update(schema.psychologists)
@@ -786,6 +788,18 @@ export const createDrizzlePsychologistQuerySource = (
 
             // Media attachment handling
             if (input.media) {
+                const previousActiveMedia = await tx.select({
+                    mediaObjectId: schema.mediaObjects.id,
+                    objectKey: schema.mediaObjects.objectKey
+                })
+                    .from(schema.mediaAttachments)
+                    .innerJoin(schema.mediaObjects, eq(schema.mediaObjects.id, schema.mediaAttachments.mediaObjectId))
+                    .where(and(
+                        eq(schema.mediaAttachments.psychologistId, psychologistId),
+                        eq(schema.mediaAttachments.role, 'profilePhoto'),
+                        sql`${schema.mediaAttachments.detachedAt} is null`
+                    ));
+
                 await tx.update(schema.mediaAttachments)
                     .set({ detachedAt: sql`now()` })
                     .where(and(
@@ -833,6 +847,29 @@ export const createDrizzlePsychologistQuerySource = (
                         role: 'profilePhoto',
                         position: 0
                     });
+
+                for (const prev of previousActiveMedia) {
+                    if (prev.mediaObjectId === mediaObjectId || !prev.objectKey || !isVersionedMediaObjectKey(prev.objectKey)) {
+                        continue;
+                    }
+                    const [stillUsed] = await tx.select({ id: schema.mediaAttachments.id })
+                        .from(schema.mediaAttachments)
+                        .where(and(
+                            eq(schema.mediaAttachments.mediaObjectId, prev.mediaObjectId),
+                            sql`(${schema.mediaAttachments.detachedAt} is null or ${schema.mediaAttachments.landingRevisionId} is not null or ${schema.mediaAttachments.articleRevisionId} is not null)`
+                        ))
+                        .limit(1);
+                    if (!stillUsed) {
+                        await tx.update(schema.mediaObjects)
+                            .set({
+                                lifecycle: 'deleted',
+                                orphanedAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString()
+                            })
+                            .where(eq(schema.mediaObjects.id, prev.mediaObjectId));
+                        replacedVersionedKeys.push(prev.objectKey);
+                    }
+                }
             }
 
             const [base] = await tx.select(selectPsychologistBase)
@@ -844,5 +881,11 @@ export const createDrizzlePsychologistQuerySource = (
             if (!canonical) throw new Error('Failed to load canonical psychologist row after save.');
             return canonical;
         });
+
+        for (const objectKey of replacedVersionedKeys) {
+            deleteVersionedMediaFile(objectKey);
+        }
+
+        return canonical;
     }
 });
