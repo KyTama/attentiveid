@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Konsol Konselor GSC · Attentive</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}
+
+/* Layout: a working desk. Client card and task checklist on the left, the five counselor tasks in order on the right. Attentive paper palette. */
+:root{--bg:#faf6ee;--paper:#fffdf8;--sand:#f3ebd9;--line:#e9e0cc;--ink:#2b3346;--mute:#6e6a62;--dim:#8a847a;--gold:#c69a56;--gold-ink:#8a6a35;--logo:#d19d38;--sup:#3f8159;--con:#b5513a;--amb:#5a72a6;--ok:#3f8159;--warn:#b5713a;
+ --sans:"Montserrat","Segoe UI",system-ui,sans-serif;--serif:"Source Serif 4",Georgia,serif;color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);margin:0}
+body{font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em;text-wrap:balance}p{margin:0}
+.top{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:18px 0 14px;border-bottom:1px solid var(--line)}
+.top b{color:var(--logo);font-size:19px;letter-spacing:-.02em}.top span{font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.top .sp{flex:1}
+.grid{max-width:1240px;margin:22px auto 0;display:grid;grid-template-columns:300px minmax(0,1fr);gap:22px;align-items:start}
+.side{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px 20px;min-width:0}
+.k{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink)}
+.client h2{font-size:20px;margin:6px 0 2px}
+.dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13.5px;margin-top:10px}.dl b{font-weight:600;color:var(--mute)}.dl span{overflow-wrap:anywhere}
+.tasks{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.tasks li a{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--ink);font-size:13.5px;font-weight:600;padding:6px 8px;border-radius:10px}
+.tasks li a:hover{background:var(--sand)}
+.tasks i{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--dim);display:grid;place-items:center;font-style:normal;font-size:11px;color:transparent}
+.tasks li.done i{background:var(--ok);border-color:var(--ok);color:#fff}
+.main{display:flex;flex-direction:column;gap:18px;min-width:0}
+.task{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:22px 24px;scroll-margin-top:16px}
+.task>header{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
+.task>header .n{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700}
+.task.done>header .n{background:var(--ok)}
+.task>header h2{font-size:19px}.task>header p{color:var(--mute);font-size:14px;margin-top:2px}
+.flags{display:grid;gap:8px}
+.flag{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.flag i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--ok)}.flag.w i{background:var(--warn)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer;padding:6px 0}
+.check input{flex:none;width:18px;height:18px;margin-top:2px;accent-color:var(--ink)}
+textarea,input[type=text],select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14.5px}
+textarea{min-height:110px;resize:vertical;line-height:1.55}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
+label.l{display:block;font-size:12.5px;font-weight:600;color:var(--mute);margin:12px 0 6px}
+.mapwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}.mapwrap>div,.row2>div{min-width:0}
+.map{background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden}.map svg{display:block;width:100%;height:auto}
+.mx{overflow-x:auto}.mx table{border-collapse:separate;border-spacing:3px;font-size:12px}
+.mx th{font-weight:600;color:var(--mute)}.mx th.rn{text-align:left;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;padding-right:6px;color:var(--ink)}
+.mx td button{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--paper);font-weight:700;font-size:14px;padding:0}
+.mx td button[data-v=s]{background:var(--sup);border-color:var(--sup);color:#fff}.mx td button[data-v=c]{background:var(--con);border-color:var(--con);color:#fff}.mx td button[data-v=b]{background:var(--amb);border-color:var(--amb);color:#fff}
+.mx td.d{background:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mute);margin-top:8px}.legend i{display:inline-block;width:20px;border-top:3px solid var(--c);vertical-align:middle;margin-right:6px}
+.notes{margin-top:10px;font-size:13px}.notes summary{cursor:pointer;font-weight:600}.notes ol{margin:6px 0 0;padding-left:20px;display:grid;gap:3px}.notes span{color:var(--mute)}
+.ct{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}.ct th{text-align:left;font-size:11px;color:var(--mute);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--line)}.ct td{padding:5px 6px;border-bottom:1px solid var(--line)}.ct tr.cen td:nth-child(2){font-weight:700;color:var(--ok)}.ct tr.per td:nth-child(2){color:var(--mute)}.ct td:last-child{white-space:nowrap}.ct td:last-child i{display:inline-block;width:50px;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--gold) var(--w),var(--line) var(--w));margin-right:6px;vertical-align:middle}
+.rolelist{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;font-size:13px}.rolelist span{color:var(--mute)}
+.edits{font-size:12.5px;color:var(--warn);margin-top:8px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.steps3{display:grid;gap:8px}
+.svc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:var(--paper);border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:14.5px;text-decoration:none}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.guide{font-size:14px}.guide ol{margin:6px 0 0;padding-left:20px;display:grid;gap:8px}.guide li b{font-weight:600}.guide li span{color:var(--mute)}
+.guide .q{display:block;font-family:var(--serif);font-style:italic;color:var(--ink);margin-top:2px}
+details.card summary{cursor:pointer;font-weight:700}
+.load{max-width:640px;margin:60px auto;display:flex;flex-direction:column;gap:14px}
+.load h1{font-size:28px}.load p{color:var(--mute)}
+.need{font-size:13px;color:var(--warn)}
+.devk{background:#c58cff;color:#1a0b26;border:1px dashed #6b2fa3;border-radius:999px;padding:8px 14px;font-weight:700;font-size:12.5px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:9}
+@media (max-width:980px){.grid{grid-template-columns:1fr}.side{position:relative;top:0}.mapwrap{grid-template-columns:1fr}}
+@media (max-width:560px){.row2,.svc{grid-template-columns:1fr}.task{padding:18px}.top>span:not(#mark):not(.sp):not(#devk){display:none}.devk{padding:7px 10px;font-size:11.5px}}
+</style>
+</head>
+<body>
+
+<header class="top"><span id="mark"></span><b>attentive.</b><span>Konsol Konselor · Goal System Compass</span><span class="sp"></span><span id="devk"></span><button type="button" class="btn ghost" data-a="new" style="padding:8px 14px;font-size:13px">Buka data lain</button></header>
+<main id="app"></main>
+<script>
+const KCONFIG={DEV:false}; // true = tombol isi otomatis untuk melihat alur (atau buka dengan #dev)
+(()=>{'use strict';
+/* ===== Goal System Compass · shared core (cards, analysis, packing) ===== */
+const $=s=>document.querySelector(s);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,k)=>a+(b-a)*k;
+const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t)},eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,eo=t=>1-Math.pow(1-t,3);
+function rng(seed){let s=(seed>>>0)||1;return()=>(s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296}
+const Q=s=>`“${s}”`;
+/* language: 'id' or 'en' */
+let LANG='id';const tr=(id,en)=>LANG==='en'?en:id;
+const AREAS=[['work','Studi & kerja','Study & work'],['money','Uang','Money'],['body','Tubuh & kesehatan','Body & health'],['mind','Pikiran & perasaan','Mind & feelings'],['family','Keluarga','Family'],['bonds','Teman & pasangan','Friends & partner'],['home','Rumah & keseharian','Home & daily life'],['play','Hobi & kesenangan','Hobbies & fun'],['learn','Belajar & berkembang','Learning & growth'],['faith','Iman & makna','Faith & meaning'],['give','Memberi & sekitar','Giving & community'],['plans','Rencana ke depan','Plans ahead']];
+const CARDS={
+work:[['Menyelesaikan tugas atau skripsi yang tertunda','Finish an overdue assignment or thesis'],['Lebih fokus saat kerja atau kuliah','Focus better at work or class'],['Mencari pekerjaan yang lebih cocok','Look for a job that fits me better'],['Naik level atau dapat promosi','Level up or get promoted'],['Menyelesaikan satu proyek sampai tuntas','Finish one project all the way'],['Berani bicara di rapat atau kelas','Speak up in meetings or class'],['Mengurangi menunda-nunda pekerjaan','Procrastinate less at work'],['Membangun usaha sampingan','Build a side business'],['Punya batas jelas antara kerja dan istirahat','Keep a clear line between work and rest']],
+money:[['Punya tabungan darurat','Build an emergency fund'],['Melunasi utang atau cicilan','Pay off a debt or installment'],['Mencatat pengeluaran','Track my spending'],['Mengurangi belanja impulsif','Cut impulse spending'],['Punya penghasilan tambahan','Earn some extra income'],['Membantu keuangan keluarga','Help my family financially'],['Menabung untuk sesuatu yang kuinginkan','Save for something I want'],['Mulai belajar investasi','Start learning to invest'],['Merasa lebih tenang soal uang','Feel calmer about money']],
+body:[['Tidur lebih teratur','Sleep on a more regular schedule'],['Bergerak atau olahraga rutin','Move or exercise regularly'],['Makan lebih teratur dan bergizi','Eat more regularly and well'],['Minum air lebih banyak','Drink more water'],['Mengurangi rokok, kopi, atau gula','Cut down on smoking, coffee, or sugar'],['Memeriksakan kesehatan yang tertunda','Get the check-up I keep postponing'],['Keluar rumah dan kena matahari tiap hari','Get outside in the sun every day'],['Punya energi yang lebih stabil','Have steadier energy'],['Merawat sakit yang sedang kujalani','Take care of an illness I live with']],
+mind:[['Merasa lebih tenang sehari-hari','Feel calmer day to day'],['Mengurangi waktu scrolling','Spend less time scrolling'],['Mencari bantuan profesional untuk perasaanku','Seek professional help for how I feel'],['Lebih baik pada diri sendiri','Be kinder to myself'],['Mengenali apa yang sebenarnya kuinginkan','Figure out what I actually want'],['Menulis jurnal atau merenung rutin','Journal or reflect regularly'],['Pulih dari kejadian yang berat','Recover from something hard'],['Lebih percaya diri','Feel more confident'],['Punya satu hal yang kutunggu-tunggu tiap minggu','Have one thing to look forward to each week']],
+family:[['Lebih dekat dengan orang tua','Grow closer to my parents'],['Meluangkan waktu untuk keluarga','Make time for family'],['Memperbaiki hubungan dengan anggota keluarga','Repair things with a family member'],['Merawat anggota keluarga yang sakit','Care for a family member who is ill'],['Jadi orang tua yang lebih sabar','Be a more patient parent'],['Membuat keluarga bangga','Make my family proud'],['Lebih sering menghubungi saudara','Reach out to my siblings more'],['Menyiapkan masa depan anak','Prepare for my children’s future'],['Mandiri dari orang tua','Become independent from my parents']],
+bonds:[['Punya teman dekat untuk berbagi','Have a close friend to confide in'],['Menghubungi teman lama','Reconnect with an old friend'],['Memperbaiki hubungan dengan pasangan','Work on things with my partner'],['Mencari pasangan','Find a partner'],['Lebih sering bertemu teman','See friends more often'],['Belajar bilang tidak','Learn to say no'],['Keluar dari hubungan yang tidak sehat','Leave an unhealthy relationship'],['Lebih terbuka soal perasaanku','Be more open about my feelings'],['Bertemu orang-orang baru','Meet new people']],
+home:[['Merapikan kamar atau rumah','Tidy my room or home'],['Punya rutinitas pagi','Have a morning routine'],['Memasak sendiri lebih sering','Cook for myself more often'],['Pindah ke tempat tinggal yang lebih baik','Move to a better place to live'],['Menyelesaikan urusan administrasi','Sort out paperwork and admin'],['Mengatur jadwal mingguan','Plan my week'],['Memperbaiki barang yang rusak','Fix something that’s broken'],['Membuat rumah lebih nyaman','Make home more comfortable'],['Bangun lebih pagi','Wake up earlier']],
+play:[['Kembali ke hobi lama','Go back to an old hobby'],['Mencoba hobi baru','Try a new hobby'],['Membaca buku sampai selesai','Finish reading a book'],['Membuat sesuatu dengan tanganku','Make something with my hands'],['Bermain musik atau bernyanyi','Play music or sing'],['Menggambar, menulis, atau berkarya','Draw, write, or create something'],['Menonton atau main game tanpa rasa bersalah','Watch or game without guilt'],['Jalan-jalan ke tempat baru di kotaku','Explore a new place in my city'],['Punya waktu santai yang benar-benar santai','Have downtime that is truly restful']],
+learn:[['Belajar bahasa baru','Learn a new language'],['Mengikuti kursus atau pelatihan','Take a course or training'],['Belajar keterampilan untuk kerja','Learn a skill for work'],['Melanjutkan sekolah','Continue my education'],['Belajar menyetir atau keterampilan praktis','Learn to drive or another practical skill'],['Membaca lebih banyak','Read more'],['Lebih disiplin','Be more disciplined'],['Mengatur waktu lebih baik','Manage my time better'],['Mengasah bakat yang kupunya','Develop a talent I have']],
+faith:[['Lebih rutin beribadah','Pray or worship more regularly'],['Mendalami keyakinanku','Deepen my faith'],['Mencari makna dari yang sedang kujalani','Find meaning in what I’m going through'],['Hidup sesuai nilai-nilaiku','Live by my values'],['Lebih bersyukur','Be more grateful'],['Berdamai dengan masa lalu','Make peace with the past'],['Punya waktu hening untuk diri sendiri','Have quiet time for myself'],['Memaafkan seseorang','Forgive someone'],['Mencari tahu apa yang penting buatku','Find out what matters to me']],
+give:[['Membantu orang di sekitarku','Help the people around me'],['Ikut kegiatan sukarela','Volunteer'],['Aktif di komunitas','Be active in a community'],['Berbagi ilmu atau keahlian','Share what I know'],['Merawat hewan atau tanaman','Care for an animal or plants'],['Lebih peduli lingkungan','Care more for the environment'],['Jadi tempat bercerita bagi orang lain','Be someone others can talk to'],['Bersedekah atau berdonasi rutin','Give or donate regularly'],['Membimbing adik atau junior','Mentor someone younger']],
+plans:[['Merencanakan hidupku 5 tahun lagi','Plan where I want to be in 5 years'],['Pindah kota atau ke luar negeri','Move to another city or country'],['Merencanakan pernikahan','Plan a wedding'],['Merencanakan perjalanan','Plan a trip'],['Memutuskan jurusan atau karier','Decide on a major or career'],['Punya rumah sendiri','Own a home'],['Menyiapkan dana pensiun','Prepare for retirement'],['Mewujudkan satu mimpi yang lama tertunda','Reach a long-postponed dream'],['Mengambil keputusan besar yang tertunda','Make a big decision I keep putting off']]};
+
+const CARD={};AREAS.forEach(a=>CARDS[a[0]].forEach((c,i)=>{CARD[a[0]+i]={id:a[0]+i,area:a[0],get text(){return LANG==='en'?c[1]:c[0]}}}));
+const areaName=a=>{const x=AREAS.find(z=>z[0]===a);return x?x[LANG==='en'?2:1]:tr('Ditulis sendiri','Written by you')};
+const PROGL=()=>LANG==='en'?[['Not lived yet','Not yet'],['Partly lived','Partly'],['Fully lived','Fully']]:[['Belum terwujud','Belum'],['Sebagian terwujud','Sebagian'],['Sudah terwujud','Terwujud']];
+const REL={s:'Mendukung',c:'Menghambat',b:'Mendukung'};
+
+/* data model shared by the participant page, the backend and the counselor console
+   goals: [{id,name,area,src,rank,prog}]  rank 1 = most important · rel: {"a>b":"s"|"c"|"b"} */
+function importance(goals){const n=goals.length,o={};goals.forEach(g=>{o[g.id]=n<=1?10:Math.round(10-7*(g.rank-1)/(n-1))});return o}
+function analyze(data){const gs=[...data.goals].sort((a,b)=>a.rank-b.rank),ids=new Set(gs.map(g=>g.id)),imp=importance(gs),E=[];
+ Object.entries(data.rel||{}).forEach(([k,v])=>{const [a,b]=k.split('>');if(ids.has(a)&&ids.has(b)&&v&&v!=='0')E.push({k,a,b,v})});
+ const D={};gs.forEach(g=>D[g.id]={sOut:0,sIn:0,cOut:0,cIn:0});E.forEach(e=>{const s=e.v!=='c',c=e.v!=='s';if(s){D[e.a].sOut++;D[e.b].sIn++}if(c){D[e.a].cOut++;D[e.b].cIn++}});
+ const has=(a,b,v)=>E.some(e=>e.a===a&&e.b===b&&e.v===v),mutual=[];for(let i=0;i<gs.length;i++)for(let j=i+1;j<gs.length;j++){const a=gs[i].id,b=gs[j].id;if(has(a,b,'s')&&has(b,a,'s'))mutual.push([a,b])}
+ const iso=gs.filter(g=>!E.some(e=>e.a===g.id||e.b===g.id)).map(g=>g.id);
+ const lever=[...gs].filter(g=>D[g.id].sOut>=2).sort((a,b)=>(D[b.id].sOut-D[a.id].sOut)||(imp[b.id]-imp[a.id]))[0]||null;
+ const recip=e=>E.some(x=>x.a===e.b&&x.b===e.a&&x.v!=='s');const pc=E.filter(e=>e.v!=='s').map(e=>({e,s:imp[e.a]+imp[e.b]+(recip(e)?2:0)+(e.v==='c'?1:0)})).sort((a,b)=>b.s-a.s)[0];
+ const groups=communities(gs.map(g=>g.id),E).filter(c=>c.length>=2);
+ /* spiral: the league winner is the core. Layer 1 = values that make the core easier, layer 2 = values that make layer 1 easier, and so on.
+    Values with no supporting path to the core stay outside ("not connected yet"). */
+ const SPI=spiral(gs,E,D);
+ const cent=gs.map((g,i)=>{const d=D[g.id];return {id:g.id,name:g.name,rank:i+1,lay:SPI.lay[g.id]??null,sz:SPI.sz[g.id]||1,S:d.sIn+d.sOut,H:d.cIn+d.cOut}}).sort((a,b)=>((a.lay??99)-(b.lay??99))||(b.sz-a.sz)||(a.rank-b.rank));cent.forEach((x,i)=>x.pos=i+1);
+ return {gs,n:gs.length,imp,E,D,cent,...SPI,mutual,iso,lever,pressure:pc?pc.e:null,groups,ns:E.filter(e=>e.v==='s').length,nc:E.filter(e=>e.v==='c').length,nb:E.filter(e=>e.v==='b').length,cells:gs.length*(gs.length-1)}}
+/* breadth-first from the core along "makes easier" links, read inward (x>t means x makes t easier) */
+function spiral(gs,E,D){const core=gs[0]?gs[0].id:null,lay={},par={},order=[],kids={};gs.forEach(g=>kids[g.id]=[]);if(!core)return {core,lay,par,order,kids,sz:{},unc:[],maxL:0,tree:[],out:[],route:[]};
+ const sup=new Set(E.filter(e=>e.v!=='c').map(e=>e.k));lay[core]=0;const q=[core];
+ while(q.length){const t=q.shift();order.push(t);gs.forEach(g=>{const x=g.id;if(lay[x]!=null)return;if(sup.has(x+'>'+t)){lay[x]=lay[t]+1;par[x]=t;kids[t].push(x);q.push(x)}})}
+ const sz={},szf=id=>sz[id]=1+kids[id].reduce((s,k)=>s+szf(k),0);szf(core);
+ const unc=gs.filter(g=>lay[g.id]==null).map(g=>g.id),maxL=Math.max(0,...Object.values(lay));
+ // outward: everything the core makes easier, directly or through others
+ const out=[],seen=new Set([core]),fq=[core];while(fq.length){const a=fq.shift();gs.forEach(g=>{if(!seen.has(g.id)&&sup.has(a+'>'+g.id)){seen.add(g.id);out.push(g.id);fq.push(g.id)}})}
+ // the route in: follow the biggest branch from the core out to its edge, then read it back inward
+ const best=arr=>arr.slice().sort((a,b)=>(sz[b]-sz[a])||(D[b].sOut-D[a].sOut))[0];const path=[];let c=best(kids[core]);while(c){path.push(c);c=best(kids[c])}
+ const route=path.reverse().concat([core]);
+ return {core,lay,par,order,kids,sz,unc,maxL,tree:Object.keys(par).map(x=>x+'>'+par[x]),out,route}}
+/* unit-circle positions for the spiral picture: the core in the middle, each layer on its own ring, every branch inside its own slice
+   so lines never cross; values not connected yet share one slice at the bottom on the outer ring */
+function spiralLayout(A){const P={},core=A.core;if(!core)return {P,rings:[]};const unc=A.unc,hasU=unc.length>0,nR=Math.max(1,A.maxL+(hasU?1:0)),rad=k=>k/nR;
+ const leaves=id=>A.kids[id].length?A.kids[id].reduce((s,k)=>s+leaves(k),0):1,UW=.75,tot=(A.kids[core].length?leaves(core):0)+unc.length*UW||1,TAU=Math.PI*2;
+ const uw=unc.length*UW/tot*TAU,a0=Math.PI/2+uw/2;P[core]={x:0,y:0,k:0};
+ const place=(id,s,e)=>{const ks=A.kids[id];if(id!==core&&ks.length){const l=A.lay[id],lim=2*Math.acos(rad(l)/rad(l+1))*.92,m0=P[id].a;if(e-s>lim){s=m0-lim/2;e=m0+lim/2}}let a=s;ks.forEach(k=>{const w=(e-s)*leaves(k)/ks.reduce((t,x)=>t+leaves(x),0),m=a+w/2,r=rad(A.lay[k]);P[k]={x:Math.cos(m)*r,y:Math.sin(m)*r,k:A.lay[k],a:m};place(k,a,a+w);a+=w})};
+ // a single child would sit straight above; centre its slice on the top instead of the side
+ place(core,a0,a0+TAU-uw);
+ unc.forEach((id,i)=>{const m=Math.PI/2-uw/2+uw*(i+.5)/unc.length;P[id]={x:Math.cos(m),y:Math.sin(m),k:null,a:m}});
+ const rings=[];for(let k=1;k<=A.maxL;k++)rings.push({r:rad(k),k});if(hasU)rings.push({r:1,k:null});return {P,rings}}
+function communities(ids,E){const W={};ids.forEach(a=>{W[a]={};ids.forEach(b=>W[a][b]=0)});E.forEach(e=>{if(e.v!=='c'){const w=e.v==='b'?.5:1;W[e.a][e.b]+=w;W[e.b][e.a]+=w}});const deg={};ids.forEach(a=>deg[a]=ids.reduce((s,b)=>s+W[a][b],0));const m2=ids.reduce((s,a)=>s+deg[a],0);if(!m2)return ids.map(a=>[a]);const m=m2/2;let C=ids.map(a=>({m:[a],D:deg[a]}));const between=(x,y)=>x.m.reduce((s,a)=>s+y.m.reduce((t,b)=>t+W[a][b],0),0);
+ for(;;){let best=null,bg=1e-9;for(let i=0;i<C.length;i++)for(let j=i+1;j<C.length;j++){const l=between(C[i],C[j]);if(l<=0)continue;const g=l/m-C[i].D*C[j].D/(2*m*m);if(g>bg){bg=g;best=[i,j]}}if(!best)break;const [i,j]=best;C[i]={m:C[i].m.concat(C[j].m),D:C[i].D+C[j].D};C.splice(j,1)}
+ return C.map(c=>c.m).sort((a,b)=>b.length-a.length)}
+/* the role each goal plays in the network, for the map and the inspector
+   trouble = hinders 2+ goals (and hinders at least as much as it helps) · driver = helps 2+ · squeezed = held back by 2+ · hub = most connected · iso = no links */
+function roles(A){const o={},n=A.gs.length;A.gs.forEach(g=>{const d=A.D[g.id],L=A.E.filter(e=>e.a===g.id||e.b===g.id),nb=new Set(L.map(e=>e.a===g.id?e.b:e.a)).size;o[g.id]={role:L.length?'neutral':'iso',nb,links:L.length,hub:false,d}});
+ // only the clearest cases get a role (at most two each), so the colours stay meaningful on a dense map
+ const pick=(role,score,ok,lim=2)=>{const c=A.gs.map(g=>({id:g.id,s:score(o[g.id].d)})).filter(x=>o[x.id].role==='neutral'&&x.s>=2&&ok(o[x.id].d)).sort((a,b)=>b.s-a.s);if(!c.length)return;const top=c[0].s;c.filter(x=>x.s>=Math.max(2,Math.ceil(top*.6))).slice(0,lim).forEach(x=>o[x.id].role=role)};
+ if(A.lever&&o[A.lever.id])o[A.lever.id].role='driver';pick('trouble',d=>d.cOut,d=>d.cOut>=d.sOut);pick('driver',d=>d.sOut,()=>true,A.lever?1:2);pick('squeezed',d=>d.cIn,d=>d.cIn>d.sIn);
+ const mx=Math.max(0,...Object.values(o).map(x=>x.nb)),tops=Object.values(o).filter(x=>x.nb===mx);if(mx>=3&&tops.length<=2&&mx>=Math.ceil((n-1)*.5))tops.forEach(x=>x.hub=true);Object.values(o).forEach(x=>{x.c=mx?x.nb/mx:0});return o}
+const gname=(data,id)=>(data.goals.find(g=>g.id===id)||{}).name||'';
+/* the three short findings everyone receives */
+/* the one thing to focus on: a value that moves others, weighted by how important it is to the person; otherwise their #1 */
+function focusOf(A){const n=A.n;let best=null,bs=-1;A.gs.forEach((g,i)=>{const d=A.D[g.id];if(d.sOut<2)return;const s=d.sOut+2.5*(n>1?1-i/(n-1):1);if(s>bs){bs=s;best=g}});return {g:best||A.gs[0],driver:!!best}}
+function brief(data){const A=analyze(data),top=A.gs[0],nm=id=>gname(data,id);const lev=A.lever,pr=A.pressure;
+ // the conclusion: what is central for the person and what is peripheral, each with a one-line reason drawn from both halves
+ const CE=A.cent[0],PE=A.cent.length>1?A.cent[A.cent.length-1]:null,C=CE?A.gs.find(g=>g.id===CE.id):null,F={g:C,driver:false},n0=A.n;
+ const into=v=>C?A.E.filter(e=>e.b===C.id&&e.v===v).map(e=>A.gs.find(g=>g.id===e.a)).sort((x,y)=>A.gs.indexOf(x)-A.gs.indexOf(y)):[],sup=into('s')[0],blk=into('c')[0];
+ const lg=x=>x.rank===1?tr('Juara turnamen Anda','Your tournament winner'):tr(`Peringkat ${x.rank} di turnamen`,`Ranked ${x.rank} in your tournament`);
+ const focusWhy=!CE?'':`${lg(CE)}${CE.S||CE.H?tr(`, dengan ${CE.S} dukungan dan ${CE.H} hambatan.`,`, with ${CE.S} supports and ${CE.H} hindrances.`):tr(', meski belum terhubung dengan nilai lain.',', though not linked to other values yet.')}`;
+ const periWhy=!PE?'':`${tr(`Peringkat ${PE.rank} dari ${n0} di liga`,`Ranked ${PE.rank} of ${n0} in your league`)}${PE.S||PE.H?(PE.H>PE.S?tr(`, dan lebih banyak menghambat (${PE.H}) daripada mendukung (${PE.S}).`,`, and it hinders (${PE.H}) more than it supports (${PE.S}).`):tr(`, dengan ${PE.S} dukungan dan ${PE.H} hambatan.`,`, with ${PE.S} supports and ${PE.H} hindrances.`)):tr(', dan belum terhubung dengan nilai lain.',', and not linked to other values yet.')}`;
+ const pHurts=PE&&C&&A.E.some(e=>e.a===PE.id&&e.b===C.id&&e.v==='c');
+ const stepC=!C?'':pHurts?tr(`Beri ${Q(PE.name)} jadwal sendiri agar tidak menghambat ${Q(C.name)}.`,`Give ${Q(PE.name)} its own slot so it stops holding back ${Q(C.name)}.`):blk?tr(`Atur ulang waktu untuk ${Q(blk.name)} agar tidak menghambat ${Q(C.name)}.`,`Rearrange time for ${Q(blk.name)} so it stops holding back ${Q(C.name)}.`):sup?tr(`Perkuat ${Q(sup.name)}, karena ia ikut mendukung ${Q(C.name)}.`,`Strengthen ${Q(sup.name)}: it supports ${Q(C.name)}.`):tr(`Sisihkan waktu tetap minggu ini untuk ${Q(C.name)}.`,`Book a fixed slot this week for ${Q(C.name)}.`);
+ const levTxt=lev?nm(lev.id):top?nm(top.id):'–',levWhy=lev?tr(`Ikut menggerakkan ${A.D[lev.id].sOut} nilai lain.`,`Moves ${A.D[lev.id].sOut} other values along with it.`):tr('Nilai terpenting Anda saat ini.','Your most important value right now.');
+ const prTxt=pr?`${nm(pr.a)} → ${nm(pr.b)}`:tr('Tidak ada yang menonjol','Nothing stands out'),prWhy=pr?(pr.v==='b'?tr('Yang pertama membantu sekaligus menahan yang kedua.','The first both helps and holds back the second.'):tr('Mengejar yang pertama menahan yang kedua.','Chasing the first holds back the second.')):tr('Nilai-nilai Anda jarang saling menahan.','Your values rarely hold each other back.');
+ const step=C?stepC:lev?tr(`Sisihkan satu waktu tetap minggu ini untuk ${Q(nm(lev.id))}.`,`Book one fixed slot this week for ${Q(nm(lev.id))}.`):pr?tr(`Beri hari berbeda untuk ${Q(nm(pr.a))} dan ${Q(nm(pr.b))}.`,`Give ${Q(nm(pr.a))} and ${Q(nm(pr.b))} different days.`):tr(`Sisihkan satu waktu tetap minggu ini untuk ${Q(nm(top.id))}.`,`Book one fixed slot this week for ${Q(nm(top.id))}.`);
+ /* the "aha": where the network disagrees with the league. A value ranked high that mostly hinders, or one ranked low that quietly supports many */
+ const half=Math.ceil(n0/2),wd=A.gs.map((g,i)=>({g,i,d:A.D[g.id]}));let sur=null;
+ const hb=wd.filter(x=>x.i<half&&x.d.cOut>=2&&x.d.cOut>x.d.sOut).sort((a,b)=>(b.d.cOut-b.d.sOut)-(a.d.cOut-a.d.sOut))[0];
+ if(hb)sur={type:'blocker',id:hb.g.id,text:tr(`Anda menaruh ${Q(hb.g.name)} di peringkat ${hb.i+1}, padahal ia menghambat ${hb.d.cOut} nilai lain.`,`You ranked ${Q(hb.g.name)} #${hb.i+1}, yet it holds back ${hb.d.cOut} other values.`)};
+ else{const hd=wd.filter(x=>x.i>=half&&x.d.sOut>=2).sort((a,b)=>b.d.sOut-a.d.sOut)[0];if(hd)sur={type:'driver',id:hd.g.id,text:tr(`${Q(hd.g.name)} hanya peringkat ${hd.i+1} di liga, padahal ia mendukung ${hd.d.sOut} nilai lain.`,`${Q(hd.g.name)} is only #${hd.i+1} in your league, yet it supports ${hd.d.sOut} other values.`)}}
+ /* spiral findings: the route in, what the core eases on the way out, and the hindrance that sits on the route */
+ const route=A.route,coreN=C?C.name:'–',start=route[0],onR=new Set(route);
+ const blkE=A.E.filter(e=>e.v==='c'&&onR.has(e.b)).sort((x,y)=>((A.lay[x.b]??9)-(A.lay[y.b]??9))||(A.D[y.a].cOut-A.D[x.a].cOut))[0]||null;
+ const outN=A.out.map(nm),routeTxt=route.map(nm).join(' → ');
+ const coreWhy=!C?'':A.out.length?tr(`Juara turnamen Anda. Kalau terpenuhi, ${A.out.length} nilai lain ikut lebih mudah.`,`Your tournament winner. When it is fulfilled, ${A.out.length} other values get easier.`):tr('Juara turnamen Anda.','Your tournament winner.');
+ const startWhy=route.length>2?tr(`Dari sini dampaknya mengalir ke dalam, selangkah demi selangkah, sampai ke ${Q(coreN)}.`,`From here the effect flows inward, one step at a time, all the way to ${Q(coreN)}.`):route.length===2?tr(`Ia langsung membuat ${Q(coreN)} lebih mudah.`,`It makes ${Q(coreN)} easier directly.`):tr('Belum ada nilai yang tersambung ke inti.','No value is connected to the core yet.');
+ const PO=A.unc.length?A.unc[A.unc.length-1]:(A.cent.length>1?A.cent[A.cent.length-1].id:null);
+ const pOut=PO?(A.unc.includes(PO)?tr('Belum tersambung ke inti.','Not connected to the core yet.'):tr(`Di lapis ${A.lay[PO]}, paling jauh dari inti.`,`On layer ${A.lay[PO]}, the furthest from the core.`)):'';
+ let aha=null;const top3=A.gs.slice(1,3).find(g=>A.unc.includes(g.id)),half2=Math.ceil(n0/2),drv=A.gs.find((g,i)=>i>=half2&&(A.sz[g.id]||1)-1>=2);
+ if(blkE)aha={type:'blocker',id:blkE.a,text:blkE.b===A.core?tr(`${Q(nm(blkE.a))} menyulitkan ${Q(nm(blkE.b))}, inti Anda sendiri.`,`${Q(nm(blkE.a))} makes ${Q(nm(blkE.b))}, your own core, harder.`):tr(`${Q(nm(blkE.a))} menyulitkan ${Q(nm(blkE.b))}, padahal ${Q(nm(blkE.b))} ada di jalan menuju inti.`,`${Q(nm(blkE.a))} makes ${Q(nm(blkE.b))} harder, and ${Q(nm(blkE.b))} sits on the road to your core.`)};
+ else if(top3)aha={type:'loose',id:top3.id,text:tr(`${Q(top3.name)} masuk 3 besar turnamen, tapi belum tersambung ke inti.`,`${Q(top3.name)} made your top 3, yet it is not connected to the core.`)};
+ else if(drv)aha={type:'driver',id:drv.id,text:tr(`${Q(drv.name)} hanya peringkat ${A.gs.indexOf(drv)+1}, padahal ia menopang ${(A.sz[drv.id]||1)-1} nilai lain menuju inti.`,`${Q(drv.name)} ranked only #${A.gs.indexOf(drv)+1}, yet it carries ${(A.sz[drv.id]||1)-1} other values toward the core.`)};
+ if(aha)sur=aha;
+ const later=route.slice(1).map(id=>Q(nm(id)));
+ const stepS=!C?'':blkE?tr(`Beri ${Q(nm(blkE.a))} waktunya sendiri minggu ini, agar tidak menyulitkan ${Q(nm(blkE.b))}.`,`Give ${Q(nm(blkE.a))} its own time this week, so it stops making ${Q(nm(blkE.b))} harder.`):route.length>1?tr(`Mulai dari ${Q(nm(start))}: satu langkah kecil yang terjadwal minggu ini. Dampaknya mengalir ke ${later.join(' lalu ')}.`,`Start with ${Q(nm(start))}: one small, scheduled step this week. Its effect flows on to ${later.join(' then ')}.`):tr(`Sisihkan waktu tetap minggu ini untuk ${Q(coreN)}.`,`Book a fixed slot this week for ${Q(coreN)}.`);
+ const mutC=[];A.gs.forEach((x,i)=>A.gs.slice(i+1).forEach(y=>{if(A.E.some(e=>e.a===x.id&&e.b===y.id&&e.v==='c')&&A.E.some(e=>e.a===y.id&&e.b===x.id&&e.v==='c'))mutC.push([x.id,y.id])}));
+ const teaser=mutC.length?tr(`${mutC.length} pasang nilai Anda saling menahan.`,`${mutC.length} pair${mutC.length>1?'s':''} of your values hold each other back.`):A.nc?tr(`Ada ${A.nc} hambatan di antara nilai-nilai Anda.`,A.nc===1?'There is 1 hindrance among your values.':`There are ${A.nc} hindrances among your values.`):tr('Peta Anda hampir tanpa hambatan: tanda yang baik.','Your map has almost no hindrances: a good sign.');
+ return {A,core:coreN,coreId:C?C.id:null,coreWhy,start:nm(start)||coreN,startId:start||null,startWhy,route,routeTxt,out:A.out,outN,blk:blkE?{a:blkE.a,b:blkE.b,k:blkE.k}:null,blkTxt:blkE?tr(`${nm(blkE.a)} menyulitkan ${nm(blkE.b)}`,`${nm(blkE.a)} makes ${nm(blkE.b)} harder`):'',unc:A.unc,maxL:A.maxL,surprise:sur?sur.text:'',surpriseId:sur?sur.id:null,surpriseType:sur?sur.type:null,teaser,mutC,focus:coreN,focusWhy:coreWhy,focusId:C?C.id:null,peri:PO?nm(PO):'–',periWhy:pOut,periId:PO,supId:sup?sup.id:null,blkId:blk?blk.id:null,lever:levTxt,leverWhy:levWhy,leverId:lev?lev.id:top&&top.id,pressure:prTxt,pressureWhy:prWhy,pressureIds:pr?[pr.a,pr.b]:null,step:stepS||step,n:A.n,links:A.E.length,ns:A.ns,nc:A.nc,nb:A.nb}}
+/* pack a session into a short URL-safe code (gzip + base64url) */
+async function pack(obj){const s=new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'));const u=new Uint8Array(await new Response(s).arrayBuffer());let b='';u.forEach(x=>b+=String.fromCharCode(x));return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+async function unpack(code){code=String(code).trim().replace(/^.*#d=/,'').replace(/\s+/g,'');const b=atob(code.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((code.length+3)%4));const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);const s=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(s).text())}
+/* Attentive mark, traced from the logo: [radius ratio, start angle, sweep] drawn anticlockwise */
+const MARK=[[.516,-162.5,211],[.76,-110,273.5],[1,-17,341.3]];
+function markSVG(size=32,col='#d19d38'){const c=size/2,R=size*.43,w=R*.113,pt=(r,a)=>[c+Math.cos(a*Math.PI/180)*r,c+Math.sin(a*Math.PI/180)*r];return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">${MARK.map(([k,st,sw])=>{const r=k*R,[x1,y1]=pt(r,st),[x2,y2]=pt(r,st-sw);return `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${r.toFixed(2)} ${r.toFixed(2)} 0 ${sw>180?1:0} 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="${col}" stroke-width="${w.toFixed(2)}" stroke-linecap="round"/>`}).join('')}</svg>`}
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+const WIN={'€':128,'‚':130,'„':132,'…':133,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,'—':151,'·':183,'±':177,'×':215,'°':176};
+const pdfPrep=s=>String(s??'').replace(/→/g,'->').replace(/←/g,'<-').replace(/↔/g,'<->').replace(/−/g,'-').replace(/≥/g,'>=').replace(/≤/g,'<=').replace(/✓/g,'v').replace(/\s+/g,' ');
+function pdfStr(s){let o='';for(const ch of pdfPrep(s)){const c=ch.codePointAt(0);let b=c<128?c:(WIN[ch]??(c>=160&&c<256?c:-1));if(b<0)continue;if(b===40||b===41||b===92)o+='\\';o+=String.fromCharCode(b)}return o}
+const MC=document.createElement('canvas').getContext('2d');
+function tw(s,size,bold){MC.font=`${bold?'bold ':''}100px Helvetica, Arial, "Liberation Sans", sans-serif`;return MC.measureText(pdfPrep(s)).width/100*size}
+function wrapT(s,size,bold,w){const words=pdfPrep(s).split(' ');const lines=[];let cur='';words.forEach(wd=>{const t=cur?cur+' '+wd:wd;if(tw(t,size,bold)<=w||!cur)cur=t;else{lines.push(cur);cur=wd}});if(cur)lines.push(cur);return lines}
+const hexrgb=h=>{h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return [0,2,4].map(i=>(parseInt(h.slice(i,i+2),16)/255).toFixed(3))};
+const PC={ink:'#2b3346',muted:'#6e6a62',gold:'#8a6a35',logo:'#d19d38',line:'#e9e0cc',sand:'#f3ebd9',paper:'#fffdf8',sup:'#3f8159',con:'#b5513a',amb:'#5a72a6',navy:'#2b3346'};
+function PDFDoc(){const W=595.28,H=841.89,pages=[],imgs=[];let cur=null;const f=n=>(+n).toFixed(2);
+ const D={W,H,pages,y:0,
+  page(){cur={ops:[]};pages.push(cur);D.y=0;return cur},
+  setPage(p){cur=p},
+  op(s){cur.ops.push(s)},
+  col(hex,stroke){const [r,g,b]=hexrgb(hex);D.op(`${r} ${g} ${b} ${stroke?'RG':'rg'}`)},
+  text(x,y,s,size=10,bold=false,color=PC.ink,sp=0){D.col(color);D.op(`BT /${bold?'F2':'F1'} ${f(size)} Tf ${sp?f(sp)+' Tc ':''}${f(x)} ${f(H-y)} Td (${pdfStr(s)}) Tj ${sp?'0 Tc ':''}ET`)},
+  textR(xr,y,s,size,bold,color){D.text(xr-tw(s,size,bold),y,s,size,bold,color)},
+  rect(x,y,w,h,fill,stroke,lw=.8,r=0){const X=x,Y=H-y-h,k=.5523*r;let p;if(!r)p=`${f(X)} ${f(Y)} ${f(w)} ${f(h)} re`;else p=`${f(X+r)} ${f(Y)} m ${f(X+w-r)} ${f(Y)} l ${f(X+w-r+k)} ${f(Y)} ${f(X+w)} ${f(Y+r-k)} ${f(X+w)} ${f(Y+r)} c ${f(X+w)} ${f(Y+h-r)} l ${f(X+w)} ${f(Y+h-r+k)} ${f(X+w-r+k)} ${f(Y+h)} ${f(X+w-r)} ${f(Y+h)} c ${f(X+r)} ${f(Y+h)} l ${f(X+r-k)} ${f(Y+h)} ${f(X)} ${f(Y+h-r+k)} ${f(X)} ${f(Y+h-r)} c ${f(X)} ${f(Y+r)} l ${f(X)} ${f(Y+r-k)} ${f(X+r-k)} ${f(Y)} ${f(X+r)} ${f(Y)} c h`;if(fill)D.col(fill);if(stroke){D.col(stroke,true);D.op(`${f(lw)} w`)}D.op(p+' '+(fill&&stroke?'B':fill?'f':'S'))},
+  line(x1,y1,x2,y2,color,lw=.8){D.col(color,true);D.op(`${f(lw)} w ${f(x1)} ${f(H-y1)} m ${f(x2)} ${f(H-y2)} l S`)},
+  ring(cx,cy,r,color,lw=.8){const k=.5523*r,X=cx,Y=H-cy;D.col(color,true);D.op(`${f(lw)} w ${f(X+r)} ${f(Y)} m ${f(X+r)} ${f(Y+k)} ${f(X+k)} ${f(Y+r)} ${f(X)} ${f(Y+r)} c ${f(X-k)} ${f(Y+r)} ${f(X-r)} ${f(Y+k)} ${f(X-r)} ${f(Y)} c ${f(X-r)} ${f(Y-k)} ${f(X-k)} ${f(Y-r)} ${f(X)} ${f(Y-r)} c ${f(X+k)} ${f(Y-r)} ${f(X+r)} ${f(Y-k)} ${f(X+r)} ${f(Y)} c S`)},
+  circle(cx,cy,r,fill){const k=.5523*r,X=cx,Y=H-cy;D.col(fill);D.op(`${f(X+r)} ${f(Y)} m ${f(X+r)} ${f(Y+k)} ${f(X+k)} ${f(Y+r)} ${f(X)} ${f(Y+r)} c ${f(X-k)} ${f(Y+r)} ${f(X-r)} ${f(Y+k)} ${f(X-r)} ${f(Y)} c ${f(X-r)} ${f(Y-k)} ${f(X-k)} ${f(Y-r)} ${f(X)} ${f(Y-r)} c ${f(X+k)} ${f(Y-r)} ${f(X+r)} ${f(Y-k)} ${f(X+r)} ${f(Y)} c f`)},
+  addJPEG(bytes,w,h){const id='Im'+(imgs.length+1);imgs.push({id,bytes,w,h});return id},
+  image(id,x,y,w,h){D.op(`q ${f(w)} 0 0 ${f(h)} ${f(x)} ${f(H-y-h)} cm /${id} Do Q`)},
+  build(title){const enc=s=>{const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i)&255;return u};const chunks=[],offs=[];let len=0,n=0;const push=x=>{const u=typeof x==='string'?enc(x):x;chunks.push(u);len+=u.length};const obj=body=>{n++;offs[n]=len;push(`${n} 0 obj\n`);(Array.isArray(body)?body:[body]).forEach(push);push('\nendobj\n');return n};
+   push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');const imgStart=5,pageStart=imgStart+imgs.length;
+   obj('<< /Type /Catalog /Pages 2 0 R >>');obj(`<< /Type /Pages /Kids [${pages.map((_,i)=>`${pageStart+i*2} 0 R`).join(' ')}] /Count ${pages.length} >>`);
+   obj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');obj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+   imgs.forEach(im=>obj([`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>\nstream\n`,im.bytes,'\nendstream']));
+   const xo=imgs.map((im,i)=>`/${im.id} ${imgStart+i} 0 R`).join(' ');
+   pages.forEach((p,i)=>{const c=p.ops.join('\n');obj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(W)} ${f(H)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xo?` /XObject << ${xo} >>`:''} >> /Contents ${pageStart+i*2+1} 0 R >>`);obj([`<< /Length ${c.length} >>\nstream\n`,c,'\nendstream'])});
+   const info=obj(`<< /Title (${pdfStr(title)}) /Author (Biro Psikologi Attentive) /Producer (Peta Tujuan Attentive) >>`);
+   const xref=len;let x=`xref\n0 ${n+1}\n0000000000 65535 f \n`;for(let i=1;i<=n;i++)x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';push(x);push(`trailer\n<< /Size ${n+1} /Root 1 0 R /Info ${info} 0 R >>\nstartxref\n${xref}\n%%EOF\n`);return new Blob(chunks,{type:'application/pdf'})}};
+ return D}
+function b64bytes(u){const b=atob(u.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+async function svgToJPEG(svg,W,H,scale=2,bg='#fffdf8'){const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});const c=document.createElement('canvas');c.width=Math.round(W*scale);c.height=Math.round(H*scale);const x=c.getContext('2d');x.fillStyle=bg;x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return {bytes:b64bytes(c.toDataURL('image/jpeg',.92)),w:c.width,h:c.height}}
+
+/* ===================== counselor console ===================== */
+const LOGO_COL='#d19d38';
+let KDEV=false; /* developer mode is off on the live site */let ktaps=[];
+let D=null,K=null;const KK=id=>'attentive-gsc-k-'+id;
+const CYC=['0','s','c'],SYM={s:'+',c:'−',b:'+'};
+const SVCS=['Sesi Goal System Compass lanjutan','Cek Kesehatan Mental (R-MHCU)','Tes Minat Karier (ACM-Y48)','Profil Kognitif Lengkap','Tes Proyektif + Big10','Rujukan ke psikolog klinis'];
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+function sample(){const ids=['gbody0','gwork6','gmoney0','gfamily0','gmind1','gwork0','gplay0','glearn3'],names=['Tidur lebih teratur','Mengurangi menunda-nunda pekerjaan','Punya tabungan darurat','Lebih dekat dengan orang tua','Mengurangi waktu scrolling','Menyelesaikan tugas atau skripsi yang tertunda','Kembali ke hobi lama','Melanjutkan sekolah'];const rel={};[['gbody0','gwork6','s'],['gbody0','gmind1','s'],['gmind1','gwork6','s'],['gwork6','gwork0','s'],['gbody0','gwork0','s'],['gwork0','gfamily0','c'],['gwork0','gplay0','c'],['gmoney0','glearn3','c'],['gplay0','gmind1','s'],['gmind1','gbody0','s'],['glearn3','gwork0','b'],['gfamily0','gmind1','s']].forEach(([a,b,v])=>rel[a+'>'+b]=v);
+ return {v:15,id:'GSC-CONTOH',profile:{name:'Rina Pratiwi (contoh)',age:'24',sex:'Perempuan',edu:'D4/S1',email:'rina@example.com',wa:'081234567890'},t0:Date.now()-11*60000,t1:Date.now(),goals:ids.map((id,i)=>({id,name:names[i],area:id.slice(1).replace(/\d+$/,''),src:'card',rank:i+1,prog:[1,0,0,1,1,0,0,0][i]})),rel}}
+function blankK(){const B=brief(D),s=draft();return {auto:s,id:D.id,rel:{...D.rel},edits:[],quality:false,qnote:'',ver:{rank:false,lever:false,peri:false,pressure:false,missing:false},vnote:'',summary:s,lever:B.focusId,pressure:B.pressureIds?B.pressureIds.join('>'):'',strengths:'',steps:defaultSteps(),svc:[],refer:'',name:'',title:'S.Psi',released:null}}
+function cur(){return {...D,rel:K?K.rel:D.rel}}
+function draft(){const B=brief(cur()),A=B.A,p=D.profile,first=p.name.split(' ')[0];const parts=[`${first} memetakan ${A.n} nilai. Juara turnamennya, ${Q(B.core)}, menjadi inti; ${A.n-A.unc.length-1} nilai tersambung ke inti dalam ${A.maxL} lapis, dan ${A.unc.length} belum tersambung.`];
+ if(B.route.length>1)parts.push(`Jalan menuju inti: ${B.routeTxt}. ${B.startWhy}`);if(B.outN.length)parts.push(`Sebaliknya, bila ${Q(B.core)} terpenuhi, ${B.outN.map(Q).join(', ')} ikut lebih mudah.`);if(B.surprise)parts.push(`Temuan yang perlu dibahas: ${B.surprise}`);
+ parts.push('[Konselor: lengkapi dengan apa yang dikatakan klien saat verifikasi, misalnya alasan di balik hubungan-hubungan ini dan apa yang paling ingin ia ubah.]');return parts.join(' ')}
+function defaultSteps(){const B=brief(cur()),A=B.A,o=[B.step];if(A.pressure&&!(B.periId&&A.pressure.a===B.periId))o.push(`Atur giliran antara ${Q(gname(D,A.pressure.a))} dan ${Q(gname(D,A.pressure.b))}: tetapkan hari atau jam yang berbeda.`);o.push('Petakan ulang dalam 4 minggu dan bandingkan inti, lapis, dan jalan menuju inti.');return o.filter(Boolean).slice(0,3)}
+function flags(){const A=analyze(cur()),p=D.profile,min=D.t0&&D.t1?Math.round((D.t1-D.t0)/60000):null,out=[];
+ if(min!=null)out.push(min<5?['w',`Pengerjaan sangat cepat (${min} menit). Tanyakan apakah klien membaca setiap kartu dengan saksama.`]:['',`Durasi pengerjaan ${min} menit.`]);
+ const dens=A.cells?A.E.length/A.cells:0;if(!A.E.length)out.push(['w','Tidak ada hubungan yang ditandai. Pastikan klien memahami cara menandai hubungan.']);else if(dens>.6)out.push(['w',`${Math.round(dens*100)}% pasangan ditandai berhubungan. Kemungkinan klien menandai terlalu banyak.`]);else out.push(['',`${Math.round(dens*100)}% pasangan ditandai berhubungan.`]);
+ if(A.E.length>=5&&new Set(A.E.map(e=>e.v)).size===1)out.push(['w','Semua hubungan sejenis. Periksa apakah klien membedakan dukungan dan hambatan.']);
+ if(D.lang==='en')out.push(['','Klien mengerjakan dalam Bahasa Inggris, jadi nama tujuan tertulis dalam Bahasa Inggris.']);
+ if(+p.age<18)out.push(['w','Klien berusia di bawah 18 tahun. Pastikan ada persetujuan orang tua atau wali sebelum sesi.']);
+ if(K&&K.edits.length)out.push(['w',`${K.edits.length} hubungan diubah konselor setelah verifikasi.`]);return out}
+function done(){return {1:K.quality,2:Object.values(K.ver).every(Boolean),3:K.summary.trim().length>80&&!/\[Konselor:/.test(K.summary),4:!!K.agreed&&K.steps.filter(s=>s.trim()).length>=2,5:!!K.released}}
+function saveK(){store.set(KK(D.id),JSON.stringify(K))}
+/* 2D map for screen and report */
+function layout2(A,W,H){const L=spiralLayout(A),R=Math.min(W,H)*.42,cx=W/2,cy=H/2,P={};A.gs.forEach(g=>{const p=L.P[g.id]||{x:0,y:1,k:null};P[g.id]={x:cx+p.x*R,y:cy+p.y*R,ring:p.k===0?-1:p.k==null?9:p.k}});P._rings=L.rings.map(q=>({r:q.r*R,k:q.k}));P._c=[cx,cy];return P}
+function mapSVG(data,o={}){const W=o.W||760,H=o.H||520,A=analyze(data),P=layout2(A,W,H),col={s:'#3f8159',c:'#b5513a'},pos={};A.cent.forEach(x=>pos[x.id]=x.pos);const rr=id=>P[id].ring===-1?20:P[id].ring===1?13:P[id].ring===9?9:11;
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Peta nilai"><defs>${Object.entries(col).map(([k,c])=>`<marker id="m${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}<radialGradient id="core"><stop offset="0" stop-color="#f3dfae"/><stop offset="1" stop-color="#f3dfae" stop-opacity="0"/></radialGradient></defs><rect width="${W}" height="${H}" fill="#fffdf8"/><circle cx="${P._c[0]}" cy="${P._c[1]}" r="${Math.min(W,H)*.2}" fill="url(#core)" opacity=".6"/>`;
+ P._rings.forEach(g=>{s+=`<circle cx="${P._c[0]}" cy="${P._c[1]}" r="${g.r.toFixed(1)}" fill="none" stroke="${g.k==null?'#8a93a8':'#d19d38'}" stroke-width="${g.k==null?1.5:2.5}" ${g.k==null?'stroke-dasharray="5 6"':''} opacity=".55"/><text x="${P._c[0]}" y="${(P._c[1]-g.r-5).toFixed(1)}" text-anchor="middle" style="font:700 9px Montserrat,Arial;fill:${g.k==null?'#6e778c':'#a37a2c'};letter-spacing:.08em">${g.k==null?'BELUM TERSAMBUNG':'LAPIS '+g.k}</text>`});
+ A.E.forEach(e=>{const a=P[e.a],b=P[e.b];if(!a||!b)return;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,rev=A.E.some(x=>x.a===e.b&&x.b===e.a),bend=rev?14:d*.08,x1=a.x+ux*(rr(e.a)+3),y1=a.y+uy*(rr(e.a)+3),x2=b.x-ux*(rr(e.b)+5),y2=b.y-uy*(rr(e.b)+5),mx=(x1+x2)/2-uy*bend,my=(y1+y2)/2+ux*bend;s+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${col[e.v]||col.s}" stroke-width="${A.tree.includes(e.k)?3:1.6}" stroke-dasharray="${e.v==='c'?'7 5':''}" stroke-linecap="round" marker-end="url(#m${e.v==='c'?'c':'s'})" opacity=".8"/>`});
+ A.cent.forEach(x=>{const p=P[x.id],r=rr(x.id),c0=p.ring===-1;s+=`<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})"><circle r="${r}" fill="${c0?'#e8c98e':'#fffdf8'}" stroke="#2b3346" stroke-width="${c0?2.5:2}"/><text y="${(r*.36).toFixed(1)}" text-anchor="middle" style="font:700 ${Math.max(11,r*.9).toFixed(0)}px Montserrat,Arial;fill:#2b3346">${x.pos}</text>${o.labels?`<text y="${r+15}" text-anchor="middle" style="font:${c0?700:500} ${c0?13:11.5}px Montserrat,Arial;fill:#2b3346;paint-order:stroke;stroke:#fffdf8;stroke-width:4px">${esc(x.name.length>26?x.name.slice(0,25)+'…':x.name)}</text>`:''}</g>`});return s+'</svg>'}
+function centTable(){const A=analyze(cur());return `<table class="ct"><tr><th>#</th><th>Lapis</th><th>Nilai</th><th>Turnamen</th><th>Memudahkan</th><th>Menyulitkan</th><th>Jalan ke inti</th></tr>${A.cent.map(x=>`<tr class="${x.lay===0?'cen':x.lay==null?'per':''}"><td>${x.pos}</td><td>${x.lay===0?'Inti':x.lay==null?'–':x.lay}</td><td>${esc(x.name)}</td><td>${x.rank}</td><td>${A.D[x.id].sOut}</td><td>${A.D[x.id].cOut}</td><td>${A.route.includes(x.id)&&A.route.length>1?'✓':''}</td></tr>`).join('')}</table><p class="small" style="margin-top:6px;color:var(--mute)">Inti = juara turnamen. Lapis 1 memudahkan inti, lapis 2 memudahkan lapis 1, dst. “–” = belum tersambung ke inti.</p>`}
+function valueNotes(){const A=analyze(cur()),w=A.gs.filter(g=>g.note);return w.length?`<details class="notes" open><summary>Makna nilai menurut klien</summary><ol>${A.gs.map(g=>`<li><b>${esc(g.name)}</b>${g.note?` · <span>${esc(g.note)}</span>`:''}</li>`).join('')}</ol></details>`:''}
+function roleList(){const A=analyze(cur()),RL=roles(A),N={trouble:['Biang kerok','menghambat',d=>d.cOut],driver:['Penggerak','membantu',d=>d.sOut],squeezed:['Terhimpit','dihambat oleh',d=>d.cIn]};const rows=Object.keys(N).map(r=>{const ids=A.gs.filter(g=>RL[g.id].role===r);return ids.length?`<li><b>${N[r][0]}:</b> ${ids.map(g=>`${esc(g.name)} <span>(${N[r][1]} ${N[r][2](RL[g.id].d)})</span>`).join(', ')}</li>`:''}).join('');const hub=A.gs.filter(g=>RL[g.id].hub).map(g=>esc(g.name)).join(', ');return `<ul class="rolelist">${rows}${hub?`<li><b>Paling terhubung:</b> ${hub}</li>`:''}${!rows&&!hub?'<li>Tidak ada peran yang menonjol.</li>':''}</ul>`}
+function matrix(){const A=analyze(cur()),o=A.gs;return `<div class="mx"><table><tr><th></th>${o.map((g,i)=>`<th title="${esc(g.name)}">${i+1}</th>`).join('')}</tr>${o.map((g,i)=>`<tr><th class="rn" title="${esc(g.name)}">${i+1}. ${esc(g.name)}</th>${o.map(h=>{if(h.id===g.id)return '<td class="d"></td>';const k=g.id+'>'+h.id,v=K.rel[k]||'0';return `<td><button type="button" data-a="cell" data-k="${esc(k)}" data-v="${v}" title="${esc(g.name)} → ${esc(h.name)}: ${v==='0'?'tidak berpengaruh':REL[v].toLowerCase()}">${SYM[v]||''}</button></td>`}).join('')}</tr>`).join('')}</table></div>`}
+function guide(){const A=analyze(cur()),nm=id=>Q(gname(D,id)),top=A.gs[0];return `<ol><li><b>Pembukaan · 5 menit.</b> <span>Jelaskan tujuan sesi: membaca peta bersama, bukan menilai.</span><span class="q">“Apa yang Anda rasakan saat melihat peta ini pertama kali?”</span></li>
+<li><b>Verifikasi urutan · 5 menit.</b> <span>Periksa apakah urutan kepentingan masih tepat.</span><span class="q">“Apakah ${top?nm(top.id):'tujuan teratas'} memang yang paling penting saat ini?”</span></li>
+<li><b>Penggerak · 10 menit.</b> <span>Konfirmasi dan gali cara kerjanya.</span><span class="q">“${A.lever?`Bagaimana ${nm(A.lever.id)} membantu tujuan-tujuan lain dalam keseharian Anda?`:'Tujuan mana yang paling sering membuat tujuan lain ikut bergerak?'}”</span></li>
+<li><b>Titik tekan · 15 menit.</b> <span>Cari sumber benturan: waktu, tenaga, uang, atau arah.</span><span class="q">“${A.pressure?`Apa yang terjadi pada ${nm(A.pressure.b)} saat Anda sedang fokus pada ${nm(A.pressure.a)}?`:'Adakah tujuan yang diam-diam saling berebut waktu?'}”</span></li>
+${(()=>{const RL=roles(A),t=A.gs.find(g=>RL[g.id].role==='trouble');return t?`<li><b>Biang kerok · bagian dari titik tekan.</b> <span>Tujuan yang menahan banyak tujuan lain.</span><span class="q">“Kalau ${esc(gname(D,t.id))} diberi jadwal sendiri, tujuan mana yang paling lega?”</span></li>`:''})()}<li><b>Rencana · 10 menit.</b> <span>Sepakati 2–3 langkah kecil dengan waktu yang pasti.</span><span class="q">“Hari dan jam berapa langkah pertama ini akan Anda lakukan?”</span></li>
+<li><b>Penutup · 5 menit.</b> <span>Ringkas kesepakatan, jadwalkan pemetaan ulang 4 minggu lagi. Rujuk bila ada tanda tekanan berat.</span></li></ol>`}
+function view(){const A=analyze(cur()),p=D.profile,dn=done(),min=D.t0&&D.t1?Math.round((D.t1-D.t0)/60000):'–',wa=String(p.wa).replace(/\D/g,'').replace(/^0/,'62'),date=new Date(D.t1||Date.now()).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});const T=[[1,'Periksa kualitas data'],[2,'Verifikasi peta bersama klien'],[3,'Tulis interpretasi'],[4,'Susun rencana tindak lanjut'],[5,'Rilis laporan lengkap']];
+ const opt=A.gs.map(g=>`<option value="${esc(g.id)}" ${K.lever===g.id?'selected':''}>${esc(g.name)}</option>`).join(''),popt=A.E.filter(e=>e.v!=='s').map(e=>`<option value="${esc(e.a+'>'+e.b)}" ${K.pressure===e.a+'>'+e.b?'selected':''}>${esc(gname(D,e.a))} → ${esc(gname(D,e.b))}</option>`).join('');
+ return `<div class="grid"><aside class="side"><div class="card client"><p class="k">Klien · ${esc(D.id)}</p><h2>${esc(p.name)}</h2><div class="dl"><b>Usia</b><span>${esc(p.age)} tahun</span><b>Jenis kelamin</b><span>${esc(p.sex)}</span><b>Pendidikan</b><span>${esc(p.edu)}</span><b>Email</b><span>${esc(p.email)}</span><b>WhatsApp</b><span><a href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">${esc(p.wa)}</a></span><b>Tanggal</b><span>${esc(date)}</span><b>Durasi</b><span>${min} menit</span></div></div>
+<div class="card"><p class="k">Tugas konselor</p><ul class="tasks">${T.map(([n,t])=>`<li class="${dn[n]?'done':''}"><a href="#t${n}"><i>✓</i>${n}. ${t}</a></li>`).join('')}</ul></div>
+<details class="card guide"><summary>Panduan sesi 50 menit</summary>${guide()}</details></aside>
+<div class="main">
+<section class="task${dn[1]?' done':''}" id="t1"><header><span class="n">1</span><div><h2>Periksa kualitas data</h2><p>Sebelum membaca isi, pastikan jawaban klien layak ditafsirkan.</p></div></header><div class="flags">${flags().map(f=>`<div class="flag ${f[0]}"><i></i><span>${esc(f[1])}</span></div>`).join('')}</div><label class="check"><input type="checkbox" data-k="quality" ${K.quality?'checked':''}><span>Saya sudah memeriksa tanda-tanda di atas dan data ini layak dibaca.</span></label><label class="l" for="qnote">Catatan kualitas (opsional)</label><textarea id="qnote" data-k="qnote" style="min-height:60px">${esc(K.qnote)}</textarea></section>
+<section class="task${dn[2]?' done':''}" id="t2"><header><span class="n">2</span><div><h2>Verifikasi peta bersama klien</h2><p>Periksa peta bersama klien lewat sesi atau telepon. Ketuk sel matriks untuk memperbaiki hubungan yang menurut klien keliru.</p></div></header>
+<div class="mapwrap"><div><div class="map" id="map">${mapSVG(cur(),{labels:true})}</div><div class="legend"><span><i style="--c:var(--sup)"></i>memudahkan (tebal = jalur lapis)</span><span><i style="--c:var(--con);border-top-style:dashed"></i>menyulitkan</span><span>angka = nomor di tabel · lingkar = lapis · putus-putus = belum tersambung</span></div>${centTable()}${valueNotes()}</div><div><p class="k" style="margin-bottom:6px">Matriks · baris memengaruhi kolom</p>${matrix()}${K.edits.length?`<p class="edits">${K.edits.length} perubahan: ${esc(K.edits.slice(-3).join('; '))}${K.edits.length>3?'…':''}</p>`:''}</div></div>
+<div style="margin-top:12px">${[['rank',`Klien setuju bahwa intinya adalah ${Q(brief(cur()).core)}.`],['lever',`Klien mengenali jalan menuju inti: ${brief(cur()).routeTxt}.`],['peri',`Klien setuju nilai yang belum tersambung memang belum terkait dengan inti${A.unc.length?`: ${A.unc.map(id=>Q(gname(D,id))).join(', ')}`:''}.`],['pressure',`Klien mengenali titik tekan (penghambat utama): ${A.pressure?`${Q(gname(D,A.pressure.a))} → ${Q(gname(D,A.pressure.b))}`:'tidak ada hambatan menonjol'}.`],['missing','Tidak ada tujuan penting yang terlewat dari peta.']].map(([k,t])=>`<label class="check"><input type="checkbox" data-ver="${k}" ${K.ver[k]?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div><label class="l" for="vnote">Catatan verifikasi</label><textarea id="vnote" data-k="vnote" style="min-height:60px" placeholder="Apa yang dikoreksi atau ditambahkan klien?">${esc(K.vnote)}</textarea></section>
+<section class="task${dn[3]?' done':''}" id="t3"><header><span class="n">3</span><div><h2>Tulis interpretasi</h2><p>Draf disusun otomatis dari peta. Sunting dengan kata-kata Anda dan masukkan apa yang dikatakan klien. Bagian dalam tanda kurung siku wajib diganti.</p></div></header>
+<label class="l" for="summary">Ringkasan konselor (tampil di halaman pertama laporan)</label><textarea id="summary" data-k="summary" style="min-height:150px">${esc(K.summary)}</textarea>${/\[Konselor:/.test(K.summary)?'<p class="need">Ganti bagian [Konselor: …] sebelum merilis laporan.</p>':''}
+<div class="row2"><div><label class="l" for="lever">Nilai sentral yang ditetapkan</label><select id="lever" data-k="lever">${opt}</select></div><div><label class="l" for="pressure">Penghambat utama yang ditetapkan</label><select id="pressure" data-k="pressure"><option value="">Tidak ada</option>${popt}</select></div></div>
+<label class="l" for="strengths">Kekuatan yang terlihat (opsional)</label><textarea id="strengths" data-k="strengths" style="min-height:60px" placeholder="Misalnya: banyak tujuan yang saling menguatkan di area kesehatan.">${esc(K.strengths)}</textarea></section>
+<section class="task${dn[4]?' done':''}" id="t4"><header><span class="n">4</span><div><h2>Susun rencana tindak lanjut</h2><p>Dua sampai tiga langkah kecil yang disepakati bersama klien, lengkap dengan waktunya bila sudah ditentukan.</p></div></header>
+<div class="steps3">${K.steps.map((s,i)=>`<input type="text" data-step="${i}" value="${esc(s)}" aria-label="Langkah ${i+1}">`).join('')}</div>
+<label class="check"><input type="checkbox" data-k="agreed" ${K.agreed?'checked':''}><span>Langkah-langkah ini sudah disepakati bersama klien, termasuk kapan dilakukan.</span></label>
+<label class="l">Rekomendasi lanjutan (opsional)</label><div class="svc">${SVCS.map(s=>`<label class="check"><input type="checkbox" data-svc="${esc(s)}" ${K.svc.includes(s)?'checked':''}><span>${esc(s)}</span></label>`).join('')}</div>
+<label class="l" for="refer">Catatan rujukan atau risiko (tidak tampil di laporan klien)</label><textarea id="refer" data-k="refer" style="min-height:60px">${esc(K.refer)}</textarea></section>
+<section class="task${dn[5]?' done':''}" id="t5"><header><span class="n">5</span><div><h2>Rilis laporan lengkap</h2><p>Laporan hanya bisa dirilis setelah tugas 1 sampai 4 selesai. Nama Anda tercantum sebagai penyusun.</p></div></header>
+<div class="row2"><div><label class="l" for="kname">Nama konselor</label><input type="text" id="kname" data-k="name" value="${esc(K.name)}" placeholder="Nama lengkap"></div><div><label class="l" for="ktitle">Gelar</label><input type="text" id="ktitle" data-k="title" value="${esc(K.title)}"></div></div>
+${!(dn[1]&&dn[2]&&dn[3]&&dn[4])?`<p class="need" style="margin-top:10px">Belum bisa dirilis: ${[!dn[1]&&'tugas 1',!dn[2]&&'tugas 2',!dn[3]&&'tugas 3',!dn[4]&&'tugas 4'].filter(Boolean).join(', ')} belum selesai.</p>`:''}
+<div class="btns"><button type="button" class="btn" data-a="release" ${dn[1]&&dn[2]&&dn[3]&&dn[4]&&K.name.trim()?'':'disabled'}>Unduh laporan lengkap (PDF)</button><button type="button" class="btn ghost" data-a="draftpdf">Pratinjau draf</button><button type="button" class="btn ghost" data-a="copywa">Salin pesan untuk klien</button><a class="btn ghost" href="mailto:${esc(p.email)}?subject=${encodeURIComponent('Laporan Lengkap Goal System Compass')}&body=${encodeURIComponent(clientMsg())}">Buka email ke klien</a><button type="button" class="btn ghost" data-a="exportK">Simpan pekerjaan (JSON)</button></div>${K.released?`<p class="small" style="margin-top:10px;color:var(--ok)">Dirilis ${new Date(K.released).toLocaleString('id-ID')}.</p>`:''}</section>
+</div></div>`}
+function clientMsg(){const p=D.profile;return `Halo ${p.name.split(' ')[0]},\n\nTerima kasih sudah mengerjakan Goal System Compass. Terlampir Laporan Lengkap Anda yang sudah saya baca dan verifikasi.\n\nTiga hal yang paling penting dari peta Anda ada di halaman 2: penggerak, titik tekan, dan rencana tindak lanjut. Bila ada yang ingin dibahas, balas pesan ini.\n\nSalam,\n${K.name||'[nama konselor]'}, ${K.title}\nBiro Psikologi Attentive · attentiveid.com`}
+function draw(){$('#devk').innerHTML=KDEV&&D?'<button type="button" class="devk" data-a="devK">DEV · Isi semua tugas</button>':'';if(!D){$('#app').innerHTML=loader();return}$('#app').innerHTML=view();saveK()}
+function loader(){return `<div class="load"><p class="k">Konsol Konselor</p><h1>Buka data klien</h1><p>Buka tautan “Buka di Konsol Konselor” dari email notifikasi, atau tempel kode data di bawah. Data hanya diproses di peramban ini dan tidak dikirim ke mana pun.</p><textarea id="code" placeholder="Tempel tautan atau kode data di sini" style="min-height:120px"></textarea><div class="btns"><button type="button" class="btn" data-a="open">Buka</button><button type="button" class="btn ghost" data-a="loadK">Muat pekerjaan tersimpan (JSON)</button><button type="button" class="btn ghost" data-a="demo">Lihat dengan data contoh</button></div><input type="file" id="kfile" accept=".json,application/json" hidden></div>`}
+function setData(d,k){D=d;D.goals.sort((a,b)=>a.rank-b.rank);let saved=null;try{saved=JSON.parse(store.get(KK(D.id))||'null')}catch(e){}K=k||saved||blankK();draw();window.scrollTo(0,0)}
+/* report */
+async function buildPDF(final){const data=cur(),A=analyze(data),Dc=PDFDoc(),M=46,CW=Dc.W-2*M,BOT=Dc.H-60,p=D.profile,date=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}),INK='#2b3346',BODY='#3a4255';
+ let logo=null;try{const lj=await svgToJPEG(markSVG(96,LOGO_COL),96,96,1,'#ffffff');logo=Dc.addJPEG(lj.bytes,lj.w,lj.h)}catch(e){}
+ const head=()=>{Dc.page();if(logo)Dc.image(logo,M,30,18,18);Dc.text(M+24,43.5,'attentive.',12,true,PC.logo);Dc.textR(Dc.W-M,42,'LAPORAN LENGKAP · GOAL SYSTEM COMPASS',7,true,PC.muted,.6);Dc.line(M,58,Dc.W-M,58,PC.line,.7);Dc.y=84};
+ const need=h=>{if(Dc.y+h>BOT)head()};const para=(t,o={})=>{const size=o.size||10.5,lh=o.lh||size*1.5;wrapT(t,size,o.bold,o.w||CW).forEach(l=>{need(lh);Dc.text(o.x||M,Dc.y+size,l,size,o.bold,o.color||BODY);Dc.y+=lh});Dc.y+=o.after??6};
+ const h2=(t,k)=>{need(60);Dc.y+=4;if(k){Dc.text(M,Dc.y+8,k.toUpperCase(),7.5,true,PC.gold,.9);Dc.y+=15}Dc.text(M,Dc.y+15,t,16,true,INK);Dc.y+=28};
+ // page 1
+ Dc.page();Dc.rect(0,0,Dc.W,150,PC.sand,null);Dc.op(`q 0 ${(Dc.H-150).toFixed(2)} ${Dc.W.toFixed(2)} 150 re W n`);for(let i=0;i<8;i++)Dc.ring(Dc.W+10,-14,60+i*24,'#e6d8b8',4);Dc.op('Q');if(logo)Dc.image(logo,M,32,22,22);Dc.text(M+28,48,'attentive.',14,true,PC.logo);Dc.textR(Dc.W-M,45,'LAPORAN LENGKAP',7.5,true,PC.gold,.8);
+ Dc.text(M,100,'Goal System Compass',24,true,INK);Dc.text(M,124,`${p.name} · ${p.age} tahun · ${date} · ${D.id}`,9.5,false,PC.muted);Dc.y=176;
+ if(!final){Dc.rect(M,Dc.y-8,CW,26,'#fbeee6',null,0,6);Dc.text(M+12,Dc.y+9,'DRAF · belum diverifikasi konselor. Jangan dikirim ke klien.',8.5,true,PC.con);Dc.y+=30}
+ Dc.text(M,Dc.y+8,'RINGKASAN KONSELOR',7.5,true,PC.gold,.9);Dc.y+=18;para(K.summary.replace(/\[Konselor:[^\]]*\]/g,'').trim(),{size:11.5,lh:17.5,color:INK,after:10});
+ try{const j=await svgToJPEG(mapSVG(data,{W:760,H:480}),760,480,2.4),id=Dc.addJPEG(j.bytes,j.w,j.h),h=CW*480/760;need(h+20);Dc.rect(M,Dc.y,CW,h+2,'#fffdf8',PC.line,.8,10);Dc.image(id,M+1,Dc.y+1,CW-2,h);Dc.y+=h+10}catch(e){}
+ const half=Math.ceil(A.n/2),cw=(CW-16)/2,y0=Dc.y;let yL=y0,yR=y0;A.cent.forEach((g,i)=>{const R=i>=half,x=M+(R?cw+16:0),y=R?yR:yL,nl=wrapT(g.name,9,false,cw-26),h=Math.max(16,nl.length*11.5+5);Dc.circle(x+8,y+8,8,'#2b3346');const n=String(i+1);Dc.text(x+8-tw(n,8,true)/2,y+11,n,8,true,'#ffffff');nl.forEach((l,k)=>Dc.text(x+22,y+11+k*11.5,l,9,false,INK));if(R)yR=y+h;else yL=y+h});Dc.y=Math.max(yL,yR)+6;
+ // page 2
+ head();h2('Inti dan jalan menuju ke sana','Hasil verifikasi');const lv=K.lever,pr=K.pressure?K.pressure.split('>'):null;
+ const card=(tag,title,body,col)=>{const tl=wrapT(title,12.5,true,CW-40),bl=wrapT(body,10,false,CW-40),h=16+10+tl.length*15+bl.length*14+8;need(h+6);Dc.rect(M,Dc.y,CW,h,'#fffdf8',PC.line,.8,12);Dc.rect(M,Dc.y+12,4,h-24,col,null,0,2);Dc.text(M+20,Dc.y+20,tag,7.5,true,col,.9);let y=Dc.y+34;tl.forEach(l=>{Dc.text(M+20,y,l,12.5,true,INK);y+=15});bl.forEach(l=>{Dc.text(M+20,y+2,l,10,false,BODY);y+=14});Dc.y+=h+6};
+ const BB=brief(data),cen=A.cent.find(x=>x.id===lv)||A.cent[0];card('INTI',gname(D,lv)||BB.focus,lv===BB.focusId?BB.focusWhy+(BB.outN.length?' '+BB.outN.join(', ')+'.':''):`Ditetapkan konselor bersama klien. Posisi ${cen?cen.pos:'–'} dari ${A.n}.`,PC.sup);
+ if(BB.route.length>1)card('JALAN MENUJU INTI',BB.routeTxt.replace(/→/g,'->'),BB.startWhy,PC.gold);
+ card('PENYUMBAT',BB.blk?`${gname(D,BB.blk.a)} -> ${gname(D,BB.blk.b)}`:pr?`${gname(D,pr[0])} -> ${gname(D,pr[1])}`:'Tidak ada hambatan yang menonjol',BB.blk?'Menyulitkan nilai yang berada di jalan menuju inti.':pr?'Hambatan terkuat di peta.':'Nilai-nilai klien jarang saling menyulitkan.',PC.con);
+ {need(40+A.n*15);Dc.y+=6;Dc.text(M,Dc.y+8,'LAPIS NILAI · INTI DI TENGAH, LAPIS MAKIN KE LUAR',7.5,true,PC.gold,.9);Dc.y+=20;const cols=[M,M+26,M+CW-150,M+CW-100,M+CW-50];[['Lapis',0],['Nilai',1],['Turnamen',2],['Memudahkan',3],['Menyulitkan',4]].forEach(([t,i])=>Dc.text(cols[i],Dc.y,t,7.5,true,PC.muted));Dc.y+=6;A.cent.forEach(x=>{Dc.y+=12.5;Dc.line(M,Dc.y-9.5,M+CW,Dc.y-10,PC.line,.4);Dc.text(cols[0],Dc.y,x.lay===0?'Inti':x.lay==null?'-':String(x.lay),9,true,INK);Dc.text(cols[1],Dc.y,x.name.length>48?x.name.slice(0,47)+'…':x.name,9,x.lay===0,INK);Dc.text(cols[2],Dc.y,String(x.rank),9,false,BODY);Dc.text(cols[3],Dc.y,String(A.D[x.id].sOut),9,false,PC.sup);Dc.text(cols[4],Dc.y,String(A.D[x.id].cOut),9,false,PC.con)});Dc.y+=14}
+
+ h2('Rencana tindak lanjut','Disepakati bersama');K.steps.filter(s=>s.trim()).forEach(s=>{const bl=wrapT(s,10.5,false,CW-26);need(bl.length*15+10);Dc.rect(M,Dc.y+2,11,11,null,INK,1,2);bl.forEach((l,i)=>Dc.text(M+22,Dc.y+11+i*15,l,10.5,false,INK));Dc.y+=bl.length*15+8});
+ if(K.svc.length){h2('Rekomendasi lanjutan');K.svc.forEach(s=>para('• '+s,{after:2}));Dc.y+=4}
+ need(70);Dc.y+=10;Dc.line(M,Dc.y,M+200,Dc.y,INK,.8);Dc.y+=14;Dc.text(M,Dc.y+4,`${K.name||'[nama konselor]'}, ${K.title}`,10.5,true,INK);Dc.text(M,Dc.y+18,`Disusun dan diverifikasi bersama klien · ${date}`,8.5,false,PC.muted);Dc.y+=36;
+ para('Laporan ini menggambarkan pandangan klien tentang nilai-nilainya pada satu waktu, yang telah diverifikasi bersama konselor. Laporan ini bukan tes, skor, maupun diagnosis. Bila prosesnya memunculkan perasaan yang berat, hubungi psikolog atau orang yang Anda percaya, dan layanan darurat setempat bila Anda merasa tidak aman.',{size:7.5,lh:11,color:PC.muted});
+ const N=Dc.pages.length;Dc.pages.forEach((pg,i)=>{Dc.setPage(pg);Dc.line(M,Dc.H-42,Dc.W-M,Dc.H-42,PC.line,.6);Dc.text(M,Dc.H-27,'Biro Psikologi Attentive · attentiveid.com · contact@attentiveid.com',7.5,false,PC.muted);Dc.textR(Dc.W-M,Dc.H-27,`${i+1} / ${N}`,7.5,true,PC.muted)});
+ return Dc.build(`Laporan Lengkap GSC · ${p.name}`)}
+async function dl(blob,name){try{if(window.claude&&claude.use){const d=await claude.use('downloads');if(d){await d.save({filename:name,data:blob});return}}}catch(e){}const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
+const slug=s=>String(s).normalize('NFKD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_').slice(0,30)||'klien';
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a;
+ if(a==='demo'){setData(sample());return}
+ if(a==='devK'){K.quality=true;Object.keys(K.ver).forEach(k=>K.ver[k]=true);K.summary=K.summary.replace(/\[Konselor:[^\]]*\]/g,'Saat verifikasi, klien membenarkan bahwa inti ini memang yang paling ia jaga, dan ingin memberi ruang khusus untuknya minggu ini.');K.vnote=K.vnote||'Klien menyetujui peta tanpa perubahan besar.';K.agreed=true;if(!K.name.trim())K.name='Konselor Contoh';redraw();toast('Semua tugas terisi. Tombol rilis aktif.');return}
+ if(a==='new'){D=null;K=null;history.replaceState(null,'',location.pathname);draw();return}
+ if(a==='open'){try{setData(await unpack($('#code').value))}catch(err){toast('Kode tidak terbaca. Salin ulang tautan dari email.')}return}
+ if(a==='loadK'){$('#kfile').click();return}
+ if(a==='cell'){const k=b.dataset.k,v=K.rel[k]||'0',nv=CYC[(CYC.indexOf(v)+1)%3],[x,y]=k.split('>');if(nv==='0')delete K.rel[k];else K.rel[k]=nv;if(K.summary===K.auto){K.summary=K.auto=draft()}K.edits.push(`${gname(D,x)} → ${gname(D,y)}: ${nv==='0'?'tidak berpengaruh':REL[nv].toLowerCase()}`);const yy=scrollY;draw();scrollTo(0,yy);return}
+ if(a==='draftpdf'){dl(await buildPDF(false),`DRAF_Laporan_GSC_${slug(D.profile.name)}.pdf`);return}
+ if(a==='release'){if(!K.released)K.released=Date.now();saveK();dl(await buildPDF(true),`Laporan_Lengkap_GSC_${slug(D.profile.name)}.pdf`);const yy=scrollY;draw();scrollTo(0,yy);return}
+ if(a==='copywa'){try{await navigator.clipboard.writeText(clientMsg());toast('Pesan disalin.')}catch(err){toast('Salin manual dari tombol email.')}return}
+ if(a==='exportK'){dl(new Blob([JSON.stringify({data:D,work:K},null,2)],{type:'application/json'}),`GSC_${D.id}_konselor.json`);return}});
+document.addEventListener('change',e=>{const t=e.target;if(!K)return;if(t.dataset.k&&t.type==='checkbox'){K[t.dataset.k]=t.checked;redraw()}else if(t.dataset.ver){K.ver[t.dataset.ver]=t.checked;redraw()}else if(t.dataset.svc){K.svc=t.checked?[...K.svc,t.dataset.svc]:K.svc.filter(x=>x!==t.dataset.svc);saveK()}else if(t.tagName==='SELECT'&&t.dataset.k){K[t.dataset.k]=t.value;saveK()}});
+document.addEventListener('input',e=>{const t=e.target;if(!K)return;if(t.dataset.k&&t.type!=='checkbox'&&t.tagName!=='SELECT'){K[t.dataset.k]=t.value;saveK();clearTimeout(window._rt);window._rt=setTimeout(redrawSoft,700)}else if(t.dataset.step){K.steps[+t.dataset.step]=t.value;saveK();clearTimeout(window._rt);window._rt=setTimeout(redrawSoft,700)}});
+document.addEventListener('change',async e=>{if(e.target.id!=='kfile')return;const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());setData(o.data,o.work)}catch(err){toast('Berkas tidak valid.')}});
+function redraw(){const yy=scrollY;draw();scrollTo(0,yy)}
+// update the task ticks without losing the cursor in a text field
+function redrawSoft(){const dn=done();document.querySelectorAll('.tasks li').forEach((li,i)=>li.classList.toggle('done',!!dn[i+1]));document.querySelectorAll('.task').forEach((s,i)=>s.classList.toggle('done',!!dn[i+1]));const r=$('[data-a=release]');if(r)r.disabled=!(dn[1]&&dn[2]&&dn[3]&&dn[4]&&K.name.trim())}
+$('#mark').innerHTML=markSVG(28);
+(async()=>{const h=location.hash;if(h.startsWith('#d=')){try{setData(await unpack(h));return}catch(e){toast('Tautan data rusak.')}}draw()})();
+
+})();
+</script>
+
+</body>
+</html>

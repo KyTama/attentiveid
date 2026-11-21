@@ -47,7 +47,7 @@ export function AssessmentsPage() {
         'Maps your goals, which ones support each other and which ones clash, then talk it through with a counselor.',
       ),
       minutes: tx('± 20–30 menit', '± 20–30 minutes'),
-      href: null,
+      href: '/assessments/goal-compass',
     },
   ]
 

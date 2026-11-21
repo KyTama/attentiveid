@@ -78,6 +78,21 @@
 		header Cache-Control "no-cache, no-store, must-revalidate"
 		file_server
 	}
+	@gsc path /assessments/goal-compass /assessments/goal-compass/
+	handle @gsc {
+		rewrite * /assessments-static/gsc.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+	# The counselor console holds no data of its own: staff open it from the portal with the session in the #d= part of the address.
+	@gscconsole path /assessments/goal-compass/konselor /assessments/goal-compass/konselor/
+	handle @gscconsole {
+		rewrite * /assessments-static/gsc-konselor.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		header Referrer-Policy "no-referrer"
+		header X-Robots-Tag "noindex, nofollow"
+		file_server
+	}
 
 	# try_files must sit inside a handle: as a top-level directive it runs before every handle block
 	# and would rewrite the path to /index.html before the matchers above can see the real one.

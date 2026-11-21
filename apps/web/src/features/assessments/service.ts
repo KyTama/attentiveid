@@ -47,8 +47,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return json as T
 }
 
-export const listMhcuSubmissions = async (status?: AssessmentStatus) =>
-  (await request<{ data?: AssessmentListItem[] }>(`/api/admin/assessments/mhcu${status ? `?status=${status}` : ''}`)).data ?? []
+export type AssessmentInstrument = 'mhcu' | 'gsc'
+
+export const listSubmissions = async (instrument: AssessmentInstrument, status?: AssessmentStatus) =>
+  (await request<{ data?: AssessmentListItem[] }>(`/api/admin/assessment-lists/${instrument}${status ? `?status=${status}` : ''}`)).data ?? []
 
 export const getAssessment = async (id: string) =>
   (await request<{ data: AssessmentDetail }>(`/api/admin/assessments/${encodeURIComponent(id)}`)).data
