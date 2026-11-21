@@ -560,7 +560,7 @@
       "sciBrief": "Sci-Brief",
       "article": "Articles",
       "support": "Services",
-      "psychologists": "Our Psychologists",
+      "psychologists": "Our Practitioners",
       "articles": "Articles",
       "process": "How it works",
       "faq": "FAQ",
@@ -812,7 +812,7 @@
       "error": "We could not load this information. Please try again."
     },
     "psychologists": {
-      "eyebrow": "Our psychologists",
+      "eyebrow": "Our Practitioners",
       "title": "Find someone who feels right for you.",
       "description": "Every psychologist brings a different perspective and way of working. Explore the team, filter by what matters to you, and begin with the person who feels easiest to talk to.",
       "introAction": "Find your fit",

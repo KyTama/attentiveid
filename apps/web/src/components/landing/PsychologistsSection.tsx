@@ -30,7 +30,7 @@ export function PsychologistsSection() {
   return (
     <section id="psychologists-section" className="bg-background py-16 px-4 md:px-8 relative overflow-hidden">
       <div className="section-heading pb-12 max-w-6xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Psychologists</h2>
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Practitioners</h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
           Find the psychologist that's right for you.
         </p>
