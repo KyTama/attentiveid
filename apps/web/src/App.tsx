@@ -21,6 +21,8 @@ import { BrowserTabManager } from './components/common/BrowserTabManager'
 import { FeaturedProductsCmsPage } from './pages/dashboard/FeaturedProductsCmsPage'
 import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
 import { OurServicesPage } from './pages/OurServicesPage'
+import { AssessmentsPage } from './pages/AssessmentsPage'
+import { AssessmentsCmsPage } from './pages/dashboard/AssessmentsCmsPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
 import { PrayersCmsPage } from './pages/dashboard/PrayersCmsPage'
 import { QrGeneratorPage } from './pages/dashboard/QrGeneratorPage'
@@ -44,6 +46,14 @@ import { SystemMapPage } from './pages/dashboard/SystemMapPage'
 import { EXPERIMENTAL_EMAILS } from './features/experimental/access'
 import type { LandingContentLoader } from './features/content/service'
 
+/** Sends the browser to a standalone HTML page in /public (a full page load, outside the single-page app). */
+function StaticFormRedirect({ to }: { to: string }) {
+  useEffect(() => {
+    window.location.replace(to)
+  }, [to])
+  return null
+}
+
 export function AppRoutes({
   landingContentLoader,
   previewLandingLoader,
@@ -66,6 +76,9 @@ export function AppRoutes({
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
           <Route path="our-services" element={<OurServicesPage />} />
+          <Route path="assessments" element={<AssessmentsPage />} />
+          {/* The form itself is a standalone page the web server serves; this keeps the address working in development. */}
+          <Route path="assessments/mhcu" element={<StaticFormRedirect to="/assessments-static/mhcu.html" />} />
           <Route path="let-there-be-light" element={<LetThereBeLightPage />} />
           <Route path="sci-brief" element={<SciBriefPage />} />
           <Route path="sci-brief/:slug" element={<SciBriefDetailPage />} />
@@ -177,6 +190,14 @@ export function AppRoutes({
             }
           />
           <Route path="experimental/traffic" element={<Navigate to="/dashboard/traffic" replace />} />
+          <Route
+            path="assessments"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                <AssessmentsCmsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="prayers"
             element={

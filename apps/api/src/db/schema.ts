@@ -555,6 +555,52 @@ export const freeSessionSubmissions = pgTable('free_session_submissions', {
     check('free_session_submissions_age_range', sql`${table.age} between 15 and 99`)
 ]);
 
+// Answers to the assessments hosted on the site (Mental Health Check-Up first, Goal System Compass next).
+// Health information: only staff with a portal login can read it, and nothing here is ever sent to a public place.
+export const assessmentSubmissions = pgTable('assessment_submissions', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    /** 'mhcu' | 'gsc' */
+    instrument: text('instrument').notNull(),
+    /** Public code such as AT-MHCU-2026-101. */
+    code: text('code').notNull(),
+    codeYear: integer('code_year').notNull(),
+    codeSeq: integer('code_seq').notNull(),
+    lang: text('lang').notNull(),
+    /** How the person arrived: 'mandiri' (public link) for now; invite tracks come later. */
+    track: text('track').default('mandiri').notNull(),
+    consentVersion: text('consent_version').notNull(),
+    /** false = the person said their data may not be used for research. */
+    researchConsent: boolean('research_consent').notNull(),
+    guardian: boolean('guardian').default(false).notNull(),
+    /** The acknowledgements the person ticked on the consent step (evidence of what they agreed to). */
+    consentAck: jsonb('consent_ack').default(sql`'[]'::jsonb`).notNull(),
+    name: text('name').notNull(),
+    sex: text('sex'),
+    age: integer('age').notNull(),
+    phone: text('phone').notNull(),
+    email: text('email').notNull(),
+    answers: jsonb('answers').notNull(),
+    scores: jsonb('scores').notNull(),
+    /** MHCU level 1-5 (5 = priority, same-day contact). */
+    level: integer('level'),
+    durationSec: integer('duration_sec'),
+    /** new → reviewed (a psychologist looked at it) → released (the report may go to the person). */
+    status: text('status').default('new').notNull(),
+    reviewerId: uuid('reviewer_id'),
+    reviewerNote: text('reviewer_note'),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true, mode: 'string' }),
+    releasedAt: timestamp('released_at', { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    sheetSyncedAt: timestamp('sheet_synced_at', { withTimezone: true, mode: 'string' }),
+    sheetError: text('sheet_error')
+}, (table) => [
+    uniqueIndex('assessment_submissions_code_idx').on(table.code),
+    uniqueIndex('assessment_submissions_seq_idx').on(table.instrument, table.codeYear, table.codeSeq),
+    index('assessment_submissions_created_at_idx').on(table.instrument, table.createdAt),
+    index('assessment_submissions_email_idx').on(table.email),
+    check('assessment_submissions_status', sql`${table.status} in ('new','reviewed','released')`)
+]);
+
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({
     dataType: () => 'bytea'
 });

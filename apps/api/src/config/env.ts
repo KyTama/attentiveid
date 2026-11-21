@@ -17,6 +17,9 @@ const EnvSchema = t.Object({
     GOOGLE_SHEET_NAME: t.Optional(t.String()),
     FREE_SESSION_SHEET_ID: t.Optional(t.String()),
     FREE_SESSION_SHEET_NAME: t.Optional(t.String()),
+    /** Private Google Sheet that mirrors assessment answers (empty = no mirror). */
+    ASSESSMENTS_SHEET_ID: t.Optional(t.String()),
+    ASSESSMENTS_MHCU_SHEET_NAME: t.Optional(t.String()),
     BOOKING_NOTIFY_EMAIL: t.Optional(t.String())
 });
 

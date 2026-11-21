@@ -163,6 +163,12 @@ export function DashboardLayout() {
           show: true,
         },
         {
+          to: '/dashboard/assessments',
+          label: t('dashboard.navAssessments', 'Hasil Asesmen'),
+          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
           to: '/dashboard/prayers',
           label: t('dashboard.navPrayers', 'Doa Pengunjung'),
           icon: <HeartHandshake className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
