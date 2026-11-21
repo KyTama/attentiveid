@@ -141,6 +141,13 @@
       "when": 1795231892769,
       "tag": "0019_assessment_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795254434702,
+      "tag": "0020_user_idle_timeout",
+      "breakpoints": true
     }
   ]
 }

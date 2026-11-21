@@ -27,6 +27,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
+import { IdleSessionGuard } from '../auth/IdleSessionGuard'
 import { LanguageSwitcher } from '../common/LanguageSwitcher'
 import { useTranslation } from 'react-i18next'
 import { canAccessExperimental } from '../../features/experimental/access'
@@ -160,6 +161,12 @@ export function DashboardLayout() {
           to: '/dashboard/qr-generator',
           label: t('dashboard.navQrGenerator', 'QR Generator'),
           icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+        {
+          to: '/dashboard/account',
+          label: t('dashboard.navAccount', 'Pengaturan Akun'),
+          icon: <SlidersHorizontal className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
         {
@@ -435,6 +442,7 @@ export function DashboardLayout() {
         {/* Dynamic Route Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <Outlet />
+          <IdleSessionGuard />
         </main>
       </div>
     </div>

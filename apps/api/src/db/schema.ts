@@ -196,9 +196,12 @@ export const users = pgTable('users', {
     status: userStatusEnum('status').default('active').notNull(),
     psychologistId: uuid('psychologist_id').references(() => psychologists.id, { onDelete: 'set null' }),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true, mode: 'string' }),
+    /** Minutes without activity (typing, scrolling, clicking in the portal) before the person is signed out; the browser warns first. */
+    idleTimeoutMinutes: integer('idle_timeout_minutes').default(15).notNull(),
     ...auditTimestamps
 }, (table) => [
     uniqueIndex('users_email_unique').on(table.email),
+    check('users_idle_timeout_range', sql`${table.idleTimeoutMinutes} between 5 and 120`),
     index('users_role_idx').on(table.role),
     index('users_status_idx').on(table.status)
 ]);

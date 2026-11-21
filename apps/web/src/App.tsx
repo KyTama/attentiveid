@@ -23,6 +23,7 @@ import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
 import { OurServicesPage } from './pages/OurServicesPage'
 import { AssessmentsPage } from './pages/AssessmentsPage'
 import { AssessmentsCmsPage } from './pages/dashboard/AssessmentsCmsPage'
+import { AccountSettingsPage } from './pages/dashboard/AccountSettingsPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
 import { PrayersCmsPage } from './pages/dashboard/PrayersCmsPage'
 import { QrGeneratorPage } from './pages/dashboard/QrGeneratorPage'
@@ -192,6 +193,7 @@ export function AppRoutes({
             }
           />
           <Route path="experimental/traffic" element={<Navigate to="/dashboard/traffic" replace />} />
+          <Route path="account" element={<AccountSettingsPage />} />
           <Route
             path="assessments"
             element={
