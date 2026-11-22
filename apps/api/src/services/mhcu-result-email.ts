@@ -138,7 +138,7 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
           <div style="font-weight:700;color:#142B51;font-size:14px">${esc(section.title)}</div>
           <div style="color:#6B7686;font-size:12px;margin-top:2px">${esc(section.note)}</div>
         </td>
-        <td style="padding:12px 14px;border-bottom:1px solid #e6e9ef;text-align:right;white-space:nowrap;vertical-align:top">
+        <td style="padding:12px 14px;border-bottom:1px solid #e6e9ef;text-align:right;vertical-align:top;width:34%;min-width:84px">
           <div style="font-weight:700;color:#142B51;font-size:16px">${esc(section.score)}</div>
           <div style="display:inline-block;margin-top:4px;padding:2px 10px;border-radius:999px;background:#FBF5E8;color:#8a5f10;font-size:12px;font-weight:700">${esc(section.category)}</div>
         </td>
@@ -156,7 +156,7 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e6e9ef;border-radius:10px;border-collapse:separate;overflow:hidden">${rows}
         <tr>
           <td style="padding:12px 14px;background:#EEF2F8;font-weight:700;color:#142B51;font-size:14px">${esc(copy.overall)}</td>
-          <td style="padding:12px 14px;background:#EEF2F8;text-align:right;font-weight:700;color:#142B51;white-space:nowrap">${esc(mhi)} · ${esc(mhiBand)}</td>
+          <td style="padding:12px 14px;background:#EEF2F8;text-align:right;font-weight:700;color:#142B51">${esc(mhi)} · ${esc(mhiBand)}</td>
         </tr>
       </table>
       <p style="margin:12px 0 0;font-size:12px;color:#6B7686">${esc(copy.resultId)}: <b>${esc(input.code)}</b></p>

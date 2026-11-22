@@ -30,6 +30,9 @@ export function AssessmentPaymentPage() {
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
+  /** What was last saved (file and choice), so a changed file or choice is uploaded again instead of being ignored. */
+  const [savedKey, setSavedKey] = useState<string | null>(null)
+  const [badLink, setBadLink] = useState(false)
 
   // Bahasa Indonesia is the default; English only when the result was taken in English or the link asks for it.
   const en = (params.get('lang') ?? info?.lang) === 'en'
@@ -46,7 +49,11 @@ export function AssessmentPaymentPage() {
         const response = await fetch(`/api/public/assessments/payment-info?id=${encodeURIComponent(id)}&t=${encodeURIComponent(token)}`)
         const json = await response.json().catch(() => ({}))
         if (cancelled) return
-        if (!response.ok) throw new Error(json?.message || 'Tautan tidak valid. Gunakan tombol di email hasil Anda.')
+        if (response.status === 404) {
+          setBadLink(true)
+          throw new Error('bad-link')
+        }
+        if (!response.ok) throw new Error(json?.message || 'Gagal memuat halaman.')
         setInfo(json.data as PaymentInfo)
         setSaved(Boolean(json.data?.submitted))
       } catch (caught) {
@@ -87,7 +94,8 @@ export function AssessmentPaymentPage() {
     }
     setBusy(true)
     try {
-      if (!saved) {
+      const key = `${choice}:${file.name}:${file.size}:${file.lastModified}`
+      if (!saved || key !== savedKey) {
         const form = new FormData()
         form.set('id', id)
         form.set('t', token)
@@ -97,11 +105,14 @@ export function AssessmentPaymentPage() {
         const json = await response.json().catch(() => ({}))
         if (!response.ok) throw new Error(json?.message || tx('Gagal menyimpan bukti.', 'Could not save the proof.'))
         setSaved(true)
+        setSavedKey(key)
       }
       // Open WhatsApp with the message ready to send.
       window.open(buildPaymentWhatsAppUrl({ whatsapp: info.whatsapp, name: info.name, code: info.code, option: selected, lang: en ? 'en' : 'id' }), '_blank', 'noopener,noreferrer')
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : tx('Gagal menyimpan bukti.', 'Could not save the proof.'))
+      // A network failure surfaces as the browser's own English text; show our own message in the page's language.
+      const message = caught instanceof Error ? caught.message : ''
+      setError(!message || message === 'Failed to fetch' || message === 'Load failed' || message === 'NetworkError when attempting to fetch resource.' ? tx('Koneksi bermasalah. Periksa internet Anda lalu coba lagi.', 'Connection problem. Please check your internet and try again.') : message)
     } finally {
       setBusy(false)
     }
@@ -117,7 +128,7 @@ export function AssessmentPaymentPage() {
           </p>
         ) : !info ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800" role="alert">
-            {error ?? 'Tautan tidak valid.'}
+            {badLink || !error ? tx('Tautan tidak valid. Gunakan tombol di email hasil Anda.', 'This link is not valid. Please use the button in your result e-mail.') : error}
           </div>
         ) : (
           <div className="space-y-6">
@@ -159,7 +170,7 @@ export function AssessmentPaymentPage() {
                   {info.account.number}
                   <button
                     aria-label={tx('Salin nomor rekening', 'Copy the account number')}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-secondary/15 px-2 py-1 text-xs font-semibold hover:bg-secondary/5"
+                    className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-lg border border-secondary/15 px-3 py-1 text-xs font-semibold hover:bg-secondary/5"
                     onClick={() => void copyNumber()}
                     type="button"
                   >

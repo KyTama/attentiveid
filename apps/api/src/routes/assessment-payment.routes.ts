@@ -123,9 +123,13 @@ export const createAssessmentPaymentRoutes = (dependencies: AssessmentPaymentRou
                 return { status: 'error', message: 'Pilihan pembayaran tidak valid.' };
             }
             const file = body.proof;
-            if (!file || typeof file.arrayBuffer !== 'function' || file.size > PROOF_MAX_BYTES) {
+            if (!file || typeof file.arrayBuffer !== 'function') {
                 set.status = 400;
                 return { status: 'error', message: 'Bukti transfer wajib diunggah (gambar JPG/PNG/WebP atau PDF, maksimal 5 MB).' };
+            }
+            if (file.size > PROOF_MAX_BYTES) {
+                set.status = 400;
+                return { status: 'error', message: 'Ukuran file melebihi batas 5 MB. Kompres atau pilih berkas yang lebih kecil.' };
             }
             const data = Buffer.from(await file.arrayBuffer());
             const mimeType = detectProofType(data);

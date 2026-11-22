@@ -83,3 +83,10 @@ describe('payment link and proof rules', () => {
         expect(detectProofType(Buffer.from('GIF89a' + 'x'.repeat(30)))).toBeNull()
     })
 })
+
+describe('result e-mail on a phone', () => {
+    it('lets the score cells wrap so the table fits a 320 px screen', () => {
+        const mail = buildMhcuResultEmail({ name: 'Rina', code: 'X', lang: 'id', scores: scoreMhcu(answers()), reportLink: 'https://attentiveid.com/assessments/payment?id=X&t=y', level: 1 })
+        expect(mail.html).not.toContain('white-space:nowrap')
+    })
+})

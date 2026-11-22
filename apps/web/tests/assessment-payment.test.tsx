@@ -49,7 +49,7 @@ describe('payment page', () => {
             }),
           })
         }
-        return Promise.resolve({ ok: false, json: async () => ({ message: 'Tautan tidak valid.' }) })
+        return Promise.resolve({ ok: false, status: 404, json: async () => ({ message: 'Tautan tidak valid.' }) })
       }),
     )
   })
@@ -76,5 +76,22 @@ describe('payment page', () => {
     open('?id=AT-MHCU-2026-100&t=bad')
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
     expect(screen.queryByText('4500499562')).toBeNull()
+  })
+})
+
+describe('payment page: bad link in English', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404, json: async () => ({ message: 'Tautan tidak valid.' }) }))
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  it('shows the error in English when the link asks for English', async () => {
+    render(
+      <MemoryRouter initialEntries={['/assessments/payment?id=X&t=bad&lang=en']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('This link is not valid'))
   })
 })
