@@ -96,7 +96,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     lang: input.lang,
                     scores: input.scores,
                     level: input.level,
-                    reportLink: paymentLink(origin, secret, row.code, input.lang)
+                    reportLink: paymentLink(origin, secret, row.code, input.lang),
+                    email: input.email,
+                    submittedAt: new Date()
                 });
                 await mailer.send({ to: input.email, ...mail });
                 await repository.markResultEmailSent(row.id);
