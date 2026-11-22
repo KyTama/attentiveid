@@ -90,6 +90,11 @@ export const createAssessmentPaymentRoutes = (dependencies: AssessmentPaymentRou
                         name: row.name,
                         lang: row.lang,
                         submitted: row.paymentSubmittedAt !== null,
+                        // What the page shows about the result itself (the team's report-access page): the index and the level.
+                        mhi: typeof (row.scores as { mhi?: unknown })?.mhi === 'number' ? (row.scores as { mhi: number }).mhi : null,
+                        level: row.level,
+                        levelName: (row.scores as { levelName?: { id?: string; en?: string } })?.levelName ?? null,
+                        track: row.track,
                         account: PAYMENT_ACCOUNT,
                         whatsapp: WHATSAPP_NUMBER,
                         options: (Object.keys(PAYMENT_OPTIONS) as Array<keyof typeof PAYMENT_OPTIONS>).map((key) => ({
