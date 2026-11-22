@@ -1,7 +1,10 @@
 /**
  * The e-mail a participant gets after the Mental Health Check-Up: the four index scores with their category, a short
- * explanation, and a button to order the full analysed report. It never shows the clinical level or the red-flag reasons:
+ * explanation, and an optional way to order the full analysed report. It never shows the clinical level or the red-flag reasons:
  * those are for the psychologist.
+ *
+ * Built to look like a calm, trustworthy message and not like a sales or phishing mail: results first, safety information before
+ * any offer, no long tracking-style link in the text, a clear reason why the person is receiving it, and a plain footer.
  */
 
 export interface MhcuEmailInput {
@@ -13,6 +16,10 @@ export interface MhcuEmailInput {
     /** Link to the payment page (already carries the signed token). */
     reportLink: string
     level: number | null
+    /** When the check-up was submitted; shown so the person recognises the mail as theirs. */
+    submittedAt?: Date
+    /** The address the mail goes to, repeated in the footer so the person sees why they got it. */
+    email?: string
 }
 
 export interface BuiltEmail {
@@ -35,6 +42,18 @@ const fmt = (value: number | null, lang: 'id' | 'en'): string => {
     if (value === null) return '–'
     const text = (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, '')
     return lang === 'id' ? text.replace('.', ',') : text
+}
+
+const MONTHS = {
+    id: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+    en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+} as const
+
+/** "22 November 2026, 10.49 WIB" (Jakarta time). */
+export const formatSubmittedAt = (date: Date, lang: 'id' | 'en'): string => {
+    const jakarta = new Date(date.getTime() + 7 * 3600 * 1000)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${jakarta.getUTCDate()} ${MONTHS[lang][jakarta.getUTCMonth()]} ${jakarta.getUTCFullYear()}, ${pad(jakarta.getUTCHours())}.${pad(jakarta.getUTCMinutes())} WIB`
 }
 
 export interface EmailSection {
@@ -87,37 +106,49 @@ export const mhcuEmailSections = (scores: unknown, lang: 'id' | 'en'): EmailSect
 const COPY = {
     id: {
         subject: (code: string) => `Hasil Mental Health Check-Up (MHCU) Anda · ${code}`,
+        preheader: 'Ringkasan hasil Mental Health Check-Up Anda dari Attentive Psychology Bureau.',
         hello: (name: string) => `Halo ${name},`,
-        intro: 'Terima kasih telah mengisi Mental Health Check-Up (MHCU) dari Attentive Psychology Bureau. Berikut ringkasan hasil Anda.',
+        intro: (when: string) =>
+            `Terima kasih telah mengisi Mental Health Check-Up (MHCU) dari Attentive Psychology Bureau pada ${when}. Berikut ringkasan hasil Anda.`,
         overall: 'Mental Health Index (MHI) keseluruhan',
         resultId: 'ID Hasil',
         about:
-            'Ini adalah hasil skrining, bukan diagnosis. Skor menggambarkan keadaan Anda dalam 2 minggu terakhir (kebiasaan dan gaya perhatian: secara umum).',
-        reportHead: 'Ingin penjelasan yang lengkap?',
-        reportBody:
-            'Laporan lengkap berisi analisis per domain, keterangan, dan rekomendasi dari psikolog Attentive. Pembelian bersifat opsional.',
-        button: 'Dapatkan Laporan Lengkap Anda di Sini!',
-        buttonHelp: 'Bila tombol tidak berfungsi, salin tautan ini ke peramban Anda:',
+            'Ini adalah hasil skrining, bukan diagnosis. Skor menggambarkan keadaan Anda dalam 2 minggu terakhir (kebiasaan dan gaya perhatian: secara umum). Psikolog Attentive dapat membantu menjelaskan hasil ini bila Anda membutuhkannya.',
+        safetyHead: 'Bila Anda merasa tidak aman',
         safety:
-            'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, jangan menunggu: hubungi orang terdekat yang Anda percaya, layanan darurat medis 119, atau IGD rumah sakit terdekat.',
-        footer: 'Attentive Psychology Bureau · contact@attentiveid.com · WhatsApp 0851-5641-0912'
+            'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, jangan menunggu hasil lanjutan: hubungi orang terdekat yang Anda percaya, layanan darurat medis 119, atau IGD rumah sakit terdekat.',
+        nextHead: 'Langkah berikutnya (opsional)',
+        nextBody:
+            'Bila Anda ingin penjelasan yang lebih lengkap, tersedia laporan lengkap yang dianalisis psikolog Attentive: analisis per domain, keterangan, dan rekomendasi. Laporan ini berbayar (transfer bank, rincian ada di halaman berikutnya) dan sepenuhnya pilihan Anda.',
+        button: 'Dapatkan Laporan Lengkap Anda di Sini!',
+        noButton: 'Tombol tidak berfungsi? Balas email ini atau hubungi kami lewat WhatsApp, sebutkan ID Hasil di atas.',
+        why: (email: string) =>
+            `Anda menerima email ini karena alamat ${email} digunakan untuk mengisi MHCU di attentiveid.com. Bila ini bukan Anda, abaikan email ini.`,
+        trust: 'Attentive tidak pernah meminta kata sandi, kode OTP, atau data kartu lewat email.',
+        footer: 'Attentive Psychology Bureau · attentiveid.com · contact@attentiveid.com · WhatsApp 0851-5641-0912'
     },
     en: {
         subject: (code: string) => `Your Mental Health Check-Up (MHCU) result · ${code}`,
+        preheader: 'A summary of your Mental Health Check-Up from Attentive Psychology Bureau.',
         hello: (name: string) => `Hello ${name},`,
-        intro: 'Thank you for completing the Mental Health Check-Up (MHCU) by Attentive Psychology Bureau. Here is a summary of your result.',
+        intro: (when: string) =>
+            `Thank you for completing the Mental Health Check-Up (MHCU) by Attentive Psychology Bureau on ${when}. Here is a summary of your result.`,
         overall: 'Overall Mental Health Index (MHI)',
         resultId: 'Result ID',
         about:
-            'This is a screening result, not a diagnosis. The scores describe how you were over the past 2 weeks (habits and attention style: in general).',
-        reportHead: 'Want the full explanation?',
-        reportBody:
-            'The full report has an analysis of every domain, notes and recommendations from an Attentive psychologist. Buying it is optional.',
-        button: 'Get Your Full Analyzed Report Here!',
-        buttonHelp: 'If the button does not work, copy this link into your browser:',
+            'This is a screening result, not a diagnosis. The scores describe how you were over the past 2 weeks (habits and attention style: in general). An Attentive psychologist can help explain this result if you would like.',
+        safetyHead: 'If you feel unsafe',
         safety:
-            'If you are having thoughts of harming yourself or feel unsafe, please do not wait: reach out to someone you trust, call the medical emergency line 119, or go to the nearest hospital emergency room.',
-        footer: 'Attentive Psychology Bureau · contact@attentiveid.com · WhatsApp +62 851-5641-0912'
+            'If you are having thoughts of harming yourself or feel unsafe, please do not wait for any further result: reach out to someone you trust, call the medical emergency line 119, or go to the nearest hospital emergency room.',
+        nextHead: 'Next step (optional)',
+        nextBody:
+            'If you would like a fuller explanation, a full report analysed by an Attentive psychologist is available: an analysis of every domain, notes and recommendations. It is a paid service (bank transfer, details on the next page) and entirely your choice.',
+        button: 'Get Your Full Analyzed Report Here!',
+        noButton: 'Button not working? Reply to this e-mail or message us on WhatsApp and mention the Result ID above.',
+        why: (email: string) =>
+            `You are receiving this e-mail because ${email} was used to complete the MHCU at attentiveid.com. If this was not you, please ignore this e-mail.`,
+        trust: 'Attentive never asks for passwords, OTP codes or card details by e-mail.',
+        footer: 'Attentive Psychology Bureau · attentiveid.com · contact@attentiveid.com · WhatsApp +62 851-5641-0912'
     }
 } as const
 
@@ -129,65 +160,80 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
     const mhi = `${fmt(num(s.mhi), lang)} / 100`
     const mhiBand = label(s.mhiBand, lang)
     const showSafety = input.level !== null && input.level >= 3
+    const when = formatSubmittedAt(input.submittedAt ?? new Date(), lang)
+    const emailAddress = input.email ?? ''
 
     const rows = sections
         .map(
             (section) => `
       <tr>
-        <td style="padding:12px 14px;border-bottom:1px solid #e6e9ef;vertical-align:top">
-          <div style="font-weight:700;color:#142B51;font-size:14px">${esc(section.title)}</div>
-          <div style="color:#6B7686;font-size:12px;margin-top:2px">${esc(section.note)}</div>
+        <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;vertical-align:top">
+          <div style="font-weight:600;color:#111827;font-size:14px">${esc(section.title)}</div>
+          <div style="color:#6b7280;font-size:12px;margin-top:2px">${esc(section.note)}</div>
         </td>
-        <td style="padding:12px 14px;border-bottom:1px solid #e6e9ef;text-align:right;vertical-align:top;width:34%;min-width:84px">
-          <div style="font-weight:700;color:#142B51;font-size:16px">${esc(section.score)}</div>
-          <div style="display:inline-block;margin-top:4px;padding:2px 10px;border-radius:999px;background:#FBF5E8;color:#8a5f10;font-size:12px;font-weight:700">${esc(section.category)}</div>
+        <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;width:34%;min-width:84px">
+          <div style="font-weight:700;color:#111827;font-size:16px">${esc(section.score)}</div>
+          <div style="margin-top:3px;color:#374151;font-size:12px">${esc(section.category)}</div>
         </td>
       </tr>`
         )
         .join('')
 
+    const safetyBlock = showSafety
+        ? `
+      <div style="margin:20px 0 0;padding:14px 16px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb">
+        <div style="font-weight:600;color:#111827;font-size:14px">${esc(copy.safetyHead)}</div>
+        <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#374151">${esc(copy.safety)}</p>
+      </div>`
+        : ''
+
     const html = `<!doctype html>
-<html lang="${lang}"><body style="margin:0;background:#f3f5f8;font-family:Segoe UI,Arial,sans-serif;color:#1B2533">
+<html lang="${lang}"><body style="margin:0;background:#f3f4f6;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#111827">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(copy.preheader)}</div>
   <div style="max-width:600px;margin:0 auto;padding:24px 16px">
-    <div style="background:#142B51;border-radius:12px 12px 0 0;padding:18px 24px;color:#fff;font-size:18px;font-weight:700">attentive. <span style="color:#D19E3A;font-size:11px;letter-spacing:1.5px;margin-left:8px">MHCU</span></div>
-    <div style="background:#fff;padding:24px;border:1px solid #e6e9ef;border-top:0">
-      <p style="margin:0 0 8px;font-size:16px;font-weight:700">${esc(copy.hello(input.name))}</p>
-      <p style="margin:0 0 16px;font-size:14px;line-height:1.6">${esc(copy.intro)}</p>
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e6e9ef;border-radius:10px;border-collapse:separate;overflow:hidden">${rows}
+    <div style="background:#142B51;border-radius:10px 10px 0 0;padding:18px 24px;color:#ffffff;font-size:18px;font-weight:700">attentive. <span style="color:#d19e3a;font-size:11px;letter-spacing:1.5px;margin-left:8px">PSYCHOLOGY BUREAU</span></div>
+    <div style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 10px 10px">
+      <p style="margin:0 0 8px;font-size:16px;font-weight:600">${esc(copy.hello(input.name))}</p>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#374151">${esc(copy.intro(when))}</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-radius:8px;border-collapse:separate;overflow:hidden">${rows}
         <tr>
-          <td style="padding:12px 14px;background:#EEF2F8;font-weight:700;color:#142B51;font-size:14px">${esc(copy.overall)}</td>
-          <td style="padding:12px 14px;background:#EEF2F8;text-align:right;font-weight:700;color:#142B51">${esc(mhi)} · ${esc(mhiBand)}</td>
+          <td style="padding:14px 16px;background:#f3f4f6;font-weight:600;color:#111827;font-size:14px">${esc(copy.overall)}</td>
+          <td style="padding:14px 16px;background:#f3f4f6;text-align:right;font-weight:700;color:#111827">${esc(mhi)} · ${esc(mhiBand)}</td>
         </tr>
       </table>
-      <p style="margin:12px 0 0;font-size:12px;color:#6B7686">${esc(copy.resultId)}: <b>${esc(input.code)}</b></p>
-      <p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#3C4858">${esc(copy.about)}</p>
-      <div style="margin:22px 0 0;padding:18px;border:1px solid #D19E3A;border-radius:10px;background:#FBF5E8;text-align:center">
-        <div style="font-weight:700;color:#142B51;font-size:15px">${esc(copy.reportHead)}</div>
-        <p style="margin:6px 0 14px;font-size:13px;line-height:1.6;color:#3C4858">${esc(copy.reportBody)}</p>
-        <a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 22px;border-radius:8px">${esc(copy.button)}</a>
-        <p style="margin:12px 0 0;font-size:11px;color:#6B7686">${esc(copy.buttonHelp)}<br><span style="word-break:break-all">${esc(input.reportLink)}</span></p>
+      <p style="margin:12px 0 0;font-size:12px;color:#6b7280">${esc(copy.resultId)}: <b style="color:#111827">${esc(input.code)}</b></p>
+      <p style="margin:14px 0 0;font-size:13px;line-height:1.6;color:#374151">${esc(copy.about)}</p>
+      ${safetyBlock}
+      <div style="margin:22px 0 0;padding-top:18px;border-top:1px solid #e5e7eb">
+        <div style="font-weight:600;color:#111827;font-size:14px">${esc(copy.nextHead)}</div>
+        <p style="margin:6px 0 14px;font-size:13px;line-height:1.6;color:#374151">${esc(copy.nextBody)}</p>
+        <a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 20px;border-radius:6px">${esc(copy.button)}</a>
+        <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#6b7280">${esc(copy.noButton)}</p>
       </div>
-      ${showSafety ? `<p style="margin:18px 0 0;padding:12px 14px;border-radius:8px;background:#FEF3F2;color:#B42318;font-size:13px;line-height:1.6">${esc(copy.safety)}</p>` : ''}
     </div>
-    <p style="margin:14px 0 0;text-align:center;font-size:11px;color:#6B7686">${esc(copy.footer)}</p>
+    <p style="margin:16px 0 0;text-align:center;font-size:11px;line-height:1.6;color:#6b7280">${emailAddress ? `${esc(copy.why(emailAddress))}<br>` : ''}${esc(copy.trust)}<br>${esc(copy.footer)}</p>
   </div>
 </body></html>`
 
     const text = [
         copy.hello(input.name),
         '',
-        copy.intro,
+        copy.intro(when),
         '',
         ...sections.map((section) => `${section.title}: ${section.score} (${section.category})`),
         `${copy.overall}: ${mhi} (${mhiBand})`,
         `${copy.resultId}: ${input.code}`,
         '',
         copy.about,
+        ...(showSafety ? ['', `${copy.safetyHead}: ${copy.safety}`] : []),
         '',
-        `${copy.button}`,
+        copy.nextHead,
+        copy.nextBody,
+        copy.button,
         input.reportLink,
-        ...(showSafety ? ['', copy.safety] : []),
         '',
+        ...(emailAddress ? [copy.why(emailAddress)] : []),
+        copy.trust,
         copy.footer
     ].join('\n')
 

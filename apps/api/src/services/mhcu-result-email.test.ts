@@ -90,3 +90,42 @@ describe('result e-mail on a phone', () => {
         expect(mail.html).not.toContain('white-space:nowrap')
     })
 })
+
+describe('result e-mail looks like a calm, trustworthy message', () => {
+    const scores = scoreMhcu(answers())
+    const link = 'https://attentiveid.com/assessments/payment?id=AT-MHCU-2026-100&t=abcdefghijklmnopqrstuvwx'
+    const when = new Date('2026-11-22T03:49:00Z')
+
+    it('does not show the long token link in the text, only behind the button', () => {
+        const mail = buildMhcuResultEmail({ name: 'Rina', code: 'AT-MHCU-2026-100', lang: 'id', scores, reportLink: link, level: 1, submittedAt: when, email: 'rina@example.com' })
+        const escaped = link.replace(/&/g, '&amp;')
+        expect(mail.html.split(escaped).length - 1).toBe(1) // only the button's href
+        expect(mail.html).not.toContain('abcdefghijklmnopqrstuvwx</')
+        expect(mail.text).toContain(link) // plain-text readers still get the link
+    })
+
+    it('says when and why the person got it and that Attentive never asks for passwords', () => {
+        const id = buildMhcuResultEmail({ name: 'Rina', code: 'X', lang: 'id', scores, reportLink: link, level: 1, submittedAt: when, email: 'rina@example.com' })
+        expect(id.html).toContain('22 November 2026, 10.49 WIB')
+        expect(id.html).toContain('rina@example.com')
+        expect(id.html).toContain('tidak pernah meminta kata sandi')
+        const en = buildMhcuResultEmail({ name: 'Rina', code: 'X', lang: 'en', scores, reportLink: link, level: 1, submittedAt: when, email: 'rina@example.com' })
+        expect(en.html).toContain('22 November 2026, 10.49 WIB')
+        expect(en.html).toContain('never asks for passwords')
+    })
+
+    it('puts the safety information before the offer, in a calm box (no red alarm styling)', () => {
+        const worrying = scoreMhcu(answers({ [mhcuCode('cc', 11)]: 3 }))
+        const mail = buildMhcuResultEmail({ name: 'Rina', code: 'X', lang: 'id', scores: worrying, reportLink: link, level: worrying.level })
+        expect(mail.html.indexOf('119')).toBeGreaterThan(0)
+        expect(mail.html.indexOf('119')).toBeLessThan(mail.html.indexOf('Langkah berikutnya'))
+        expect(mail.html).not.toContain('#B42318')
+        expect(mail.html).not.toContain('#FEF3F2')
+    })
+
+    it('states plainly that the full report is optional and paid', () => {
+        const mail = buildMhcuResultEmail({ name: 'Rina', code: 'X', lang: 'id', scores, reportLink: link, level: 1 })
+        expect(mail.html).toContain('berbayar')
+        expect(mail.html).toContain('opsional')
+    })
+})
