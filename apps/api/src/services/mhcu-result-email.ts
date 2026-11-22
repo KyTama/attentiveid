@@ -1,11 +1,11 @@
 /**
- * The e-mail a participant gets after the Mental Health Check-Up: the four index scores with their category, a short
- * explanation, and an optional way to order the full analysed report. It never shows the clinical level or the red-flag reasons:
- * those are for the psychologist.
- *
- * Built to look like a calm, trustworthy message and not like a sales or phishing mail: results first, safety information before
- * any offer, no long tracking-style link in the text, a clear reason why the person is receiving it, and a plain footer.
+ * The result e-mail a participant gets after the Mental Health Check-Up. It follows the team's e-mail template
+ * (RMHCU/new, documents "Pemeriksaan mandiri" and "Pemeriksaan mandiri, Level 4"): the Mental Health Index and the overall
+ * status level only. The three indices (DI, WI, BHI) are part of the full report, not of this e-mail, and the clinical
+ * red-flag reasons are for the psychologist only.
  */
+
+import { PAYMENT_OPTIONS, priceFor } from './assessment-payment'
 
 export interface MhcuEmailInput {
     name: string
@@ -13,13 +13,15 @@ export interface MhcuEmailInput {
     lang: 'id' | 'en'
     /** The stored scoring result (see scoreMhcu); read defensively. */
     scores: unknown
-    /** Link to the payment page (already carries the signed token). */
+    /** Link to the unlock/payment page (already carries the signed token). */
     reportLink: string
+    /** 1-5; null when the result is incomplete. */
     level: number | null
-    /** When the check-up was submitted; shown so the person recognises the mail as theirs. */
+    /** When the check-up was submitted. */
     submittedAt?: Date
-    /** The address the mail goes to, repeated in the footer so the person sees why they got it. */
-    email?: string
+    /** Public address of the site, used for the logo (images must be hosted: mail clients do not show embedded ones). */
+    siteOrigin?: string
+    today?: Date
 }
 
 export interface BuiltEmail {
@@ -31,211 +33,199 @@ export interface BuiltEmail {
 const esc = (value: unknown): string =>
     String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
-const asRecord = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' ? (value as Record<string, unknown>) : {})
 const num = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null)
-const label = (value: unknown, lang: 'id' | 'en'): string => {
-    const record = asRecord(value)
-    const text = record[lang]
-    return typeof text === 'string' && text ? text : '–'
-}
-const fmt = (value: number | null, lang: 'id' | 'en'): string => {
-    if (value === null) return '–'
-    const text = (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, '')
-    return lang === 'id' ? text.replace('.', ',') : text
-}
+const record = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' ? (value as Record<string, unknown>) : {})
 
 const MONTHS = {
     id: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 } as const
 
-/** "22 November 2026, 10.49 WIB" (Jakarta time). */
-export const formatSubmittedAt = (date: Date, lang: 'id' | 'en'): string => {
+/** "19 November 2026" (Jakarta date). */
+export const formatSubmittedDate = (date: Date, lang: 'id' | 'en'): string => {
     const jakarta = new Date(date.getTime() + 7 * 3600 * 1000)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${jakarta.getUTCDate()} ${MONTHS[lang][jakarta.getUTCMonth()]} ${jakarta.getUTCFullYear()}, ${pad(jakarta.getUTCHours())}.${pad(jakarta.getUTCMinutes())} WIB`
+    return `${jakarta.getUTCDate()} ${MONTHS[lang][jakarta.getUTCMonth()]} ${jakarta.getUTCFullYear()}`
 }
 
-export interface EmailSection {
-    key: 'di' | 'wi' | 'bhi' | 'ati'
-    title: string
-    score: string
-    category: string
-    note: string
+const decimal = (value: number, lang: 'id' | 'en'): string => {
+    const text = (Math.round(value * 10) / 10).toFixed(1)
+    return lang === 'id' ? text.replace('.', ',') : text
 }
 
-/** The four sections shown at the top of the e-mail. */
-export const mhcuEmailSections = (scores: unknown, lang: 'id' | 'en'): EmailSection[] => {
-    const s = asRecord(scores)
-    const ati = asRecord(s.ati)
-    const atiIndex = num(ati.index)
-    const atiTotal = num(ati.total)
-    const id = lang === 'id'
-    return [
-        {
-            key: 'di',
-            title: id ? 'Distress Index (DI) · Tingkat keluhan' : 'Distress Index (DI) · Symptom load',
-            score: `${fmt(num(s.di), lang)} / 100`,
-            category: label(s.diCategory, lang),
-            note: id ? 'Makin rendah makin baik.' : 'Lower is better.'
-        },
-        {
-            key: 'wi',
-            title: id ? 'Well-being Index (WI) · Kesejahteraan' : 'Well-being Index (WI) · Well-being',
-            score: `${fmt(num(s.wi), lang)} / 100`,
-            category: label(s.wiCategory, lang),
-            note: id ? 'Makin tinggi makin baik.' : 'Higher is better.'
-        },
-        {
-            key: 'bhi',
-            title: id ? 'Behavioral Health Index (BHI) · Kebiasaan sehat' : 'Behavioral Health Index (BHI) · Healthy habits',
-            score: `${fmt(num(s.bhi), lang)} / 100`,
-            category: label(s.bhiCategory, lang),
-            note: id ? 'Makin tinggi makin baik.' : 'Higher is better.'
-        },
-        {
-            key: 'ati',
-            title: id ? 'Attentive Personality Index (ATI) · Gaya perhatian' : 'Attentive Personality Index (ATI) · Attention style',
-            score: atiIndex === null ? '–' : `${fmt(atiIndex, lang)} / 100${atiTotal === null ? '' : ` (${fmt(atiTotal, lang)} / 24)`}`,
-            category: label(ati.category, lang),
-            note: id ? 'Gambaran gaya Anda, bukan nilai baik atau buruk.' : 'A picture of your style, not a good or bad mark.'
-        }
-    ]
-}
+const rupiah = (amount: number): string => `Rp ${String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
+
+const LEVELS = {
+    id: ['Baik', 'Perlu Dipantau', 'Perlu Perhatian', 'Perlu Perhatian Serius', 'Prioritas'],
+    en: ['Good', 'Needs Monitoring', 'Needs Attention', 'Needs Serious Attention', 'Priority']
+} as const
+/** The colour strip under the status scale (from the template). */
+const LEVEL_COLORS = ['#8DB39B', '#B9C98F', '#D9C089', '#D3A184', '#C48A8A'] as const
+/** The reference bar: lowest band first (0-40, 40-55, 55-70, 70-100) with its share of the width. */
+const BAR = [
+    { idx: 3, width: 40, bg: '#D0D5DD', from: 0 },
+    { idx: 2, width: 15, bg: '#DDE1E7', from: 40 },
+    { idx: 1, width: 15, bg: '#E8EBEF', from: 55 },
+    { idx: 0, width: 30, bg: '#F4F5F7', from: 70 }
+] as const
 
 const COPY = {
     id: {
         subject: (code: string) => `Hasil Mental Health Check-Up (MHCU) Anda · ${code}`,
-        preheader: 'Ringkasan hasil Mental Health Check-Up Anda dari Attentive Psychology Bureau.',
-        hello: (name: string) => `Halo ${name},`,
-        intro: (when: string) =>
-            `Terima kasih telah mengisi Mental Health Check-Up (MHCU) dari Attentive Psychology Bureau pada ${when}. Berikut ringkasan hasil Anda.`,
-        overall: 'Mental Health Index (MHI) keseluruhan',
-        resultId: 'ID Hasil',
-        about:
-            'Ini adalah hasil skrining, bukan diagnosis. Skor menggambarkan keadaan Anda dalam 2 minggu terakhir (kebiasaan dan gaya perhatian: secara umum). Psikolog Attentive dapat membantu menjelaskan hasil ini bila Anda membutuhkannya.',
-        safetyHead: 'Bila Anda merasa tidak aman',
-        safety:
-            'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, jangan menunggu hasil lanjutan: hubungi orang terdekat yang Anda percaya, layanan darurat medis 119, atau IGD rumah sakit terdekat.',
-        nextHead: 'Langkah berikutnya (opsional)',
-        nextBody:
-            'Bila Anda ingin penjelasan yang lebih lengkap, tersedia laporan lengkap yang dianalisis psikolog Attentive: analisis per domain, keterangan, dan rekomendasi. Laporan ini berbayar (transfer bank, rincian ada di halaman berikutnya) dan sepenuhnya pilihan Anda.',
-        button: 'Dapatkan Laporan Lengkap Anda di Sini!',
-        noButton: 'Tombol tidak berfungsi? Balas email ini atau hubungi kami lewat WhatsApp, sebutkan ID Hasil di atas.',
-        why: (email: string) =>
-            `Anda menerima email ini karena alamat ${email} digunakan untuk mengisi MHCU di attentiveid.com. Bila ini bukan Anda, abaikan email ini.`,
-        trust: 'Attentive tidak pernah meminta kata sandi, kode OTP, atau data kartu lewat email.',
-        footer: 'Attentive Psychology Bureau · attentiveid.com · contact@attentiveid.com · WhatsApp 0851-5641-0912'
+        kicker: 'MENTAL HEALTH CHECK-UP',
+        summary: 'RINGKASAN HASIL',
+        heading: 'Hasil Mental Health Check-Up Anda',
+        greeting: (name: string, date: string) =>
+            `Yth. ${name}, terima kasih telah mengikuti Mental Health Check-Up pada ${date}. Berikut ringkasan hasil Anda.`,
+        noticeBold: 'Psikolog Attentive akan segera menghubungi Anda.',
+        noticeRest:
+            ' Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, segera hubungi layanan darurat medis 119 atau datang ke IGD terdekat.',
+        mhi: 'MENTAL HEALTH INDEX',
+        outOf: 'dari 100 (semakin tinggi semakin baik)',
+        status: 'STATUS KESELURUHAN',
+        levelOf: (level: number, name: string) => `Level ${level} dari 5: ${name}`,
+        scale: 'SKALA STATUS',
+        position: 'POSISI MHI PADA RENTANG RUJUKAN',
+        whatHead: 'Apa yang diukur MHI?',
+        whatBody:
+            'Mental Health Index (MHI) adalah angka 0 sampai 100 yang merangkum kondisi kesehatan mental Anda dalam 2 minggu terakhir. Semakin tinggi angkanya, semakin baik. MHI dihitung dari tiga indeks berikut.',
+        whatList: [
+            'Distress Index (DI) menunjukkan seberapa banyak keluhan dan tekanan psikologis yang Anda alami.',
+            'Well-being Index (WI) menunjukkan sisi positif kesehatan mental, misalnya perasaan, keberfungsian, dan hubungan dengan orang lain.',
+            'Behavioral Health Index (BHI) menunjukkan kebiasaan sehari-hari yang mendukung kesehatan mental.'
+        ],
+        reportTitle: (code: string) => `Laporan lengkap ${code}`,
+        reportDesc: 'Hasil per indeks (DI, WI, BHI) beserta keterangan dan rekomendasi dari psikolog.',
+        single: 'Laporan 1x',
+        bundle: 'Paket 3x pemeriksaan',
+        promoUntil: (date: string) => `Harga promo berlaku hingga ${date}.`,
+        afterBuy: 'Setelah pembelian, psikolog Attentive akan ditugaskan untuk meninjau hasil Anda dan menyusun laporan lengkap.',
+        button: 'Beli laporan lengkap',
+        confirmed: 'Pembayaran dikonfirmasi oleh admin kami.',
+        disclaimer: 'Hasil ini merupakan skrining berbasis laporan diri, bukan diagnosis klinis. ',
+        disclaimerSafety:
+            'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, segera hubungi layanan darurat medis 119 atau datang ke IGD terdekat.',
+        org: 'Biro Psikologi Attentive',
+        confidential: 'Email ini bersifat rahasia dan hanya ditujukan kepada penerima.',
+        promoDate: '30 April 2027'
     },
     en: {
         subject: (code: string) => `Your Mental Health Check-Up (MHCU) result · ${code}`,
-        preheader: 'A summary of your Mental Health Check-Up from Attentive Psychology Bureau.',
-        hello: (name: string) => `Hello ${name},`,
-        intro: (when: string) =>
-            `Thank you for completing the Mental Health Check-Up (MHCU) by Attentive Psychology Bureau on ${when}. Here is a summary of your result.`,
-        overall: 'Overall Mental Health Index (MHI)',
-        resultId: 'Result ID',
-        about:
-            'This is a screening result, not a diagnosis. The scores describe how you were over the past 2 weeks (habits and attention style: in general). An Attentive psychologist can help explain this result if you would like.',
-        safetyHead: 'If you feel unsafe',
-        safety:
-            'If you are having thoughts of harming yourself or feel unsafe, please do not wait for any further result: reach out to someone you trust, call the medical emergency line 119, or go to the nearest hospital emergency room.',
-        nextHead: 'Next step (optional)',
-        nextBody:
-            'If you would like a fuller explanation, a full report analysed by an Attentive psychologist is available: an analysis of every domain, notes and recommendations. It is a paid service (bank transfer, details on the next page) and entirely your choice.',
-        button: 'Get Your Full Analyzed Report Here!',
-        noButton: 'Button not working? Reply to this e-mail or message us on WhatsApp and mention the Result ID above.',
-        why: (email: string) =>
-            `You are receiving this e-mail because ${email} was used to complete the MHCU at attentiveid.com. If this was not you, please ignore this e-mail.`,
-        trust: 'Attentive never asks for passwords, OTP codes or card details by e-mail.',
-        footer: 'Attentive Psychology Bureau · attentiveid.com · contact@attentiveid.com · WhatsApp +62 851-5641-0912'
+        kicker: 'MENTAL HEALTH CHECK-UP',
+        summary: 'RESULT SUMMARY',
+        heading: 'Your Mental Health Check-Up Result',
+        greeting: (name: string, date: string) =>
+            `Dear ${name}, thank you for taking the Mental Health Check-Up on ${date}. Here is a summary of your result.`,
+        noticeBold: 'An Attentive psychologist will contact you shortly.',
+        noticeRest:
+            ' If you are having thoughts of harming yourself or feel unsafe, contact the medical emergency line 119 or go to the nearest emergency room right away.',
+        mhi: 'MENTAL HEALTH INDEX',
+        outOf: 'out of 100 (higher is better)',
+        status: 'OVERALL STATUS',
+        levelOf: (level: number, name: string) => `Level ${level} of 5: ${name}`,
+        scale: 'STATUS SCALE',
+        position: 'MHI POSITION ON THE REFERENCE RANGE',
+        whatHead: 'What does the MHI measure?',
+        whatBody:
+            'The Mental Health Index (MHI) is a number from 0 to 100 that summarises your mental health over the past 2 weeks. The higher the number, the better. The MHI is calculated from the three indices below.',
+        whatList: [
+            'The Distress Index (DI) shows how many complaints and how much psychological distress you experienced.',
+            'The Well-being Index (WI) shows the positive side of mental health, for example feelings, functioning and relationships with others.',
+            'The Behavioral Health Index (BHI) shows the daily habits that support mental health.'
+        ],
+        reportTitle: (code: string) => `Full report ${code}`,
+        reportDesc: 'Results per index with notes and recommendations from a psychologist.',
+        single: 'Single report',
+        bundle: 'Package of 3 check-ups',
+        promoUntil: (date: string) => `Introductory prices are valid until ${date}.`,
+        afterBuy: 'After purchase, an Attentive psychologist will be assigned to review your result and prepare the full report.',
+        button: 'Buy the full report',
+        confirmed: 'Payment is confirmed by our admin.',
+        disclaimer: 'This result is a self-report screening, not a clinical diagnosis. ',
+        disclaimerSafety:
+            'If you are having thoughts of harming yourself or feel unsafe, contact the medical emergency line 119 or go to the nearest emergency room right away.',
+        org: 'Attentive Psychology Bureau',
+        confidential: 'This e-mail is confidential and intended only for the recipient.',
+        promoDate: '30 April 2027'
     }
 } as const
+
+const FONT = 'Montserrat,Arial,Helvetica,sans-serif'
 
 export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
     const lang = input.lang === 'en' ? 'en' : 'id'
     const copy = COPY[lang]
-    const sections = mhcuEmailSections(input.scores, lang)
-    const s = asRecord(input.scores)
-    const mhi = `${fmt(num(s.mhi), lang)} / 100`
-    const mhiBand = label(s.mhiBand, lang)
-    const showSafety = input.level !== null && input.level >= 3
-    const when = formatSubmittedAt(input.submittedAt ?? new Date(), lang)
-    const emailAddress = input.email ?? ''
+    const scores = record(input.scores)
+    const mhiValue = num(scores.mhi)
+    const level = Math.min(5, Math.max(1, Math.round(input.level ?? num(scores.level) ?? 1)))
+    const levelName = LEVELS[lang][level - 1]
+    const mhiText = mhiValue === null ? '–' : decimal(mhiValue, lang)
+    const date = formatSubmittedDate(input.submittedAt ?? new Date(), lang)
+    const origin = (input.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '')
+    const logo = `${origin}/images/email/attentive-logo.png`
+    const showNotice = level >= 4
 
-    const rows = sections
-        .map(
-            (section) => `
-      <tr>
-        <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;vertical-align:top">
-          <div style="font-weight:600;color:#111827;font-size:14px">${esc(section.title)}</div>
-          <div style="color:#6b7280;font-size:12px;margin-top:2px">${esc(section.note)}</div>
-        </td>
-        <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;width:34%;min-width:84px">
-          <div style="font-weight:700;color:#111827;font-size:16px">${esc(section.score)}</div>
-          <div style="margin-top:3px;color:#374151;font-size:12px">${esc(section.category)}</div>
-        </td>
-      </tr>`
-        )
+    const today = input.today ?? new Date()
+    const promoActive = priceFor('single', today) < PAYMENT_OPTIONS.single.normal
+    const singleNow = priceFor('single', today)
+    const bundleNow = priceFor('package3', today)
+    const priceRow = (label: string, now: number, normal: number) =>
+        `<tr><td style="padding:2px 14px 2px 0">${esc(label)}</td><td style="padding:2px 0"><span style="font-size:14px;font-weight:bold;color:#142B51">${esc(rupiah(now))}</span>${
+            promoActive ? `<s style="color:#98A2B3;font-size:12px"> ${esc(rupiah(normal))}</s>` : ''
+        }</td></tr>`
+
+    const scaleCells = LEVELS[lang]
+        .map((name, i) => {
+            const on = i + 1 === level
+            return `<td width="20%" align="center" bgcolor="${on ? '#142B51' : '#F4F5F7'}" style="background:${on ? '#142B51' : '#F4F5F7'};padding:8px 2px;font-size:10.5px;line-height:1.3;color:${on ? '#FFFFFF' : '#98A2B3'};${on ? 'font-weight:bold;' : ''}border-right:2px solid #FFFFFF">${i + 1}<br>${esc(name)}</td>`
+        })
         .join('')
+    const scaleStrip = LEVEL_COLORS.map((color) => `<td height="3" bgcolor="${color}" style="background:${color};font-size:1px;line-height:3px;border-right:2px solid #FFFFFF">&nbsp;</td>`).join('')
 
-    const safetyBlock = showSafety
-        ? `
-      <div style="margin:20px 0 0;padding:14px 16px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb">
-        <div style="font-weight:600;color:#111827;font-size:14px">${esc(copy.safetyHead)}</div>
-        <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#374151">${esc(copy.safety)}</p>
-      </div>`
-        : ''
+    const markerLeft = mhiValue === null ? 0 : Math.min(94, Math.max(0, Math.round(mhiValue - 3)))
+    const marker = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="${markerLeft}%" style="font-size:1px">&nbsp;</td><td width="6%" align="center" style="font-family:${FONT};font-size:10px;line-height:12px;font-weight:bold;color:#142B51">${esc(mhiText)}<br>&#9660;</td><td style="font-size:1px">&nbsp;</td></tr></table>`
+    const bar = BAR.map(
+        (band) =>
+            `<td width="${band.width}%" align="center" bgcolor="${band.bg}" style="background:${band.bg};font-family:${FONT};font-size:10px;font-weight:bold;color:#3C4858;padding:6px 1px;border-right:1px solid #FFFFFF">${esc(LEVELS[lang][band.idx])}</td>`
+    ).join('')
 
-    const html = `<!doctype html>
-<html lang="${lang}"><body style="margin:0;background:#f3f4f6;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#111827">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(copy.preheader)}</div>
-  <div style="max-width:600px;margin:0 auto;padding:24px 16px">
-    <div style="background:#142B51;border-radius:10px 10px 0 0;padding:18px 24px;color:#ffffff;font-size:18px;font-weight:700">attentive. <span style="color:#d19e3a;font-size:11px;letter-spacing:1.5px;margin-left:8px">PSYCHOLOGY BUREAU</span></div>
-    <div style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 10px 10px">
-      <p style="margin:0 0 8px;font-size:16px;font-weight:600">${esc(copy.hello(input.name))}</p>
-      <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#374151">${esc(copy.intro(when))}</p>
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-radius:8px;border-collapse:separate;overflow:hidden">${rows}
-        <tr>
-          <td style="padding:14px 16px;background:#f3f4f6;font-weight:600;color:#111827;font-size:14px">${esc(copy.overall)}</td>
-          <td style="padding:14px 16px;background:#f3f4f6;text-align:right;font-weight:700;color:#111827">${esc(mhi)} · ${esc(mhiBand)}</td>
-        </tr>
-      </table>
-      <p style="margin:12px 0 0;font-size:12px;color:#6b7280">${esc(copy.resultId)}: <b style="color:#111827">${esc(input.code)}</b></p>
-      <p style="margin:14px 0 0;font-size:13px;line-height:1.6;color:#374151">${esc(copy.about)}</p>
-      ${safetyBlock}
-      <div style="margin:22px 0 0;padding-top:18px;border-top:1px solid #e5e7eb">
-        <div style="font-weight:600;color:#111827;font-size:14px">${esc(copy.nextHead)}</div>
-        <p style="margin:6px 0 14px;font-size:13px;line-height:1.6;color:#374151">${esc(copy.nextBody)}</p>
-        <a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 20px;border-radius:6px">${esc(copy.button)}</a>
-        <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#6b7280">${esc(copy.noButton)}</p>
-      </div>
-    </div>
-    <p style="margin:16px 0 0;text-align:center;font-size:11px;line-height:1.6;color:#6b7280">${emailAddress ? `${esc(copy.why(emailAddress))}<br>` : ''}${esc(copy.trust)}<br>${esc(copy.footer)}</p>
-  </div>
-</body></html>`
+    const html = `<!DOCTYPE html><meta charset="utf-8"><div style="background:#EEF0F3;padding:24px 10px;font-family:${FONT};"><table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #D0D5DD"><tr><td bgcolor="#142B51" style="background:#142B51;padding:16px 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td><img src="${esc(logo)}" width="150" height="45" alt="attentive." style="display:block"></td><td align="right" style="font-family:${FONT};font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#C9D1DE">${copy.kicker}</td></tr></table></td></tr><tr><td height="3" bgcolor="#D19E3A" style="background:#D19E3A;font-size:1px;line-height:3px">&nbsp;</td></tr><tr><td style="padding:26px 28px 10px 28px;font-size:14px;line-height:1.6;color:#1B2533"><p style="margin:0 0 4px 0;font-size:11px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.summary} | ${esc(input.code)}</p><p style="margin:0 0 6px 0;font-size:20px;line-height:1.3;font-weight:bold;color:#142B51">${copy.heading}</p><p style="margin:0 0 18px 0;color:#3C4858">${esc(copy.greeting(input.name, date))}</p>${
+        showNotice
+            ? `<div style="border:1px solid #D0D5DD;border-left:3px solid #142B51;background:#F4F5F7;padding:11px 14px;margin:0 0 18px 0;font-size:13px;color:#1B2533"><b>${copy.noticeBold}</b>${copy.noticeRest}</div>`
+            : ''
+    }<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};border:1px solid #D0D5DD"><tr><td width="150" valign="middle" align="center" bgcolor="#F4F5F7" style="background:#F4F5F7;padding:16px 8px;border-right:1px solid #D0D5DD"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.mhi}</div><div style="font-size:38px;line-height:44px;font-weight:bold;color:#142B51">${esc(mhiText)}</div><div style="font-size:10.5px;color:#667085">${copy.outOf}</div></td><td valign="middle" style="padding:14px 18px"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.status}</div><div style="font-size:19px;line-height:25px;font-weight:bold;color:#142B51;margin-top:2px">${esc(copy.levelOf(level, levelName))}</div></td></tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 5px 0">${copy.scale}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};"><tr>${scaleCells}</tr><tr>${scaleStrip}</tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 3px 0">${copy.position}</div>${marker}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${bar}</tr></table><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};font-size:9.5px;color:#98A2B3"><tr><td width="40%">0</td><td width="15%">40</td><td width="15%">55</td><td width="25%">70</td><td width="5%" align="right">100</td></tr></table><div style="margin:22px 0 0 0;padding:14px 16px;border:1px solid #EAECF0;background:#FAFAFB;font-size:13px;line-height:1.6;color:#3C4858"><div style="font-weight:bold;color:#142B51;margin-bottom:4px">${copy.whatHead}</div>${copy.whatBody}<ul style="margin:6px 0 0 18px;padding:0">${copy.whatList.map((line) => `<li>${esc(line)}</li>`).join('')}</ul></div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 6px 0;border:1px solid #D0D5DD"><tr><td width="66" align="center" valign="top" style="padding:16px 0 16px 14px"><div style="width:42px;height:54px;border:1px solid #D0D5DD;background:#F4F5F7;color:#142B51;font-size:10px;font-weight:bold;line-height:54px;text-align:center">PDF</div></td><td valign="top" style="padding:14px 16px;font-size:13px;line-height:1.5"><div style="font-weight:bold;color:#1B2533">${esc(copy.reportTitle(input.code))}</div><div style="color:#667085;font-size:12px">${copy.reportDesc}</div><table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:10px;font-size:13px;color:#1B2533">${priceRow(copy.single, singleNow, PAYMENT_OPTIONS.single.normal)}${priceRow(copy.bundle, bundleNow, PAYMENT_OPTIONS.package3.normal)}</table>${
+        promoActive ? `<div style="font-size:11.5px;color:#667085;margin-top:4px">${esc(copy.promoUntil(copy.promoDate))}</div>` : ''
+    }<div style="font-size:12px;color:#3C4858;margin-top:8px">${copy.afterBuy}</div></td></tr><tr><td colspan="2" style="padding:0 16px 16px 16px"><a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:13.5px;padding:11px 20px">${copy.button}</a><span style="font-size:11.5px;color:#667085;padding-left:10px">${copy.confirmed}</span></td></tr></table><p style="font-size:11.5px;line-height:1.55;color:#667085;margin:14px 0 0 0">${copy.disclaimer}${showNotice ? '' : copy.disclaimerSafety}</p></td></tr><tr><td style="padding:16px 28px 22px 28px;border-top:1px solid #EAECF0;font-size:11px;line-height:1.55;color:#667085"><b style="color:#142B51">${copy.org}</b><br>WhatsApp <a href="https://wa.me/6285156410912" style="color:#142B51">+62 851-5641-0912</a> | <a href="mailto:contact@attentiveid.com" style="color:#142B51">contact@attentiveid.com</a> | <a href="https://attentiveid.com" style="color:#142B51">attentiveid.com</a><br>${copy.confidential}</td></tr></table></div>`
 
     const text = [
-        copy.hello(input.name),
+        `${copy.summary} | ${input.code}`,
+        copy.heading,
         '',
-        copy.intro(when),
+        copy.greeting(input.name, date),
         '',
-        ...sections.map((section) => `${section.title}: ${section.score} (${section.category})`),
-        `${copy.overall}: ${mhi} (${mhiBand})`,
-        `${copy.resultId}: ${input.code}`,
+        ...(showNotice ? [`${copy.noticeBold}${copy.noticeRest}`, ''] : []),
+        `${copy.mhi}: ${mhiText} (${copy.outOf})`,
+        `${copy.status}: ${copy.levelOf(level, levelName)}`,
         '',
-        copy.about,
-        ...(showSafety ? ['', `${copy.safetyHead}: ${copy.safety}`] : []),
+        copy.whatHead,
+        copy.whatBody,
+        ...copy.whatList.map((line) => `- ${line}`),
         '',
-        copy.nextHead,
-        copy.nextBody,
-        copy.button,
-        input.reportLink,
+        copy.reportTitle(input.code),
+        copy.reportDesc,
+        `${copy.single}: ${rupiah(singleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.single.normal)})` : ''}`,
+        `${copy.bundle}: ${rupiah(bundleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.package3.normal)})` : ''}`,
+        ...(promoActive ? [copy.promoUntil(copy.promoDate)] : []),
+        copy.afterBuy,
         '',
-        ...(emailAddress ? [copy.why(emailAddress)] : []),
-        copy.trust,
-        copy.footer
+        `${copy.button}: ${input.reportLink}`,
+        copy.confirmed,
+        '',
+        `${copy.disclaimer}${showNotice ? '' : copy.disclaimerSafety}`.trim(),
+        '',
+        `${copy.org} | WhatsApp +62 851-5641-0912 | contact@attentiveid.com | attentiveid.com`,
+        copy.confidential
     ].join('\n')
 
     return { subject: copy.subject(input.code), html, text }
 }
+

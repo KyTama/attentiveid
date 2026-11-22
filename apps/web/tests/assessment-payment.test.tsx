@@ -69,7 +69,7 @@ describe('payment page', () => {
     expect(screen.getByText('Rek. BCA')).toBeTruthy()
     expect(screen.getAllByText('Rp 227.000').length).toBeGreaterThan(0)
     expect(screen.getByText('Simpan & Hubungi Kami')).toBeTruthy()
-    expect(screen.getByText(/Unggah bukti transfer/)).toBeTruthy()
+    expect(screen.getAllByText(/Unggah bukti transfer/).length).toBeGreaterThan(0)
   })
 
   it('refuses an invalid link without showing any payment details', async () => {
@@ -92,6 +92,55 @@ describe('payment page: bad link in English', () => {
         <AppRoutes />
       </MemoryRouter>,
     )
-    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('This link is not valid'))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('This report link is invalid'))
+  })
+})
+
+describe('payment page follows the team design', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          status: 'success',
+          data: {
+            code: 'AT-MHCU-2026-120',
+            name: 'Andini Rahmawati',
+            lang: 'id',
+            submitted: false,
+            mhi: 78.3,
+            level: 1,
+            levelName: { id: 'Baik', en: 'Good' },
+            track: 'mandiri',
+            account: { bank: 'BCA', number: '4500499562', holder: 'Atensi Kini Group PT' },
+            whatsapp: '6285156410912',
+            options: [single, { key: 'package3', labelId: 'Paket 3x', labelEn: 'Package of 3', amount: 647_000, normal: 885_000 }],
+          },
+        }),
+      }),
+    )
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  it('shows the locked report card with the MHI and level, the two options and the safety note', async () => {
+    render(
+      <MemoryRouter initialEntries={['/assessments/payment?id=AT-MHCU-2026-120&t=good']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Dapatkan laporan lengkap')).toBeTruthy()
+    expect(screen.getByText('Laporan lengkap belum dibeli')).toBeTruthy()
+    expect(screen.getByText('Laporan lengkap AT-MHCU-2026-120')).toBeTruthy()
+    expect(screen.getByText('78,3 (Level 1, Baik)')).toBeTruthy()
+    expect(screen.getByText('Ditugaskan setelah pembelian')).toBeTruthy()
+    expect(screen.getByText('Laporan 1x')).toBeTruthy()
+    expect(screen.getByText('Paket 3x')).toBeTruthy()
+    expect(screen.getByText('Beli 1x')).toBeTruthy()
+    expect(screen.getByText('Beli paket 3x')).toBeTruthy()
+    expect(screen.getByText('Harga promo berlaku hingga 30 April 2027.')).toBeTruthy()
+    expect(screen.getByText('119')).toBeTruthy()
   })
 })
