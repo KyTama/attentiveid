@@ -121,6 +121,11 @@ jobs:
 
       - name: Promote exact staged release
         id: deploy
+        env:
+          # The site's e-mail login lives in GitHub (environment "production"); remote-deploy.sh writes it only into the candidate file on the server.
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
         run: |
           ./scripts/deploy/remote-deploy.sh \
             --host "${{ vars.DEPLOY_SSH_HOST }}" \
