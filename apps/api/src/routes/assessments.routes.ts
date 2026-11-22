@@ -7,6 +7,7 @@ import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
 import { paymentLink } from '../services/assessment-payment';
+import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
 
 export interface AssessmentsRateLimit {
     max: number;
@@ -20,6 +21,8 @@ export interface AssessmentsRoutesDependencies {
     sheetSync?: AssessmentsSheetSync;
     /** Sends the result e-mail to the participant. Without it (or without SMTP settings) no e-mail is sent. */
     mailer?: Mailer;
+    /** Staff address that gets the alert for a Level 4-5 result. */
+    alertEmail?: string;
     /** Secret that signs the links in the e-mail (the API's JWT secret). */
     paymentSecret?: string;
     /** The public address of the site, used in the links of the e-mail. */
@@ -108,6 +111,23 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         })();
     };
 
+    /** Tells staff straight away about a Level 4-5 result (same-day contact). Never blocks or fails the submission. */
+    const sendAdminAlert = (row: { id: string; code: string; waveNo: number | null }, input: { level: number; mhi: number | null; name: string; phone: string; email: string; lang: string }) => {
+        const mailer = dependencies.mailer;
+        const to = dependencies.alertEmail;
+        if (!mailer?.isConfigured || !to || input.level < 4) return;
+        void (async () => {
+            try {
+                const origin = (dependencies.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
+                const mail = buildAdminAlertEmail({ ...input, code: row.code, waveNo: row.waveNo, submittedAt: new Date(), portalUrl: `${origin}/dashboard/assessments` });
+                await mailer.send({ to, ...mail });
+                await repository.markAdminAlertSent(row.id);
+            } catch (error) {
+                logFailure('admin-alert', error);
+            }
+        })();
+    };
+
     const sync = () => {
         // Fire and forget: the person's answers are already safe in the database; a failed copy is tried again next time.
         void dependencies.sheetSync?.syncPending().catch(() => undefined);
@@ -173,6 +193,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 );
                 if (!created.duplicate) {
                     sync();
+                    sendAdminAlert(created, { level: typeof scores.level === 'number' ? scores.level : 0, mhi: typeof scores.mhi === 'number' ? scores.mhi : null, name: value.name, phone: value.phone, email: value.email, lang: value.lang });
                     sendResultEmail(created, { name: value.name, email: value.email, lang: value.lang, scores, level: typeof scores.level === 'number' ? scores.level : null });
                 }
                 set.status = 201;

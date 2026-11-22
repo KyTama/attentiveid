@@ -40,6 +40,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
     mailer?: Mailer;
+    alertEmail?: string;
     paymentSecret?: string;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
@@ -222,6 +223,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
                 sheetSync: dependencies.assessmentsSheetSync,
                 mailer: dependencies.mailer,
+                alertEmail: dependencies.alertEmail,
                 paymentSecret: dependencies.paymentSecret,
                 siteOrigin: dependencies.frontendOrigin,
             }))

@@ -65,6 +65,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
     const rows: AssessmentRow[] = [];
     const sent: MailMessage[] = [];
     const emailed: string[] = [];
+    const alerted: string[] = [];
     let synced = 0;
     const repository: AssessmentsRepository = {
         create: async (input, createOptions) => {
@@ -89,7 +90,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 ...input
             } as AssessmentRow;
             rows.push(row);
-            return { id: row.id, code: row.code, duplicate: false };
+            return { id: row.id, code: row.code, duplicate: false, participantId: null, waveNo: 1 };
         },
         list: async (_instrument, listOptions) =>
             rows.filter((row) => !listOptions?.status || row.status === listOptions.status) as unknown as AssessmentListItem[],
@@ -105,6 +106,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
         markSheetSynced: async () => {},
         getByCode: async (code) => rows.find((row) => row.code === code) ?? null,
         markResultEmailSent: async (id) => { emailed.push(id); },
+        markAdminAlertSent: async (id) => { alerted.push(id); },
         savePayment: async () => {},
         getProof: async () => null,
         listUnsynced: async () => []
@@ -121,13 +123,14 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                     sent.push(message);
                 }
             }))(),
+            alertEmail: 'alerts@attentive.id',
             paymentSecret: 'payment-secret-payment-secret-1234',
             siteOrigin: 'https://attentiveid.com',
             sheetSync: { isConfigured: true, syncPending: async () => { synced += 1; return { configured: true, synced: 0, error: null }; } },
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, sent, emailed, syncCalls: () => synced };
+    return { app, rows, sent, emailed, alerted, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -367,5 +370,37 @@ describe('result e-mail after a submission', () => {
         await submitGsc(app, gscBody());
         await settle();
         expect(sent).toHaveLength(0);
+    });
+});
+
+
+describe('alert for a Level 4-5 result', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
+
+    it('e-mails staff the contact details and the response time, once, and stays quiet for lower levels', async () => {
+        const high = createFixture();
+        await submit(high.app, body({ answers: answersWith({ [mhcuCode('cc', 11)]: 3 }), email: 'high@example.com' }));
+        await submit(high.app, body({ answers: answersWith({ [mhcuCode('cc', 11)]: 3 }), email: 'high@example.com' })); // same click again
+        await settle();
+        const alerts = high.sent.filter((mail) => mail.to === 'alerts@attentive.id');
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0].subject).toContain('[MHCU] Level 5');
+        expect(alerts[0].text).toContain('081234567890');
+        expect(alerts[0].text).toContain('high@example.com');
+        expect(alerts[0].text).toContain('/dashboard/assessments');
+        expect(high.alerted).toHaveLength(1);
+        const low = createFixture();
+        await submit(low.app, body());
+        await settle();
+        expect(low.sent.filter((mail) => mail.to === 'alerts@attentive.id')).toHaveLength(0);
+    });
+
+    it('never puts the alert and its contact details in the e-mail the person receives', async () => {
+        const { app, sent } = createFixture();
+        await submit(app, body({ answers: answersWith({ [mhcuCode('cc', 11)]: 3 }) }));
+        await settle();
+        const toPerson = sent.find((mail) => mail.to === 'rina@example.com');
+        expect(toPerson).toBeDefined();
+        expect(toPerson?.html).not.toContain('Tindak lanjut:');
     });
 });
