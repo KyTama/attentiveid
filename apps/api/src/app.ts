@@ -15,6 +15,8 @@ import { createAssessmentsRoutes } from './routes/assessments.routes';
 import { createAccountSettingsRoutes } from './routes/account-settings.routes';
 import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
+import type { Mailer } from './services/mailer';
+import { createAssessmentPaymentRoutes } from './routes/assessment-payment.routes';
 import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
@@ -37,6 +39,8 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     prayersRepository?: PrayersRepository;
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
+    mailer?: Mailer;
+    paymentSecret?: string;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
     adminToolsRepository?: AdminToolsRepository;
@@ -206,11 +210,20 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 db: dependencies.db,
             }))
+            .use(createAssessmentPaymentRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
+                paymentSecret: dependencies.paymentSecret,
+            }))
             .use(createAssessmentsRoutes({
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
                 sheetSync: dependencies.assessmentsSheetSync,
+                mailer: dependencies.mailer,
+                paymentSecret: dependencies.paymentSecret,
+                siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createSciBriefsRoutes({
                 tokenService: dependencies.tokenService,

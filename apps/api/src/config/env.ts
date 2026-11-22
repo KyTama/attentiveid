@@ -18,6 +18,14 @@ const EnvSchema = t.Object({
     FREE_SESSION_SHEET_ID: t.Optional(t.String()),
     FREE_SESSION_SHEET_NAME: t.Optional(t.String()),
     /** Private Google Sheet that mirrors assessment answers (empty = no mirror). */
+    /** SMTP for the e-mails the site sends (Gmail: smtp.gmail.com, port 587, an app password). Empty = no e-mail is sent. */
+    SMTP_HOST: t.Optional(t.String()),
+    SMTP_PORT: t.Optional(t.String()),
+    SMTP_USER: t.Optional(t.String()),
+    SMTP_PASS: t.Optional(t.String()),
+    SMTP_FROM: t.Optional(t.String()),
+    SMTP_FROM_NAME: t.Optional(t.String()),
+    SMTP_REPLY_TO: t.Optional(t.String()),
     ASSESSMENTS_SHEET_ID: t.Optional(t.String()),
     ASSESSMENTS_MHCU_SHEET_NAME: t.Optional(t.String()),
     BOOKING_NOTIFY_EMAIL: t.Optional(t.String())

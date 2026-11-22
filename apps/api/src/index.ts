@@ -9,6 +9,7 @@ import { createFreeSessionRepository } from './repositories/free-session.reposit
 import { createFreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createAssessmentsRepository } from './repositories/assessments.repository';
 import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
+import { createMailer } from './services/mailer';
 import { processDueBookingOutbox } from './services/booking-outbox';
 import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
@@ -123,7 +124,20 @@ const assessmentsSheetSync = createAssessmentsSheetSync({
     onError: (error) => console.error('[assessments] Google Sheet sync failed:', error instanceof Error ? error.message : error)
 });
 
+// E-mail sent by the site (the result e-mail of the Mental Health Check-Up). Only active when SMTP_USER and SMTP_PASS are set.
+const mailer = createMailer({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+    from: env.SMTP_FROM,
+    fromName: env.SMTP_FROM_NAME || 'Attentive',
+    replyTo: env.SMTP_REPLY_TO
+});
+
 const app = createApp({
+    mailer,
+    paymentSecret: jwtSecretValue,
     assessmentsRepository,
     assessmentsSheetSync,
     freeSessionRepository,

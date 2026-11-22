@@ -22,6 +22,7 @@ import { FeaturedProductsCmsPage } from './pages/dashboard/FeaturedProductsCmsPa
 import { SharePreviewsCmsPage } from './pages/dashboard/SharePreviewsCmsPage'
 import { OurServicesPage } from './pages/OurServicesPage'
 import { AssessmentsPage } from './pages/AssessmentsPage'
+import { AssessmentPaymentPage } from './pages/AssessmentPaymentPage'
 import { AssessmentsCmsPage } from './pages/dashboard/AssessmentsCmsPage'
 import { AccountSettingsPage } from './pages/dashboard/AccountSettingsPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
@@ -78,6 +79,7 @@ export function AppRoutes({
           <Route path="free-session" element={<FreeSessionPage />} />
           <Route path="our-services" element={<OurServicesPage />} />
           <Route path="assessments" element={<AssessmentsPage />} />
+          <Route path="assessments/payment" element={<AssessmentPaymentPage />} />
           {/* The form itself is a standalone page the web server serves; this keeps the address working in development. */}
           <Route path="assessments/mhcu" element={<StaticFormRedirect to="/assessments-static/mhcu.html" />} />
           <Route path="assessments/goal-compass" element={<StaticFormRedirect to="/assessments-static/gsc.html" />} />
