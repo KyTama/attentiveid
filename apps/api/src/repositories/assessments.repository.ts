@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { matchParticipant, normalizeParticipantEmail as normalizeEmail, normalizeParticipantPhone as normalizePhone } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions } from '../db/schema';
+import { assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions, psychologists } from '../db/schema';
 
 export type AssessmentInstrument = 'mhcu' | 'gsc';
 export type AssessmentStatus = 'new' | 'reviewed' | 'released';
@@ -42,6 +42,9 @@ export interface AssessmentListItem {
     level: number | null;
     status: AssessmentStatus;
     researchConsent: boolean;
+    psychologistId: string | null;
+    paymentStatus: string;
+    waveNo: number | null;
     createdAt: string;
 }
 
@@ -52,7 +55,7 @@ export interface AssessmentsRepository {
      * insert happen under one lock, so two clicks arriving together cannot both be saved.
      */
     create(input: NewAssessmentSubmission, options?: { now?: Date; dedupeMs?: number }): Promise<{ id: string; code: string; duplicate: boolean; participantId: string | null; waveNo: number | null }>;
-    list(instrument: AssessmentInstrument, options?: { status?: AssessmentStatus; limit?: number }): Promise<AssessmentListItem[]>;
+    list(instrument: AssessmentInstrument, options?: { status?: AssessmentStatus; limit?: number; psychologistId?: string }): Promise<AssessmentListItem[]>;
     get(id: string): Promise<AssessmentRow | null>;
     review(id: string, input: { status: AssessmentStatus; note: string | null; reviewerId: string }): Promise<AssessmentRow | null>;
     /** One update for the whole batch (all rows or none); an error text marks them as failed for the portal to show. */
@@ -60,6 +63,16 @@ export interface AssessmentsRepository {
     getByCode(code: string): Promise<AssessmentRow | null>;
     markResultEmailSent(id: string): Promise<void>;
     markAdminAlertSent(id: string): Promise<void>;
+    /** All check-ups of one person (oldest first), with the person's printed number (P00001). */
+    listHistory(participantId: string): Promise<Array<AssessmentRow & { participantNo: number }>>;
+    /** The psychologists a result can be assigned to. */
+    listPsychologists(): Promise<Array<{ id: string; name: string }>>;
+    getPsychologistName(id: string): Promise<string | null>;
+    /** Assigns (or clears) the psychologist of a check-up; the person keeps the same psychologist for later check-ups. */
+    assign(id: string, psychologistId: string | null): Promise<AssessmentRow | null>;
+    saveNote(id: string, input: { template: string | null; custom: string | null; final: boolean; userId: string }): Promise<AssessmentRow | null>;
+    setPayment(id: string, input: { status: string; package: string | null; amount: number | null; ref: string | null }): Promise<AssessmentRow | null>;
+    markReportReleased(id: string): Promise<AssessmentRow | null>;
     /** Records what the participant says they paid for and keeps the proof of transfer (a screenshot or PDF) with it. */
     savePayment(id: string, input: { paymentFor: string; mimeType: string; data: Buffer }): Promise<void>;
     /** The latest proof of transfer for a submission, or null. */
@@ -152,6 +165,7 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
     async list(instrument, options = {}) {
         const conditions = [eq(assessmentSubmissions.instrument, instrument)];
         if (options.status) conditions.push(eq(assessmentSubmissions.status, options.status));
+        if (options.psychologistId) conditions.push(eq(assessmentSubmissions.psychologistId, options.psychologistId));
         const rows = await db
             .select({
                 id: assessmentSubmissions.id,
@@ -164,6 +178,9 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                 level: assessmentSubmissions.level,
                 status: assessmentSubmissions.status,
                 researchConsent: assessmentSubmissions.researchConsent,
+                psychologistId: assessmentSubmissions.psychologistId,
+                paymentStatus: assessmentSubmissions.paymentStatus,
+                waveNo: assessmentSubmissions.waveNo,
                 createdAt: assessmentSubmissions.createdAt
             })
             .from(assessmentSubmissions)
@@ -204,6 +221,70 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
 
     async getByCode(code) {
         const rows = await db.select().from(assessmentSubmissions).where(eq(assessmentSubmissions.code, code)).limit(1);
+        return rows[0] ?? null;
+    },
+
+    async listHistory(participantId) {
+        const rows = await db
+            .select({ row: assessmentSubmissions, participantNo: assessmentParticipants.participantNo })
+            .from(assessmentSubmissions)
+            .innerJoin(assessmentParticipants, eq(assessmentParticipants.id, assessmentSubmissions.participantId))
+            .where(eq(assessmentSubmissions.participantId, participantId))
+            .orderBy(assessmentSubmissions.waveNo, assessmentSubmissions.createdAt);
+        return rows.map((r) => ({ ...r.row, participantNo: r.participantNo }));
+    },
+
+    async listPsychologists() {
+        return db.select({ id: psychologists.id, name: psychologists.name }).from(psychologists).orderBy(psychologists.name);
+    },
+
+    async getPsychologistName(id) {
+        const rows = await db.select({ name: psychologists.name }).from(psychologists).where(eq(psychologists.id, id)).limit(1);
+        return rows[0]?.name ?? null;
+    },
+
+    async assign(id, psychologistId) {
+        return db.transaction(async (tx) => {
+            const rows = await tx.update(assessmentSubmissions).set({ psychologistId }).where(eq(assessmentSubmissions.id, id)).returning();
+            const row = rows[0];
+            if (row?.participantId) {
+                await tx.update(assessmentParticipants).set({ psychologistId }).where(eq(assessmentParticipants.id, row.participantId));
+            }
+            return row ?? null;
+        });
+    },
+
+    async saveNote(id, input) {
+        const rows = await db
+            .update(assessmentSubmissions)
+            .set({ noteTemplate: input.template, noteCustom: input.custom, noteFinal: input.final, noteUpdatedBy: input.userId, noteUpdatedAt: sql`now()` })
+            .where(eq(assessmentSubmissions.id, id))
+            .returning();
+        return rows[0] ?? null;
+    },
+
+    async setPayment(id, input) {
+        const settled = input.status !== 'UNPAID';
+        const rows = await db
+            .update(assessmentSubmissions)
+            .set({
+                paymentStatus: input.status,
+                paymentPackage: input.package,
+                paymentAmount: input.amount,
+                paymentRef: input.ref,
+                paidAt: settled ? sql`coalesce(${assessmentSubmissions.paidAt}, now())` : null
+            })
+            .where(eq(assessmentSubmissions.id, id))
+            .returning();
+        return rows[0] ?? null;
+    },
+
+    async markReportReleased(id) {
+        const rows = await db
+            .update(assessmentSubmissions)
+            .set({ status: 'released', releasedAt: sql`coalesce(${assessmentSubmissions.releasedAt}, now())`, reportSentAt: sql`now()` })
+            .where(eq(assessmentSubmissions.id, id))
+            .returning();
         return rows[0] ?? null;
     },
 

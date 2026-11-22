@@ -13,7 +13,7 @@ const makeUser = (id: string, role: UserDto['role']): UserDto => ({
     name: id,
     role,
     status: 'active',
-    psychologistId: null,
+    psychologistId: id === 'psych-1' ? '00000000-0000-4000-8000-0000000000aa' : null,
     lastLoginAt: null,
     createdAt: '2026-09-01T00:00:00Z',
     updatedAt: '2026-09-01T00:00:00Z'
@@ -59,9 +59,11 @@ const body = (overrides: Record<string, unknown> = {}) => ({
     ...overrides
 });
 
+const PSY_ID = '00000000-0000-4000-8000-0000000000aa';
+const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off' } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean } = {}) => {
     const rows: AssessmentRow[] = [];
     const sent: MailMessage[] = [];
     const emailed: string[] = [];
@@ -72,7 +74,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             if (options.failCreate) throw new Error('Failed query: insert ... params: Rina Pratiwi, 081234567890');
             if (createOptions?.dedupeMs) {
                 const found = rows.find((row) => row.email.toLowerCase() === input.email.toLowerCase() && JSON.stringify(row.answers) === JSON.stringify(input.answers));
-                if (found) return { id: found.id, code: found.code, duplicate: true };
+                if (found) return { id: found.id, code: found.code, duplicate: true, participantId: null, waveNo: null };
             }
             const row = {
                 id: idOf(rows.length + 1),
@@ -87,13 +89,20 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 sheetSyncedAt: null,
                 sheetError: null,
                 status: 'new',
+                participantId: 'pp-1',
+                waveNo: rows.length + 1,
+                psychologistId: options.unassigned ? null : PSY_ID,
+                noteTemplate: null,
+                noteCustom: null,
+                noteFinal: false,
+                paymentStatus: 'UNPAID',
                 ...input
             } as AssessmentRow;
             rows.push(row);
             return { id: row.id, code: row.code, duplicate: false, participantId: null, waveNo: 1 };
         },
         list: async (_instrument, listOptions) =>
-            rows.filter((row) => !listOptions?.status || row.status === listOptions.status) as unknown as AssessmentListItem[],
+            rows.filter((row) => (!listOptions?.status || row.status === listOptions.status) && (!listOptions?.psychologistId || row.psychologistId === listOptions.psychologistId)) as unknown as AssessmentListItem[],
         get: async (id) => rows.find((row) => row.id === id) ?? null,
         review: async (id, input) => {
             const row = rows.find((entry) => entry.id === id);
@@ -101,6 +110,33 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             row.status = input.status;
             row.reviewerNote = input.note;
             row.reviewerId = input.reviewerId;
+            return row;
+        },
+        listHistory: async () => rows.map((row) => ({ ...row, participantNo: 1 })),
+        listPsychologists: async () => [{ id: PSY_ID, name: 'dr. Aly' }],
+        getPsychologistName: async (id) => (id === PSY_ID ? 'dr. Aly' : id === OTHER_PSY_ID ? 'dr. Budi' : null),
+        assign: async (id, psychologistId) => {
+            const row = rows.find((entry) => entry.id === id);
+            if (!row) return null;
+            row.psychologistId = psychologistId;
+            return row;
+        },
+        saveNote: async (id, input) => {
+            const row = rows.find((entry) => entry.id === id);
+            if (!row) return null;
+            Object.assign(row, { noteTemplate: input.template, noteCustom: input.custom, noteFinal: input.final });
+            return row;
+        },
+        setPayment: async (id, input) => {
+            const row = rows.find((entry) => entry.id === id);
+            if (!row) return null;
+            Object.assign(row, { paymentStatus: input.status, paymentPackage: input.package, paymentAmount: input.amount, paymentRef: input.ref });
+            return row;
+        },
+        markReportReleased: async (id) => {
+            const row = rows.find((entry) => entry.id === id);
+            if (!row) return null;
+            row.status = 'released';
             return row;
         },
         markSheetSynced: async () => {},
@@ -260,9 +296,11 @@ describe('staff endpoints', () => {
         await submit(app, body());
         const bad = await send(app, `/api/admin/assessments/${idOf(1)}/review`, 'PUT', { status: 'deleted' }, bearer(psychologistToken));
         expect(bad.status).toBe(400);
-        const ok = await send(app, `/api/admin/assessments/${idOf(1)}/review`, 'PUT', { status: 'released' as AssessmentStatus, note: '  Perlu tindak lanjut  ' }, bearer(psychologistToken));
+        const ok = await send(app, `/api/admin/assessments/${idOf(1)}/review`, 'PUT', { status: 'reviewed' as AssessmentStatus, note: '  Perlu tindak lanjut  ' }, bearer(psychologistToken));
         expect(ok.status).toBe(200);
-        expect(rows[0]).toMatchObject({ status: 'released', reviewerNote: 'Perlu tindak lanjut', reviewerId: 'psych-1' });
+        expect(rows[0]).toMatchObject({ status: 'reviewed', reviewerNote: 'Perlu tindak lanjut', reviewerId: 'psych-1' });
+        // Releasing the full report goes through its own step (final note + confirmed payment), never through review.
+        expect((await send(app, `/api/admin/assessments/${idOf(1)}/review`, 'PUT', { status: 'released' }, bearer(psychologistToken))).status).toBe(409);
         expect((await send(app, `/api/admin/assessments/${idOf(99)}/review`, 'PUT', { status: 'reviewed' }, bearer(psychologistToken))).status).toBe(404);
     });
 
@@ -280,7 +318,7 @@ describe('staff endpoints', () => {
         await submit(app, body());
         const url = `/api/admin/assessments/${idOf(1)}/review`;
         expect((await send(app, url, 'PUT', { status: 'new' }, bearer(psychologistToken))).status).toBe(400);
-        expect((await send(app, url, 'PUT', { status: 'released' }, bearer(psychologistToken))).status).toBe(200);
+        rows[0].status = 'released';
         expect((await send(app, url, 'PUT', { status: 'reviewed' }, bearer(psychologistToken))).status).toBe(409);
         expect(rows[0].status).toBe('released');
     });
@@ -289,6 +327,108 @@ describe('staff endpoints', () => {
         const { app } = createFixture();
         expect((await send(app, '/api/admin/assessments/sync', 'POST', {}, bearer(psychologistToken))).status).toBe(403);
         expect((await send(app, '/api/admin/assessments/sync', 'POST', {}, bearer(adminToken))).status).toBe(200);
+    });
+});
+
+describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
+    const adminHeaders = bearer(adminToken);
+    const psyHeaders = bearer(psychologistToken);
+
+    it('shows a psychologist only the check-ups assigned to them', async () => {
+        const unassigned = createFixture({ unassigned: true });
+        await submit(unassigned.app, body());
+        // not assigned yet: the psychologist sees nothing
+        expect((await (await send(unassigned.app, '/api/admin/assessment-lists/mhcu', 'GET', undefined, psyHeaders)).json()).data).toHaveLength(0);
+        const fixture = createFixture({ unassigned: true });
+        await submit(fixture.app, body());
+        fixture.rows[0].psychologistId = OTHER_PSY_ID;
+        expect((await (await send(fixture.app, '/api/admin/assessment-lists/mhcu', 'GET', undefined, psyHeaders)).json()).data).toHaveLength(0);
+        expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}`, 'GET', undefined, psyHeaders)).status).toBe(404);
+        expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}/report/psychologist`, 'GET', undefined, psyHeaders)).status).toBe(404);
+        expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}`, 'GET', undefined, adminHeaders)).status).toBe(200);
+    });
+
+    it('lets only admins assign a psychologist, and rejects an unknown one', async () => {
+        const { app, rows } = createFixture({ unassigned: true });
+        await submit(app, body());
+        const url = `/api/admin/assessments/${idOf(1)}/psychologist`;
+        expect((await send(app, url, 'PUT', { psychologistId: PSY_ID }, psyHeaders)).status).toBe(403);
+        expect((await send(app, url, 'PUT', { psychologistId: idOf(77) }, adminHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { psychologistId: 'nope' }, adminHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { psychologistId: PSY_ID }, adminHeaders)).status).toBe(200);
+        expect(rows[0].psychologistId).toBe(PSY_ID);
+        expect((await send(app, url, 'PUT', { psychologistId: null }, adminHeaders)).status).toBe(200);
+        expect(rows[0].psychologistId).toBeNull();
+    });
+
+    it('saves the note, limits the special note to 500 characters, and keeps other psychologists out', async () => {
+        const { app, rows } = createFixture();
+        await submit(app, body());
+        const url = `/api/admin/assessments/${idOf(1)}/note`;
+        expect((await send(app, url, 'PUT', { template: 'Teks', custom: 'x'.repeat(501), final: false }, psyHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { template: 'Teks', custom: 'Catatan', final: 'yes' }, psyHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { template: ' Teks ', custom: ' Catatan ', final: true }, psyHeaders)).status).toBe(200);
+        expect(rows[0]).toMatchObject({ noteTemplate: 'Teks', noteCustom: 'Catatan', noteFinal: true });
+        rows[0].psychologistId = OTHER_PSY_ID;
+        expect((await send(app, url, 'PUT', { template: 'a', custom: null, final: false }, psyHeaders)).status).toBe(404);
+    });
+
+    it('sets the payment status for admins only and validates it', async () => {
+        const { app, rows } = createFixture();
+        await submit(app, body());
+        const url = `/api/admin/assessments/${idOf(1)}/payment`;
+        expect((await send(app, url, 'PUT', { status: 'PAID' }, psyHeaders)).status).toBe(403);
+        expect((await send(app, url, 'PUT', { status: 'MAYBE' }, adminHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { status: 'PAID', amount: -5 }, adminHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { status: 'PAID', package: 'single', amount: 227000, ref: 'BCA 22/11' }, adminHeaders)).status).toBe(200);
+        expect(rows[0]).toMatchObject({ paymentStatus: 'PAID', paymentAmount: 227000 });
+    });
+
+    it('previews both reports for staff as no-store pages', async () => {
+        const { app } = createFixture();
+        await submit(app, body());
+        const client = await send(app, `/api/admin/assessments/${idOf(1)}/report/client`, 'GET', undefined, psyHeaders);
+        expect(client.status).toBe(200);
+        expect(client.headers.get('cache-control')).toBe('no-store');
+        expect(await client.text()).toContain('Rina Pratiwi');
+        const internal = await send(app, `/api/admin/assessments/${idOf(1)}/report/psychologist`, 'GET', undefined, psyHeaders);
+        expect(internal.status).toBe(200);
+        expect(await internal.text()).toContain('AT-MHCU-2026-100');
+        expect((await send(app, `/api/admin/assessments/${idOf(1)}/report/other`, 'GET', undefined, psyHeaders)).status).toBe(404);
+        expect((await send(app, `/api/admin/assessments/${idOf(1)}/report/client`, 'GET')).status).toBe(401);
+    });
+
+    it('releases the report only with a final note and confirmed payment, then e-mails the signed link that opens the client report', async () => {
+        const { app, rows, sent } = createFixture();
+        await submit(app, body());
+        sent.length = 0;
+        const release = `/api/admin/assessments/${idOf(1)}/release-report`;
+        expect((await send(app, release, 'POST', {}, psyHeaders)).status).toBe(403);
+        expect((await send(app, release, 'POST', {}, adminHeaders)).status).toBe(409); // note not final
+        await send(app, `/api/admin/assessments/${idOf(1)}/note`, 'PUT', { template: null, custom: null, final: true }, adminHeaders);
+        expect((await send(app, release, 'POST', {}, adminHeaders)).status).toBe(409); // not paid
+        await send(app, `/api/admin/assessments/${idOf(1)}/payment`, 'PUT', { status: 'PAID' }, adminHeaders);
+        const done = await send(app, release, 'POST', {}, adminHeaders);
+        expect(done.status).toBe(200);
+        expect((await done.json()).data).toEqual({ released: true, emailed: true });
+        expect(rows[0].status).toBe('released');
+        expect(sent).toHaveLength(1);
+        const link = /https:\/\/attentiveid\.com(\/api\/public\/assessments\/report\?[^\s"<]+)/.exec(sent[0].text ?? '');
+        expect(link).not.toBeNull();
+        const open = await send(app, link![1], 'GET');
+        expect(open.status).toBe(200);
+        expect(open.headers.get('cache-control')).toBe('no-store');
+        expect(open.headers.get('x-robots-tag')).toContain('noindex');
+        expect(await open.text()).toContain('Rina Pratiwi');
+    });
+
+    it('does not open the public report for a wrong token, an unreleased result or a made-up code', async () => {
+        const { app, rows } = createFixture();
+        await submit(app, body());
+        const bad = await send(app, '/api/public/assessments/report?id=AT-MHCU-2026-100&t=aaaaaaaaaaaaaaaaaaaaaaaa', 'GET');
+        expect(bad.status).toBe(404);
+        expect((await send(app, '/api/public/assessments/report?id=x&t=y', 'GET')).status).toBe(404);
+        expect(rows[0].status).toBe('new');
     });
 });
 
