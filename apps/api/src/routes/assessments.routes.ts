@@ -6,8 +6,9 @@ import type { AssessmentsRepository, AssessmentStatus } from '../repositories/as
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
-import { paymentLink } from '../services/assessment-payment';
+import { paymentLink, paymentToken, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
+import { REPORT_READY_PAYMENT, renderClientReportHtml, renderPsychologistReportHtml } from '../services/mhcu-report-service';
 
 export interface AssessmentsRateLimit {
     max: number;
@@ -45,6 +46,7 @@ const MAX_GSC_BODY_BYTES = 160 * 1024;
 const STATUSES: readonly AssessmentStatus[] = ['new', 'reviewed', 'released'];
 /** A status staff may set. 'new' is only the starting state. */
 const SETTABLE: readonly AssessmentStatus[] = ['reviewed', 'released'];
+const PAYMENT_STATUSES = ['UNPAID', 'PAID', 'FREE', 'INCLUDED', 'LEGACY'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SERVER_ERROR =
     'Terjadi gangguan pada server. Jawaban Anda belum tersimpan, silakan coba lagi sebentar lagi. / Something went wrong on our side; your answers were not saved, please try again shortly.';
@@ -126,6 +128,29 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 logFailure('admin-alert', error);
             }
         })();
+    };
+
+    /** Admins see everything; a psychologist sees only the Mental Health Check-Ups assigned to them. */
+    const canAccess = (user: any, row: { instrument: string; psychologistId: string | null }): boolean =>
+        user?.role === 'admin' || row.instrument !== 'mhcu' || (!!user?.psychologistId && row.psychologistId === user.psychologistId);
+    /** undefined = no limit (admin); null = nothing visible (a psychologist profile that is not linked); else the psychologist's id. */
+    const ownScope = (user: any): string | null | undefined => (user?.role === 'admin' ? undefined : user?.psychologistId ?? null);
+
+    /** Loads a check-up and the person's other check-ups, ready for a report. */
+    const loadReportInput = async (id: string) => {
+        const row = await repository.get(id);
+        if (!row || row.instrument !== 'mhcu' || !row.participantId) return null;
+        const history = await repository.listHistory(row.participantId);
+        const current = history.find((h) => h.id === row.id);
+        if (!current) return null;
+        const psychologistName = row.psychologistId ? await repository.getPsychologistName(row.psychologistId) : null;
+        return { raw: row, input: { row: current, history, psychologistName, finalizedBy: psychologistName } };
+    };
+    const htmlHeaders = (set: any) => {
+        set.headers['content-type'] = 'text/html; charset=utf-8';
+        set.headers['cache-control'] = 'no-store';
+        set.headers['x-robots-tag'] = 'noindex, nofollow';
+        set.headers['referrer-policy'] = 'no-referrer';
     };
 
     const sync = () => {
@@ -265,7 +290,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             body: t.Any(),
             detail: { tags: ['Assessments'], summary: 'Submit the Goal System Compass (public)' }
         })
-        .get('/api/admin/assessment-lists/:instrument', async ({ params, query, set }: any) => {
+        .get('/api/admin/assessment-lists/:instrument', async ({ params, query, set, currentUser }: any) => {
             if (params.instrument !== 'mhcu' && params.instrument !== 'gsc') {
                 set.status = 404;
                 return { status: 'notFound', message: 'Data tidak ditemukan.' };
@@ -274,7 +299,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             try {
                 // A failed copy to the Google Sheet is tried again whenever staff open the list.
                 sync();
-                return { status: 'success', data: await repository.list(params.instrument, { status }) };
+                const own = params.instrument === 'mhcu' ? ownScope(currentUser) : undefined;
+                if (own === null) return { status: 'success', data: [] };
+                return { status: 'success', data: await repository.list(params.instrument, { status, psychologistId: own }) };
             } catch (error) {
                 logFailure('list', error);
                 set.status = 503;
@@ -284,14 +311,14 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             requireRole: ['admin', 'psychologist'],
             detail: { tags: ['Assessments'], summary: 'List submissions of one assessment (staff)' }
         })
-        .get('/api/admin/assessments/:id', async ({ params, set }: any) => {
+        .get('/api/admin/assessments/:id', async ({ params, set, currentUser }: any) => {
             if (!UUID.test(params.id)) {
                 set.status = 404;
                 return { status: 'notFound', message: 'Data tidak ditemukan.' };
             }
             try {
                 const row = await repository.get(params.id);
-                if (!row) {
+                if (!row || !canAccess(currentUser, row)) {
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
@@ -318,9 +345,14 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             const note = typeof body?.note === 'string' ? body.note.trim().slice(0, 4000) : '';
             try {
                 const current = await repository.get(params.id);
-                if (!current) {
+                if (!current || !canAccess(currentUser, current)) {
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                // A Mental Health Check-Up is released only through the release-report step (final note + confirmed payment).
+                if (current.instrument === 'mhcu' && status === 'released' && current.status !== 'released') {
+                    set.status = 409;
+                    return { status: 'error', message: 'Gunakan tombol rilis laporan.' };
                 }
                 // A released result stays released: moving it back would hide that it was already shared.
                 if (current.status === 'released' && status !== 'released') {
@@ -338,6 +370,192 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             requireRole: ['admin', 'psychologist'],
             body: t.Any(),
             detail: { tags: ['Assessments'], summary: 'Mark a submission reviewed or released (staff)' }
+        })
+        .get('/api/admin/assessment-psychologists', async () => ({ status: 'success', data: await repository.listPsychologists() }), {
+            requireRole: ['admin'],
+            detail: { tags: ['Assessments'], summary: 'Psychologists a check-up can be assigned to (admin)' }
+        })
+        .put('/api/admin/assessments/:id/psychologist', async ({ params, body, set }: any) => {
+            const psychologistId = body?.psychologistId ?? null;
+            if (!UUID.test(params.id) || (psychologistId !== null && (typeof psychologistId !== 'string' || !UUID.test(psychologistId)))) {
+                set.status = 400;
+                return { status: 'error', message: 'Data tidak valid.' };
+            }
+            try {
+                if (psychologistId && !(await repository.getPsychologistName(psychologistId))) {
+                    set.status = 400;
+                    return { status: 'error', message: 'Psikolog tidak ditemukan.' };
+                }
+                const row = await repository.assign(params.id, psychologistId);
+                if (!row) {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                return { status: 'success', data: row };
+            } catch (error) {
+                logFailure('assign', error);
+                set.status = 503;
+                return { status: 'error', message: 'Perubahan belum tersimpan.' };
+            }
+        }, {
+            requireRole: ['admin'],
+            body: t.Any(),
+            detail: { tags: ['Assessments'], summary: 'Assign (or clear) the psychologist of a check-up (admin)' }
+        })
+        .put('/api/admin/assessments/:id/note', async ({ params, body, set, currentUser }: any) => {
+            if (!UUID.test(params.id)) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            const text = (value: unknown, max: number): string | null | undefined =>
+                value === undefined || value === null ? null : typeof value === 'string' ? (value.trim().length <= max ? value.trim() || null : undefined) : undefined;
+            const template = text(body?.template, 4000);
+            const custom = text(body?.custom, 500);
+            if (template === undefined || custom === undefined || typeof body?.final !== 'boolean') {
+                set.status = 400;
+                return { status: 'error', message: 'Catatan tidak valid (catatan khusus maksimal 500 karakter).' };
+            }
+            try {
+                const current = await repository.get(params.id);
+                if (!current || current.instrument !== 'mhcu' || !canAccess(currentUser, current)) {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                const row = await repository.saveNote(params.id, { template, custom, final: body.final, userId: currentUser.id });
+                return { status: 'success', data: row };
+            } catch (error) {
+                logFailure('note', error);
+                set.status = 503;
+                return { status: 'error', message: 'Perubahan belum tersimpan.' };
+            }
+        }, {
+            requireRole: ['admin', 'psychologist'],
+            body: t.Any(),
+            detail: { tags: ['Assessments'], summary: "Save the psychologist's note for the full report (staff)" }
+        })
+        .put('/api/admin/assessments/:id/payment', async ({ params, body, set }: any) => {
+            const status = body?.status;
+            const amount = body?.amount === undefined || body?.amount === null ? null : Number(body.amount);
+            const packageName = typeof body?.package === 'string' ? body.package.trim().slice(0, 40) || null : null;
+            const ref = typeof body?.ref === 'string' ? body.ref.trim().slice(0, 120) || null : null;
+            if (!UUID.test(params.id) || !PAYMENT_STATUSES.includes(status) || (amount !== null && (!Number.isInteger(amount) || amount < 0 || amount > 100_000_000))) {
+                set.status = 400;
+                return { status: 'error', message: 'Data pembayaran tidak valid.' };
+            }
+            try {
+                const row = await repository.setPayment(params.id, { status, package: packageName, amount, ref });
+                if (!row) {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                return { status: 'success', data: row };
+            } catch (error) {
+                logFailure('payment', error);
+                set.status = 503;
+                return { status: 'error', message: 'Perubahan belum tersimpan.' };
+            }
+        }, {
+            requireRole: ['admin'],
+            body: t.Any(),
+            detail: { tags: ['Assessments'], summary: 'Set the payment status after checking the proof (admin)' }
+        })
+        .get('/api/admin/assessments/:id/report/:kind', async ({ params, set, currentUser }: any) => {
+            if (!UUID.test(params.id) || (params.kind !== 'client' && params.kind !== 'psychologist')) {
+                set.status = 404;
+                return 'Not found';
+            }
+            try {
+                const loaded = await loadReportInput(params.id);
+                if (!loaded || !canAccess(currentUser, loaded.raw)) {
+                    set.status = 404;
+                    return 'Not found';
+                }
+                // The internal report holds comparisons for psychologists only; each opening is logged (who, which check-up).
+                if (params.kind === 'psychologist') console.info(`[assessments] psychologist report opened code=${loaded.raw.code} by=${currentUser.id}`);
+                htmlHeaders(set);
+                return params.kind === 'client' ? renderClientReportHtml(loaded.input) : renderPsychologistReportHtml(loaded.input);
+            } catch (error) {
+                logFailure('report', error);
+                set.status = 503;
+                return 'Laporan belum bisa dimuat.';
+            }
+        }, {
+            requireRole: ['admin', 'psychologist'],
+            detail: { tags: ['Assessments'], summary: 'Preview the client or psychologist report as a print-ready page (staff)' }
+        })
+        .post('/api/admin/assessments/:id/release-report', async ({ params, set }: any) => {
+            if (!UUID.test(params.id)) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            try {
+                const row = await repository.get(params.id);
+                if (!row || row.instrument !== 'mhcu') {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                if (!row.noteFinal) {
+                    set.status = 409;
+                    return { status: 'error', message: 'Catatan psikolog belum ditandai final.' };
+                }
+                if (!(REPORT_READY_PAYMENT as readonly string[]).includes(row.paymentStatus)) {
+                    set.status = 409;
+                    return { status: 'error', message: 'Pembayaran belum dikonfirmasi.' };
+                }
+                const released = await repository.markReportReleased(params.id);
+                const secret = dependencies.paymentSecret;
+                const mailer = dependencies.mailer;
+                let emailed = false;
+                if (released && secret && mailer?.isConfigured) {
+                    const origin = (dependencies.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
+                    const link = `${origin}/api/public/assessments/report?id=${encodeURIComponent(row.code)}&t=${paymentToken(secret, row.code)}`;
+                    const en = row.lang === 'en';
+                    try {
+                        await mailer.send({
+                            to: row.email,
+                            subject: en ? `Your full report is ready · ${row.code}` : `Laporan lengkap Anda sudah siap · ${row.code}`,
+                            text: en ? `Dear ${row.name},\n\nYour full Mental Health Check-Up report is ready: ${link}\n\nYou can save it as a PDF from the page (Print > Save as PDF).\n\nAttentive Psychology Bureau` : `Yth. ${row.name},\n\nLaporan lengkap Mental Health Check-Up Anda sudah siap: ${link}\n\nAnda dapat menyimpannya sebagai PDF dari halaman tersebut (Cetak > Simpan sebagai PDF).\n\nBiro Psikologi Attentive`,
+                            html: `<p>${en ? 'Dear' : 'Yth.'} ${row.name.replace(/[<>&"]/g, '')},</p><p>${en ? 'Your full Mental Health Check-Up report is ready' : 'Laporan lengkap Mental Health Check-Up Anda sudah siap'}: <a href="${link}">${en ? 'open the report' : 'buka laporan'}</a></p><p>${en ? 'Save it as a PDF from the page (Print &gt; Save as PDF).' : 'Simpan sebagai PDF dari halaman tersebut (Cetak &gt; Simpan sebagai PDF).'}</p><p>Attentive Psychology Bureau</p>`
+                        });
+                        emailed = true;
+                    } catch (error) {
+                        logFailure('release-email', error);
+                    }
+                }
+                return { status: 'success', data: { released: !!released, emailed } };
+            } catch (error) {
+                logFailure('release', error);
+                set.status = 503;
+                return { status: 'error', message: 'Laporan belum dirilis.' };
+            }
+        }, {
+            requireRole: ['admin'],
+            detail: { tags: ['Assessments'], summary: 'Release the full report to the participant: needs final note and confirmed payment (admin)' }
+        })
+        .get('/api/public/assessments/report', async ({ query, set }: any) => {
+            const code = typeof query?.id === 'string' ? query.id : '';
+            const token = typeof query?.t === 'string' ? query.t : '';
+            const secret = dependencies.paymentSecret;
+            const gone = () => {
+                set.status = 404;
+                set.headers['cache-control'] = 'no-store';
+                return 'Not found';
+            };
+            if (!secret || !/^AT-MHCU-\d{4}-\d{3,}$/.test(code) || !verifyPaymentToken(secret, code, token)) return gone();
+            try {
+                const row = await repository.getByCode(code);
+                if (!row || row.status !== 'released') return gone();
+                const loaded = await loadReportInput(row.id);
+                if (!loaded) return gone();
+                htmlHeaders(set);
+                return renderClientReportHtml(loaded.input);
+            } catch (error) {
+                logFailure('public-report', error);
+                set.status = 503;
+                return 'Laporan belum bisa dimuat.';
+            }
+        }, {
+            detail: { tags: ['Assessments'], summary: 'The released client report, opened with the signed link from the e-mail (public)' }
         })
         .post('/api/admin/assessments/sync', async () => {
             if (!dependencies.sheetSync) return { status: 'success', data: { configured: false, synced: 0, error: 'Not configured.' } };
