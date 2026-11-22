@@ -4,6 +4,9 @@ import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { AssessmentsRepository, AssessmentStatus } from '../repositories/assessments.repository';
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
+import type { Mailer } from '../services/mailer';
+import { buildMhcuResultEmail } from '../services/mhcu-result-email';
+import { paymentLink } from '../services/assessment-payment';
 
 export interface AssessmentsRateLimit {
     max: number;
@@ -15,6 +18,12 @@ export interface AssessmentsRoutesDependencies {
     userRepository: Pick<AuthUserRepository, 'findById'>;
     assessmentsRepository: AssessmentsRepository;
     sheetSync?: AssessmentsSheetSync;
+    /** Sends the result e-mail to the participant. Without it (or without SMTP settings) no e-mail is sent. */
+    mailer?: Mailer;
+    /** Secret that signs the links in the e-mail (the API's JWT secret). */
+    paymentSecret?: string;
+    /** The public address of the site, used in the links of the e-mail. */
+    siteOrigin?: string;
     rateLimit?: AssessmentsRateLimit;
     now?: () => number;
 }
@@ -71,6 +80,30 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     /** Logs only what failed, never the request: the body holds a person's name, phone, e-mail and answers. */
     const logFailure = (where: string, error: unknown) => {
         console.error(`[assessments] ${where} failed:`, error instanceof Error ? error.name : 'error');
+    };
+
+    /** E-mails the result to the participant. Never blocks or fails the submission: the answers are already saved. */
+    const sendResultEmail = (row: { id: string; code: string }, input: { name: string; email: string; lang: 'id' | 'en'; scores: unknown; level: number | null }) => {
+        const mailer = dependencies.mailer;
+        const secret = dependencies.paymentSecret;
+        if (!mailer?.isConfigured || !secret) return;
+        void (async () => {
+            try {
+                const origin = dependencies.siteOrigin || 'https://attentiveid.com';
+                const mail = buildMhcuResultEmail({
+                    name: input.name,
+                    code: row.code,
+                    lang: input.lang,
+                    scores: input.scores,
+                    level: input.level,
+                    reportLink: paymentLink(origin, secret, row.code, input.lang)
+                });
+                await mailer.send({ to: input.email, ...mail });
+                await repository.markResultEmailSent(row.id);
+            } catch (error) {
+                logFailure('result-email', error);
+            }
+        })();
     };
 
     const sync = () => {
@@ -136,7 +169,10 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     },
                     { dedupeMs: DUPLICATE_WINDOW_MS }
                 );
-                if (!created.duplicate) sync();
+                if (!created.duplicate) {
+                    sync();
+                    sendResultEmail(created, { name: value.name, email: value.email, lang: value.lang, scores, level: typeof scores.level === 'number' ? scores.level : null });
+                }
                 set.status = 201;
                 return { ok: true, status: 'success', code: created.code, email: value.email };
             } catch (error) {

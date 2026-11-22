@@ -5,6 +5,7 @@ import { MHCU_ANSWER_RANGE, MHCU_ITEMS, mhcuCode } from '@attentiveid/shared';
 import { createTokenService } from '../security/token-service';
 import type { AssessmentListItem, AssessmentRow, AssessmentsRepository, AssessmentStatus } from '../repositories/assessments.repository';
 import { createAssessmentsRoutes } from './assessments.routes';
+import type { MailMessage, Mailer } from '../services/mailer';
 
 const makeUser = (id: string, role: UserDto['role']): UserDto => ({
     id,
@@ -60,8 +61,10 @@ const body = (overrides: Record<string, unknown> = {}) => ({
 
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off' } = {}) => {
     const rows: AssessmentRow[] = [];
+    const sent: MailMessage[] = [];
+    const emailed: string[] = [];
     let synced = 0;
     const repository: AssessmentsRepository = {
         create: async (input, createOptions) => {
@@ -100,6 +103,10 @@ const createFixture = (options: { max?: number; failCreate?: boolean } = {}) => 
             return row;
         },
         markSheetSynced: async () => {},
+        getByCode: async (code) => rows.find((row) => row.code === code) ?? null,
+        markResultEmailSent: async (id) => { emailed.push(id); },
+        savePayment: async () => {},
+        getProof: async () => null,
         listUnsynced: async () => []
     };
     const app = new Elysia().use(
@@ -107,11 +114,20 @@ const createFixture = (options: { max?: number; failCreate?: boolean } = {}) => 
             tokenService,
             userRepository: { findById: async (id: string) => usersById.get(id) ?? null },
             assessmentsRepository: repository,
+            mailer: ((): Mailer => ({
+                isConfigured: options.mail !== 'off',
+                send: async (message) => {
+                    if (options.mail === 'fail') throw new Error('smtp down: ' + message.to);
+                    sent.push(message);
+                }
+            }))(),
+            paymentSecret: 'payment-secret-payment-secret-1234',
+            siteOrigin: 'https://attentiveid.com',
             sheetSync: { isConfigured: true, syncPending: async () => { synced += 1; return { configured: true, synced: 0, error: null }; } },
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, syncCalls: () => synced };
+    return { app, rows, sent, emailed, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -315,5 +331,41 @@ describe('Goal System Compass', () => {
         expect((await send(app, '/api/admin/assessment-lists/gsc', 'GET')).status).toBe(401);
         expect((await send(app, '/api/admin/assessment-lists/gsc', 'GET', undefined, bearer(psychologistToken))).status).toBe(200);
         expect((await send(app, '/api/admin/assessment-lists/other', 'GET', undefined, bearer(psychologistToken))).status).toBe(404);
+    });
+});
+
+
+describe('result e-mail after a submission', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+    it('sends the four index scores and the report link to the participant, once', async () => {
+        const { app, sent, emailed } = createFixture();
+        await submit(app, body());
+        await submit(app, body()); // the same click again: no second e-mail
+        await settle();
+        expect(sent).toHaveLength(1);
+        expect(sent[0].to).toBe('rina@example.com');
+        expect(sent[0].html).toContain('Distress Index');
+        expect(sent[0].html).toContain('https://attentiveid.com/assessments/payment?id=AT-MHCU-2026-100&amp;t=');
+        expect(emailed).toHaveLength(1);
+    });
+
+    it('still saves the answers when the mail server is down, and sends nothing when e-mail is not set up', async () => {
+        const down = createFixture({ mail: 'fail' });
+        expect((await submit(down.app, body())).status).toBe(201);
+        await settle();
+        expect(down.rows).toHaveLength(1);
+        expect(down.emailed).toHaveLength(0);
+        const off = createFixture({ mail: 'off' });
+        expect((await submit(off.app, body())).status).toBe(201);
+        await settle();
+        expect(off.sent).toHaveLength(0);
+    });
+
+    it('does not e-mail a Goal System Compass session', async () => {
+        const { app, sent } = createFixture();
+        await submitGsc(app, gscBody());
+        await settle();
+        expect(sent).toHaveLength(0);
     });
 });

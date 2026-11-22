@@ -595,7 +595,12 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     releasedAt: timestamp('released_at', { withTimezone: true, mode: 'string' }),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
     sheetSyncedAt: timestamp('sheet_synced_at', { withTimezone: true, mode: 'string' }),
-    sheetError: text('sheet_error')
+    sheetError: text('sheet_error'),
+    /** When the result e-mail (index scores and a link to order the full report) was sent to the participant. */
+    resultEmailSentAt: timestamp('result_email_sent_at', { withTimezone: true, mode: 'string' }),
+    /** What the participant says they paid for ('single' | 'package3'); the proof of transfer is in assessment_payment_proofs. */
+    paymentFor: text('payment_for'),
+    paymentSubmittedAt: timestamp('payment_submitted_at', { withTimezone: true, mode: 'string' })
 }, (table) => [
     uniqueIndex('assessment_submissions_code_idx').on(table.code),
     uniqueIndex('assessment_submissions_seq_idx').on(table.instrument, table.codeYear, table.codeSeq),
@@ -850,6 +855,18 @@ export const prayers = pgTable('prayers', {
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 }, (table) => [
     index('prayers_created_at_idx').on(table.createdAt)
+]);
+
+// Proof of transfer uploaded by a participant for the full report. Kept in the database (private, never a public file).
+export const assessmentPaymentProofs = pgTable('assessment_payment_proofs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    submissionId: uuid('submission_id').notNull().references(() => assessmentSubmissions.id, { onDelete: 'cascade' }),
+    mimeType: text('mime_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    data: bytea('data').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('assessment_payment_proofs_submission_idx').on(table.submissionId)
 ]);
 
 export const siteSettings = pgTable('site_settings', {

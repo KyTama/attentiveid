@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db as defaultDb } from '../db';
-import { assessmentSubmissions } from '../db/schema';
+import { assessmentPaymentProofs, assessmentSubmissions } from '../db/schema';
 
 export type AssessmentInstrument = 'mhcu' | 'gsc';
 export type AssessmentStatus = 'new' | 'reviewed' | 'released';
@@ -56,6 +56,12 @@ export interface AssessmentsRepository {
     review(id: string, input: { status: AssessmentStatus; note: string | null; reviewerId: string }): Promise<AssessmentRow | null>;
     /** One update for the whole batch (all rows or none); an error text marks them as failed for the portal to show. */
     markSheetSynced(ids: string[], error: string | null): Promise<void>;
+    getByCode(code: string): Promise<AssessmentRow | null>;
+    markResultEmailSent(id: string): Promise<void>;
+    /** Records what the participant says they paid for and keeps the proof of transfer (a screenshot or PDF) with it. */
+    savePayment(id: string, input: { paymentFor: string; mimeType: string; data: Buffer }): Promise<void>;
+    /** The latest proof of transfer for a submission, or null. */
+    getProof(id: string): Promise<{ mimeType: string; data: Buffer } | null>;
     /** Oldest first: the rows that are not in the Google Sheet yet. */
     listUnsynced(instrument: AssessmentInstrument, limit: number): Promise<AssessmentRow[]>;
 }
@@ -155,6 +161,35 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
             .where(and(eq(assessmentSubmissions.instrument, instrument), sql`${assessmentSubmissions.sheetSyncedAt} is null`))
             .orderBy(assessmentSubmissions.createdAt)
             .limit(limit);
+    },
+
+    async getByCode(code) {
+        const rows = await db.select().from(assessmentSubmissions).where(eq(assessmentSubmissions.code, code)).limit(1);
+        return rows[0] ?? null;
+    },
+
+    async markResultEmailSent(id) {
+        await db.update(assessmentSubmissions).set({ resultEmailSentAt: sql`now()` }).where(eq(assessmentSubmissions.id, id));
+    },
+
+    async savePayment(id, input) {
+        await db.transaction(async (tx) => {
+            await tx.insert(assessmentPaymentProofs).values({ submissionId: id, mimeType: input.mimeType, byteSize: input.data.length, data: input.data });
+            await tx
+                .update(assessmentSubmissions)
+                .set({ paymentFor: input.paymentFor, paymentSubmittedAt: sql`now()` })
+                .where(eq(assessmentSubmissions.id, id));
+        });
+    },
+
+    async getProof(id) {
+        const rows = await db
+            .select({ mimeType: assessmentPaymentProofs.mimeType, data: assessmentPaymentProofs.data })
+            .from(assessmentPaymentProofs)
+            .where(eq(assessmentPaymentProofs.submissionId, id))
+            .orderBy(desc(assessmentPaymentProofs.createdAt))
+            .limit(1);
+        return rows[0] ?? null;
     },
 
     async markSheetSynced(ids, error) {

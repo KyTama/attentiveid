@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, Search, X } from 'luci
 import {
   getAssessment,
   listSubmissions,
+  openPaymentProof,
   type AssessmentInstrument,
   reviewAssessment,
   type AssessmentDetail,
@@ -320,6 +321,32 @@ export function AssessmentsCmsPage() {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {detail.instrument === 'mhcu' && (
+                <div className="space-y-1 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+                  <p>
+                    <b>{tx('Email hasil ke peserta', 'Result e-mail to the participant')}:</b>{' '}
+                    {detail.resultEmailSentAt ? dateText(detail.resultEmailSentAt) : tx('belum terkirim', 'not sent')}
+                  </p>
+                  <p>
+                    <b>{tx('Laporan lengkap', 'Full report')}:</b>{' '}
+                    {detail.paymentSubmittedAt
+                      ? `${detail.paymentFor === 'package3' ? tx('Paket 3x', 'Package of 3') : tx('1x pemeriksaan', '1 check-up')} · ${tx('bukti transfer diterima', 'proof of transfer received')} ${dateText(detail.paymentSubmittedAt)}`
+                      : tx('belum ada pembayaran', 'no payment yet')}
+                  </p>
+                  {detail.paymentSubmittedAt && (
+                    <button
+                      className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      onClick={() => {
+                        void openPaymentProof(detail.id).catch((caught) => setError(caught instanceof Error ? caught.message : tx('Gagal membuka bukti.', 'Could not open the proof.')))
+                      }}
+                      type="button"
+                    >
+                      {tx('Lihat bukti transfer', 'View proof of transfer')}
+                    </button>
+                  )}
                 </div>
               )}
 

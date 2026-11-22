@@ -31,6 +31,9 @@ export interface AssessmentDetail extends AssessmentListItem {
   releasedAt: string | null
   sheetSyncedAt: string | null
   sheetError: string | null
+  resultEmailSentAt?: string | null
+  paymentFor?: 'single' | 'package3' | null
+  paymentSubmittedAt?: string | null
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -60,3 +63,13 @@ export const reviewAssessment = async (id: string, status: AssessmentStatus, not
     method: 'PUT',
     body: JSON.stringify({ status, note }),
   })).data
+
+/** Opens the proof of transfer a participant uploaded. It needs the staff login, so it is fetched and shown from a temporary local address. */
+export const openPaymentProof = async (id: string): Promise<void> => {
+  const response = await fetch(`/api/admin/assessments/${encodeURIComponent(id)}/proof`, { credentials: 'include', headers: { ...getActiveAuthHeaders() } })
+  if (!response.ok) throw new Error(response.status === 404 ? 'Belum ada bukti transfer.' : `Bukti belum bisa dimuat (${response.status})`)
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank', 'noopener,noreferrer')
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
