@@ -1,6 +1,7 @@
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { matchParticipant, normalizeParticipantEmail as normalizeEmail, normalizeParticipantPhone as normalizePhone } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { assessmentPaymentProofs, assessmentSubmissions } from '../db/schema';
+import { assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions } from '../db/schema';
 
 export type AssessmentInstrument = 'mhcu' | 'gsc';
 export type AssessmentStatus = 'new' | 'reviewed' | 'released';
@@ -50,7 +51,7 @@ export interface AssessmentsRepository {
      * (a double click, a retry) nothing new is saved and the earlier record is returned with `duplicate: true`. The check and the
      * insert happen under one lock, so two clicks arriving together cannot both be saved.
      */
-    create(input: NewAssessmentSubmission, options?: { now?: Date; dedupeMs?: number }): Promise<{ id: string; code: string; duplicate: boolean }>;
+    create(input: NewAssessmentSubmission, options?: { now?: Date; dedupeMs?: number }): Promise<{ id: string; code: string; duplicate: boolean; participantId: string | null; waveNo: number | null }>;
     list(instrument: AssessmentInstrument, options?: { status?: AssessmentStatus; limit?: number }): Promise<AssessmentListItem[]>;
     get(id: string): Promise<AssessmentRow | null>;
     review(id: string, input: { status: AssessmentStatus; note: string | null; reviewerId: string }): Promise<AssessmentRow | null>;
@@ -58,6 +59,7 @@ export interface AssessmentsRepository {
     markSheetSynced(ids: string[], error: string | null): Promise<void>;
     getByCode(code: string): Promise<AssessmentRow | null>;
     markResultEmailSent(id: string): Promise<void>;
+    markAdminAlertSent(id: string): Promise<void>;
     /** Records what the participant says they paid for and keeps the proof of transfer (a screenshot or PDF) with it. */
     savePayment(id: string, input: { paymentFor: string; mimeType: string; data: Buffer }): Promise<void>;
     /** The latest proof of transfer for a submission, or null. */
@@ -87,18 +89,55 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                         sql`${assessmentSubmissions.answers} = ${JSON.stringify(input.answers)}::jsonb`
                     ))
                     .limit(1);
-                if (earlier[0]) return { ...earlier[0], duplicate: true };
+                if (earlier[0]) return { ...earlier[0], duplicate: true, participantId: null, waveNo: null };
+            }
+            // The same person (same e-mail, else same WhatsApp number) keeps one participant record across their check-ups,
+            // and each check-up gets its number T1, T2... Only the Mental Health Check-Up follows people over time.
+            let participantId: string | null = null;
+            let waveNo: number | null = null;
+            if (input.instrument === 'mhcu') {
+                const emailNorm = normalizeEmail(input.email);
+                const phoneNorm = normalizePhone(input.phone);
+                const conditions = [
+                    emailNorm ? eq(assessmentParticipants.emailNorm, emailNorm) : undefined,
+                    phoneNorm ? eq(assessmentParticipants.phoneNorm, phoneNorm) : undefined
+                ].filter((condition): condition is NonNullable<typeof condition> => condition !== undefined);
+                const candidates = conditions.length
+                    ? await tx.select().from(assessmentParticipants).where(or(...conditions))
+                    : [];
+                const match = matchParticipant(
+                    candidates.map((p) => ({ participantId: p.id, emailNorm: p.emailNorm, phoneNorm: p.phoneNorm })),
+                    { email: input.email, phone: input.phone }
+                );
+                const nowIso = now.toISOString();
+                if (match) {
+                    const [updated] = await tx
+                        .update(assessmentParticipants)
+                        .set({ nSessions: sql`${assessmentParticipants.nSessions} + 1`, lastSessionAt: nowIso })
+                        .where(eq(assessmentParticipants.id, match.participantId))
+                        .returning({ id: assessmentParticipants.id, nSessions: assessmentParticipants.nSessions });
+                    participantId = updated.id;
+                    waveNo = updated.nSessions;
+                } else {
+                    const [created] = await tx
+                        .insert(assessmentParticipants)
+                        .values({ emailNorm, phoneNorm, name: input.name, sex: input.sex, firstSessionAt: nowIso, lastSessionAt: nowIso, nSessions: 1 })
+                        .returning({ id: assessmentParticipants.id });
+                    participantId = created.id;
+                    waveNo = 1;
+                }
             }
             const rows = await tx.execute(sql`
                 insert into assessment_submissions
                   (instrument, code, code_year, code_seq, lang, track, consent_version, research_consent, guardian, consent_ack,
-                   name, sex, age, phone, email, answers, scores, level, duration_sec)
+                   name, sex, age, phone, email, answers, scores, level, duration_sec, participant_id, wave_no)
                 select ${input.instrument},
                        ${CODE_PREFIX[input.instrument]} || ${year}::text || '-' || lpad(s.seq::text, 3, '0'),
                        ${year}, s.seq, ${input.lang}, ${input.track}, ${input.consentVersion}, ${input.researchConsent}, ${input.guardian},
                        ${JSON.stringify(input.consentAck)}::jsonb,
                        ${input.name}, ${input.sex}, ${input.age}, ${input.phone}, ${input.email},
-                       ${JSON.stringify(input.answers)}::jsonb, ${JSON.stringify(input.scores)}::jsonb, ${input.level}, ${input.durationSec}
+                       ${JSON.stringify(input.answers)}::jsonb, ${JSON.stringify(input.scores)}::jsonb, ${input.level}, ${input.durationSec},
+                       ${participantId}::uuid, ${waveNo}
                 from (
                   select coalesce(max(code_seq), ${FIRST_SITE_SEQ - 1}) + 1 as seq
                   from assessment_submissions where instrument = ${input.instrument} and code_year = ${year}
@@ -106,7 +145,7 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                 returning id, code`);
             const row = (rows as unknown as { rows?: { id: string; code: string }[] }).rows?.[0] ?? (rows as unknown as { id: string; code: string }[])[0];
             if (!row) throw new Error('Insert returned no row');
-            return { id: row.id, code: row.code, duplicate: false };
+            return { id: row.id, code: row.code, duplicate: false, participantId, waveNo };
         });
     },
 
@@ -166,6 +205,10 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
     async getByCode(code) {
         const rows = await db.select().from(assessmentSubmissions).where(eq(assessmentSubmissions.code, code)).limit(1);
         return rows[0] ?? null;
+    },
+
+    async markAdminAlertSent(id) {
+        await db.update(assessmentSubmissions).set({ adminAlertAt: sql`now()` }).where(eq(assessmentSubmissions.id, id));
     },
 
     async markResultEmailSent(id) {

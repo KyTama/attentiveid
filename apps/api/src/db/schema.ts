@@ -558,6 +558,30 @@ export const freeSessionSubmissions = pgTable('free_session_submissions', {
     check('free_session_submissions_age_range', sql`${table.age} between 15 and 99`)
 ]);
 
+// One row per person across their Mental Health Check-Ups (the same person = same e-mail, else same WhatsApp number).
+export const assessmentParticipants = pgTable('assessment_participants', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    /** P00001, P00002...: the number printed on reports. */
+    participantNo: integer('participant_no').generatedAlwaysAsIdentity().notNull(),
+    emailNorm: text('email_norm'),
+    phoneNorm: text('phone_norm'),
+    name: text('name').notNull(),
+    sex: text('sex'),
+    firstSessionAt: timestamp('first_session_at', { withTimezone: true, mode: 'string' }),
+    lastSessionAt: timestamp('last_session_at', { withTimezone: true, mode: 'string' }),
+    nSessions: integer('n_sessions').default(0).notNull(),
+    /** The psychologist who follows this person (kept for their next check-ups). */
+    psychologistId: uuid('psychologist_id'),
+    /** Package of 3: how many check-ups were bought and how many are left. */
+    creditsTotal: integer('credits_total').default(0).notNull(),
+    creditsRemaining: integer('credits_remaining').default(0).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('assessment_participants_no_idx').on(table.participantNo),
+    index('assessment_participants_email_idx').on(table.emailNorm),
+    index('assessment_participants_phone_idx').on(table.phoneNorm)
+]);
+
 // Answers to the assessments hosted on the site (Mental Health Check-Up first, Goal System Compass next).
 // Health information: only staff with a portal login can read it, and nothing here is ever sent to a public place.
 export const assessmentSubmissions = pgTable('assessment_submissions', {
@@ -600,13 +624,37 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     resultEmailSentAt: timestamp('result_email_sent_at', { withTimezone: true, mode: 'string' }),
     /** What the participant says they paid for ('single' | 'package3'); the proof of transfer is in assessment_payment_proofs. */
     paymentFor: text('payment_for'),
-    paymentSubmittedAt: timestamp('payment_submitted_at', { withTimezone: true, mode: 'string' })
+    paymentSubmittedAt: timestamp('payment_submitted_at', { withTimezone: true, mode: 'string' }),
+    /** Who this check-up belongs to over time, and which check-up of theirs it is (T1, T2...). */
+    participantId: uuid('participant_id'),
+    waveNo: integer('wave_no'),
+    /** The psychologist assigned to review this result (a row of the public psychologists table). */
+    psychologistId: uuid('psychologist_id'),
+    /** The psychologist's note for the full report: the editable paragraph, a special note (max 500) and the final flag. */
+    noteTemplate: text('note_template'),
+    noteCustom: text('note_custom'),
+    noteFinal: boolean('note_final').default(false).notNull(),
+    noteUpdatedBy: uuid('note_updated_by'),
+    noteUpdatedAt: timestamp('note_updated_at', { withTimezone: true, mode: 'string' }),
+    /** UNPAID | PAID | FREE | INCLUDED | LEGACY, set by staff after checking the proof of transfer. */
+    paymentStatus: text('payment_status').default('UNPAID').notNull(),
+    paymentPackage: text('payment_package'),
+    paymentAmount: integer('payment_amount'),
+    paymentRef: text('payment_ref'),
+    paidAt: timestamp('paid_at', { withTimezone: true, mode: 'string' }),
+    /** When the full report was released to the participant (a link to the report page is e-mailed). */
+    reportSentAt: timestamp('report_sent_at', { withTimezone: true, mode: 'string' }),
+    /** When the admin alert for a level 4-5 result was sent. */
+    adminAlertAt: timestamp('admin_alert_at', { withTimezone: true, mode: 'string' })
 }, (table) => [
     uniqueIndex('assessment_submissions_code_idx').on(table.code),
     uniqueIndex('assessment_submissions_seq_idx').on(table.instrument, table.codeYear, table.codeSeq),
     index('assessment_submissions_created_at_idx').on(table.instrument, table.createdAt),
     index('assessment_submissions_email_idx').on(table.email),
-    check('assessment_submissions_status', sql`${table.status} in ('new','reviewed','released')`)
+    index('assessment_submissions_participant_idx').on(table.participantId, table.waveNo),
+    check('assessment_submissions_status', sql`${table.status} in ('new','reviewed','released')`),
+    check('assessment_submissions_payment_status', sql`${table.paymentStatus} in ('UNPAID','PAID','FREE','INCLUDED','LEGACY')`),
+    check('assessment_submissions_note_custom_len', sql`${table.noteCustom} is null or char_length(${table.noteCustom}) <= 500`)
 ]);
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({

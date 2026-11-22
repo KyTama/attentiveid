@@ -26,6 +26,8 @@ const EnvSchema = t.Object({
     SMTP_FROM: t.Optional(t.String()),
     SMTP_FROM_NAME: t.Optional(t.String()),
     SMTP_REPLY_TO: t.Optional(t.String()),
+    /** Where the alert goes when a Mental Health Check-Up result is Level 4 or 5 (default: contact@attentiveid.com). */
+    ASSESSMENTS_ALERT_EMAIL: t.Optional(t.String()),
     ASSESSMENTS_SHEET_ID: t.Optional(t.String()),
     ASSESSMENTS_MHCU_SHEET_NAME: t.Optional(t.String()),
     BOOKING_NOTIFY_EMAIL: t.Optional(t.String())

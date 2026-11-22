@@ -137,6 +137,7 @@ const mailer = createMailer({
 
 const app = createApp({
     mailer,
+    alertEmail: env.ASSESSMENTS_ALERT_EMAIL || 'contact@attentiveid.com',
     paymentSecret: jwtSecretValue,
     assessmentsRepository,
     assessmentsSheetSync,
