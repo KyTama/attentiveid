@@ -91,6 +91,11 @@ jobs:
           chmod 0600 "$RUNNER_TEMP/attentive-ssh/id_ed25519" "$RUNNER_TEMP/attentive-ssh/known_hosts"
 
       - name: Deploy immutable staging release
+        env:
+          # The site's e-mail login lives in GitHub (environment "staging"); remote-deploy.sh writes it only into the candidate file on the server.
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
         run: |
           ./scripts/deploy/remote-deploy.sh \
             --host "${{ vars.DEPLOY_SSH_HOST }}" \

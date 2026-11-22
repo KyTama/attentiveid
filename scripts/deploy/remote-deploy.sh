@@ -32,6 +32,16 @@ done
 [[ -f "$bundle" && -f "$checksum" && -f "$manifest" ]] || { printf 'Bundle, checksum, and release manifest are required\n' >&2; exit 1; }
 [[ "$environment" =~ ^(staging|production)$ ]] || { printf 'Environment must be staging or production\n' >&2; exit 1; }
 
+# Settings that arrive from GitHub secrets/variables (set on the workflow step). They are written only into the candidate file
+# on the server, never into the release bundle or manifest that GitHub keeps as artifacts. Plain characters only.
+extra_env=''
+for name in SMTP_USER SMTP_PASS SMTP_HOST SMTP_PORT SMTP_FROM SMTP_FROM_NAME SMTP_REPLY_TO; do
+    value="${!name:-}"
+    [[ -n "$value" ]] || continue
+    [[ "$value" =~ ^[A-Za-z0-9@._:/+=,\ -]+$ ]] || { printf '%s has characters that are not allowed in a deployment setting\n' "$name" >&2; exit 1; }
+    extra_env+="${name}=${value}"$'\n'
+done
+
 ssh_options=(-i "$identity" -p "$port" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$known_hosts")
 scp_options=(-i "$identity" -P "$port" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$known_hosts")
 remote="$user@$host"
@@ -40,8 +50,9 @@ remote_upload="$remote_root/uploads/$release_name"
 
 ssh "${ssh_options[@]}" "$remote" "install -d -m 0750 '$remote_root/uploads' '$remote_root/manifests/$environment'"
 scp "${scp_options[@]}" "$bundle" "$checksum" "$manifest" "$remote:$remote_root/uploads/"
-ssh "${ssh_options[@]}" "$remote" "
+printf '%s' "$extra_env" | ssh "${ssh_options[@]}" "$remote" "
 set -euo pipefail
+extra_settings=\$(cat)
 bundle='$remote_upload'
 checksum='$remote_root/uploads/$(basename "$checksum")'
 release_manifest='$remote_root/uploads/$(basename "$manifest")'
@@ -58,7 +69,8 @@ chmod 0700 \"\$bootstrap_dir/scripts/deploy/install-release-bundle.sh\"
 candidate='$remote_root/manifests/$environment/candidate.env'
 host_inventory='/etc/attentive/$environment.deploy.env'
 [[ -f \"\$host_inventory\" ]] || { printf 'Host deployment inventory is missing: %s\n' \"\$host_inventory\" >&2; exit 1; }
-cat \"\$host_inventory\" \"\$release_manifest\" >\"\$candidate\"
+( umask 077; cat \"\$host_inventory\" \"\$release_manifest\" >\"\$candidate\"; [[ -z \"\$extra_settings\" ]] || printf '%s\n' \"\$extra_settings\" >>\"\$candidate\" )
+chmod 0600 \"\$candidate\"
 '$remote_root/current/scripts/deploy/deploy.sh' --env-file \"\$candidate\" --root '$remote_root'
 "
 

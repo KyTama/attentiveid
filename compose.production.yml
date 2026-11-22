@@ -53,6 +53,10 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL is required}
       PORT: "3000"
       MEDIA_DIR: "/app/apps/api/uploads/media"
+      # E-mail login for the result e-mails, delivered from GitHub secrets at deploy time (empty = no e-mail is sent).
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
     healthcheck:
       test: [CMD, bun, -e, "const response = await fetch('http://127.0.0.1:3000/ready'); if (!response.ok) process.exit(1)"]
       interval: 15s
