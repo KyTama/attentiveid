@@ -10,6 +10,7 @@ import {
   BookOpenText,
   ShieldCheck,
   MessageSquareQuote,
+  ClipboardCheck,
   ClipboardList,
   FlaskConical,
   TextCursorInput,
@@ -173,6 +174,13 @@ export function DashboardLayout() {
           to: '/dashboard/assessments',
           label: t('dashboard.navAssessments', 'Hasil Asesmen'),
           icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+          end: true,
+        },
+        {
+          to: '/dashboard/assessments/mhcu',
+          label: t('dashboard.navMhcuDashboard', 'Dasbor MHCU'),
+          icon: <ClipboardCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
         },
         {
