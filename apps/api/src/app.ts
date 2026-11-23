@@ -17,6 +17,8 @@ import { createAssessmentsRepository, type AssessmentsRepository } from './repos
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import type { Mailer } from './services/mailer';
 import { createAssessmentPaymentRoutes } from './routes/assessment-payment.routes';
+import { createMhcuInviteRoutes } from './routes/mhcu-invites.routes';
+import { createMhcuInvitesRepository, type MhcuInvitesRepository } from './repositories/mhcu-invites.repository';
 import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
@@ -39,6 +41,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     prayersRepository?: PrayersRepository;
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
+    mhcuInvitesRepository?: MhcuInvitesRepository;
     mailer?: Mailer;
     alertEmail?: string;
     paymentSecret?: string;
@@ -218,6 +221,13 @@ export const createApp = (dependencies: AppDependencies) => {
                 paymentSecret: dependencies.paymentSecret,
                 mailer: dependencies.mailer,
                 alertEmail: dependencies.alertEmail,
+                siteOrigin: dependencies.frontendOrigin,
+            }))
+            .use(createMhcuInviteRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                invitesRepository: dependencies.mhcuInvitesRepository || createMhcuInvitesRepository(dependencies.db),
+                assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
                 siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createAssessmentsRoutes({

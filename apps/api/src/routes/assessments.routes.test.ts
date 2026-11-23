@@ -3,7 +3,7 @@ import { Elysia } from 'elysia';
 import type { UserDto } from '@attentiveid/shared';
 import { MHCU_ANSWER_RANGE, MHCU_ITEMS, mhcuCode } from '@attentiveid/shared';
 import { createTokenService } from '../security/token-service';
-import type { AssessmentListItem, AssessmentRow, AssessmentsRepository, AssessmentStatus } from '../repositories/assessments.repository';
+import { InviteUnavailableError, type AssessmentListItem, type AssessmentRow, type AssessmentsRepository, type AssessmentStatus, type AuditEntry, type NewAssessmentSubmission } from '../repositories/assessments.repository';
 import { createAssessmentsRoutes } from './assessments.routes';
 import type { MailMessage, Mailer } from '../services/mailer';
 
@@ -63,8 +63,10 @@ const PSY_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number } = {}) => {
     const rows: AssessmentRow[] = [];
+    const inputs: NewAssessmentSubmission[] = [];
+    const audits: AuditEntry[] = [];
     const sent: MailMessage[] = [];
     const emailed: string[] = [];
     const alerted: string[] = [];
@@ -72,6 +74,8 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
     const repository: AssessmentsRepository = {
         create: async (input, createOptions) => {
             if (options.failCreate) throw new Error('Failed query: insert ... params: Rina Pratiwi, 081234567890');
+            inputs.push(input);
+            if (options.inviteUnavailable && input.inviteToken) throw new InviteUnavailableError();
             if (createOptions?.dedupeMs) {
                 const found = rows.find((row) => row.email.toLowerCase() === input.email.toLowerCase() && JSON.stringify(row.answers) === JSON.stringify(input.answers));
                 if (found) return { id: found.id, code: found.code, duplicate: true, participantId: null, waveNo: null };
@@ -98,8 +102,9 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 paymentStatus: 'UNPAID',
                 ...input
             } as AssessmentRow;
+            if (options.track) Object.assign(row, { track: options.track });
             rows.push(row);
-            return { id: row.id, code: row.code, duplicate: false, participantId: null, waveNo: 1 };
+            return { id: row.id, code: row.code, duplicate: false, participantId: null, waveNo: 1, track: options.track, psychologistId: options.track ? PSY_ID : undefined, creditsRemaining: options.creditsRemaining };
         },
         list: async (_instrument, listOptions) =>
             rows.filter((row) => (!listOptions?.status || row.status === listOptions.status) && (!listOptions?.psychologistId || row.psychologistId === listOptions.psychologistId)) as unknown as AssessmentListItem[],
@@ -145,7 +150,16 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
         markAdminAlertSent: async (id) => { alerted.push(id); },
         savePayment: async () => {},
         getProof: async () => null,
-        listUnsynced: async () => []
+        listUnsynced: async () => [],
+        setPrice: async (id, price) => {
+            const row = rows.find((entry) => entry.id === id);
+            if (!row) return { status: 'notFound' };
+            if (row.track !== 'lanjutan') return { status: 'wrongTrack' };
+            Object.assign(row, { priceDue: price });
+            return { status: 'ok', row };
+        },
+        getParticipant: async () => null,
+        audit: async (entry) => { audits.push(entry); }
     };
     const app = new Elysia().use(
         createAssessmentsRoutes({
@@ -166,7 +180,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, sent, emailed, alerted, syncCalls: () => synced };
+    return { app, rows, sent, emailed, alerted, inputs, audits, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -217,10 +231,18 @@ describe('POST /api/public/assessments/mhcu', () => {
         expect(rows).toHaveLength(0);
     });
 
-    it('does not let an invite token or client claims change how the person is recorded', async () => {
+    it('does not let client claims change how the person is recorded', async () => {
         const { app, rows } = createFixture();
-        await submit(app, body({ invite: 'abcdef123456', track: 'asesmen', level: 1, status: 'released' }));
-        expect(rows[0]).toMatchObject({ track: 'mandiri', status: 'new' });
+        await submit(app, body({ track: 'asesmen', level: 1, status: 'released', psychologist_id: 'x', payment_status: 'PAID' }));
+        expect(rows[0]).toMatchObject({ track: 'mandiri', status: 'new', paymentStatus: 'UNPAID' });
+    });
+
+    it('refuses an invitation token that is not 16 hex characters, and saves nothing', async () => {
+        const { app, rows } = createFixture();
+        const response = await submit(app, body({ invite: 'abcdef123456' }));
+        expect(response.status).toBe(400);
+        expect(((await response.json()) as { error: string }).error).toContain('Tautan undangan');
+        expect(rows).toHaveLength(0);
     });
 
     it('limits how many tries one address can make', async () => {
@@ -547,5 +569,101 @@ describe('alert for a Level 4-5 result', () => {
         const toPerson = sent.find((mail) => mail.to === 'rina@example.com');
         expect(toPerson).toBeDefined();
         expect(toPerson?.html).not.toContain('Tindak lanjut:');
+    });
+});
+
+describe('MHCU invitations on the public form', () => {
+    const token = 'abcdef0123456789';
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
+
+    it('passes a valid-looking token to the repository and never trusts the body for track, payment or psychologist', async () => {
+        const { app, inputs } = createFixture();
+        const response = await submit(app, body({ invite: token, track: 'free', psychologist_id: 'x', payment_status: 'PAID' }));
+        expect(response.status).toBe(201);
+        expect(inputs[0]?.inviteToken).toBe(token);
+        expect(inputs[0]?.track).toBe('mandiri');
+    });
+
+    it('sends no token when the form has none', async () => {
+        const { app, inputs } = createFixture();
+        await submit(app, body());
+        expect(inputs[0]?.inviteToken).toBeNull();
+    });
+
+    it('answers a used, cancelled or unknown invitation with a clear 400 and stores nothing', async () => {
+        const { app, rows, sent } = createFixture({ inviteUnavailable: true });
+        const response = await submit(app, body({ invite: token }));
+        expect(response.status).toBe(400);
+        const json = (await response.json()) as { ok: boolean; error: string };
+        expect(json.ok).toBe(false);
+        expect(json.error).toContain('Tautan undangan tidak valid atau sudah dipakai');
+        expect(json.error).toContain('invitation link');
+        expect(rows).toHaveLength(0);
+        await settle();
+        expect(sent).toHaveLength(0);
+    });
+
+    it('e-mails the asesmen variant (no prices, the psychologist, included) when the repository says asesmen', async () => {
+        const { app, sent } = createFixture({ track: 'asesmen' });
+        await submit(app, body({ invite: token, email: 'asesmen@example.com' }));
+        await settle();
+        const mail = sent.find((m) => m.to === 'asesmen@example.com');
+        expect(mail?.text).toContain('Sudah termasuk dalam asesmen awal Anda.');
+        expect(mail?.text).toContain('Psikolog pemeriksa: dr. Aly');
+        expect(mail?.text).not.toContain('Rp 227.000');
+    });
+
+    it('e-mails the package variant with the credits left', async () => {
+        const { app, sent } = createFixture({ track: 'paket', creditsRemaining: 1 });
+        await submit(app, body({ email: 'paket@example.com' }));
+        await settle();
+        const mail = sent.find((m) => m.to === 'paket@example.com');
+        expect(mail?.text).toContain('Termasuk dalam paket 3x Anda. Sisa kuota setelah pemeriksaan ini: 1.');
+    });
+
+    it('keeps the public-link e-mail with prices when there is no invitation', async () => {
+        const { app, sent } = createFixture();
+        await submit(app, body({ email: 'plain@example.com' }));
+        await settle();
+        const mail = sent.find((m) => m.to === 'plain@example.com');
+        expect(mail?.text).toContain('Rp 227.000');
+    });
+});
+
+describe('PUT price and package payments (admin)', () => {
+    const adminHeaders = bearer(adminToken);
+    const psyHeaders = bearer(psychologistToken);
+
+    it('sets the price of a lanjutan check-up for admins only, refuses other tracks, and writes an audit row without personal data', async () => {
+        const { app, rows, audits } = createFixture({ track: 'lanjutan' });
+        await submit(app, body());
+        const url = `/api/admin/assessments/${idOf(1)}/price`;
+        expect((await send(app, url, 'PUT', { price: 200000 }, psyHeaders)).status).toBe(403);
+        expect((await send(app, url, 'PUT', { price: 200000 })).status).toBe(401);
+        expect((await send(app, url, 'PUT', { price: -1 }, adminHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { price: 'abc' }, adminHeaders)).status).toBe(400);
+        expect((await send(app, url, 'PUT', { price: 1.5 }, adminHeaders)).status).toBe(400);
+        expect((await send(app, `/api/admin/assessments/${idOf(99)}/price`, 'PUT', { price: 1000 }, adminHeaders)).status).toBe(404);
+        const ok = await send(app, url, 'PUT', { price: '200000' }, adminHeaders);
+        expect(ok.status).toBe(200);
+        expect(rows[0]).toMatchObject({ priceDue: 200000 });
+        expect(audits).toEqual([{ actor: 'admin-1', action: 'price', submissionId: idOf(1), detail: '200000' }]);
+        const mandiri = createFixture();
+        await submit(mandiri.app, body());
+        expect((await send(mandiri.app, `/api/admin/assessments/${idOf(1)}/price`, 'PUT', { price: 1000 }, adminHeaders)).status).toBe(409);
+        expect(mandiri.audits).toHaveLength(0);
+    });
+
+    it('accepts package 1x and 3x on the payment route and audits the change without names or scores', async () => {
+        const { app, rows, audits } = createFixture();
+        await submit(app, body());
+        const url = `/api/admin/assessments/${idOf(1)}/payment`;
+        expect((await send(app, url, 'PUT', { status: 'PAID', package: '3x', amount: 647000, ref: 'BCA' }, adminHeaders)).status).toBe(200);
+        expect(rows[0]).toMatchObject({ paymentStatus: 'PAID', paymentPackage: '3x', paymentAmount: 647000 });
+        expect(audits).toHaveLength(1);
+        expect(audits[0]).toMatchObject({ actor: 'admin-1', action: 'payment', submissionId: idOf(1), detail: 'PAID 3x Rp647000' });
+        expect(JSON.stringify(audits)).not.toContain('Rina');
+        expect(JSON.stringify(audits)).not.toContain('rina@');
+        expect((await send(app, url, 'PUT', { status: 'PAID', package: '1x' }, adminHeaders)).status).toBe(200);
     });
 });

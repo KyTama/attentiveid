@@ -575,6 +575,8 @@ export const assessmentParticipants = pgTable('assessment_participants', {
     /** Package of 3: how many check-ups were bought and how many are left. */
     creditsTotal: integer('credits_total').default(0).notNull(),
     creditsRemaining: integer('credits_remaining').default(0).notNull(),
+    /** How the person first arrived ('mandiri' | 'asesmen' | 'free'): people who came through an invitation continue as 'lanjutan' with their psychologist. */
+    trackOrigin: text('track_origin'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 }, (table) => [
     uniqueIndex('assessment_participants_no_idx').on(table.participantNo),
@@ -645,7 +647,15 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     /** When the full report was released to the participant (a link to the report page is e-mailed). */
     reportSentAt: timestamp('report_sent_at', { withTimezone: true, mode: 'string' }),
     /** When the admin alert for a level 4-5 result was sent. */
-    adminAlertAt: timestamp('admin_alert_at', { withTimezone: true, mode: 'string' })
+    adminAlertAt: timestamp('admin_alert_at', { withTimezone: true, mode: 'string' }),
+    /** The invitation this check-up was made with (asesmen awal / free session), when there was one. */
+    inviteId: uuid('invite_id'),
+    /** What the report costs for this check-up, in Rupiah. 'lanjutan': set by the psychologist (null until then). */
+    priceDue: integer('price_due'),
+    /** true = this check-up used one credit of a package of 3. */
+    creditUsed: boolean('credit_used').default(false).notNull(),
+    /** Credits of a package that this check-up's payment added to the person (3 for a confirmed package of 3), so a repeated save never adds twice. */
+    creditsGranted: integer('credits_granted').default(0).notNull(),
 }, (table) => [
     uniqueIndex('assessment_submissions_code_idx').on(table.code),
     uniqueIndex('assessment_submissions_seq_idx').on(table.instrument, table.codeYear, table.codeSeq),
@@ -654,7 +664,53 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     index('assessment_submissions_participant_idx').on(table.participantId, table.waveNo),
     check('assessment_submissions_status', sql`${table.status} in ('new','reviewed','released')`),
     check('assessment_submissions_payment_status', sql`${table.paymentStatus} in ('UNPAID','PAID','FREE','INCLUDED','LEGACY')`),
-    check('assessment_submissions_note_custom_len', sql`${table.noteCustom} is null or char_length(${table.noteCustom}) <= 500`)
+    check('assessment_submissions_note_custom_len', sql`${table.noteCustom} is null or char_length(${table.noteCustom}) <= 500`),
+    check('assessment_submissions_track', sql`${table.track} in ('mandiri','asesmen','free','paket','lanjutan','legacy')`),
+    check('assessment_submissions_price_due', sql`${table.priceDue} is null or ${table.priceDue} >= 0`),
+    index('assessment_submissions_invite_idx').on(table.inviteId)
+]);
+
+/** One-time invitation links for the invited tracks (asesmen awal, free session). The token is what ?invite= carries. */
+export const assessmentInvites = pgTable('assessment_invites', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    /** 1, 2, 3...: printed as INV0001. */
+    inviteNo: integer('invite_no').generatedAlwaysAsIdentity().notNull(),
+    /** 16 hex characters. */
+    token: text('token').notNull(),
+    /** 'asesmen' | 'free' */
+    track: text('track').notNull(),
+    psychologistId: uuid('psychologist_id').notNull(),
+    clientName: text('client_name'),
+    clientEmail: text('client_email'),
+    phone: text('phone'),
+    note: text('note'),
+    /** Language the form opens in (optional). */
+    lang: text('lang'),
+    /** OPEN | USED | CANCELLED */
+    status: text('status').default('OPEN').notNull(),
+    createdBy: uuid('created_by'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true, mode: 'string' }),
+    usedSubmissionId: uuid('used_submission_id')
+}, (table) => [
+    uniqueIndex('assessment_invites_no_idx').on(table.inviteNo),
+    uniqueIndex('assessment_invites_token_idx').on(table.token),
+    index('assessment_invites_status_idx').on(table.status, table.createdAt),
+    check('assessment_invites_track', sql`${table.track} in ('asesmen','free')`),
+    check('assessment_invites_status', sql`${table.status} in ('OPEN','USED','CANCELLED')`)
+]);
+
+/** What staff did and when. Never holds names, e-mails, phone numbers or scores. */
+export const assessmentAudit = pgTable('assessment_audit', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    at: timestamp('at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    actor: uuid('actor'),
+    action: text('action').notNull(),
+    submissionId: uuid('submission_id'),
+    detail: text('detail')
+}, (table) => [
+    index('assessment_audit_at_idx').on(table.at),
+    index('assessment_audit_submission_idx').on(table.submissionId)
 ]);
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({
