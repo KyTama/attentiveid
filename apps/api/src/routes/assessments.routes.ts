@@ -6,7 +6,7 @@ import type { AssessmentsRepository, AssessmentStatus } from '../repositories/as
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
-import { paymentLink, paymentToken, verifyPaymentToken } from '../services/assessment-payment';
+import { paymentLink, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
 import { renderClientReportHtml, renderPsychologistReportHtml } from '../services/mhcu-report-service';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
