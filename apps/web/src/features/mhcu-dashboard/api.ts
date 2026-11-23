@@ -15,6 +15,8 @@ export interface MhcuListItem extends AssessmentListItem {
   paymentSubmittedAt?: string | null
   /** What they say they paid for: 'single' | 'package3'. */
   paymentFor?: string | null
+  /** mandiri | asesmen | free | paket | lanjutan | legacy; absent on older API versions. */
+  track?: string
 }
 
 export interface MhcuDetail extends AssessmentDetail {
@@ -30,6 +32,13 @@ export interface MhcuDetail extends AssessmentDetail {
   paymentAmount: number | null
   paymentRef: string | null
   adminAlertAt?: string | null
+  /** When the full report was released to the person. */
+  reportSentAt?: string | null
+  /**
+   * OPTIONAL HOOK (invites API): remaining credits of a 3x package. The field name is a guess until the invites API is final;
+   * change it here (and in `creditsOf`) only.
+   */
+  creditsRemaining?: number | null
 }
 
 export interface PsychologistOption {
@@ -109,3 +118,125 @@ export const openReport = async (id: string, kind: 'client' | 'psychologist'): P
     throw caught
   }
 }
+
+/* ------------------------------ history of one person ------------------------------ */
+
+export interface HistoryWave {
+  id: string
+  code: string
+  waveNo: number
+  /** YYYY-MM-DD */
+  date: string
+  mhi: number | null
+  di: number | null
+  wi: number | null
+  bhi: number | null
+  level: number
+  deltaMhi: number | null
+  daysSincePrev: number | null
+}
+
+export interface HistoryData {
+  participantNo: number | null
+  nSessions: number
+  spanDays: number
+  /** id of the check-up that is open */
+  current: string
+  waves: HistoryWave[]
+}
+
+export const getHistory = async (id: string): Promise<HistoryData> => (await request<{ data: HistoryData }>(`${base(id)}/history`)).data
+
+/** Sends the result e-mail again (admin). */
+export const resendResult = async (id: string): Promise<{ sent: boolean }> =>
+  (await request<{ data: { sent: boolean } }>(`${base(id)}/resend-result`, { method: 'POST' })).data
+
+/* ------------------------------------ overview ------------------------------------ */
+
+export interface Overview {
+  sessions: number
+  participants: number
+  returning: number
+  /** Count per level, index 0 = level 1. */
+  levels: number[]
+  meanMhi: number | null
+  meanChange: number | null
+  months: { m: string; n: number; mhi: number | null }[]
+  unpaid: number
+  awaitingConfirmation: number
+  notesToFinish: number
+  readyNotReleased: number
+  notAssigned: number
+}
+
+export const getOverview = async (): Promise<Overview> =>
+  (await request<{ data: Overview }>('/api/admin/assessments/mhcu/overview')).data
+
+/* ------------------------------------ settings ------------------------------------ */
+
+export interface MhcuSettings {
+  pricing: {
+    single: { normal: number; promo: number }
+    package3: { normal: number; promo: number }
+    /** YYYY-MM-DD */
+    promoUntil: string
+  }
+  alertLevel: number
+  alertEmail: string
+  autoAssign: boolean
+  autoSend: boolean
+}
+
+export const getSettings = async (): Promise<MhcuSettings> =>
+  (await request<{ data: MhcuSettings }>('/api/admin/assessments/mhcu/settings')).data
+
+export const saveSettings = async (settings: MhcuSettings): Promise<MhcuSettings> =>
+  (await request<{ data: MhcuSettings }>('/api/admin/assessments/mhcu/settings', put(settings))).data
+
+/* ------------------------------------- invites -------------------------------------
+ * Contract = docs/assessments-work/dashboard-spec.md section 3. The invites API is still being built: if a name or shape
+ * differs, change this block only (the pages use the types below, never the raw JSON). */
+
+export type InviteTrack = 'asesmen' | 'free'
+export type InviteStatus = 'OPEN' | 'USED' | 'CANCELLED'
+
+export interface Invite {
+  id: string
+  track: InviteTrack
+  psychologistId: string | null
+  psychologistName: string | null
+  clientName: string | null
+  clientEmail: string | null
+  clientPhone?: string | null
+  note: string | null
+  status: InviteStatus
+  createdAt: string
+  usedAt?: string | null
+  url: string
+}
+
+export interface NewInvite {
+  track: InviteTrack
+  psychologistId: string
+  clientName?: string
+  clientEmail?: string
+  clientPhone?: string
+  note?: string
+}
+
+const INVITES = '/api/admin/assessments/mhcu/invites'
+
+export const listInvites = async (): Promise<Invite[]> => {
+  const json = await request<{ data?: Invite[] }>(INVITES)
+  return json.data ?? []
+}
+
+export const createInvite = async (input: NewInvite): Promise<{ invite: Invite; url: string; invites: Invite[] }> =>
+  (await request<{ data: { invite: Invite; url: string; invites: Invite[] } }>(INVITES, { method: 'POST', body: JSON.stringify(input) })).data
+
+export const cancelInvite = async (id: string): Promise<Invite[]> =>
+  (await request<{ data?: Invite[] }>(`${INVITES}/${encodeURIComponent(id)}`, { method: 'DELETE' })).data ?? []
+
+/** Remaining package credits of the person, when the API gives them (see `creditsRemaining`). */
+export const creditsOf = (detail: Pick<MhcuDetail, 'creditsRemaining'>): number | null =>
+  typeof detail.creditsRemaining === 'number' && detail.creditsRemaining > 0 ? detail.creditsRemaining : null

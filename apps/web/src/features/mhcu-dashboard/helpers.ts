@@ -1,5 +1,5 @@
 import { MHCU_LEVELS } from '@attentiveid/shared'
-import { REPORT_READY_PAYMENT, type MhcuDetail, type MhcuListItem } from './api'
+import { REPORT_READY_PAYMENT, type MhcuDetail, type MhcuListItem, type MhcuSettings, type Overview } from './api'
 
 export const LEVEL_STYLE: Record<number, string> = {
   1: 'bg-emerald-100 text-emerald-800',
@@ -139,3 +139,126 @@ export const fmt1 = (value: unknown): string =>
 
 export const dateText = (iso: string): string =>
   new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' })
+
+/* ---------------------------------- charts and summary ---------------------------------- */
+
+/** Level colours of the charts (the same as the e-mail and the demo dashboard). */
+export const LEVEL_HEX: Record<number, string> = { 1: '#2E8B57', 2: '#9BBF3B', 3: '#F2B33D', 4: '#E8742C', 5: '#C62828' }
+
+/** The four reference bands of the MHI (from, to, name index of MHCU level 4..1). */
+export const MHI_BANDS = [
+  { from: 0, to: 40, fill: '#E8742C', level: 4 },
+  { from: 40, to: 55, fill: '#F2B33D', level: 3 },
+  { from: 55, to: 70, fill: '#9BBF3B', level: 2 },
+  { from: 70, to: 100, fill: '#2E8B57', level: 1 },
+] as const
+
+export const levelNameOf = (level: number | null, lang: 'id' | 'en'): string => {
+  if (!level || level < 1 || level > 5) return ''
+  const def = MHCU_LEVELS[level as 1 | 2 | 3 | 4 | 5]
+  return lang === 'en' ? def.en : def.id
+}
+
+/** Position of the MHI marker on a 0-100 bar, in percent (clamped). */
+export const markerPercent = (mhi: number | null): number | null => (mhi === null || !Number.isFinite(mhi) ? null : Math.max(0, Math.min(100, mhi)))
+
+export interface ChartPoint {
+  id: string
+  x: number
+  y: number
+  mhi: number
+  level: number
+  label: string
+  caption: string
+  current: boolean
+}
+
+export const CHART = { W: 480, H: 170, left: 42, right: 34, top: 16, bottom: 34 } as const
+
+/** Coordinates of the dots of the MHI history chart. Waves without an MHI are left out of the line. */
+export function chartPoints(waves: readonly { id: string; waveNo: number; date: string; mhi: number | null; level: number }[], currentId: string): ChartPoint[] {
+  const usable = waves.filter((w): w is typeof w & { mhi: number } => w.mhi !== null && Number.isFinite(w.mhi))
+  const width = CHART.W - CHART.left - CHART.right
+  const height = CHART.H - CHART.top - CHART.bottom
+  return usable.map((w, i) => ({
+    id: w.id,
+    x: CHART.left + (usable.length === 1 ? width / 2 : (i * width) / (usable.length - 1)),
+    y: CHART.top + ((100 - Math.max(0, Math.min(100, w.mhi))) / 100) * height,
+    mhi: w.mhi,
+    level: w.level,
+    label: fmt1(w.mhi),
+    caption: `T${w.waveNo} ${w.date.slice(5, 10)}`,
+    current: w.id === currentId,
+  }))
+}
+
+export const yOfScore = (score: number): number => CHART.top + ((100 - score) / 100) * (CHART.H - CHART.top - CHART.bottom)
+
+/** "+4,7" / "-1,9" / "0,0"; '–' when unknown. */
+export const signed1 = (value: number | null): string => {
+  if (value === null || !Number.isFinite(value)) return '–'
+  const r = Math.round(value * 10) / 10
+  return `${r > 0 ? '+' : ''}${r.toFixed(1).replace('.', ',')}`
+}
+
+export const deltaTone = (value: number | null): string =>
+  value === null || Math.round(value * 10) === 0 ? 'text-slate-500' : value > 0 ? 'text-emerald-700' : 'text-rose-700'
+
+export const TRACKS: Record<string, [string, string]> = {
+  mandiri: ['Pemeriksaan mandiri', 'Self check-up'],
+  asesmen: ['Asesmen awal', 'Initial assessment'],
+  free: ['Free session', 'Free session'],
+  paket: ['Paket', 'Package'],
+  lanjutan: ['Lanjutan', 'Follow-up'],
+  legacy: ['Data lama', 'Legacy data'],
+}
+
+export const trackLabel = (track: string | undefined, lang: 'id' | 'en'): string | null => {
+  if (!track) return null
+  const names = TRACKS[track]
+  return names ? names[lang === 'en' ? 1 : 0] : track
+}
+
+/** "2026-11" -> "Nov 26" / "Nov 26" (Indonesian month short names). */
+export function monthLabel(month: string, lang: 'id' | 'en'): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(month)
+  if (!m) return month
+  const id = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+  const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${(lang === 'en' ? en : id)[Number(m[2]) - 1] ?? m[2]} ${m[1]!.slice(2)}`
+}
+
+/** Fallback for the overview when the call fails: the counts that can be made from the list alone. */
+export function overviewFromList(items: readonly MhcuListItem[]): Pick<Overview, 'sessions' | 'participants' | 'returning' | 'levels' | 'unpaid' | 'awaitingConfirmation' | 'notAssigned'> {
+  const s = summarize(items)
+  return { sessions: s.results, participants: s.people, returning: s.returning, levels: s.levels, unpaid: s.unpaid, awaitingConfirmation: s.awaiting, notAssigned: s.unassigned }
+}
+
+/* ------------------------------------ settings ------------------------------------ */
+
+/** "1.250.000" (thousand points); '' for none. */
+export const formatThousands = (value: number | null | undefined): string =>
+  value === null || value === undefined || !Number.isFinite(value) ? '' : String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+
+/** Digits typed into a rupiah field, re-shown with thousand points while typing. */
+export const regroupRupiah = (typed: string): string => formatThousands(typed.replace(/\D/g, '') === '' ? null : Number(typed.replace(/\D/g, '')))
+
+/** The rupiah text as a whole number; null when empty or not a number. */
+export const rupiahValue = (text: string): number | null => {
+  const digits = text.replace(/\./g, '').trim()
+  return /^\d{1,9}$/.test(digits) ? Number(digits) : null
+}
+
+export const settingsEqual = (a: MhcuSettings, b: MhcuSettings): boolean => JSON.stringify(a) === JSON.stringify(b)
+
+/** Easy mistakes caught before sending; the server still has the last word and its messages are shown as given. */
+export function settingsProblem(s: MhcuSettings, lang: 'id' | 'en'): string | null {
+  const t = (id: string, en: string) => (lang === 'en' ? en : id)
+  for (const [label, p] of [['1x', s.pricing.single], ['3x', s.pricing.package3]] as const) {
+    if (!Number.isInteger(p.normal) || p.normal < 0 || !Number.isInteger(p.promo) || p.promo < 0) return t(`Harga ${label} harus angka rupiah.`, `The ${label} prices must be rupiah amounts.`)
+    if (p.promo > p.normal) return t(`Harga promo ${label} tidak boleh lebih tinggi dari harga normal.`, `The ${label} promo price cannot be higher than the normal price.`)
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s.pricing.promoUntil)) return t('Isi tanggal akhir promo.', 'Enter the last day of the promo.')
+  if (s.alertEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.alertEmail.trim())) return t('Alamat email peringatan tidak valid.', 'The alert e-mail address is not valid.')
+  return null
+}

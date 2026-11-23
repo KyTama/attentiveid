@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import type { MhcuListItem } from '../src/features/mhcu-dashboard/api'
+import type { MhcuListItem, MhcuSettings } from '../src/features/mhcu-dashboard/api'
 import {
+  CHART,
   NO_FILTERS,
+  chartPoints,
+  deltaTone,
+  formatThousands,
+  markerPercent,
+  monthLabel,
+  regroupRupiah,
+  rupiahValue,
+  settingsEqual,
+  settingsProblem,
+  signed1,
+  trackLabel,
+  yOfScore,
   awaitsConfirmation,
   defaultRecommendation,
   filterItems,
@@ -145,5 +158,100 @@ describe('releaseBlocker', () => {
 
   it('says so when it is already released', () => {
     expect(releaseBlocker({ noteFinal: true, paymentStatus: 'PAID', status: 'released' })).toBe('released')
+  })
+})
+
+describe('history chart numbers', () => {
+  const waves = [
+    { id: 'a', waveNo: 1, date: '2026-07-31', mhi: 46.08, level: 3 },
+    { id: 'b', waveNo: 2, date: '2026-08-28', mhi: null, level: 3 },
+    { id: 'c', waveNo: 3, date: '2026-09-25', mhi: 76.1, level: 2 },
+  ]
+
+  it('leaves out waves without an MHI and spreads the rest over the width', () => {
+    const points = chartPoints(waves, 'c')
+    expect(points.map((p) => p.id)).toEqual(['a', 'c'])
+    expect(points[0]!.x).toBe(CHART.left)
+    expect(points[1]!.x).toBe(CHART.W - CHART.right)
+    expect(points[0]!.caption).toBe('T1 07-31')
+    expect(points[1]!.current).toBe(true)
+    expect(points[0]!.current).toBe(false)
+  })
+
+  it('a higher MHI is drawn higher up, a lone point sits in the middle', () => {
+    const [low, high] = chartPoints(waves, 'a')
+    expect(high!.y).toBeLessThan(low!.y)
+    const single = chartPoints([waves[0]!], 'a')
+    expect(single[0]!.x).toBe(CHART.left + (CHART.W - CHART.left - CHART.right) / 2)
+  })
+
+  it('keeps out-of-range scores on the chart', () => {
+    const [p] = chartPoints([{ id: 'x', waveNo: 1, date: '2026-01-01', mhi: 140, level: 1 }], 'x')
+    expect(p!.y).toBe(yOfScore(100))
+  })
+
+  it('places the MHI marker on the 0-100 bar', () => {
+    expect(markerPercent(54.2)).toBe(54.2)
+    expect(markerPercent(-3)).toBe(0)
+    expect(markerPercent(120)).toBe(100)
+    expect(markerPercent(null)).toBeNull()
+  })
+
+  it('writes changes with a sign and a decimal comma', () => {
+    expect(signed1(4.68)).toBe('+4,7')
+    expect(signed1(-12.7)).toBe('-12,7')
+    expect(signed1(0)).toBe('0,0')
+    expect(signed1(null)).toBe('–')
+    expect(deltaTone(4.7)).toContain('emerald')
+    expect(deltaTone(-4.7)).toContain('rose')
+    expect(deltaTone(null)).toContain('slate')
+  })
+
+  it('names months and tracks in both languages', () => {
+    expect(monthLabel('2026-11', 'id')).toBe('Nov 26')
+    expect(monthLabel('2026-08', 'id')).toBe('Agu 26')
+    expect(monthLabel('2026-08', 'en')).toBe('Aug 26')
+    expect(monthLabel('bad', 'id')).toBe('bad')
+    expect(trackLabel('asesmen', 'id')).toBe('Asesmen awal')
+    expect(trackLabel('mandiri', 'en')).toBe('Self check-up')
+    expect(trackLabel(undefined, 'id')).toBeNull()
+    expect(trackLabel('something-new', 'id')).toBe('something-new')
+  })
+})
+
+describe('settings helpers', () => {
+  const base: MhcuSettings = {
+    pricing: { single: { normal: 297000, promo: 227000 }, package3: { normal: 885000, promo: 647000 }, promoUntil: '2027-04-30' },
+    alertLevel: 4,
+    alertEmail: 'contact@attentiveid.com',
+    autoAssign: true,
+    autoSend: false,
+  }
+
+  it('writes rupiah with thousand points and reads them back', () => {
+    expect(formatThousands(1250000)).toBe('1.250.000')
+    expect(formatThousands(0)).toBe('0')
+    expect(formatThousands(null)).toBe('')
+    expect(regroupRupiah('227000')).toBe('227.000')
+    expect(regroupRupiah('2270x00')).toBe('227.000')
+    expect(regroupRupiah('')).toBe('')
+    expect(rupiahValue('227.000')).toBe(227000)
+    expect(rupiahValue('')).toBeNull()
+    expect(rupiahValue('abc')).toBeNull()
+  })
+
+  it('finds dirty state', () => {
+    expect(settingsEqual(base, structuredClone(base))).toBe(true)
+    expect(settingsEqual(base, { ...base, autoSend: true })).toBe(false)
+  })
+
+  it('catches easy mistakes and says them in the language asked', () => {
+    expect(settingsProblem(base, 'id')).toBeNull()
+    expect(settingsProblem({ ...base, pricing: { ...base.pricing, single: { normal: 100, promo: 200 } } }, 'id')).toMatch(/promo 1x tidak boleh lebih tinggi/)
+    expect(settingsProblem({ ...base, pricing: { ...base.pricing, package3: { normal: 100, promo: 200 } } }, 'en')).toMatch(/3x promo price cannot be higher/)
+    expect(settingsProblem({ ...base, pricing: { ...base.pricing, single: { normal: Number.NaN, promo: 1 } } }, 'id')).toMatch(/angka rupiah/)
+    expect(settingsProblem({ ...base, pricing: { ...base.pricing, promoUntil: '' } }, 'id')).toMatch(/tanggal akhir promo/)
+    expect(settingsProblem({ ...base, alertEmail: 'bukan-email' }, 'id')).toMatch(/tidak valid/)
+    expect(settingsProblem({ ...base, alertEmail: '  ' }, 'id')).toBeNull()
   })
 })

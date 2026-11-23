@@ -4,6 +4,7 @@ import { openPaymentProof } from '../assessments/service'
 import { useTx } from '../i18n/use-tx'
 import {
   PAYMENT_STATUSES,
+  creditsOf,
   assignPsychologist,
   getMhcu,
   openReport,
@@ -26,7 +27,9 @@ import {
   releaseBlocker,
   type NoteDraft,
 } from './helpers'
-import { LevelBadge, PaymentChip, StatusText } from './ListParts'
+import { HistorySection } from './HistorySection'
+import { LevelBadge, PaymentChip, StatusText, TrackChip } from './ListParts'
+import { DeliveryBlock, SummaryBlock } from './SummarySection'
 
 interface Props {
   id: string
@@ -35,6 +38,8 @@ interface Props {
   onClose: () => void
   /** Called after any save so the list row can follow (psychologist, payment, status). */
   onChanged: (detail: MhcuDetail) => void
+  /** Opens another check-up of the same person (history chart and table). */
+  onOpenWave: (id: string) => void
 }
 
 type Scores = Record<string, unknown>
@@ -49,7 +54,7 @@ const buttonClass = 'min-h-11 cursor-pointer rounded-xl border border-slate-200 
 const primaryClass = 'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60'
 
 /** One result with its scores, assignment, note, payment and report actions. */
-export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: Props) {
+export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, onOpenWave }: Props) {
   const { tx, isEn } = useTx()
   const [detail, setDetail] = useState<MhcuDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -116,6 +121,12 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: 
             {detail.code} · {detail.waveNo ? `T${detail.waveNo} · ` : ''}{dateText(detail.createdAt)} · {detail.age} {tx('tahun', 'years')} · {detail.sex ?? '–'} · {detail.lang.toUpperCase()}
           </p>
           <p className="text-xs text-slate-500">{detail.email} · {detail.phone}</p>
+          {(detail.track || creditsOf(detail) !== null) && (
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+              <TrackChip track={detail.track} />
+              {creditsOf(detail) !== null && <span className="font-semibold text-slate-700">{tx('Sisa kuota paket', 'Package credits left')}: {creditsOf(detail)}</span>}
+            </p>
+          )}
         </div>
         <button aria-label={tx('Tutup', 'Close')} className="hidden cursor-pointer rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 xl:block" onClick={onClose} type="button">
           <X aria-hidden="true" className="size-4" />
@@ -146,6 +157,8 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: 
           </span>
         </div>
       )}
+
+      <SummaryBlock detail={detail} />
 
       <section aria-label={tx('Skor', 'Scores')}>
         <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
@@ -196,9 +209,11 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: 
         </section>
       )}
 
+      <HistorySection id={detail.id} key={`history:${detail.id}`} onOpenWave={onOpenWave} />
       <AssignBlock key={`assign:${detail.id}:${detail.psychologistId}`} detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} psychologists={psychologists} />
       <NoteEditor key={`note:${detail.id}:${detail.noteTemplate}:${detail.noteCustom}:${detail.noteFinal}`} detail={detail} onError={fail} onSaved={applied} />
       <PaymentBlock key={`pay:${detail.id}:${detail.paymentStatus}:${detail.paymentPackage}:${detail.paymentAmount}:${detail.paymentRef}`} detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} />
+      <DeliveryBlock detail={detail} isAdmin={isAdmin} onError={fail} onNotice={(message) => { setError(null); setNotice(message) }} />
       <ReportBlock detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} />
     </div>
   )
