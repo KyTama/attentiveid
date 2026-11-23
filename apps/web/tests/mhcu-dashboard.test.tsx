@@ -26,7 +26,7 @@ const listItem = (over: Record<string, unknown>) => ({
 })
 
 const LIST = [
-  listItem({}),
+  listItem({ paymentSubmittedAt: '2026-11-21T03:00:00Z', paymentFor: 'package3' }),
   listItem({ id: '2', code: 'AT-MHCU-2026-002', name: 'Dimas Hidayat', email: 'dimas@example.com', level: 4, psychologistId: 'p1', paymentStatus: 'PAID', waveNo: 3 }),
 ]
 
@@ -83,7 +83,7 @@ function setup(role: 'admin' | 'psychologist' = 'admin', detail: Record<string, 
 
 const openFirst = async () => {
   const u = userEvent.setup()
-  await u.click(await screen.findByRole('button', { name: /nadia putri/i }))
+  await u.click((await screen.findAllByRole('button', { name: /nadia putri/i }))[0] as HTMLElement)
   const panel = await screen.findByRole('complementary', { name: /detail hasil/i })
   await within(panel).findByRole('heading', { name: /nadia putri/i })
   return { u, panel }
@@ -100,24 +100,71 @@ describe('MHCU dashboard', () => {
   it('lists the results with the cohort tiles', async () => {
     setup()
     expect(await screen.findByRole('heading', { name: /dasbor mhcu/i })).toBeInTheDocument()
-    expect(await screen.findByText('Nadia Putri')).toBeInTheDocument()
-    expect(screen.getByText('Dimas Hidayat')).toBeInTheDocument()
-    expect(screen.getByText('T3')).toBeInTheDocument()
+    expect((await screen.findAllByText('Nadia Putri')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Dimas Hidayat').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/T3/).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Belum bayar').length).toBeGreaterThan(0)
     expect(screen.getByRole('img', { name: /L1: 0, L2: 1, L3: 0, L4: 1, L5: 0/ })).toBeInTheDocument()
+  })
+
+  it('shows who is waiting to be confirmed: badge, tile count and a filter', async () => {
+    setup()
+    const u = userEvent.setup()
+    await screen.findAllByText('Nadia Putri')
+    // one badge in the card list and one in the table (both are in the page; CSS decides which one is seen)
+    expect(screen.getAllByText('Bukti transfer masuk').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByRole('button', { name: 'Bukti transfer masuk: 1' })).toBeInTheDocument()
+    await u.click(screen.getByRole('button', { name: 'Bukti transfer masuk: 1' }))
+    expect(screen.queryAllByText('Dimas Hidayat')).toHaveLength(0)
+    expect(screen.getAllByText('Nadia Putri').length).toBeGreaterThan(0)
+  })
+
+  it('tells in the detail panel when the proof was sent and what the person chose', async () => {
+    setup('admin', detailOf({ paymentSubmittedAt: '2026-11-21T03:00:00Z', paymentFor: 'package3' }))
+    const { panel } = await openFirst()
+    const banner = within(panel).getAllByRole('status').find((el) => /bukti transfer masuk/i.test(el.textContent ?? ''))
+    expect(banner).toHaveTextContent(/memilih paket 3x/i)
+    expect(banner).toHaveTextContent(/ubah status menjadi paid/i)
+  })
+
+  it('has no proof banner once the payment is confirmed', async () => {
+    setup('admin', detailOf({ paymentSubmittedAt: '2026-11-21T03:00:00Z', paymentFor: 'single', paymentStatus: 'PAID' }))
+    const { panel } = await openFirst()
+    expect(within(panel).queryByText(/memilih laporan 1x/i)).not.toBeInTheDocument()
+  })
+
+  it('on a phone the filters wait behind one button and show how many are active', async () => {
+    setup()
+    const u = userEvent.setup()
+    await screen.findAllByText('Nadia Putri')
+    const toggle = screen.getByRole('button', { name: /^filter/i })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await u.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await u.selectOptions(screen.getByRole('combobox', { name: /level/i }), '4')
+    expect(toggle).toHaveTextContent('1')
+    await u.click(screen.getByRole('button', { name: /hapus filter/i }))
+    expect(screen.getAllByText('Nadia Putri').length).toBeGreaterThan(0)
+  })
+
+  it('has a way back to the list from the open result (phone)', async () => {
+    setup()
+    const { u, panel } = await openFirst()
+    await u.click(within(panel).getByRole('button', { name: /daftar hasil/i }))
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: /detail hasil/i })).not.toBeInTheDocument())
   })
 
   it('searches and filters the list', async () => {
     setup()
     const u = userEvent.setup()
-    await screen.findByText('Nadia Putri')
+    await screen.findAllByText('Nadia Putri')
     await u.type(screen.getByRole('searchbox'), 'dimas')
-    expect(screen.queryByText('Nadia Putri')).not.toBeInTheDocument()
-    expect(screen.getByText('Dimas Hidayat')).toBeInTheDocument()
+    expect(screen.queryAllByText('Nadia Putri')).toHaveLength(0)
+    expect(screen.getAllByText('Dimas Hidayat').length).toBeGreaterThan(0)
     await u.clear(screen.getByRole('searchbox'))
     await u.selectOptions(screen.getByRole('combobox', { name: /pembayaran/i }), 'UNPAID')
-    expect(screen.getByText('Nadia Putri')).toBeInTheDocument()
-    expect(screen.queryByText('Dimas Hidayat')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Nadia Putri').length).toBeGreaterThan(0)
+    expect(screen.queryAllByText('Dimas Hidayat')).toHaveLength(0)
     await u.selectOptions(screen.getByRole('combobox', { name: /pembayaran/i }), 'FREE')
     expect(screen.getByText(/tidak ada hasil yang cocok/i)).toBeInTheDocument()
   })

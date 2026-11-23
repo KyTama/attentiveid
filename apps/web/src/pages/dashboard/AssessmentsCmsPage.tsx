@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, Search, X } from 'lucide-react'
+import { useAuth } from '@/features/auth/auth-context'
 import {
   getAssessment,
   listSubmissions,
@@ -33,6 +35,7 @@ const dateText = (iso: string) =>
 /** Mental Health Check-Up results. A psychologist reads the scores, writes a note, then marks the result as reviewed or released. */
 export function AssessmentsCmsPage() {
   const { tx, isEn } = useTx()
+  const { user } = useAuth()
   const [items, setItems] = useState<AssessmentListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -128,15 +131,20 @@ export function AssessmentsCmsPage() {
                 )}
           </p>
         </div>
-        <button
-          className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-          disabled={isLoading}
-          onClick={() => void load()}
-          type="button"
-        >
-          <RefreshCw aria-hidden="true" className={`size-4 ${isLoading ? 'animate-spin' : ''}`} />
-          {tx('Muat ulang', 'Refresh')}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments/mhcu">
+            {tx('Buka Dasbor MHCU', 'Open the MHCU dashboard')}
+          </Link>
+          <button
+            className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            disabled={isLoading}
+            onClick={() => void load()}
+            type="button"
+          >
+            <RefreshCw aria-hidden="true" className={`size-4 ${isLoading ? 'animate-spin' : ''}`} />
+            {tx('Muat ulang', 'Refresh')}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -192,7 +200,14 @@ export function AssessmentsCmsPage() {
               <Loader2 aria-hidden="true" className="size-4 animate-spin" /> {tx('Memuat...', 'Loading...')}
             </p>
           ) : visible.length === 0 ? (
-            <p className="p-6 text-sm text-slate-500">{tx('Belum ada data.', 'Nothing here yet.')}</p>
+            <p className="p-6 text-sm text-slate-500">
+              {user?.role === 'psychologist' && instrument === 'mhcu' && items.length === 0
+                ? tx(
+                    'Hasil akan muncul di sini setelah admin menugaskan klien kepada Anda.',
+                    'Results will appear here after an admin assigns clients to you.',
+                  )
+                : tx('Belum ada data.', 'Nothing here yet.')}
+            </p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {visible.map((item) => (

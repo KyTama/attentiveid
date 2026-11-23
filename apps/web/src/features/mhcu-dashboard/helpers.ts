@@ -18,7 +18,7 @@ export const PAYMENT_STYLE: Record<string, string> = {
 }
 
 export type StatusFilter = 'all' | 'new' | 'reviewed' | 'released'
-export type TodoFilter = '' | 'unreleased' | 'unassigned' | 'return' | 'urgent'
+export type TodoFilter = '' | 'proof' | 'unreleased' | 'unassigned' | 'return' | 'urgent'
 
 export interface MhcuFilters {
   q: string
@@ -32,6 +32,10 @@ export interface MhcuFilters {
 
 export const NO_FILTERS: MhcuFilters = { q: '', status: 'all', level: '', payment: '', psychologist: '', todo: '' }
 
+/** A proof of transfer was sent but nobody has confirmed the payment yet: an admin has to check it. */
+export const awaitsConfirmation = (item: Pick<MhcuListItem, 'paymentSubmittedAt' | 'paymentStatus'>): boolean =>
+  Boolean(item.paymentSubmittedAt) && item.paymentStatus === 'UNPAID'
+
 /** Search by name, report code, e-mail or phone; every other filter must match too. */
 export function filterItems(items: readonly MhcuListItem[], f: MhcuFilters): MhcuListItem[] {
   const term = f.q.trim().toLowerCase()
@@ -41,6 +45,7 @@ export function filterItems(items: readonly MhcuListItem[], f: MhcuFilters): Mhc
     if (f.level && String(item.level) !== f.level) return false
     if (f.payment && item.paymentStatus !== f.payment) return false
     if (f.psychologist === 'none' ? item.psychologistId !== null : f.psychologist && item.psychologistId !== f.psychologist) return false
+    if (f.todo === 'proof' && !awaitsConfirmation(item)) return false
     if (f.todo === 'unreleased' && item.status === 'released') return false
     if (f.todo === 'unassigned' && item.psychologistId !== null) return false
     if (f.todo === 'return' && (item.waveNo ?? 1) < 2) return false
@@ -53,6 +58,8 @@ export interface CohortSummary {
   results: number
   people: number
   returning: number
+  /** Proof of transfer received, payment not confirmed yet. */
+  awaiting: number
   unpaid: number
   unassigned: number
   unreleased: number
@@ -68,6 +75,7 @@ export function summarize(items: readonly MhcuListItem[]): CohortSummary {
     results: items.length,
     people: new Set(items.map((item) => item.email.trim().toLowerCase())).size,
     returning: items.filter((item) => (item.waveNo ?? 1) >= 2).length,
+    awaiting: items.filter(awaitsConfirmation).length,
     unpaid: items.filter((item) => item.paymentStatus === 'UNPAID').length,
     unassigned: items.filter((item) => item.psychologistId === null).length,
     unreleased: items.filter((item) => item.status !== 'released').length,

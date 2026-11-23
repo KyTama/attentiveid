@@ -63,11 +63,11 @@ export function MhcuDashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments">
+          <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments">
             {tx('Hasil asesmen', 'Assessment results')}
           </Link>
           <button
-            className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             disabled={loading}
             onClick={() => void load()}
             type="button"
@@ -84,11 +84,14 @@ export function MhcuDashboardPage() {
         </div>
       )}
 
-      <CohortTiles items={items} />
-      <SessionFilters filters={filters} onChange={setFilters} psychologists={psychologists} shown={visible.length} />
+      {/* On a phone the open result takes the whole screen; the summary and filters come back with "Daftar hasil". */}
+      <div className={`space-y-5 ${selectedId ? 'hidden xl:block xl:space-y-5' : ''}`}>
+        <CohortTiles items={items} onShowProof={() => setFilters({ ...NO_FILTERS, todo: 'proof' })} />
+        <SessionFilters filters={filters} onChange={setFilters} psychologists={psychologists} shown={visible.length} />
+      </div>
 
       <div className={`grid min-w-0 gap-5 ${selectedId ? 'xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)]' : ''}`}>
-        <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className={`min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white ${selectedId ? 'hidden xl:block' : ''}`}>
           {loading ? (
             <p className="flex items-center gap-2 p-6 text-sm text-slate-500" role="status">
               <Loader2 aria-hidden="true" className="size-4 animate-spin" /> {tx('Memuat...', 'Loading...')}

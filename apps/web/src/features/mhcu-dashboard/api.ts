@@ -11,6 +11,10 @@ export interface MhcuListItem extends AssessmentListItem {
   psychologistId: string | null
   paymentStatus: string
   waveNo: number | null
+  /** When the person sent a proof of transfer (the API adds this to the list); null/absent = no proof yet. */
+  paymentSubmittedAt?: string | null
+  /** What they say they paid for: 'single' | 'package3'. */
+  paymentFor?: string | null
 }
 
 export interface MhcuDetail extends AssessmentDetail {

@@ -94,6 +94,16 @@
 		file_server
 	}
 
+	# PDF files (the sample reports linked from the result e-mail) open inline in the browser's own viewer. The site-wide policy
+	# above has object-src 'none', which stops Chrome's PDF viewer from showing a PDF opened in its own tab, so a PDF gets a
+	# policy without it (it can still load nothing from other sites).
+	@pdf path *.pdf
+	header @pdf {
+		>Content-Security-Policy "default-src 'self'; frame-ancestors 'none'"
+		Content-Disposition inline
+		Cache-Control "public, max-age=3600"
+	}
+
 	# try_files must sit inside a handle: as a top-level directive it runs before every handle block
 	# and would rewrite the path to /index.html before the matchers above can see the real one.
 	handle {
