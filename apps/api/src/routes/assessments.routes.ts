@@ -148,11 +148,13 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         })();
     };
 
+    /** The superadmin is an admin too (the role guard already lets them through every admin route). */
+    const isAdminRole = (user: any): boolean => user?.role === 'admin' || user?.role === 'superadmin';
     /** Admins see everything; a psychologist sees only the Mental Health Check-Ups assigned to them. */
     const canAccess = (user: any, row: { instrument: string; psychologistId: string | null }): boolean =>
-        user?.role === 'admin' || row.instrument !== 'mhcu' || (!!user?.psychologistId && row.psychologistId === user.psychologistId);
+        isAdminRole(user) || row.instrument !== 'mhcu' || (!!user?.psychologistId && row.psychologistId === user.psychologistId);
     /** undefined = no limit (admin); null = nothing visible (a psychologist profile that is not linked); else the psychologist's id. */
-    const ownScope = (user: any): string | null | undefined => (user?.role === 'admin' ? undefined : user?.psychologistId ?? null);
+    const ownScope = (user: any): string | null | undefined => (isAdminRole(user) ? undefined : user?.psychologistId ?? null);
 
     /** After staff change a note or a payment: auto-assign and auto-release when the settings say so. Never fails the request. */
     const automate = async (id: string) => {
