@@ -20,6 +20,8 @@ import { createAssessmentPaymentRoutes } from './routes/assessment-payment.route
 import { createMhcuOpsRoutes, type MhcuSettingsStore } from './routes/mhcu-ops.routes';
 import { createMhcuOpsRepository, type MhcuOpsRepository } from './repositories/mhcu-ops.repository';
 import { createMemorySettingsStore } from './services/mhcu-settings-store';
+import { createMhcuInviteRoutes } from './routes/mhcu-invites.routes';
+import { createMhcuInvitesRepository, type MhcuInvitesRepository } from './repositories/mhcu-invites.repository';
 import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
@@ -42,6 +44,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     prayersRepository?: PrayersRepository;
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
+    mhcuInvitesRepository?: MhcuInvitesRepository;
     mailer?: Mailer;
     alertEmail?: string;
     mhcuSettings?: MhcuSettingsStore;
@@ -226,6 +229,13 @@ export const createApp = (dependencies: AppDependencies) => {
                 settings: dependencies.mhcuSettings,
                 siteOrigin: dependencies.frontendOrigin,
             }))
+            .use(createMhcuInviteRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                invitesRepository: dependencies.mhcuInvitesRepository || createMhcuInvitesRepository(dependencies.db),
+                assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
+                siteOrigin: dependencies.frontendOrigin,
+            }))
             .use(createAssessmentsRoutes({
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
@@ -244,6 +254,10 @@ export const createApp = (dependencies: AppDependencies) => {
                 assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
                 ops: dependencies.mhcuOpsRepository || createMhcuOpsRepository(dependencies.db),
                 settings: dependencies.mhcuSettings || createMemorySettingsStore(dependencies.alertEmail),
+                audit: async (entry) => {
+                    const repo = dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db);
+                    await repo.audit({ actor: entry.actor, action: entry.action, submissionId: entry.submissionId, detail: entry.detail });
+                },
                 mailer: dependencies.mailer,
                 paymentSecret: dependencies.paymentSecret,
                 siteOrigin: dependencies.frontendOrigin,

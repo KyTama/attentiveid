@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { matchParticipant, normalizeParticipantEmail as normalizeEmail, normalizeParticipantPhone as normalizePhone } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions, psychologists } from '../db/schema';
+import { assessmentAudit, assessmentInvites, assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions, psychologists } from '../db/schema';
+import { priceFor } from '../services/assessment-payment';
+import { creditDelta, decideTrack, PACKAGE_SIZE, type TrackDecision } from '../services/mhcu-tracks';
 
 export type AssessmentInstrument = 'mhcu' | 'gsc';
 export type AssessmentStatus = 'new' | 'reviewed' | 'released';
@@ -9,6 +11,14 @@ export type AssessmentStatus = 'new' | 'reviewed' | 'released';
 export const CODE_PREFIX: Record<AssessmentInstrument, string> = { mhcu: 'AT-MHCU-', gsc: 'AT-GSC-' };
 /** The old Google Form used codes 001-099; the site starts at 100 so a code can never be issued twice. */
 export const FIRST_SITE_SEQ = 100;
+
+/** The invitation link is unknown, already used or cancelled. Thrown inside the saving transaction, so nothing is stored. */
+export class InviteUnavailableError extends Error {
+    constructor() {
+        super('invite-unavailable');
+        this.name = 'InviteUnavailableError';
+    }
+}
 
 export interface NewAssessmentSubmission {
     instrument: AssessmentInstrument;
@@ -27,6 +37,43 @@ export interface NewAssessmentSubmission {
     scores: unknown;
     level: number | null;
     durationSec: number | null;
+    /** The ?invite= token of the form (Mental Health Check-Up only). A valid open token decides the track and is used up by this very insert. */
+    inviteToken?: string | null;
+}
+
+export interface CreatedAssessment {
+    id: string;
+    code: string;
+    duplicate: boolean;
+    participantId: string | null;
+    waveNo: number | null;
+    /** The track this check-up got (the fixture of older tests may leave these out). */
+    track?: string;
+    paymentStatus?: string;
+    priceDue?: number | null;
+    psychologistId?: string | null;
+    /** Credits of the person's package left after this check-up. */
+    creditsRemaining?: number;
+    creditUsed?: boolean;
+}
+
+export interface AuditEntry {
+    /** The staff user (or null for the system). */
+    actor: string | null;
+    action: string;
+    submissionId?: string | null;
+    /** A short text without names, e-mail addresses, phone numbers or scores. */
+    detail?: string | null;
+}
+
+export type SetPriceResult = { status: 'ok'; row: AssessmentRow } | { status: 'notFound' } | { status: 'wrongTrack' };
+
+export interface ParticipantInfo {
+    participantNo: number;
+    creditsRemaining: number;
+    creditsTotal: number;
+    psychologistId: string | null;
+    trackOrigin: string | null;
 }
 
 export type AssessmentRow = typeof assessmentSubmissions.$inferSelect;
@@ -56,7 +103,7 @@ export interface AssessmentsRepository {
      * (a double click, a retry) nothing new is saved and the earlier record is returned with `duplicate: true`. The check and the
      * insert happen under one lock, so two clicks arriving together cannot both be saved.
      */
-    create(input: NewAssessmentSubmission, options?: { now?: Date; dedupeMs?: number }): Promise<{ id: string; code: string; duplicate: boolean; participantId: string | null; waveNo: number | null }>;
+    create(input: NewAssessmentSubmission, options?: { now?: Date; dedupeMs?: number }): Promise<CreatedAssessment>;
     list(instrument: AssessmentInstrument, options?: { status?: AssessmentStatus; limit?: number; psychologistId?: string }): Promise<AssessmentListItem[]>;
     get(id: string): Promise<AssessmentRow | null>;
     review(id: string, input: { status: AssessmentStatus; note: string | null; reviewerId: string }): Promise<AssessmentRow | null>;
@@ -73,7 +120,17 @@ export interface AssessmentsRepository {
     /** Assigns (or clears) the psychologist of a check-up; the person keeps the same psychologist for later check-ups. */
     assign(id: string, psychologistId: string | null): Promise<AssessmentRow | null>;
     saveNote(id: string, input: { template: string | null; custom: string | null; final: boolean; userId: string }): Promise<AssessmentRow | null>;
+    /**
+     * Staff confirm (or undo) a payment. A confirmed package of 3 on a 'mandiri' check-up gives the person 3 credits (this check-up is the
+     * first, so 2 are left); saving the same payment again adds nothing, and moving it back to UNPAID takes the credits back.
+     */
     setPayment(id: string, input: { status: string; package: string | null; amount: number | null; ref: string | null }): Promise<AssessmentRow | null>;
+    /** The psychologist's price for a 'lanjutan' check-up. */
+    setPrice(id: string, price: number): Promise<SetPriceResult>;
+    /** The person behind a check-up: package credits, psychologist and how they first arrived. */
+    getParticipant(participantId: string): Promise<ParticipantInfo | null>;
+    /** Writes one row of the staff audit trail. Never throws into the caller's flow: a failed audit row is logged by the caller if it wants to. */
+    audit(entry: AuditEntry): Promise<void>;
     markReportReleased(id: string): Promise<AssessmentRow | null>;
     /** Records what the participant says they paid for and keeps the proof of transfer (a screenshot or PDF) with it. */
     savePayment(id: string, input: { paymentFor: string; mimeType: string; data: Buffer }): Promise<void>;
@@ -106,10 +163,24 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                     .limit(1);
                 if (earlier[0]) return { ...earlier[0], duplicate: true, participantId: null, waveNo: null };
             }
+            // An invitation is used up by this very insert: one conditional update, so of two uses of one link exactly one wins and
+            // the other rolls the whole transaction back (nothing is stored, the link is not consumed twice).
+            let invite: { id: string; track: 'asesmen' | 'free'; psychologistId: string } | null = null;
+            if (input.instrument === 'mhcu' && input.inviteToken) {
+                const used = await tx
+                    .update(assessmentInvites)
+                    .set({ status: 'USED', usedAt: sql`now()` })
+                    .where(and(eq(assessmentInvites.token, input.inviteToken), eq(assessmentInvites.status, 'OPEN')))
+                    .returning({ id: assessmentInvites.id, track: assessmentInvites.track, psychologistId: assessmentInvites.psychologistId });
+                if (!used[0]) throw new InviteUnavailableError();
+                invite = { id: used[0].id, track: used[0].track as 'asesmen' | 'free', psychologistId: used[0].psychologistId };
+            }
             // The same person (same e-mail, else same WhatsApp number) keeps one participant record across their check-ups,
             // and each check-up gets its number T1, T2... Only the Mental Health Check-Up follows people over time.
             let participantId: string | null = null;
             let waveNo: number | null = null;
+            let decision: TrackDecision | null = null;
+            let creditsRemaining = 0;
             if (input.instrument === 'mhcu') {
                 const emailNorm = normalizeEmail(input.email);
                 const phoneNorm = normalizePhone(input.phone);
@@ -124,35 +195,75 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                     candidates.map((p) => ({ participantId: p.id, emailNorm: p.emailNorm, phoneNorm: p.phoneNorm })),
                     { email: input.email, phone: input.phone }
                 );
+                const known = match ? candidates.find((p) => p.id === match.participantId) ?? null : null;
+                const asParticipant = (p: NonNullable<typeof known>, credits = p.creditsRemaining) => ({ creditsRemaining: credits, psychologistId: p.psychologistId, trackOrigin: p.trackOrigin });
+                decision = decideTrack({ invite, participant: known ? asParticipant(known) : null, today: now });
                 const nowIso = now.toISOString();
-                if (match) {
+                if (known) {
+                    if (decision.creditUsed) {
+                        // Take one credit only if one is still there; if it is gone the person falls back to the next track.
+                        const taken = await tx
+                            .update(assessmentParticipants)
+                            .set({ creditsRemaining: sql`${assessmentParticipants.creditsRemaining} - 1` })
+                            .where(and(eq(assessmentParticipants.id, known.id), sql`${assessmentParticipants.creditsRemaining} > 0`))
+                            .returning({ creditsRemaining: assessmentParticipants.creditsRemaining });
+                        if (!taken[0]) decision = decideTrack({ invite: null, participant: asParticipant(known, 0), today: now });
+                    }
                     const [updated] = await tx
                         .update(assessmentParticipants)
-                        .set({ nSessions: sql`${assessmentParticipants.nSessions} + 1`, lastSessionAt: nowIso })
-                        .where(eq(assessmentParticipants.id, match.participantId))
-                        .returning({ id: assessmentParticipants.id, nSessions: assessmentParticipants.nSessions });
+                        .set({
+                            nSessions: sql`${assessmentParticipants.nSessions} + 1`,
+                            lastSessionAt: nowIso,
+                            ...(invite ? { psychologistId: invite.psychologistId, trackOrigin: invite.track } : {})
+                        })
+                        .where(eq(assessmentParticipants.id, known.id))
+                        .returning({ id: assessmentParticipants.id, nSessions: assessmentParticipants.nSessions, creditsRemaining: assessmentParticipants.creditsRemaining });
                     participantId = updated.id;
                     waveNo = updated.nSessions;
+                    creditsRemaining = updated.creditsRemaining;
                 } else {
                     const [created] = await tx
                         .insert(assessmentParticipants)
-                        .values({ emailNorm, phoneNorm, name: input.name, sex: input.sex, firstSessionAt: nowIso, lastSessionAt: nowIso, nSessions: 1 })
+                        .values({
+                            emailNorm,
+                            phoneNorm,
+                            name: input.name,
+                            sex: input.sex,
+                            firstSessionAt: nowIso,
+                            lastSessionAt: nowIso,
+                            nSessions: 1,
+                            psychologistId: invite?.psychologistId ?? null,
+                            trackOrigin: invite?.track ?? 'mandiri'
+                        })
                         .returning({ id: assessmentParticipants.id });
                     participantId = created.id;
                     waveNo = 1;
                 }
             }
+            const d: TrackDecision = decision ?? {
+                track: input.track as TrackDecision['track'],
+                paymentStatus: 'UNPAID',
+                paymentPackage: null,
+                paymentAmount: null,
+                priceDue: null,
+                psychologistId: null,
+                creditUsed: false
+            };
+            const settled = d.paymentStatus !== 'UNPAID';
             const rows = await tx.execute(sql`
                 insert into assessment_submissions
                   (instrument, code, code_year, code_seq, lang, track, consent_version, research_consent, guardian, consent_ack,
-                   name, sex, age, phone, email, answers, scores, level, duration_sec, participant_id, wave_no)
+                   name, sex, age, phone, email, answers, scores, level, duration_sec, participant_id, wave_no,
+                   payment_status, payment_package, payment_amount, paid_at, price_due, psychologist_id, credit_used, invite_id)
                 select ${input.instrument},
                        ${CODE_PREFIX[input.instrument]} || ${year}::text || '-' || lpad(s.seq::text, 3, '0'),
-                       ${year}, s.seq, ${input.lang}, ${input.track}, ${input.consentVersion}, ${input.researchConsent}, ${input.guardian},
+                       ${year}, s.seq, ${input.lang}, ${d.track}, ${input.consentVersion}, ${input.researchConsent}, ${input.guardian},
                        ${JSON.stringify(input.consentAck)}::jsonb,
                        ${input.name}, ${input.sex}, ${input.age}, ${input.phone}, ${input.email},
                        ${JSON.stringify(input.answers)}::jsonb, ${JSON.stringify(input.scores)}::jsonb, ${input.level}, ${input.durationSec},
-                       ${participantId}::uuid, ${waveNo}
+                       ${participantId}::uuid, ${waveNo},
+                       ${d.paymentStatus}, ${d.paymentPackage}, ${d.paymentAmount}, ${settled ? sql`now()` : sql`null`}, ${d.priceDue},
+                       ${d.psychologistId}::uuid, ${d.creditUsed}, ${invite?.id ?? null}::uuid
                 from (
                   select coalesce(max(code_seq), ${FIRST_SITE_SEQ - 1}) + 1 as seq
                   from assessment_submissions where instrument = ${input.instrument} and code_year = ${year}
@@ -160,7 +271,20 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                 returning id, code`);
             const row = (rows as unknown as { rows?: { id: string; code: string }[] }).rows?.[0] ?? (rows as unknown as { id: string; code: string }[])[0];
             if (!row) throw new Error('Insert returned no row');
-            return { id: row.id, code: row.code, duplicate: false, participantId, waveNo };
+            if (invite) await tx.update(assessmentInvites).set({ usedSubmissionId: row.id }).where(eq(assessmentInvites.id, invite.id));
+            return {
+                id: row.id,
+                code: row.code,
+                duplicate: false,
+                participantId,
+                waveNo,
+                track: d.track,
+                paymentStatus: d.paymentStatus,
+                priceDue: d.priceDue,
+                psychologistId: d.psychologistId,
+                creditsRemaining,
+                creditUsed: d.creditUsed
+            };
         });
     },
 
@@ -268,19 +392,75 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
     },
 
     async setPayment(id, input) {
-        const settled = input.status !== 'UNPAID';
+        return db.transaction(async (tx) => {
+            const current = (await tx.select().from(assessmentSubmissions).where(eq(assessmentSubmissions.id, id)).for('update'))[0];
+            if (!current) return null;
+            const settled = input.status !== 'UNPAID';
+            // A confirmed payment without an amount gets the price of what was bought (single report or package of 3).
+            const amount = input.amount ?? (input.status === 'PAID' ? priceFor(input.package === '3x' ? 'package3' : 'single') : null);
+            // Only a 'mandiri' check-up can buy a package; PAID is what counts, UNPAID or another status gives the credits back.
+            const wanted = current.track === 'mandiri' && input.status === 'PAID' && input.package === '3x' ? PACKAGE_SIZE : 0;
+            const delta = creditDelta(current.creditsGranted, wanted);
+            let psychologistId = current.psychologistId;
+            if (!psychologistId && settled && current.participantId) {
+                // A returning person keeps their psychologist.
+                const person = (await tx.select({ psychologistId: assessmentParticipants.psychologistId }).from(assessmentParticipants).where(eq(assessmentParticipants.id, current.participantId)))[0];
+                psychologistId = person?.psychologistId ?? null;
+            }
+            const rows = await tx
+                .update(assessmentSubmissions)
+                .set({
+                    paymentStatus: input.status,
+                    paymentPackage: input.package,
+                    paymentAmount: amount,
+                    paymentRef: input.ref,
+                    paidAt: settled ? sql`coalesce(${assessmentSubmissions.paidAt}, now())` : null,
+                    creditsGranted: wanted,
+                    psychologistId
+                })
+                .where(eq(assessmentSubmissions.id, id))
+                .returning();
+            if ((delta.total !== 0 || delta.remaining !== 0) && current.participantId) {
+                await tx
+                    .update(assessmentParticipants)
+                    .set({
+                        creditsTotal: sql`greatest(0, ${assessmentParticipants.creditsTotal} + ${delta.total})`,
+                        creditsRemaining: sql`greatest(0, ${assessmentParticipants.creditsRemaining} + ${delta.remaining})`
+                    })
+                    .where(eq(assessmentParticipants.id, current.participantId));
+            }
+            return rows[0] ?? null;
+        });
+    },
+
+    async setPrice(id, price) {
         const rows = await db
             .update(assessmentSubmissions)
-            .set({
-                paymentStatus: input.status,
-                paymentPackage: input.package,
-                paymentAmount: input.amount,
-                paymentRef: input.ref,
-                paidAt: settled ? sql`coalesce(${assessmentSubmissions.paidAt}, now())` : null
-            })
-            .where(eq(assessmentSubmissions.id, id))
+            .set({ priceDue: price })
+            .where(and(eq(assessmentSubmissions.id, id), eq(assessmentSubmissions.instrument, 'mhcu'), eq(assessmentSubmissions.track, 'lanjutan')))
             .returning();
+        if (rows[0]) return { status: 'ok', row: rows[0] };
+        const exists = await db.select({ id: assessmentSubmissions.id }).from(assessmentSubmissions).where(eq(assessmentSubmissions.id, id)).limit(1);
+        return exists[0] ? { status: 'wrongTrack' } : { status: 'notFound' };
+    },
+
+    async getParticipant(participantId) {
+        const rows = await db
+            .select({
+                participantNo: assessmentParticipants.participantNo,
+                creditsRemaining: assessmentParticipants.creditsRemaining,
+                creditsTotal: assessmentParticipants.creditsTotal,
+                psychologistId: assessmentParticipants.psychologistId,
+                trackOrigin: assessmentParticipants.trackOrigin
+            })
+            .from(assessmentParticipants)
+            .where(eq(assessmentParticipants.id, participantId))
+            .limit(1);
         return rows[0] ?? null;
+    },
+
+    async audit(entry) {
+        await db.insert(assessmentAudit).values({ actor: entry.actor, action: entry.action, submissionId: entry.submissionId ?? null, detail: entry.detail ?? null });
     },
 
     async markReportReleased(id) {

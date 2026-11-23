@@ -162,6 +162,13 @@
       "when": 1795332143426,
       "tag": "0022_mhcu_participants_notes_payment",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795419412915,
+      "tag": "0023_mhcu_invites_tracks_quota",
+      "breakpoints": true
     }
   ]
 }

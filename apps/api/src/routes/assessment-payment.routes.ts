@@ -123,9 +123,21 @@ export const createAssessmentPaymentRoutes = (dependencies: AssessmentPaymentRou
                     set.status = 404;
                     return { status: 'notFound', message: BAD_LINK };
                 }
+                // What the report-access page needs to pick its variant (team demo uA / uK / uL): the track, what is due, who reviews, the package credits.
+                const person = row.participantId ? await repository.getParticipant(row.participantId) : null;
+                const psychologistName = row.psychologistId ? await repository.getPsychologistName(row.psychologistId) : null;
+                const settled = row.paymentStatus === 'PAID' || row.paymentStatus === 'FREE' || row.paymentStatus === 'INCLUDED';
                 return {
                     status: 'success',
                     data: {
+                        // locked = still to buy (mandiri) or to settle (lanjutan); pending = covered, waiting for the psychologist's signed report; ready = released
+                        state: row.status === 'released' ? 'ready' : settled ? 'pending' : 'locked',
+                        paymentStatus: row.paymentStatus,
+                        psychologist: psychologistName,
+                        waveNo: row.waveNo,
+                        creditsRemaining: person?.creditsRemaining ?? 0,
+                        priceDue: row.priceDue,
+                        package: row.paymentPackage,
                         code: row.code,
                         name: row.name,
                         lang: row.lang,
