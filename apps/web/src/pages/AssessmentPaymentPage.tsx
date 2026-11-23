@@ -7,6 +7,15 @@ interface PaymentInfo {
   name: string
   lang: 'id' | 'en'
   submitted: boolean
+  /** locked = still to buy (mandiri) or to settle (lanjutan); pending = covered, waiting for the signed report; ready = released */
+  state?: 'locked' | 'pending' | 'ready'
+  paymentStatus?: string
+  psychologist?: string | null
+  waveNo?: number | null
+  creditsRemaining?: number
+  /** Whole rupiah the psychologist asked for (track lanjutan); null = as agreed. */
+  priceDue?: number | null
+  package?: string | null
   mhi: number | null
   level: number | null
   levelName: { id?: string; en?: string } | null
@@ -14,6 +23,11 @@ interface PaymentInfo {
   account: { bank: string; number: string; holder: string }
   whatsapp: string
   options: PaymentOption[]
+}
+
+const PAY_INFO = {
+  id: 'Silakan hubungi Admin Attentive melalui WhatsApp untuk informasi pembayaran. Sebutkan kode laporan Anda.',
+  en: 'Please contact the Attentive admin on WhatsApp for payment details. Mention your report code.',
 }
 
 const MAX_BYTES = 5 * 1024 * 1024
@@ -48,7 +62,7 @@ const CSS = `
 .mhcu-unlock .doc b{font-size:15px;color:var(--ink)}
 .mhcu-unlock .doc dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0 0;font-size:13px}
 .mhcu-unlock .doc dt{color:var(--mute)}
-.mhcu-unlock .doc dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.mhcu-unlock .doc dd{margin:0;font-weight:600;overflow-wrap:break-word}
 .mhcu-unlock .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 12px}
 .mhcu-unlock .opt{border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .mhcu-unlock .opt.sel{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
@@ -62,6 +76,8 @@ const CSS = `
 .mhcu-unlock ol.st{margin:16px 0 0;padding:0;list-style:none;counter-reset:n}
 .mhcu-unlock ol.st li{counter-increment:n;position:relative;padding:0 0 12px 36px;font-size:14px;color:var(--ink-2)}
 .mhcu-unlock ol.st li::before{content:counter(n);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--navy);color:var(--navy);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.mhcu-unlock .price{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:14px 0 0}
+.mhcu-unlock .price .now{font-size:21px;font-weight:800;color:var(--navy)}
 .mhcu-unlock .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
 .mhcu-unlock .btn{display:inline-block;border:1px solid transparent;font:700 14px Montserrat,Arial,sans-serif;padding:12px 20px;border-radius:8px;cursor:pointer;text-decoration:none;min-height:44px}
 .mhcu-unlock .btn.pri{background:var(--navy);color:#fff}
@@ -83,6 +99,7 @@ const CSS = `
 .mhcu-unlock .ok{color:#1E6B42;font-weight:700;font-size:13.5px;margin-top:8px}
 .mhcu-unlock footer{max-width:760px;margin:0 auto;padding:0 20px 30px;font-size:12px;color:var(--mute)}
 @media (max-width:600px){.mhcu-unlock .card{padding:22px 18px}.mhcu-unlock .doc{grid-template-columns:70px 1fr}.mhcu-unlock .paper{width:70px;height:94px}.mhcu-unlock .pay dl{grid-template-columns:1fr}}
+@media (max-width:440px){.mhcu-unlock .doc{grid-template-columns:1fr;justify-items:start;gap:12px}.mhcu-unlock .doc dl{grid-template-columns:6.5rem 1fr}}
 `
 
 const lockSvg = (
@@ -205,6 +222,12 @@ export function AssessmentPaymentPage() {
   const waAdmin = (text: string) => `https://wa.me/${info?.whatsapp ?? '6285156410912'}?text=${encodeURIComponent(text)}`
   const levelName = info?.levelName ? (en ? info.levelName.en : info.levelName.id) : ''
 
+  const state = info?.state ?? 'locked'
+  const track = info?.track ?? 'mandiri'
+  const covered = track === 'asesmen' || track === 'free' || track === 'paket'
+  const ready = state === 'ready'
+  const psychologistText = info?.psychologist || (track === 'mandiri' ? t('Ditugaskan setelah pembelian', 'Assigned after purchase') : t('Akan ditugaskan', 'To be assigned'))
+
   const docLine = info && (
     <div className="doc">
       <div className="paper">
@@ -222,7 +245,7 @@ export function AssessmentPaymentPage() {
         <i style={{ top: 84 }} />
         <i style={{ top: 92, width: '60%' }} />
         <i style={{ top: 104, width: '40%', left: 'auto' }} />
-        <div className="lock">{lockSvg}</div>
+        {!ready && <div className="lock">{lockSvg}</div>}
       </div>
       <div>
         <b>
@@ -232,14 +255,14 @@ export function AssessmentPaymentPage() {
           <dt>{t('Atas nama', 'Name')}</dt>
           <dd>{info.name}</dd>
           <dt>{t('Isi', 'Content')}</dt>
-          <dd>{t('1 halaman', '1 page')}</dd>
+          <dd>{(info.waveNo ?? 1) >= 2 ? t('2 halaman (hasil + perkembangan)', '2 pages (result + progress)') : t('1 halaman', '1 page')}</dd>
           <dt>MHI</dt>
           <dd>
             {mhiText(info.mhi)}
             {info.level ? ` (Level ${info.level}${levelName ? `, ${levelName}` : ''})` : ''}
           </dd>
           <dt>{t('Psikolog', 'Psychologist')}</dt>
-          <dd>{t('Ditugaskan setelah pembelian', 'Assigned after purchase')}</dd>
+          <dd>{psychologistText}</dd>
         </dl>
       </div>
     </div>
@@ -282,11 +305,11 @@ export function AssessmentPaymentPage() {
                 </a>
               </div>
             </div>
-          ) : saved && info.submitted ? (
+          ) : (saved || info.submitted) && state === 'locked' && !covered ? (
             <>
               <p className="eyebrow">
                 <i className="ok" />
-                {t('Pembayaran sedang dikonfirmasi', 'Payment being confirmed')}
+                {t('Bukti transfer diterima, menunggu konfirmasi', 'Proof of transfer received, awaiting confirmation')}
               </p>
               <h1 data-route-heading tabIndex={-1}>
                 {t('Laporan sedang disiapkan', 'Your report is being prepared')}
@@ -302,6 +325,78 @@ export function AssessmentPaymentPage() {
                 <a
                   className="btn pri"
                   href={waAdmin(t('Halo Admin Attentive, saya sudah membayar laporan lengkap MHCU saya. Kode laporan: ', 'Hello Attentive Admin, I have paid for my full MHCU report. Report code: ') + info.code + ` (${info.name})`)}
+                >
+                  {t('Hubungi admin via WhatsApp', 'Contact admin on WhatsApp')}
+                </a>
+              </div>
+            </>
+          ) : ready ? (
+            <>
+              <p className="eyebrow">
+                <i className="ok" />
+                {t('Siap dibuka', 'Ready to open')}
+              </p>
+              <h1 data-route-heading tabIndex={-1}>
+                {t('Laporan lengkap Anda', 'Your full report')}
+              </h1>
+              {docLine}
+              <div className="row">
+                <a className="btn pri" href={`/api/public/assessments/report?id=${encodeURIComponent(id)}&t=${encodeURIComponent(token)}`} rel="noopener noreferrer" target="_blank">
+                  {t('Buka laporan', 'Open the report')}
+                </a>
+              </div>
+              <p className="muted" style={{ marginTop: 10 }}>
+                {t('Di halaman laporan, pilih Cetak lalu Simpan sebagai PDF untuk menyimpannya.', 'On the report page, choose Print, then Save as PDF to keep a copy.')}
+              </p>
+            </>
+          ) : state === 'pending' || covered ? (
+            <>
+              <p className="eyebrow">
+                <i className={state === 'pending' ? 'ok' : undefined} />
+                {state === 'pending' ? t('Sedang ditinjau psikolog', 'Being reviewed by your psychologist') : t('Menunggu psikolog meninjau', 'Waiting for your psychologist to review')}
+              </p>
+              <h1 data-route-heading tabIndex={-1}>
+                {t('Laporan sedang disiapkan', 'Your report is being prepared')}
+              </h1>
+              {docLine}
+              <p className="muted">
+                {track === 'asesmen'
+                  ? t('Laporan lengkap sudah termasuk dalam asesmen awal Anda.', 'The full report is included in your initial assessment.')
+                  : track === 'free'
+                    ? t('Laporan lengkap ini gratis sebagai bagian dari free session Anda.', 'This full report is free as part of your free session.')
+                    : track === 'paket'
+                      ? t(`Pemeriksaan ini memakai kuota paket 3x Anda (sisa ${info.creditsRemaining ?? 0}).`, `This check-up uses a credit from your package of 3 (${info.creditsRemaining ?? 0} left).`)
+                      : t('Pembayaran Anda sudah kami terima.', 'We have received your payment.')}{' '}
+                {t(
+                  'Psikolog sedang meninjau hasil Anda dan menandatangani laporannya. Laporan akan dikirim ke email Anda begitu selesai, dan bisa dibuka dari halaman ini.',
+                  'Your psychologist is reviewing your result and signing the report. It will be emailed to you as soon as it is ready, and can be opened from this page.',
+                )}
+              </p>
+            </>
+          ) : track === 'lanjutan' ? (
+            <>
+              <p className="eyebrow">
+                <i />
+                {t('Menunggu pembayaran', 'Awaiting payment')}
+              </p>
+              <h1 data-route-heading tabIndex={-1}>
+                {t('Akses laporan lengkap', 'Full report access')}
+              </h1>
+              <p className="muted">
+                {t(
+                  'Laporan lengkap disusun oleh psikolog yang selama ini mendampingi Anda. Biayanya mengikuti kesepakatan dengan psikolog tersebut.',
+                  'The full report is prepared by the psychologist who has been working with you. The fee follows your agreement with that psychologist.',
+                )}
+              </p>
+              {docLine}
+              <div className="price">
+                <span className="now">{info.priceDue ? formatRupiah(info.priceDue) : t('Sesuai kesepakatan', 'As agreed')}</span>
+              </div>
+              <p className="muted" style={{ marginTop: 10 }}>{t(PAY_INFO.id, PAY_INFO.en)}</p>
+              <div className="row">
+                <a
+                  className="btn pri"
+                  href={waAdmin(t('Halo Admin Attentive, saya ingin membuka laporan lengkap MHCU saya. Kode laporan: ', 'Hello Attentive Admin, I would like to unlock my full MHCU report. Report code: ') + info.code + ` (${info.name})`)}
                 >
                   {t('Hubungi admin via WhatsApp', 'Contact admin on WhatsApp')}
                 </a>
