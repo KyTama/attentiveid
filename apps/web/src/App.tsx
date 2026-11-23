@@ -24,6 +24,7 @@ import { OurServicesPage } from './pages/OurServicesPage'
 import { AssessmentsPage } from './pages/AssessmentsPage'
 import { AssessmentPaymentPage } from './pages/AssessmentPaymentPage'
 import { AssessmentsCmsPage } from './pages/dashboard/AssessmentsCmsPage'
+import { MhcuDashboardPage } from './pages/dashboard/MhcuDashboardPage'
 import { AccountSettingsPage } from './pages/dashboard/AccountSettingsPage'
 import { TrafficMonitorPage } from './pages/dashboard/TrafficMonitorPage'
 import { PrayersCmsPage } from './pages/dashboard/PrayersCmsPage'
@@ -204,6 +205,17 @@ export function AppRoutes({
               </ProtectedRoute>
             }
           />
+          {['assessments/mhcu', 'assessments/mhcu/:id'].map((path) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                  <MhcuDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+          ))}
           <Route
             path="prayers"
             element={
