@@ -71,7 +71,7 @@ describe('MHCU result e-mail (team template: Pemeriksaan mandiri)', () => {
 
     it('uses a hosted logo, because mail apps do not show embedded images', () => {
         const mail = buildMhcuResultEmail({ name: 'Maya', code: 'X', lang: 'id', scores: { mhi: 60, level: 2 }, level: 2, reportLink: link, siteOrigin: 'https://attentiveid.com/' })
-        expect(mail.html).toContain('src="https://attentiveid.com/images/email/attentive-logo.png"')
+        expect(mail.html).toContain('src="https://attentiveid.com/images/assessments/attentive-logo-light.png"')
         expect(mail.html).not.toContain('data:image')
     })
 

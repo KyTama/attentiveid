@@ -21,7 +21,9 @@ export const buildAdminAlertEmail = (input: AdminAlertInput): { subject: string;
     const level = Math.min(5, Math.max(1, Math.round(input.level))) as 1 | 2 | 3 | 4 | 5;
     const def = MHCU_LEVELS[level];
     const mhi = input.mhi === null ? '-' : (Math.round(input.mhi * 10) / 10).toFixed(1);
-    const subject = `[MHCU] Level ${level} (${def.id}) · ${input.code} · hubungi: ${def.responseTimeId}`;
+    const subject = level >= 4
+        ? `[MHCU] Level ${level} (${def.id}) · ${input.code} · hubungi: ${def.responseTimeId}`
+        : `[MHCU] Hasil baru · Level ${level} (${def.id}) · ${input.code}`;
     const lines = [
         `Hasil MHCU Level ${level} dari 5: ${def.id}`,
         `Tindak lanjut: ${def.actionId}`,

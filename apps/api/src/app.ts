@@ -216,6 +216,9 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
                 paymentSecret: dependencies.paymentSecret,
+                mailer: dependencies.mailer,
+                alertEmail: dependencies.alertEmail,
+                siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createAssessmentsRoutes({
                 tokenService: dependencies.tokenService,

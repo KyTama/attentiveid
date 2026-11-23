@@ -2,6 +2,8 @@ import { Elysia, t } from 'elysia';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { AssessmentsRepository } from '../repositories/assessments.repository';
+import type { Mailer } from '../services/mailer';
+import { buildPaymentReceivedEmail, buildPaymentStaffEmail } from '../services/mhcu-payment-emails';
 import {
     detectProofType,
     isPaymentFor,
@@ -19,6 +21,10 @@ export interface AssessmentPaymentRoutesDependencies {
     assessmentsRepository: AssessmentsRepository;
     /** Secret that signs the links in the result e-mail (the API's JWT secret). */
     paymentSecret?: string;
+    mailer?: Mailer;
+    /** Admin inbox that is told when a proof of transfer arrives. */
+    alertEmail?: string;
+    siteOrigin?: string;
     now?: () => number;
 }
 
@@ -58,6 +64,32 @@ export const createAssessmentPaymentRoutes = (dependencies: AssessmentPaymentRou
 
     const logFailure = (where: string, error: unknown) => {
         console.error(`[assessment-payment] ${where} failed:`, error instanceof Error ? error.name : 'error');
+    };
+
+    /** After a proof arrives: tell the participant it is being checked, and tell the admin inbox to check it. Never fails the upload. */
+    const sendPaymentEmails = (row: { id: string; code: string; name: string; email: string; phone: string; lang: string; level: number | null }, paymentFor: string) => {
+        const mailer = dependencies.mailer;
+        if (!mailer?.isConfigured) return;
+        const siteOrigin = dependencies.siteOrigin;
+        void (async () => {
+            try {
+                await mailer.send({
+                    to: row.email,
+                    ...buildPaymentReceivedEmail({ name: row.name, code: row.code, lang: row.lang === 'en' ? 'en' : 'id', paymentFor, siteOrigin })
+                });
+            } catch (error) {
+                logFailure('payment-received-email', error);
+            }
+            if (!dependencies.alertEmail) return;
+            try {
+                await mailer.send({
+                    to: dependencies.alertEmail,
+                    ...buildPaymentStaffEmail({ name: row.name, code: row.code, phone: row.phone, email: row.email, level: row.level, paymentFor, submissionId: row.id, siteOrigin })
+                });
+            } catch (error) {
+                logFailure('payment-staff-email', error);
+            }
+        })();
     };
 
     const validLink = (code: unknown, token: unknown): code is string =>
@@ -153,6 +185,7 @@ export const createAssessmentPaymentRoutes = (dependencies: AssessmentPaymentRou
                     return { status: 'notFound', message: BAD_LINK };
                 }
                 await repository.savePayment(row.id, { paymentFor: body.paymentFor, mimeType, data });
+                sendPaymentEmails(row, body.paymentFor);
                 return { status: 'success' };
             } catch (error) {
                 logFailure('upload', error);
