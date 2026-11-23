@@ -113,15 +113,15 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         })();
     };
 
-    /** Tells staff straight away about a Level 4-5 result (same-day contact). Never blocks or fails the submission. */
+    /** Copies every new result to the admin inbox; a Level 4-5 result carries the urgent subject (same-day contact). Never blocks or fails the submission. */
     const sendAdminAlert = (row: { id: string; code: string; waveNo: number | null }, input: { level: number; mhi: number | null; name: string; phone: string; email: string; lang: string }) => {
         const mailer = dependencies.mailer;
         const to = dependencies.alertEmail;
-        if (!mailer?.isConfigured || !to || input.level < 4) return;
+        if (!mailer?.isConfigured || !to) return;
         void (async () => {
             try {
                 const origin = (dependencies.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
-                const mail = buildAdminAlertEmail({ ...input, code: row.code, waveNo: row.waveNo, submittedAt: new Date(), portalUrl: `${origin}/dashboard/assessments` });
+                const mail = buildAdminAlertEmail({ ...input, code: row.code, waveNo: row.waveNo, submittedAt: new Date(), portalUrl: `${origin}/dashboard/assessments/mhcu/${row.id}` });
                 await mailer.send({ to, ...mail });
                 await repository.markAdminAlertSent(row.id);
             } catch (error) {

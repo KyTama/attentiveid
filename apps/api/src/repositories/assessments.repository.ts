@@ -44,6 +44,8 @@ export interface AssessmentListItem {
     researchConsent: boolean;
     psychologistId: string | null;
     paymentStatus: string;
+    paymentSubmittedAt: string | null;
+    paymentFor: string | null;
     waveNo: number | null;
     createdAt: string;
 }
@@ -180,6 +182,8 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                 researchConsent: assessmentSubmissions.researchConsent,
                 psychologistId: assessmentSubmissions.psychologistId,
                 paymentStatus: assessmentSubmissions.paymentStatus,
+                paymentSubmittedAt: assessmentSubmissions.paymentSubmittedAt,
+                paymentFor: assessmentSubmissions.paymentFor,
                 waveNo: assessmentSubmissions.waveNo,
                 createdAt: assessmentSubmissions.createdAt
             })

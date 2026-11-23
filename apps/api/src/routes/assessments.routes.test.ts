@@ -486,10 +486,11 @@ describe('result e-mail after a submission', () => {
         await submit(app, body());
         await submit(app, body()); // the same click again: no second e-mail
         await settle();
-        expect(sent).toHaveLength(1);
-        expect(sent[0].to).toBe('rina@example.com');
-        expect(sent[0].html).toContain('Distress Index');
-        expect(sent[0].html).toContain('https://attentiveid.com/assessments/payment?id=AT-MHCU-2026-100&amp;t=');
+        const toPerson = sent.filter((mail) => mail.to === 'rina@example.com');
+        expect(toPerson).toHaveLength(1);
+        expect(sent).toHaveLength(2); // the person's result and one copy for the admin inbox
+        expect(toPerson[0].html).toContain('Distress Index');
+        expect(toPerson[0].html).toContain('https://attentiveid.com/assessments/payment?id=AT-MHCU-2026-100&amp;t=');
         expect(emailed).toHaveLength(1);
     });
 
@@ -517,7 +518,7 @@ describe('result e-mail after a submission', () => {
 describe('alert for a Level 4-5 result', () => {
     const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
 
-    it('e-mails staff the contact details and the response time, once, and stays quiet for lower levels', async () => {
+    it('e-mails staff the contact details and the response time, once, and copies lower levels with a calmer subject', async () => {
         const high = createFixture();
         await submit(high.app, body({ answers: answersWith({ [mhcuCode('cc', 11)]: 3 }), email: 'high@example.com' }));
         await submit(high.app, body({ answers: answersWith({ [mhcuCode('cc', 11)]: 3 }), email: 'high@example.com' })); // same click again
@@ -532,7 +533,11 @@ describe('alert for a Level 4-5 result', () => {
         const low = createFixture();
         await submit(low.app, body());
         await settle();
-        expect(low.sent.filter((mail) => mail.to === 'alerts@attentive.id')).toHaveLength(0);
+        const copies = low.sent.filter((mail) => mail.to === 'alerts@attentive.id');
+        expect(copies).toHaveLength(1);
+        expect(copies[0].subject).toContain('[MHCU] Hasil baru');
+        expect(copies[0].subject).not.toContain('hubungi');
+        expect(copies[0].text).toContain('/dashboard/assessments/mhcu/');
     });
 
     it('never puts the alert and its contact details in the e-mail the person receives', async () => {

@@ -4,6 +4,7 @@ import type { UserDto } from '@attentiveid/shared';
 import { createTokenService } from '../security/token-service';
 import type { AssessmentRow, AssessmentsRepository } from '../repositories/assessments.repository';
 import { paymentToken } from '../services/assessment-payment';
+import type { MailMessage } from '../services/mailer';
 import { createAssessmentPaymentRoutes } from './assessment-payment.routes';
 
 const SECRET = 'payment-secret-payment-secret-1234';
@@ -22,7 +23,8 @@ const CODE = 'AT-MHCU-2026-100';
 const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64)]);
 
 const fixture = (options: { failSave?: boolean } = {}) => {
-    const row = { id: ID, code: CODE, instrument: 'mhcu', name: 'Rina Pratiwi', lang: 'id', paymentSubmittedAt: null } as unknown as AssessmentRow;
+    const row = { id: ID, code: CODE, instrument: 'mhcu', name: 'Rina Pratiwi', lang: 'id', email: 'rina@example.com', phone: '081234567890', level: 3, paymentSubmittedAt: null } as unknown as AssessmentRow;
+    const sent: MailMessage[] = [];
     const saved: { id: string; paymentFor: string; mimeType: string; size: number }[] = [];
     const repository = {
         getByCode: async (code: string) => (code === CODE ? row : null),
@@ -36,9 +38,12 @@ const fixture = (options: { failSave?: boolean } = {}) => {
         tokenService,
         userRepository: { findById: async (id: string) => (id === psychologist.id ? psychologist : null) },
         assessmentsRepository: repository,
-        paymentSecret: SECRET
+        paymentSecret: SECRET,
+        mailer: { isConfigured: true, send: async (message: MailMessage) => { sent.push(message); } },
+        alertEmail: 'alerts@attentive.id',
+        siteOrigin: 'https://attentiveid.com'
     }));
-    return { app, saved };
+    return { app, saved, sent };
 };
 
 const token = paymentToken(SECRET, CODE);
@@ -108,5 +113,35 @@ describe('staff view of the proof', () => {
         expect(response.headers.get('content-type')).toBe('image/png');
         expect(response.headers.get('x-content-type-options')).toBe('nosniff');
         expect((await app.handle(new Request('http://localhost/api/admin/assessments/not-a-uuid/proof', { headers: { authorization: `Bearer ${staffToken}` } }))).status).toBe(404);
+    });
+});
+
+describe('e-mails after the proof of transfer', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
+
+    it('tells the participant it is being checked (not yet confirmed) and tells the admin inbox to check it', async () => {
+        const { app, sent } = fixture();
+        const response = await upload(app, { id: CODE, t: token, paymentFor: 'package3' }, { data: png, name: 'bukti.png', type: 'image/png' });
+        expect(response.status).toBe(200);
+        await settle();
+        const toPerson = sent.find((mail) => mail.to === 'rina@example.com');
+        expect(toPerson).toBeDefined();
+        expect(toPerson?.subject).toContain('Bukti transfer Anda sudah kami terima');
+        expect(toPerson?.text).toContain('sedang memeriksa pembayaran');
+        expect(toPerson?.text).toContain('Paket 3x pemeriksaan');
+        expect(toPerson?.text).not.toContain('terkonfirmasi.');
+        const toStaff = sent.find((mail) => mail.to === 'alerts@attentive.id');
+        expect(toStaff).toBeDefined();
+        expect(toStaff?.subject).toContain('Bukti transfer masuk');
+        expect(toStaff?.text).toContain('081234567890');
+        expect(toStaff?.text).toContain(`/dashboard/assessments/mhcu/${ID}`);
+        expect(toPerson?.text).not.toContain('081234567890');
+    });
+
+    it('sends nothing when the upload is refused, and a mail failure does not fail the upload', async () => {
+        const refused = fixture();
+        await upload(refused.app, { id: CODE, t: 'bad-token-bad-token-ab', paymentFor: 'single' }, { data: png, name: 'bukti.png', type: 'image/png' });
+        await settle();
+        expect(refused.sent).toHaveLength(0);
     });
 });
