@@ -423,7 +423,12 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         const client = await send(app, `/api/admin/assessments/${idOf(1)}/report/client`, 'GET', undefined, psyHeaders);
         expect(client.status).toBe(200);
         expect(client.headers.get('cache-control')).toBe('no-store');
-        expect(await client.text()).toContain('Rina Pratiwi');
+        const preview = await client.text();
+        expect(preview).toContain('Rina Pratiwi');
+        // the client report comes inside the report page, marked as a staff preview (no copy-link button)
+        expect(preview).toContain('Laporan Hasil Pemeriksaan MHCU');
+        expect(preview).toContain('Pratinjau untuk staf.');
+        expect(preview).not.toContain('id="rp-copy"');
         const internal = await send(app, `/api/admin/assessments/${idOf(1)}/report/psychologist`, 'GET', undefined, psyHeaders);
         expect(internal.status).toBe(200);
         expect(await internal.text()).toContain('AT-MHCU-2026-100');
@@ -452,7 +457,14 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         expect(open.status).toBe(200);
         expect(open.headers.get('cache-control')).toBe('no-store');
         expect(open.headers.get('x-robots-tag')).toContain('noindex');
-        expect(await open.text()).toContain('Rina Pratiwi');
+        const page = await open.text();
+        expect(page).toContain('Rina Pratiwi');
+        // the participant's page: title, print and copy buttons, then the A4 pages; no staff ribbon
+        expect(page).toContain('Laporan Hasil Pemeriksaan MHCU');
+        expect(page).toContain('id="rp-print"');
+        expect(page).toContain('id="rp-copy"');
+        expect(page).not.toContain('Pratinjau untuk staf.');
+        expect(page).toContain('<div class="page">');
     });
 
     it('does not open the public report for a wrong token, an unreleased result or a made-up code', async () => {

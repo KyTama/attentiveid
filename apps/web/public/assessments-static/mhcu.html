@@ -134,6 +134,13 @@
   .toast { position:fixed; left:50%; top:86px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:8px; font-size:13.5px; display:none; z-index:40; max-width:90vw; }
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .8s linear infinite; vertical-align:-2px; margin-right:8px; }
   @keyframes sp { to { transform:rotate(360deg); } }
+  .fullrep { border:1px solid var(--line); border-radius:var(--r); padding:16px 18px; margin:0 0 16px; background:#fff; }
+  .fullrep h3 { margin:0 0 6px; }
+  .fullrep p { margin:0 0 10px; }
+  .fullrep .pricebox { margin:12px 0 8px; }
+  .fullrep .pricebox div { padding:11px 12px; } .fullrep .pricebox b { white-space:nowrap; font-size:15px; } .fullrep .pricebox s { display:block; margin:2px 0 0; }
+  .fullrep .btn { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; min-height:44px; }
+  .fullrep a.lnk { display:inline-block; padding:12px 0; min-height:44px; color:var(--navy); font-weight:700; }
   .receipt { border:1px solid var(--line); border-radius:var(--r); display:grid; grid-template-columns:repeat(3,1fr); margin:16px 0; }
   .receipt div { padding:12px 16px; border-right:1px solid var(--line-2); } .receipt div:last-child { border-right:0; }
   .receipt small { display:block; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--mute); font-weight:700; } .receipt b { font-size:14px; word-break:break-all; }
@@ -275,6 +282,7 @@
       <h1 data-t="doneTitle"></h1>
       <p class="lead" data-t="doneLead"></p>
       <div class="receipt" id="receipt"></div>
+      <div class="fullrep hide" id="fullrep"></div>
       <h3 data-t="nextTitle"></h3>
       <ol class="next" id="nextList2"></ol>
       <p class="muted" data-t="spam"></p>
@@ -421,6 +429,9 @@ var T = {
   rvData:'Data peserta', rvConfirm:'Saya menyatakan bahwa jawaban yang saya berikan sesuai dengan kondisi dan pengalaman saya.', errFinal:'Mohon centang pernyataan di atas sebelum mengirim.',
   rvCols:['Bagian','Terjawab',''], rvEdit:'Ubah', rvLabels:['Nama','Jenis kelamin','Usia','WhatsApp','Email','Penelitian'], rvRes:['Mengizinkan (anonim)','Tidak mengizinkan'],
   doneEyebrow:'Jawaban diterima', doneTitle:'Terima kasih, jawaban Anda telah kami terima.', doneLead:'Jawaban Anda tersimpan dengan aman dan akan ditinjau psikolog Attentive. Simpan kode di bawah ini bila Anda perlu menghubungi Attentive.',
+  fullTitle:'Laporan lengkap (opsional)', fullLead:'Laporan lengkap berisi hasil per indeks serta keterangan dan rekomendasi dari psikolog Attentive, ditandatangani psikolog. Pembelian bersifat opsional; ringkasan hasil tetap gratis.',
+  fullSingle:'Laporan 1x', fullPack:'Paket 3x', fullPromoUntil:function(d){ return 'Harga promo hingga ' + d + '.'; }, fullBtn:'Dapatkan laporan lengkap', fullSeeAccess:'Lihat akses laporan',
+  fullTrack:{ asesmen:'Laporan lengkap sudah termasuk dalam asesmen awal Anda.', free:'Laporan lengkap ini gratis sebagai bagian dari free session Anda.', paket:'Pemeriksaan ini memakai kuota paket 3x Anda.', lanjutan:'Laporan lengkap disusun oleh psikolog yang mendampingi Anda.' },
   rcp:['Kode','Email','Tanggal'], spam:'Ada pertanyaan tentang hasil Anda? Hubungi Admin Attentive dan sebutkan kode di atas.',
   back:'Kembali', next:'Lanjut', start:'Mulai', agree:'Setuju & lanjut', review:'Tinjau jawaban', submit:'Kirim jawaban', sending:'Mengirim...',
   answered:function(a,b){ return a+' dari '+b+' pernyataan terjawab'; }, missing:function(n){ return 'Masih ada '+n+' pernyataan yang belum dijawab (ditandai merah).'; },
@@ -466,6 +477,9 @@ var T = {
   rvData:'Participant details', rvConfirm:'I confirm that my answers reflect my own condition and experience.', errFinal:'Please tick the statement above before submitting.',
   rvCols:['Part','Answered',''], rvEdit:'Edit', rvLabels:['Name','Sex','Age','WhatsApp','Email','Research'], rvRes:['Allowed (anonymous)','Not allowed'],
   doneEyebrow:'Answers received', doneTitle:'Thank you, we have received your answers.', doneLead:'Your answers are saved securely and will be reviewed by a psychologist at Attentive. Please keep the code below for any communication with Attentive.',
+  fullTitle:'Full report (optional)', fullLead:'The full report holds your results per index plus notes and recommendations from an Attentive psychologist, signed by the psychologist. Buying it is optional; your result summary stays free.',
+  fullSingle:'Single report', fullPack:'Package of 3', fullPromoUntil:function(d){ return 'Introductory prices valid until ' + d + '.'; }, fullBtn:'Get your full analyzed report', fullSeeAccess:'See report access',
+  fullTrack:{ asesmen:'The full report is included in your initial assessment.', free:'This full report is free as part of your free session.', paket:'This check-up uses a credit from your package of 3.', lanjutan:'The full report is prepared by the psychologist who has been working with you.' },
   rcp:['Code','Email','Date'], spam:'Questions about your result? Contact the Attentive admin and mention the code above.',
   back:'Back', next:'Continue', start:'Begin', agree:'Agree & continue', review:'Review answers', submit:'Submit answers', sending:'Submitting...',
   answered:function(a,b){ return a+' of '+b+' statements answered'; }, missing:function(n){ return n+' statement(s) not yet answered. They are marked in red.'; },
@@ -549,8 +563,28 @@ function render(){
   if (DEMO) $('#demoBar').classList.toggle('hide', S.step===LAST);
   $('#checks').classList.toggle('locked', !S.read);
   if (S.step===7) renderReview();
+  if (S.step===LAST && S.done) renderFullReport(L, S.done, lg);
   if (S.step===LAST && S.done) $('#receipt').innerHTML = '<div><small>'+L.rcp[0]+'</small><b>'+esc(S.done.code)+'</b></div><div><small>'+L.rcp[1]+'</small><b>'+esc(S.done.email)+'</b></div><div><small>'+L.rcp[2]+'</small><b>'+new Date().toLocaleDateString(lg==='en'?'en-GB':'id-ID',{day:'numeric',month:'long',year:'numeric'})+'</b></div>';
   counts();
+}
+/* The full report, offered after sending: only when the server says it can be bought (canBuy and a report link); nothing about the scores is shown here. */
+function safeLink(u){ return typeof u === 'string' && /^(\/[^\/]|https:\/\/)/.test(u) ? u : ''; }
+function rp(n){ return 'Rp ' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function renderFullReport(L, r, lg){
+  var box = $('#fullrep'), link = safeLink(r && r.reportLink);
+  if (!r || !link || !(r.canBuy || r.track === 'asesmen' || r.track === 'free' || r.track === 'paket' || r.track === 'lanjutan')) { box.classList.add('hide'); box.innerHTML = ''; return; }
+  var h;
+  if (r.canBuy && r.pricing && r.pricing.single && r.pricing.package3) {
+    var P = r.pricing, promo = !!P.promoActive;
+    var cell = function(label, o){ return '<div><small>' + label + '</small><b>' + esc(rp(o.price)) + '</b>' + (promo && o.normal > o.price ? '<s>' + esc(rp(o.normal)) + '</s>' : '') + '</div>'; };
+    var until = '';
+    if (promo && /^\d{4}-\d{2}-\d{2}$/.test(P.promoUntil || '')) { var d = new Date(P.promoUntil + 'T12:00:00'); until = '<p class="muted">' + esc(L.fullPromoUntil(d.toLocaleDateString(lg==='en'?'en-GB':'id-ID',{day:'numeric',month:'long',year:'numeric'}))) + '</p>'; }
+    h = '<h3>' + L.fullTitle + '</h3><p class="muted">' + L.fullLead + '</p><div class="pricebox">' + cell(L.fullSingle, P.single) + cell(L.fullPack, P.package3) + '</div>' + until +
+      '<a class="btn pri" href="' + esc(link) + '" rel="noopener">' + L.fullBtn + '</a>';
+  } else if (L.fullTrack[r.track]) {
+    h = '<h3>' + L.fullTitle + '</h3><p class="muted">' + L.fullTrack[r.track] + '</p><a class="lnk" href="' + esc(link) + '" rel="noopener">' + L.fullSeeAccess + '</a>';
+  } else { box.classList.add('hide'); box.innerHTML = ''; return; }
+  box.innerHTML = h; box.classList.remove('hide');
 }
 function renderReview(){
   var L = T[S.lang], f = fields();
