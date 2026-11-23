@@ -6,6 +6,7 @@
  */
 
 import { PAYMENT_OPTIONS, PROMO_UNTIL, priceFor } from './assessment-payment'
+import type { MhcuTrack } from './mhcu-tracks'
 
 export interface MhcuEmailInput {
     name: string
@@ -22,6 +23,14 @@ export interface MhcuEmailInput {
     /** Public address of the site, used for the logo (images must be hosted: mail clients do not show embedded ones). */
     siteOrigin?: string
     today?: Date
+    /** The track of the check-up. Left out (or 'mandiri') = the e-mail of the public link, with prices; the others have no prices. */
+    track?: MhcuTrack
+    /** The examining psychologist, printed on the invited, package and 'lanjutan' variants. */
+    psychologistName?: string | null
+    /** Package credits left after this check-up ('paket'). */
+    creditsRemaining?: number
+    /** Which check-up of the person this is (T1, T2...). */
+    waveNo?: number | null
 }
 
 export interface BuiltEmail {
@@ -155,6 +164,36 @@ const COPY = {
     }
 } as const
 
+/**
+ * The report box of the e-mails for the invited tracks (asesmen awal, free session), the package of 3 and 'lanjutan'. The team's documents
+ * (eA, eF, eP) replace the price table by one line saying why the report is already covered; 'lanjutan' has no e-mail in the documents,
+ * its sentence is the one of the report-access page for clients with a psychologist (uL).
+ */
+const VARIANT_COPY = {
+    id: {
+        psychologist: 'Psikolog pemeriksa: ',
+        asesmen: 'Sudah termasuk dalam asesmen awal Anda.',
+        free: 'Gratis sebagai bagian dari free session Anda.',
+        paket: 'Termasuk dalam paket 3x Anda.',
+        paketLeft: (n: number) => ` Sisa kuota setelah pemeriksaan ini: ${n}.`,
+        lanjutan: 'Laporan lengkap disusun oleh psikolog yang selama ini mendampingi Anda. Biayanya mengikuti kesepakatan dengan psikolog tersebut.',
+        delivery: 'Laporan dikirim ke email Anda setelah ditinjau dan ditandatangani psikolog.',
+        button: 'Lihat akses laporan',
+        progress: ', serta perkembangan hasil Anda dari waktu ke waktu.'
+    },
+    en: {
+        psychologist: 'Examining psychologist: ',
+        asesmen: 'Included in your initial assessment.',
+        free: 'Free as part of your free session.',
+        paket: 'Included in your package of 3.',
+        paketLeft: (n: number) => ` Credits left after this check-up: ${n}.`,
+        lanjutan: 'The full report is prepared by the psychologist who has been working with you. The fee follows your agreement with that psychologist.',
+        delivery: 'The report is e-mailed to you after your psychologist has reviewed and signed it.',
+        button: 'View report access',
+        progress: ', plus your progress over time.'
+    }
+} as const
+
 const FONT = 'Montserrat,Arial,Helvetica,sans-serif'
 
 export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
@@ -169,6 +208,17 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
     const origin = (input.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '')
     const logo = `${origin}/images/assessments/attentive-logo-light.png`
     const showNotice = level >= 4
+
+    // The invited / package / 'lanjutan' e-mails: no prices, one line on why the report is covered, who reviews it, and when it arrives.
+    const track = input.track ?? 'mandiri'
+    const variantCopy = VARIANT_COPY[lang]
+    const variantKey = track === 'asesmen' || track === 'free' || track === 'paket' || track === 'lanjutan' ? track : null
+    const variantNote = variantKey === null ? '' : variantCopy[variantKey] + (variantKey === 'paket' ? variantCopy.paketLeft(Math.max(0, Math.round(input.creditsRemaining ?? 0))) : '')
+    const variantDesc = variantKey === 'paket' && (input.waveNo ?? 1) >= 2 ? copy.reportDesc.replace(/\.$/, '') + variantCopy.progress : copy.reportDesc
+    const psychologistLine = variantKey !== null && input.psychologistName
+        ? `<p style="font-size:13px;color:#1B2533;margin:16px 0 0 0">${esc(variantCopy.psychologist)}<b>${esc(input.psychologistName)}</b></p>`
+        : ''
+    const variantBox = variantKey === null ? '' : `${psychologistLine}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 6px 0;border:1px solid #D0D5DD"><tr><td style="padding:14px 16px 0 16px;font-size:13px;line-height:1.5"><div style="font-weight:bold;color:#1B2533">${esc(copy.reportTitle(input.code))}</div><div style="color:#667085;font-size:12px">${esc(variantDesc)}</div></td></tr><tr><td style="padding:10px 16px 0 16px;font-size:13px;line-height:1.5;color:#1B2533">${esc(variantNote)}<div style="font-size:12px;color:#3C4858;margin-top:8px">${esc(variantCopy.delivery)}</div></td></tr><tr><td style="padding:14px 16px 16px 16px"><a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:13.5px;padding:11px 20px">${esc(variantCopy.button)}</a></td></tr></table>`
 
     const today = input.today ?? new Date()
     const promoActive = priceFor('single', today) < PAYMENT_OPTIONS.single.normal
@@ -203,9 +253,9 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
         showNotice
             ? `<div style="border:1px solid #D0D5DD;border-left:3px solid #142B51;background:#F4F5F7;padding:11px 14px;margin:0 0 18px 0;font-size:13px;color:#1B2533"><b>${copy.noticeBold}</b>${copy.noticeRest}</div>`
             : ''
-    }<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};border:1px solid #D0D5DD"><tr><td width="150" valign="middle" align="center" bgcolor="#F4F5F7" style="background:#F4F5F7;padding:16px 8px;border-right:1px solid #D0D5DD"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.mhi}</div><div style="font-size:38px;line-height:44px;font-weight:bold;color:#142B51">${esc(mhiText)}</div><div style="font-size:10.5px;color:#667085">${copy.outOf}</div></td><td valign="middle" style="padding:14px 18px"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.status}</div><div style="font-size:19px;line-height:25px;font-weight:bold;color:#142B51;margin-top:2px">${esc(copy.levelOf(level, levelName))}</div></td></tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 5px 0">${copy.scale}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};"><tr>${scaleCells}</tr><tr>${scaleStrip}</tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 3px 0">${copy.position}</div>${marker}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${bar}</tr></table><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};font-size:9.5px;color:#98A2B3"><tr><td width="40%">0</td><td width="15%">40</td><td width="15%">55</td><td width="25%">70</td><td width="5%" align="right">100</td></tr></table><div style="margin:22px 0 0 0;padding:14px 16px;border:1px solid #EAECF0;background:#FAFAFB;font-size:13px;line-height:1.6;color:#3C4858"><div style="font-weight:bold;color:#142B51;margin-bottom:4px">${copy.whatHead}</div>${copy.whatBody}<ul style="margin:6px 0 0 18px;padding:0">${copy.whatList.map((line) => `<li>${esc(line)}</li>`).join('')}</ul></div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 6px 0;border:1px solid #D0D5DD"><tr><td style="padding:14px 16px 0 16px;font-size:13px;line-height:1.5"><div style="font-weight:bold;color:#1B2533">${esc(copy.reportTitle(input.code))}</div><div style="color:#667085;font-size:12px">${copy.reportDesc}</div></td></tr><tr><td style="padding:12px 16px 0 16px"><div style="font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:0 0 6px 0">${copy.teaserHead}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${teasers}</tr></table></td></tr><tr><td style="padding:12px 16px 0 16px;font-size:13px;line-height:1.5"><table role="presentation" cellpadding="0" cellspacing="0" style="font-size:13px;color:#1B2533">${priceRow(copy.single, singleNow, PAYMENT_OPTIONS.single.normal)}${priceRow(copy.bundle, bundleNow, PAYMENT_OPTIONS.package3.normal)}</table>${
+    }<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};border:1px solid #D0D5DD"><tr><td width="150" valign="middle" align="center" bgcolor="#F4F5F7" style="background:#F4F5F7;padding:16px 8px;border-right:1px solid #D0D5DD"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.mhi}</div><div style="font-size:38px;line-height:44px;font-weight:bold;color:#142B51">${esc(mhiText)}</div><div style="font-size:10.5px;color:#667085">${copy.outOf}</div></td><td valign="middle" style="padding:14px 18px"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.status}</div><div style="font-size:19px;line-height:25px;font-weight:bold;color:#142B51;margin-top:2px">${esc(copy.levelOf(level, levelName))}</div></td></tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 5px 0">${copy.scale}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};"><tr>${scaleCells}</tr><tr>${scaleStrip}</tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 3px 0">${copy.position}</div>${marker}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${bar}</tr></table><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};font-size:9.5px;color:#98A2B3"><tr><td width="40%">0</td><td width="15%">40</td><td width="15%">55</td><td width="25%">70</td><td width="5%" align="right">100</td></tr></table><div style="margin:22px 0 0 0;padding:14px 16px;border:1px solid #EAECF0;background:#FAFAFB;font-size:13px;line-height:1.6;color:#3C4858"><div style="font-weight:bold;color:#142B51;margin-bottom:4px">${copy.whatHead}</div>${copy.whatBody}<ul style="margin:6px 0 0 18px;padding:0">${copy.whatList.map((line) => `<li>${esc(line)}</li>`).join('')}</ul></div>${variantKey !== null ? variantBox : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 6px 0;border:1px solid #D0D5DD"><tr><td style="padding:14px 16px 0 16px;font-size:13px;line-height:1.5"><div style="font-weight:bold;color:#1B2533">${esc(copy.reportTitle(input.code))}</div><div style="color:#667085;font-size:12px">${copy.reportDesc}</div></td></tr><tr><td style="padding:12px 16px 0 16px"><div style="font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:0 0 6px 0">${copy.teaserHead}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${teasers}</tr></table></td></tr><tr><td style="padding:12px 16px 0 16px;font-size:13px;line-height:1.5"><table role="presentation" cellpadding="0" cellspacing="0" style="font-size:13px;color:#1B2533">${priceRow(copy.single, singleNow, PAYMENT_OPTIONS.single.normal)}${priceRow(copy.bundle, bundleNow, PAYMENT_OPTIONS.package3.normal)}</table>${
         promoActive ? `<div style="font-size:11.5px;color:#667085;margin-top:4px">${esc(copy.promoUntil(promoDateText))}</div>` : ''
-    }<div style="font-size:12px;color:#3C4858;margin-top:8px">${copy.afterBuy}</div></td></tr><tr><td style="padding:14px 16px 16px 16px"><a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:13.5px;padding:11px 20px">${copy.button}</a><span style="font-size:11.5px;color:#667085;padding-left:10px">${copy.confirmed}</span></td></tr></table><p style="font-size:11.5px;line-height:1.55;color:#667085;margin:14px 0 0 0">${copy.disclaimer}${showNotice ? '' : copy.disclaimerSafety}</p></td></tr><tr><td style="padding:16px 28px 22px 28px;border-top:1px solid #EAECF0;font-size:11px;line-height:1.55;color:#667085"><b style="color:#142B51">${copy.org}</b><br>WhatsApp <a href="https://wa.me/6285156410912" style="color:#142B51">+62 851-5641-0912</a> | <a href="mailto:contact@attentiveid.com" style="color:#142B51">contact@attentiveid.com</a> | <a href="https://attentiveid.com" style="color:#142B51">attentiveid.com</a><br>${copy.confidential}</td></tr></table></div>`
+    }<div style="font-size:12px;color:#3C4858;margin-top:8px">${copy.afterBuy}</div></td></tr><tr><td style="padding:14px 16px 16px 16px"><a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:13.5px;padding:11px 20px">${copy.button}</a><span style="font-size:11.5px;color:#667085;padding-left:10px">${copy.confirmed}</span></td></tr></table>`}<p style="font-size:11.5px;line-height:1.55;color:#667085;margin:14px 0 0 0">${copy.disclaimer}${showNotice ? '' : copy.disclaimerSafety}</p></td></tr><tr><td style="padding:16px 28px 22px 28px;border-top:1px solid #EAECF0;font-size:11px;line-height:1.55;color:#667085"><b style="color:#142B51">${copy.org}</b><br>WhatsApp <a href="https://wa.me/6285156410912" style="color:#142B51">+62 851-5641-0912</a> | <a href="mailto:contact@attentiveid.com" style="color:#142B51">contact@attentiveid.com</a> | <a href="https://attentiveid.com" style="color:#142B51">attentiveid.com</a><br>${copy.confidential}</td></tr></table></div>`
 
     const text = [
         `${copy.summary} | ${input.code}`,
@@ -221,17 +271,29 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
         copy.whatBody,
         ...copy.whatList.map((line) => `- ${line}`),
         '',
-        copy.reportTitle(input.code),
-        copy.reportDesc,
-        `${copy.teaserSingle}: ${origin}/assessments-static/contoh-laporan-1x.pdf`,
-        `${copy.teaserPackage}: ${origin}/assessments-static/contoh-laporan-paket-3x.pdf`,
-        `${copy.single}: ${rupiah(singleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.single.normal)})` : ''}`,
-        `${copy.bundle}: ${rupiah(bundleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.package3.normal)})` : ''}`,
-        ...(promoActive ? [copy.promoUntil(promoDateText)] : []),
-        copy.afterBuy,
-        '',
-        `${copy.button}: ${input.reportLink}`,
-        copy.confirmed,
+        ...(variantKey !== null
+            ? [
+                  ...(input.psychologistName ? [`${variantCopy.psychologist}${input.psychologistName}`] : []),
+                  copy.reportTitle(input.code),
+                  variantDesc,
+                  variantNote,
+                  variantCopy.delivery,
+                  '',
+                  `${variantCopy.button}: ${input.reportLink}`
+              ]
+            : [
+            copy.reportTitle(input.code),
+            copy.reportDesc,
+            `${copy.teaserSingle}: ${origin}/assessments-static/contoh-laporan-1x.pdf`,
+            `${copy.teaserPackage}: ${origin}/assessments-static/contoh-laporan-paket-3x.pdf`,
+            `${copy.single}: ${rupiah(singleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.single.normal)})` : ''}`,
+            `${copy.bundle}: ${rupiah(bundleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.package3.normal)})` : ''}`,
+            ...(promoActive ? [copy.promoUntil(promoDateText)] : []),
+            copy.afterBuy,
+            '',
+            `${copy.button}: ${input.reportLink}`,
+            copy.confirmed,
+            ]),
         '',
         `${copy.disclaimer}${showNotice ? '' : copy.disclaimerSafety}`.trim(),
         '',

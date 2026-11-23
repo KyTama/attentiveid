@@ -27,6 +27,8 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/account': 'account settings session timeout inactivity idle sign out logout automatic limit minutes security pengaturan akun batas waktu sesi tidak aktif keluar otomatis menit keamanan',
   '/dashboard/assessments': 'assessments mhcu mental health check up results scores psychologist review release hasil asesmen skor skrining kesehatan mental peninjauan rilis',
   '/dashboard/assessments/mhcu': 'mhcu dashboard mental health check up results list filter psychologist assign note final payment paid unpaid proof release report preview level cohort dasbor hasil daftar saring psikolog tugaskan catatan final pembayaran lunas bukti transfer rilis laporan pratinjau level',
+  '/dashboard/assessments/mhcu/invites': 'mhcu invitation links invite one time link client initial assessment free session cancel copy tautan undangan sekali pakai klien asesmen awal batalkan salin',
+  '/dashboard/assessments/mhcu/settings': 'mhcu settings prices promo package alert level e-mail automatic assign release pengaturan harga promo paket peringatan level email otomatis tugaskan rilis',
   '/dashboard/prayers': 'prayers doa pengunjung moderation hide approve gift hadiah let there be light kirim doa moderasi sembunyikan setujui',
   '/dashboard/qr-generator': 'qr code barcode logo attentive scan poster print tools qr code barcode logo attentive kode scan poster cetak alat bantu',
   '/dashboard/experimental/system-map': 'system map diagram connections architecture peta sistem diagram koneksi hubungan arsitektur',

@@ -2,7 +2,9 @@ import { Elysia, t } from 'elysia';
 import { scoreMhcu, validateGscSubmission, validateMhcuSubmission } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
-import type { AssessmentsRepository, AssessmentStatus } from '../repositories/assessments.repository';
+import { InviteUnavailableError, type AssessmentsRepository, type AssessmentStatus } from '../repositories/assessments.repository';
+import { INVITE_TOKEN } from '../repositories/mhcu-invites.repository';
+import type { MhcuTrack } from '../services/mhcu-tracks';
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
@@ -54,6 +56,8 @@ const STATUSES: readonly AssessmentStatus[] = ['new', 'reviewed', 'released'];
 const SETTABLE: readonly AssessmentStatus[] = ['reviewed', 'released'];
 const PAYMENT_STATUSES = ['UNPAID', 'PAID', 'FREE', 'INCLUDED', 'LEGACY'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const INVITE_ERROR =
+    'Tautan undangan tidak valid atau sudah dipakai. Hubungi admin Attentive. / This invitation link is not valid or has already been used. Please contact the Attentive admin.';
 const SERVER_ERROR =
     'Terjadi gangguan pada server. Jawaban Anda belum tersimpan, silakan coba lagi sebentar lagi. / Something went wrong on our side; your answers were not saved, please try again shortly.';
 
@@ -94,13 +98,15 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     };
 
     /** E-mails the result to the participant. Never blocks or fails the submission: the answers are already saved. */
-    const sendResultEmail = (row: { id: string; code: string }, input: { name: string; email: string; lang: 'id' | 'en'; scores: unknown; level: number | null }) => {
+    const sendResultEmail = (row: { id: string; code: string }, input: { name: string; email: string; lang: 'id' | 'en'; scores: unknown; level: number | null; track?: string; psychologistId?: string | null; creditsRemaining?: number; waveNo?: number | null }) => {
         const mailer = dependencies.mailer;
         const secret = dependencies.paymentSecret;
         if (!mailer?.isConfigured || !secret) return;
         void (async () => {
             try {
                 const origin = dependencies.siteOrigin || 'https://attentiveid.com';
+                // The invited tracks, the package and 'lanjutan' have their own e-mail (no prices, who reviews the report).
+                const psychologistName = input.psychologistId ? await repository.getPsychologistName(input.psychologistId) : null;
                 const mail = buildMhcuResultEmail({
                     name: input.name,
                     code: row.code,
@@ -109,7 +115,11 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     level: input.level,
                     reportLink: paymentLink(origin, secret, row.code, input.lang),
                     submittedAt: new Date(),
-                    siteOrigin: origin
+                    siteOrigin: origin,
+                    track: (input.track ?? 'mandiri') as MhcuTrack,
+                    psychologistName,
+                    creditsRemaining: input.creditsRemaining,
+                    waveNo: input.waveNo
                 });
                 await mailer.send({ to: input.email, ...mail });
                 await repository.markResultEmailSent(row.id);
@@ -175,6 +185,15 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         set.headers['referrer-policy'] = 'no-referrer';
     };
 
+    /** An audit row never holds a name, e-mail, phone or score; a failed row is logged and never blocks the action. */
+    const auditSafely = async (entry: { actor: string | null; action: string; submissionId?: string | null; detail?: string | null }) => {
+        try {
+            await repository.audit(entry);
+        } catch (error) {
+            logFailure('audit', error);
+        }
+    };
+
     const sync = () => {
         // Fire and forget: the person's answers are already safe in the database; a failed copy is tried again next time.
         void dependencies.sheetSync?.syncPending().catch(() => undefined);
@@ -213,6 +232,10 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 return { ok: false, status: 'error', error: parsed.error };
             }
             const value = parsed.value;
+            if (value.invite && !INVITE_TOKEN.test(value.invite)) {
+                set.status = 400;
+                return { ok: false, status: 'error', error: INVITE_ERROR };
+            }
             if (isRateLimited(`email:${value.email.toLowerCase()}`, PER_EMAIL_LIMIT)) return tooMany();
             try {
                 const scores = scoreMhcu(value.answers);
@@ -220,8 +243,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     {
                         instrument: 'mhcu',
                         lang: value.lang,
-                        // Invite tracks (asesmen awal / free session) are not enabled yet: everyone arrives by the public link.
+                        // The repository decides the track: a valid invitation (asesmen awal / free session), a package credit, 'lanjutan' or 'mandiri'.
                         track: 'mandiri',
+                        inviteToken: value.invite || null,
                         consentVersion: value.consentVersion,
                         researchConsent: value.consent === 'research',
                         guardian: value.guardian,
@@ -241,11 +265,16 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 if (!created.duplicate) {
                     sync();
                     sendAdminAlert(created, { level: typeof scores.level === 'number' ? scores.level : 0, mhi: typeof scores.mhi === 'number' ? scores.mhi : null, name: value.name, phone: value.phone, email: value.email, lang: value.lang });
-                    sendResultEmail(created, { name: value.name, email: value.email, lang: value.lang, scores, level: typeof scores.level === 'number' ? scores.level : null });
+                    sendResultEmail(created, { name: value.name, email: value.email, lang: value.lang, scores, level: typeof scores.level === 'number' ? scores.level : null, track: created.track, psychologistId: created.psychologistId, creditsRemaining: created.creditsRemaining, waveNo: created.waveNo });
                 }
                 set.status = 201;
                 return { ok: true, status: 'success', code: created.code, email: value.email };
             } catch (error) {
+                // A used, cancelled or unknown invitation link: nothing was saved, the person is told clearly.
+                if (error instanceof InviteUnavailableError) {
+                    set.status = 400;
+                    return { ok: false, status: 'error', error: INVITE_ERROR };
+                }
                 logFailure('submit', error);
                 set.status = 503;
                 return { ok: false, status: 'error', error: SERVER_ERROR };
@@ -397,7 +426,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             requireRole: ['admin'],
             detail: { tags: ['Assessments'], summary: 'Psychologists a check-up can be assigned to (admin)' }
         })
-        .put('/api/admin/assessments/:id/psychologist', async ({ params, body, set }: any) => {
+        .put('/api/admin/assessments/:id/psychologist', async ({ params, body, set, currentUser }: any) => {
             const psychologistId = body?.psychologistId ?? null;
             if (!UUID.test(params.id) || (psychologistId !== null && (typeof psychologistId !== 'string' || !UUID.test(psychologistId)))) {
                 set.status = 400;
@@ -413,6 +442,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'assign', submissionId: row.id, detail: psychologistId ? 'assigned' : 'cleared' });
                 return { status: 'success', data: row };
             } catch (error) {
                 logFailure('assign', error);
@@ -444,6 +474,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
                 const row = await repository.saveNote(params.id, { template, custom, final: body.final, userId: currentUser.id });
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'note', submissionId: params.id, detail: body.final ? 'final' : 'draft' });
                 await automate(params.id);
                 return { status: 'success', data: (await repository.get(params.id)) ?? row };
             } catch (error) {
@@ -456,9 +487,10 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             body: t.Any(),
             detail: { tags: ['Assessments'], summary: "Save the psychologist's note for the full report (staff)" }
         })
-        .put('/api/admin/assessments/:id/payment', async ({ params, body, set }: any) => {
+        .put('/api/admin/assessments/:id/payment', async ({ params, body, set, currentUser }: any) => {
             const status = body?.status;
             const amount = body?.amount === undefined || body?.amount === null ? null : Number(body.amount);
+            // The package is free text as before ('1x' / '3x' from the dashboard); only a confirmed '3x' gives the person package credits.
             const packageName = typeof body?.package === 'string' ? body.package.trim().slice(0, 40) || null : null;
             const ref = typeof body?.ref === 'string' ? body.ref.trim().slice(0, 120) || null : null;
             if (!UUID.test(params.id) || !PAYMENT_STATUSES.includes(status) || (amount !== null && (!Number.isInteger(amount) || amount < 0 || amount > 100_000_000))) {
@@ -472,6 +504,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
                 await automate(params.id);
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'payment', submissionId: row.id, detail: `${status}${packageName ? ` ${packageName}` : ''}${row.paymentAmount !== null ? ` Rp${row.paymentAmount}` : ''}` });
                 return { status: 'success', data: (await repository.get(params.id)) ?? row };
             } catch (error) {
                 logFailure('payment', error);
@@ -482,6 +515,35 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             requireRole: ['admin'],
             body: t.Any(),
             detail: { tags: ['Assessments'], summary: 'Set the payment status after checking the proof (admin)' }
+        })
+        .put('/api/admin/assessments/:id/price', async ({ params, body, set, currentUser }: any) => {
+            const raw = body?.price;
+            const price = typeof raw === 'number' ? raw : typeof raw === 'string' && /^\d{1,9}$/.test(raw.trim()) ? Number(raw.trim()) : Number.NaN;
+            if (!UUID.test(params.id) || !Number.isInteger(price) || price < 0 || price > 100_000_000) {
+                set.status = 400;
+                return { status: 'error', message: 'Harga tidak valid.' };
+            }
+            try {
+                const result = await repository.setPrice(params.id, price);
+                if (result.status === 'notFound') {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                if (result.status === 'wrongTrack') {
+                    set.status = 409;
+                    return { status: 'error', message: 'Harga hanya dapat diisi untuk jalur lanjutan.' };
+                }
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'price', submissionId: result.row.id, detail: String(price) });
+                return { status: 'success', data: result.row };
+            } catch (error) {
+                logFailure('price', error);
+                set.status = 503;
+                return { status: 'error', message: 'Perubahan belum tersimpan.' };
+            }
+        }, {
+            requireRole: ['admin'],
+            body: t.Any(),
+            detail: { tags: ['Assessments'], summary: "Set the psychologist's report price for a 'lanjutan' check-up (admin)" }
         })
         .get('/api/admin/assessments/:id/report/:kind', async ({ params, set, currentUser }: any) => {
             if (!UUID.test(params.id) || (params.kind !== 'client' && params.kind !== 'psychologist')) {
@@ -495,7 +557,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     return 'Not found';
                 }
                 // The internal report holds comparisons for psychologists only; each opening is logged (who, which check-up).
-                if (params.kind === 'psychologist') console.info(`[assessments] psychologist report opened code=${loaded.raw.code} by=${currentUser.id}`);
+                if (params.kind === 'psychologist') await auditSafely({ actor: currentUser?.id ?? null, action: 'psychologist_report', submissionId: loaded.raw.id, detail: 'opened' });
                 htmlHeaders(set);
                 return params.kind === 'client' ? renderClientReportHtml(loaded.input) : renderPsychologistReportHtml(loaded.input);
             } catch (error) {
@@ -507,7 +569,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             requireRole: ['admin', 'psychologist'],
             detail: { tags: ['Assessments'], summary: 'Preview the client or psychologist report as a print-ready page (staff)' }
         })
-        .post('/api/admin/assessments/:id/release-report', async ({ params, set }: any) => {
+        .post('/api/admin/assessments/:id/release-report', async ({ params, set, currentUser }: any) => {
             if (!UUID.test(params.id)) {
                 set.status = 404;
                 return { status: 'notFound', message: 'Data tidak ditemukan.' };
@@ -529,6 +591,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     set.status = result.status;
                     return { status: 'error', message: result.message };
                 }
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'send', submissionId: row.id, detail: result.emailed ? 'released, e-mailed' : 'released' });
                 return { status: 'success', data: { released: result.released, emailed: result.emailed } };
             } catch (error) {
                 logFailure('release', error);
