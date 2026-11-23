@@ -11,6 +11,8 @@ export interface AdminAlertInput {
     waveNo: number | null
     submittedAt: Date
     portalUrl: string
+    /** Results at this level or higher get the urgent subject (default 4). */
+    urgentFrom?: number
 }
 
 const esc = (value: unknown): string =>
@@ -21,7 +23,7 @@ export const buildAdminAlertEmail = (input: AdminAlertInput): { subject: string;
     const level = Math.min(5, Math.max(1, Math.round(input.level))) as 1 | 2 | 3 | 4 | 5;
     const def = MHCU_LEVELS[level];
     const mhi = input.mhi === null ? '-' : (Math.round(input.mhi * 10) / 10).toFixed(1);
-    const subject = level >= 4
+    const subject = level >= (input.urgentFrom ?? 4)
         ? `[MHCU] Level ${level} (${def.id}) · ${input.code} · hubungi: ${def.responseTimeId}`
         : `[MHCU] Hasil baru · Level ${level} (${def.id}) · ${input.code}`;
     const lines = [

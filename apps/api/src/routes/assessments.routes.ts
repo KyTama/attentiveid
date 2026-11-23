@@ -6,9 +6,12 @@ import type { AssessmentsRepository, AssessmentStatus } from '../repositories/as
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
-import { paymentLink, paymentToken, verifyPaymentToken } from '../services/assessment-payment';
+import { paymentLink, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
-import { REPORT_READY_PAYMENT, renderClientReportHtml, renderPsychologistReportHtml } from '../services/mhcu-report-service';
+import { renderClientReportHtml, renderPsychologistReportHtml } from '../services/mhcu-report-service';
+import { releaseReport, runAutomation } from '../services/mhcu-release';
+import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
+import type { MhcuSettings } from '../services/mhcu-settings';
 
 export interface AssessmentsRateLimit {
     max: number;
@@ -24,6 +27,9 @@ export interface AssessmentsRoutesDependencies {
     mailer?: Mailer;
     /** Staff address that gets the alert for a Level 4-5 result. */
     alertEmail?: string;
+    /** Settings staff can change (alert level and address, automation). When missing the defaults above apply. */
+    settings?: { get(): Promise<MhcuSettings> };
+    ops?: MhcuOpsRepository;
     /** Secret that signs the links in the e-mail (the API's JWT secret). */
     paymentSecret?: string;
     /** The public address of the site, used in the links of the e-mail. */
@@ -116,12 +122,14 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     /** Copies every new result to the admin inbox; a Level 4-5 result carries the urgent subject (same-day contact). Never blocks or fails the submission. */
     const sendAdminAlert = (row: { id: string; code: string; waveNo: number | null }, input: { level: number; mhi: number | null; name: string; phone: string; email: string; lang: string }) => {
         const mailer = dependencies.mailer;
-        const to = dependencies.alertEmail;
-        if (!mailer?.isConfigured || !to) return;
+        if (!mailer?.isConfigured) return;
         void (async () => {
             try {
+                const settings = dependencies.settings ? await dependencies.settings.get() : null;
+                const to = settings?.alertEmail || dependencies.alertEmail;
+                if (!to) return;
                 const origin = (dependencies.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
-                const mail = buildAdminAlertEmail({ ...input, code: row.code, waveNo: row.waveNo, submittedAt: new Date(), portalUrl: `${origin}/dashboard/assessments/mhcu/${row.id}` });
+                const mail = buildAdminAlertEmail({ ...input, code: row.code, waveNo: row.waveNo, submittedAt: new Date(), portalUrl: `${origin}/dashboard/assessments/mhcu/${row.id}`, urgentFrom: settings?.alertLevel });
                 await mailer.send({ to, ...mail });
                 await repository.markAdminAlertSent(row.id);
             } catch (error) {
@@ -135,6 +143,20 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         user?.role === 'admin' || row.instrument !== 'mhcu' || (!!user?.psychologistId && row.psychologistId === user.psychologistId);
     /** undefined = no limit (admin); null = nothing visible (a psychologist profile that is not linked); else the psychologist's id. */
     const ownScope = (user: any): string | null | undefined => (user?.role === 'admin' ? undefined : user?.psychologistId ?? null);
+
+    /** After staff change a note or a payment: auto-assign and auto-release when the settings say so. Never fails the request. */
+    const automate = async (id: string) => {
+        if (!dependencies.settings) return;
+        await runAutomation({
+            repository,
+            mailer: dependencies.mailer,
+            secret: dependencies.paymentSecret,
+            siteOrigin: dependencies.siteOrigin,
+            onError: logFailure,
+            ops: dependencies.ops,
+            getSettings: () => (dependencies.settings as { get(): Promise<MhcuSettings> }).get()
+        }, id);
+    };
 
     /** Loads a check-up and the person's other check-ups, ready for a report. */
     const loadReportInput = async (id: string) => {
@@ -422,7 +444,8 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
                 const row = await repository.saveNote(params.id, { template, custom, final: body.final, userId: currentUser.id });
-                return { status: 'success', data: row };
+                await automate(params.id);
+                return { status: 'success', data: (await repository.get(params.id)) ?? row };
             } catch (error) {
                 logFailure('note', error);
                 set.status = 503;
@@ -448,7 +471,8 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
-                return { status: 'success', data: row };
+                await automate(params.id);
+                return { status: 'success', data: (await repository.get(params.id)) ?? row };
             } catch (error) {
                 logFailure('payment', error);
                 set.status = 503;
@@ -494,35 +518,18 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
-                if (!row.noteFinal) {
-                    set.status = 409;
-                    return { status: 'error', message: 'Catatan psikolog belum ditandai final.' };
+                const result = await releaseReport({
+                    repository,
+                    mailer: dependencies.mailer,
+                    secret: dependencies.paymentSecret,
+                    siteOrigin: dependencies.siteOrigin,
+                    onError: logFailure
+                }, row);
+                if (!result.ok) {
+                    set.status = result.status;
+                    return { status: 'error', message: result.message };
                 }
-                if (!(REPORT_READY_PAYMENT as readonly string[]).includes(row.paymentStatus)) {
-                    set.status = 409;
-                    return { status: 'error', message: 'Pembayaran belum dikonfirmasi.' };
-                }
-                const released = await repository.markReportReleased(params.id);
-                const secret = dependencies.paymentSecret;
-                const mailer = dependencies.mailer;
-                let emailed = false;
-                if (released && secret && mailer?.isConfigured) {
-                    const origin = (dependencies.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
-                    const link = `${origin}/api/public/assessments/report?id=${encodeURIComponent(row.code)}&t=${paymentToken(secret, row.code)}`;
-                    const en = row.lang === 'en';
-                    try {
-                        await mailer.send({
-                            to: row.email,
-                            subject: en ? `Your full report is ready · ${row.code}` : `Laporan lengkap Anda sudah siap · ${row.code}`,
-                            text: en ? `Dear ${row.name},\n\nYour full Mental Health Check-Up report is ready: ${link}\n\nYou can save it as a PDF from the page (Print > Save as PDF).\n\nAttentive Psychology Bureau` : `Yth. ${row.name},\n\nLaporan lengkap Mental Health Check-Up Anda sudah siap: ${link}\n\nAnda dapat menyimpannya sebagai PDF dari halaman tersebut (Cetak > Simpan sebagai PDF).\n\nBiro Psikologi Attentive`,
-                            html: `<p>${en ? 'Dear' : 'Yth.'} ${row.name.replace(/[<>&"]/g, '')},</p><p>${en ? 'Your full Mental Health Check-Up report is ready' : 'Laporan lengkap Mental Health Check-Up Anda sudah siap'}: <a href="${link}">${en ? 'open the report' : 'buka laporan'}</a></p><p>${en ? 'Save it as a PDF from the page (Print &gt; Save as PDF).' : 'Simpan sebagai PDF dari halaman tersebut (Cetak &gt; Simpan sebagai PDF).'}</p><p>Attentive Psychology Bureau</p>`
-                        });
-                        emailed = true;
-                    } catch (error) {
-                        logFailure('release-email', error);
-                    }
-                }
-                return { status: 'success', data: { released: !!released, emailed } };
+                return { status: 'success', data: { released: result.released, emailed: result.emailed } };
             } catch (error) {
                 logFailure('release', error);
                 set.status = 503;
