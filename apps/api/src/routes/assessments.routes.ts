@@ -8,7 +8,7 @@ import type { MhcuTrack } from '../services/mhcu-tracks';
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
-import { paymentLink, verifyPaymentToken } from '../services/assessment-payment';
+import { PAYMENT_OPTIONS, PROMO_UNTIL, paymentLink, priceFor, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
 import { renderClientReportHtml, renderPsychologistReportHtml } from '../services/mhcu-report-service';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
@@ -270,7 +270,29 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     sendResultEmail(created, { name: value.name, email: value.email, lang: value.lang, scores, level: typeof scores.level === 'number' ? scores.level : null, track: created.track, psychologistId: created.psychologistId, creditsRemaining: created.creditsRemaining, waveNo: created.waveNo });
                 }
                 set.status = 201;
-                return { ok: true, status: 'success', code: created.code, email: value.email };
+                // What the thank-you page needs to offer the full report: the signed link to the report page and the current prices.
+                const track = created.track ?? 'mandiri';
+                const secret = dependencies.paymentSecret;
+                const origin = (dependencies.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
+                const buyable = track === 'mandiri' || track === 'lanjutan';
+                const today = new Date();
+                return {
+                    ok: true,
+                    status: 'success',
+                    code: created.code,
+                    email: value.email,
+                    track,
+                    reportLink: secret ? paymentLink(origin, secret, created.code, value.lang) : null,
+                    pricing: track === 'mandiri'
+                        ? {
+                            single: { price: priceFor('single', today), normal: PAYMENT_OPTIONS.single.normal },
+                            package3: { price: priceFor('package3', today), normal: PAYMENT_OPTIONS.package3.normal },
+                            promoUntil: PROMO_UNTIL,
+                            promoActive: priceFor('single', today) < PAYMENT_OPTIONS.single.normal
+                        }
+                        : null,
+                    canBuy: buyable
+                };
             } catch (error) {
                 // A used, cancelled or unknown invitation link: nothing was saved, the person is told clearly.
                 if (error instanceof InviteUnavailableError) {
