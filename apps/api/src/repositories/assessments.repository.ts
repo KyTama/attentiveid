@@ -90,6 +90,7 @@ export interface AssessmentListItem {
     status: AssessmentStatus;
     researchConsent: boolean;
     psychologistId: string | null;
+    track: string;
     paymentStatus: string;
     paymentSubmittedAt: string | null;
     paymentFor: string | null;
@@ -305,6 +306,7 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
                 status: assessmentSubmissions.status,
                 researchConsent: assessmentSubmissions.researchConsent,
                 psychologistId: assessmentSubmissions.psychologistId,
+                track: assessmentSubmissions.track,
                 paymentStatus: assessmentSubmissions.paymentStatus,
                 paymentSubmittedAt: assessmentSubmissions.paymentSubmittedAt,
                 paymentFor: assessmentSubmissions.paymentFor,
