@@ -511,6 +511,25 @@ describe('Goal System Compass', () => {
 });
 
 
+describe('what the thank-you page gets to offer the full report', () => {
+    it('returns the signed report-page link and the current prices for a normal check-up', async () => {
+        const { app } = createFixture();
+        const json = await (await submit(app, body())).json();
+        expect(json).toMatchObject({ ok: true, code: 'AT-MHCU-2026-100', track: 'mandiri', canBuy: true });
+        expect(json.reportLink).toContain('https://attentiveid.com/assessments/payment?id=AT-MHCU-2026-100&t=');
+        expect(json.pricing).toMatchObject({ single: { price: 227000, normal: 297000 }, package3: { price: 647000, normal: 885000 }, promoActive: true });
+        expect(JSON.stringify(json)).not.toContain('scores');
+    });
+
+    it('still gives the link for a second click, and never puts the scores in the answer', async () => {
+        const { app } = createFixture();
+        await submit(app, body());
+        const again = await (await submit(app, body())).json();
+        expect(again.code).toBe('AT-MHCU-2026-100');
+        expect(again.reportLink).toContain('t=');
+    });
+});
+
 describe('result e-mail after a submission', () => {
     const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
