@@ -307,7 +307,7 @@ describe('MHCU settings page', () => {
     expect(screen.getByRole('switch', { name: /tugaskan psikolog otomatis/i })).toBeChecked()
     expect(screen.getByRole('switch', { name: /rilis laporan otomatis/i })).not.toBeChecked()
     expect(screen.getByText('Pilih psikolog otomatis saat pembayaran dikonfirmasi.')).toBeInTheDocument()
-    expect(screen.getByText(/Rilis laporan otomatis bila bayar terkonfirmasi, psikolog ditugaskan dan catatan final\./)).toBeInTheDocument()
+    expect(screen.getByText(/Rilis laporan otomatis bila pembayaran terkonfirmasi, psikolog ditugaskan dan catatan final\./)).toBeInTheDocument()
   })
 
   it('saving needs a change, shows the dirty state, regroups digits and sends whole rupiah', async () => {

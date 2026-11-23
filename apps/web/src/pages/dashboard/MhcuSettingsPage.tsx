@@ -197,7 +197,7 @@ export function MhcuSettingsPage() {
         })}
         {switchRow({
           checked: draft.autoSend,
-          hint: tx('Rilis laporan otomatis bila bayar terkonfirmasi, psikolog ditugaskan dan catatan final.', 'Release the report automatically when the payment is confirmed, a psychologist is assigned and the note is final.'),
+          hint: tx('Rilis laporan otomatis bila pembayaran terkonfirmasi, psikolog ditugaskan dan catatan final.', 'Release the report automatically when the payment is confirmed, a psychologist is assigned and the note is final.'),
           id: 'auto-send',
           onChange: (v) => setDraft({ ...draft, autoSend: v }),
           title: tx('Rilis laporan otomatis', 'Release the report automatically'),
