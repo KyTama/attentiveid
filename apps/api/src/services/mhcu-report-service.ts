@@ -3,6 +3,7 @@ import type { MhcuStoredSession } from '@attentiveid/shared';
 import type { AssessmentRow } from '../repositories/assessments.repository';
 import { renderClientReport } from '../reports/mhcu/client-report';
 import { renderPsychologistReport } from '../reports/mhcu/psychologist-report';
+import { wrapReportPage } from '../reports/mhcu/report-page';
 
 type HistoryRow = AssessmentRow & { participantNo: number };
 
@@ -57,6 +58,16 @@ export const renderClientReportHtml = (input: ReportInput): string => {
     const lang = input.row.lang === 'en' ? 'en' : 'id';
     return renderClientReport(buildClientReportData(buildInput(input)), { lang, title: `${input.row.code} · Mental Health Check-Up` });
 };
+
+/** The client report inside the report page (title, print and copy buttons, what is in it): the public page and the staff preview. */
+export const renderClientReportPage = (input: ReportInput, mode: 'public' | 'staff'): string =>
+    wrapReportPage(renderClientReportHtml(input), {
+        lang: input.row.lang === 'en' ? 'en' : 'id',
+        name: input.row.name,
+        code: input.row.code,
+        createdAt: new Date(input.row.createdAt).toISOString(),
+        mode
+    });
 
 export const renderPsychologistReportHtml = (input: ReportInput): string => {
     const lang = input.row.lang === 'en' ? 'en' : 'id';

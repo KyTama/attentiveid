@@ -10,7 +10,7 @@ import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
 import { PAYMENT_OPTIONS, PROMO_UNTIL, paymentLink, priceFor, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
-import { renderClientReportHtml, renderPsychologistReportHtml } from '../services/mhcu-report-service';
+import { renderClientReportPage, renderPsychologistReportHtml } from '../services/mhcu-report-service';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { MhcuSettings } from '../services/mhcu-settings';
@@ -583,7 +583,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 // The internal report holds comparisons for psychologists only; each opening is logged (who, which check-up).
                 if (params.kind === 'psychologist') await auditSafely({ actor: currentUser?.id ?? null, action: 'psychologist_report', submissionId: loaded.raw.id, detail: 'opened' });
                 htmlHeaders(set);
-                return params.kind === 'client' ? renderClientReportHtml(loaded.input) : renderPsychologistReportHtml(loaded.input);
+                return params.kind === 'client' ? renderClientReportPage(loaded.input, 'staff') : renderPsychologistReportHtml(loaded.input);
             } catch (error) {
                 logFailure('report', error);
                 set.status = 503;
@@ -642,7 +642,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 const loaded = await loadReportInput(row.id);
                 if (!loaded) return gone();
                 htmlHeaders(set);
-                return renderClientReportHtml(loaded.input);
+                return renderClientReportPage(loaded.input, 'public');
             } catch (error) {
                 logFailure('public-report', error);
                 set.status = 503;
