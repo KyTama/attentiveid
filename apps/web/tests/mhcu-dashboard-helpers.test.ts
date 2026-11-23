@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { MhcuListItem } from '../src/features/mhcu-dashboard/api'
 import {
   NO_FILTERS,
+  awaitsConfirmation,
   defaultRecommendation,
   filterItems,
   noteChanged,
@@ -31,7 +32,7 @@ const item = (over: Partial<MhcuListItem>): MhcuListItem => ({
 })
 
 const items = [
-  item({ id: '1' }),
+  item({ id: '1', paymentSubmittedAt: '2026-11-21T03:00:00Z', paymentFor: 'single' }),
   item({ id: '2', name: 'Dimas Hidayat', code: 'AT-MHCU-2026-002', email: 'dimas@example.com', level: 4, psychologistId: 'p1', paymentStatus: 'PAID', waveNo: 3, status: 'released' }),
   item({ id: '3', name: 'Sari Wulandari', code: 'AT-MHCU-2026-003', email: 'NADIA@example.com', level: 5, psychologistId: 'p2', paymentStatus: 'FREE', waveNo: 2, status: 'reviewed' }),
 ]
@@ -53,6 +54,17 @@ describe('filterItems', () => {
     expect(filterItems(items, { ...NO_FILTERS, level: '4', payment: 'UNPAID' })).toEqual([])
   })
 
+  it('finds the ones waiting for a payment check: proof sent, still unpaid', () => {
+    expect(filterItems(items, { ...NO_FILTERS, todo: 'proof' }).map((i) => i.id)).toEqual(['1'])
+    // proof sent but already confirmed, or unpaid without a proof, does not count
+    const confirmed = item({ id: '9', paymentSubmittedAt: '2026-11-21T03:00:00Z', paymentStatus: 'PAID' })
+    const noProof = item({ id: '8', paymentSubmittedAt: null })
+    expect(filterItems([confirmed, noProof], { ...NO_FILTERS, todo: 'proof' })).toEqual([])
+    expect(awaitsConfirmation(confirmed)).toBe(false)
+    expect(awaitsConfirmation(noProof)).toBe(false)
+    expect(awaitsConfirmation(item({}))).toBe(false)
+  })
+
   it('has to-do filters for what still needs doing', () => {
     expect(filterItems(items, { ...NO_FILTERS, todo: 'unreleased' }).map((i) => i.id)).toEqual(['1', '3'])
     expect(filterItems(items, { ...NO_FILTERS, todo: 'unassigned' }).map((i) => i.id)).toEqual(['1'])
@@ -68,7 +80,7 @@ describe('filterItems', () => {
 describe('summarize', () => {
   it('counts results, people (by e-mail, case-insensitive), repeats and what is open', () => {
     const s = summarize(items)
-    expect(s).toEqual({ results: 3, people: 2, returning: 2, unpaid: 1, unassigned: 1, unreleased: 2, levels: [0, 1, 0, 1, 1] })
+    expect(s).toEqual({ results: 3, people: 2, returning: 2, awaiting: 1, unpaid: 1, unassigned: 1, unreleased: 2, levels: [0, 1, 0, 1, 1] })
   })
 
   it('is all zero for an empty list', () => {

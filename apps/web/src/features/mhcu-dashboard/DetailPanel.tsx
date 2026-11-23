@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, CheckCircle2, FileText, Loader2, Send, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, CheckCircle2, FileText, Loader2, Send, X } from 'lucide-react'
 import { openPaymentProof } from '../assessments/service'
 import { useTx } from '../i18n/use-tx'
 import {
@@ -17,6 +17,7 @@ import {
 import {
   CUSTOM_NOTE_MAX,
   dateText,
+  awaitsConfirmation,
   fmt1,
   noteChanged,
   noteDraftOf,
@@ -43,9 +44,9 @@ const bilingual = (v: unknown, en: boolean): string => {
   return o ? String((en ? o.en : o.id) ?? '') : ''
 }
 
-const fieldClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100 disabled:bg-slate-50'
-const buttonClass = 'cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60'
-const primaryClass = 'inline-flex cursor-pointer items-center gap-2 rounded-xl bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60'
+const fieldClass = 'min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100 disabled:bg-slate-50'
+const buttonClass = 'min-h-11 cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60'
+const primaryClass = 'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60'
 
 /** One result with its scores, assignment, note, payment and report actions. */
 export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: Props) {
@@ -104,7 +105,10 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: 
   const followUp = obj(scores.followUp)
 
   return (
-    <div className="space-y-5 p-5">
+    <div className="space-y-5 p-4 sm:p-5">
+      <button className="flex min-h-11 cursor-pointer items-center gap-1 text-sm font-semibold text-navy-800 xl:hidden" onClick={onClose} type="button">
+        <ArrowLeft aria-hidden="true" className="size-4" /> {tx('Daftar hasil', 'Results list')}
+      </button>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 break-words [overflow-wrap:anywhere]">
           <h2 className="text-lg font-bold text-slate-900">{detail.name}</h2>
@@ -113,13 +117,24 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged }: 
           </p>
           <p className="text-xs text-slate-500">{detail.email} · {detail.phone}</p>
         </div>
-        <button aria-label={tx('Tutup', 'Close')} className="cursor-pointer rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" onClick={onClose} type="button">
+        <button aria-label={tx('Tutup', 'Close')} className="hidden cursor-pointer rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 xl:block" onClick={onClose} type="button">
           <X aria-hidden="true" className="size-4" />
         </button>
       </div>
 
       {notice && <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{notice}</p>}
       {error && <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" role="alert">{error}</p>}
+
+      {awaitsConfirmation(detail) && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+          <b>{tx('Bukti transfer masuk', 'Proof of transfer received')}</b>
+          {' · '}
+          {detail.paymentSubmittedAt ? dateText(detail.paymentSubmittedAt) : ''}
+          {' · '}
+          {detail.paymentFor === 'package3' ? tx('memilih Paket 3x', 'chose the package of 3') : detail.paymentFor === 'single' ? tx('memilih laporan 1x', 'chose the 1x report') : tx('pilihan belum diketahui', 'choice unknown')}
+          {isAdmin ? ` — ${tx('periksa bukti, lalu ubah status menjadi PAID.', 'check the proof, then set the status to PAID.')}` : ''}
+        </div>
+      )}
 
       {(detail.level ?? 0) >= 4 && (
         <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" role="alert">
