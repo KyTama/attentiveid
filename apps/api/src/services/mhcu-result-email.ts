@@ -5,7 +5,7 @@
  * red-flag reasons are for the psychologist only.
  */
 
-import { PAYMENT_OPTIONS, priceFor } from './assessment-payment'
+import { PAYMENT_OPTIONS, PROMO_UNTIL, priceFor } from './assessment-payment'
 
 export interface MhcuEmailInput {
     name: string
@@ -109,8 +109,7 @@ const COPY = {
         disclaimerSafety:
             'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, segera hubungi layanan darurat medis 119 atau datang ke IGD terdekat.',
         org: 'Biro Psikologi Attentive',
-        confidential: 'Email ini bersifat rahasia dan hanya ditujukan kepada penerima.',
-        promoDate: '30 April 2027'
+        confidential: 'Email ini bersifat rahasia dan hanya ditujukan kepada penerima.'
     },
     en: {
         subject: (code: string) => `Your Mental Health Check-Up (MHCU) result · ${code}`,
@@ -152,8 +151,7 @@ const COPY = {
         disclaimerSafety:
             'If you are having thoughts of harming yourself or feel unsafe, contact the medical emergency line 119 or go to the nearest emergency room right away.',
         org: 'Attentive Psychology Bureau',
-        confidential: 'This e-mail is confidential and intended only for the recipient.',
-        promoDate: '30 April 2027'
+        confidential: 'This e-mail is confidential and intended only for the recipient.'
     }
 } as const
 
@@ -174,6 +172,7 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
 
     const today = input.today ?? new Date()
     const promoActive = priceFor('single', today) < PAYMENT_OPTIONS.single.normal
+    const promoDateText = formatSubmittedDate(new Date(`${PROMO_UNTIL}T12:00:00+07:00`), lang)
     const singleNow = priceFor('single', today)
     const bundleNow = priceFor('package3', today)
     const priceRow = (label: string, now: number, normal: number) =>
@@ -205,7 +204,7 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
             ? `<div style="border:1px solid #D0D5DD;border-left:3px solid #142B51;background:#F4F5F7;padding:11px 14px;margin:0 0 18px 0;font-size:13px;color:#1B2533"><b>${copy.noticeBold}</b>${copy.noticeRest}</div>`
             : ''
     }<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};border:1px solid #D0D5DD"><tr><td width="150" valign="middle" align="center" bgcolor="#F4F5F7" style="background:#F4F5F7;padding:16px 8px;border-right:1px solid #D0D5DD"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.mhi}</div><div style="font-size:38px;line-height:44px;font-weight:bold;color:#142B51">${esc(mhiText)}</div><div style="font-size:10.5px;color:#667085">${copy.outOf}</div></td><td valign="middle" style="padding:14px 18px"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#667085">${copy.status}</div><div style="font-size:19px;line-height:25px;font-weight:bold;color:#142B51;margin-top:2px">${esc(copy.levelOf(level, levelName))}</div></td></tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 5px 0">${copy.scale}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};"><tr>${scaleCells}</tr><tr>${scaleStrip}</tr></table><div style="font-family:${FONT};font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:16px 0 3px 0">${copy.position}</div>${marker}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${bar}</tr></table><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${FONT};font-size:9.5px;color:#98A2B3"><tr><td width="40%">0</td><td width="15%">40</td><td width="15%">55</td><td width="25%">70</td><td width="5%" align="right">100</td></tr></table><div style="margin:22px 0 0 0;padding:14px 16px;border:1px solid #EAECF0;background:#FAFAFB;font-size:13px;line-height:1.6;color:#3C4858"><div style="font-weight:bold;color:#142B51;margin-bottom:4px">${copy.whatHead}</div>${copy.whatBody}<ul style="margin:6px 0 0 18px;padding:0">${copy.whatList.map((line) => `<li>${esc(line)}</li>`).join('')}</ul></div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 6px 0;border:1px solid #D0D5DD"><tr><td style="padding:14px 16px 0 16px;font-size:13px;line-height:1.5"><div style="font-weight:bold;color:#1B2533">${esc(copy.reportTitle(input.code))}</div><div style="color:#667085;font-size:12px">${copy.reportDesc}</div></td></tr><tr><td style="padding:12px 16px 0 16px"><div style="font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:0 0 6px 0">${copy.teaserHead}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${teasers}</tr></table></td></tr><tr><td style="padding:12px 16px 0 16px;font-size:13px;line-height:1.5"><table role="presentation" cellpadding="0" cellspacing="0" style="font-size:13px;color:#1B2533">${priceRow(copy.single, singleNow, PAYMENT_OPTIONS.single.normal)}${priceRow(copy.bundle, bundleNow, PAYMENT_OPTIONS.package3.normal)}</table>${
-        promoActive ? `<div style="font-size:11.5px;color:#667085;margin-top:4px">${esc(copy.promoUntil(copy.promoDate))}</div>` : ''
+        promoActive ? `<div style="font-size:11.5px;color:#667085;margin-top:4px">${esc(copy.promoUntil(promoDateText))}</div>` : ''
     }<div style="font-size:12px;color:#3C4858;margin-top:8px">${copy.afterBuy}</div></td></tr><tr><td style="padding:14px 16px 16px 16px"><a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:13.5px;padding:11px 20px">${copy.button}</a><span style="font-size:11.5px;color:#667085;padding-left:10px">${copy.confirmed}</span></td></tr></table><p style="font-size:11.5px;line-height:1.55;color:#667085;margin:14px 0 0 0">${copy.disclaimer}${showNotice ? '' : copy.disclaimerSafety}</p></td></tr><tr><td style="padding:16px 28px 22px 28px;border-top:1px solid #EAECF0;font-size:11px;line-height:1.55;color:#667085"><b style="color:#142B51">${copy.org}</b><br>WhatsApp <a href="https://wa.me/6285156410912" style="color:#142B51">+62 851-5641-0912</a> | <a href="mailto:contact@attentiveid.com" style="color:#142B51">contact@attentiveid.com</a> | <a href="https://attentiveid.com" style="color:#142B51">attentiveid.com</a><br>${copy.confidential}</td></tr></table></div>`
 
     const text = [
@@ -228,7 +227,7 @@ export const buildMhcuResultEmail = (input: MhcuEmailInput): BuiltEmail => {
         `${copy.teaserPackage}: ${origin}/assessments-static/contoh-laporan-paket-3x.pdf`,
         `${copy.single}: ${rupiah(singleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.single.normal)})` : ''}`,
         `${copy.bundle}: ${rupiah(bundleNow)}${promoActive ? ` (${rupiah(PAYMENT_OPTIONS.package3.normal)})` : ''}`,
-        ...(promoActive ? [copy.promoUntil(copy.promoDate)] : []),
+        ...(promoActive ? [copy.promoUntil(promoDateText)] : []),
         copy.afterBuy,
         '',
         `${copy.button}: ${input.reportLink}`,

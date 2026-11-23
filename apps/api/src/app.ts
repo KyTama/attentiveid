@@ -17,6 +17,9 @@ import { createAssessmentsRepository, type AssessmentsRepository } from './repos
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import type { Mailer } from './services/mailer';
 import { createAssessmentPaymentRoutes } from './routes/assessment-payment.routes';
+import { createMhcuOpsRoutes, type MhcuSettingsStore } from './routes/mhcu-ops.routes';
+import { createMhcuOpsRepository, type MhcuOpsRepository } from './repositories/mhcu-ops.repository';
+import { createMemorySettingsStore } from './services/mhcu-settings-store';
 import { createPrayersRepository, type PrayersRepository } from './repositories/prayers.repository';
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
@@ -41,6 +44,8 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     assessmentsSheetSync?: AssessmentsSheetSync;
     mailer?: Mailer;
     alertEmail?: string;
+    mhcuSettings?: MhcuSettingsStore;
+    mhcuOpsRepository?: MhcuOpsRepository;
     paymentSecret?: string;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
@@ -218,6 +223,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 paymentSecret: dependencies.paymentSecret,
                 mailer: dependencies.mailer,
                 alertEmail: dependencies.alertEmail,
+                settings: dependencies.mhcuSettings,
                 siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createAssessmentsRoutes({
@@ -227,6 +233,18 @@ export const createApp = (dependencies: AppDependencies) => {
                 sheetSync: dependencies.assessmentsSheetSync,
                 mailer: dependencies.mailer,
                 alertEmail: dependencies.alertEmail,
+                settings: dependencies.mhcuSettings,
+                ops: dependencies.mhcuSettings ? dependencies.mhcuOpsRepository || createMhcuOpsRepository(dependencies.db) : undefined,
+                paymentSecret: dependencies.paymentSecret,
+                siteOrigin: dependencies.frontendOrigin,
+            }))
+            .use(createMhcuOpsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                assessmentsRepository: dependencies.assessmentsRepository || createAssessmentsRepository(dependencies.db),
+                ops: dependencies.mhcuOpsRepository || createMhcuOpsRepository(dependencies.db),
+                settings: dependencies.mhcuSettings || createMemorySettingsStore(dependencies.alertEmail),
+                mailer: dependencies.mailer,
                 paymentSecret: dependencies.paymentSecret,
                 siteOrigin: dependencies.frontendOrigin,
             }))

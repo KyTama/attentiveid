@@ -24,6 +24,8 @@ export interface AssessmentPaymentRoutesDependencies {
     mailer?: Mailer;
     /** Admin inbox that is told when a proof of transfer arrives. */
     alertEmail?: string;
+    /** Settings staff can change; its alert address wins over alertEmail. */
+    settings?: { get(): Promise<{ alertEmail: string }> };
     siteOrigin?: string;
     now?: () => number;
 }
@@ -80,10 +82,16 @@ export const createAssessmentPaymentRoutes = (dependencies: AssessmentPaymentRou
             } catch (error) {
                 logFailure('payment-received-email', error);
             }
-            if (!dependencies.alertEmail) return;
+            let staffTo = dependencies.alertEmail;
+            try {
+                staffTo = (await dependencies.settings?.get())?.alertEmail || dependencies.alertEmail;
+            } catch {
+                /* keep the default address */
+            }
+            if (!staffTo) return;
             try {
                 await mailer.send({
-                    to: dependencies.alertEmail,
+                    to: staffTo,
                     ...buildPaymentStaffEmail({ name: row.name, code: row.code, phone: row.phone, email: row.email, level: row.level, paymentFor, submissionId: row.id, siteOrigin })
                 });
             } catch (error) {

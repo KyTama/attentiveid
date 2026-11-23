@@ -10,6 +10,8 @@ import { createFreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createAssessmentsRepository } from './repositories/assessments.repository';
 import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createMailer } from './services/mailer';
+import { createMhcuOpsRepository } from './repositories/mhcu-ops.repository';
+import { createMhcuSettingsStore } from './services/mhcu-settings-store';
 import { processDueBookingOutbox } from './services/booking-outbox';
 import { createContentTransitions, createDrizzleContentTransitionDatabase } from './services/content-transitions';
 import { createDrizzleUserRepositorySource, createUserRepository, verifyPassword } from './repositories/users.repository';
@@ -125,6 +127,11 @@ const assessmentsSheetSync = createAssessmentsSheetSync({
 });
 
 // E-mail sent by the site (the result e-mail of the Mental Health Check-Up). Only active when SMTP_USER and SMTP_PASS are set.
+const mhcuOpsRepository = createMhcuOpsRepository(db);
+const mhcuSettings = createMhcuSettingsStore(mhcuOpsRepository, env.ASSESSMENTS_ALERT_EMAIL || 'contact@attentiveid.com');
+// Load the stored MHCU prices and promo date once at start (a failure keeps the built-in defaults).
+void mhcuSettings.get();
+
 const mailer = createMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -138,6 +145,8 @@ const mailer = createMailer({
 const app = createApp({
     mailer,
     alertEmail: env.ASSESSMENTS_ALERT_EMAIL || 'contact@attentiveid.com',
+    mhcuSettings,
+    mhcuOpsRepository,
     paymentSecret: jwtSecretValue,
     assessmentsRepository,
     assessmentsSheetSync,

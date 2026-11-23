@@ -15,7 +15,11 @@ export const PAYMENT_OPTIONS: Record<PaymentFor, { amount: number; normal: numbe
     package3: { amount: 647_000, normal: 885_000, labelId: 'Paket Laporan Lengkap MHCU (3x pemeriksaan)', labelEn: 'Full MHCU report package (3 check-ups)' }
 }
 /** The prices above are introductory until this date (Jakarta); after it the normal price applies. */
-export const PROMO_UNTIL = '2027-04-30'
+export let PROMO_UNTIL = '2027-04-30'
+/** Staff can move the promo end date in the dashboard settings. */
+export const setPromoUntil = (day: string): void => {
+    PROMO_UNTIL = day
+}
 
 export const isPaymentFor = (value: unknown): value is PaymentFor => value === 'single' || value === 'package3'
 
