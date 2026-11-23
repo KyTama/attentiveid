@@ -21,7 +21,8 @@ const makeUser = (id: string, role: UserDto['role'], psychologistId: string | nu
 });
 const admin = makeUser('admin-1', 'admin');
 const psychologist = makeUser('psych-1', 'psychologist', PSY);
-const users = new Map([[admin.id, admin], [psychologist.id, psychologist]]);
+const superadmin = makeUser('super-1', 'superadmin');
+const users = new Map([[admin.id, admin], [psychologist.id, psychologist], [superadmin.id, superadmin]]);
 const tokenService = createTokenService({
     secret: 'test-secret-key-must-be-at-least-32-bytes-long-for-hmac-sha256-security',
     store: { saveRefreshToken: async () => {}, findRefreshToken: async () => null, revokeRefreshToken: async () => {}, revokeAllForUser: async () => {} }
@@ -95,6 +96,18 @@ describe('overview numbers', () => {
         expect(asAdmin.headers.get('cache-control')).toBe('no-store');
         await send(app, '/api/admin/assessments/mhcu/overview', 'GET', undefined, bearer(psychologist));
         expect(scopes).toEqual([{}, { psychologistId: PSY }]);
+    });
+});
+
+describe('the superadmin is an admin too', () => {
+    it('sees every result and the full numbers, not an empty list like an unlinked psychologist', async () => {
+        const { app, scopes } = fixture([row(1, { psychologistId: OTHER }), row(2, { psychologistId: null })]);
+        const overview = await send(app, '/api/admin/assessments/mhcu/overview', 'GET', undefined, bearer(superadmin));
+        expect(overview.status).toBe(200);
+        expect(scopes).toEqual([{}]);
+        const history = await send(app, `/api/admin/assessments/${idOf(1)}/history`, 'GET', undefined, bearer(superadmin));
+        expect(history.status).toBe(200);
+        expect((await send(app, '/api/admin/assessments/mhcu/settings', 'GET', undefined, bearer(superadmin))).status).toBe(200);
     });
 });
 

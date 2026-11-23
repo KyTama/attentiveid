@@ -37,8 +37,9 @@ const logFailure = (where: string, error: unknown) => {
 const num = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null);
 
 /** A psychologist reads only the check-ups assigned to them; an admin reads all. */
+const isAdminRole = (user: any): boolean => user?.role === 'admin' || user?.role === 'superadmin';
 const canAccess = (user: any, row: Pick<AssessmentRow, 'instrument' | 'psychologistId'>): boolean =>
-    user?.role === 'admin' || (!!user?.psychologistId && row.psychologistId === user.psychologistId);
+    isAdminRole(user) || (!!user?.psychologistId && row.psychologistId === user.psychologistId);
 
 /**
  * The extras the MHCU dashboard needs next to the list and the detail: overview numbers, the person's history over time,
@@ -63,7 +64,7 @@ export const createMhcuOpsRoutes = (dependencies: MhcuOpsRoutesDependencies) => 
         .use(roleGuard)
         .get('/api/admin/assessments/mhcu/overview', async ({ set, currentUser }: any) => {
             try {
-                const scope = currentUser.role === 'admin' ? {} : { psychologistId: currentUser.psychologistId ?? '00000000-0000-0000-0000-000000000000' };
+                const scope = isAdminRole(currentUser) ? {} : { psychologistId: currentUser.psychologistId ?? '00000000-0000-0000-0000-000000000000' };
                 set.headers['cache-control'] = 'no-store';
                 return { status: 'success', data: await dependencies.ops.overview(scope) };
             } catch (error) {

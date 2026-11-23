@@ -21,7 +21,8 @@ const makeUser = (id: string, role: UserDto['role']): UserDto => ({
 
 const admin = makeUser('admin-1', 'admin');
 const psychologist = makeUser('psych-1', 'psychologist');
-const usersById = new Map([[admin.id, admin], [psychologist.id, psychologist]]);
+const superadmin = makeUser('super-1', 'superadmin');
+const usersById = new Map([[admin.id, admin], [psychologist.id, psychologist], [superadmin.id, superadmin]]);
 const tokenService = createTokenService({
     secret: 'test-secret-key-must-be-at-least-32-bytes-long-for-hmac-sha256-security',
     store: {
@@ -368,6 +369,16 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}`, 'GET', undefined, psyHeaders)).status).toBe(404);
         expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}/report/psychologist`, 'GET', undefined, psyHeaders)).status).toBe(404);
         expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}`, 'GET', undefined, adminHeaders)).status).toBe(200);
+    });
+
+    it('shows a superadmin every check-up, also unassigned ones, like an admin', async () => {
+        const fixture = createFixture({ unassigned: true });
+        await submit(fixture.app, body());
+        const superToken = tokenService.issueAccessToken(superadmin).accessToken;
+        const list = await send(fixture.app, '/api/admin/assessment-lists/mhcu', 'GET', undefined, bearer(superToken));
+        expect((await list.json()).data).toHaveLength(1);
+        expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}`, 'GET', undefined, bearer(superToken))).status).toBe(200);
+        expect((await send(fixture.app, `/api/admin/assessments/${idOf(1)}/report/psychologist`, 'GET', undefined, bearer(superToken))).status).toBe(200);
     });
 
     it('lets only admins assign a psychologist, and rejects an unknown one', async () => {

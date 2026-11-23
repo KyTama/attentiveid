@@ -16,7 +16,7 @@ import { OverviewTiles } from '@/features/mhcu-dashboard/OverviewTiles'
 export function MhcuDashboardPage() {
   const { tx } = useTx()
   const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
   const { id: selectedId = null } = useParams()
   const navigate = useNavigate()
   const [items, setItems] = useState<MhcuListItem[]>([])
