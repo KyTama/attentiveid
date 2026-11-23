@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { ChevronDown, Search, SlidersHorizontal } from 'lucide-react'
 import { useTx } from '../i18n/use-tx'
 import type { MhcuListItem, PsychologistOption } from './api'
-import { LEVEL_STYLE, PAYMENT_STYLE, awaitsConfirmation, dateText, summarize, type MhcuFilters, type StatusFilter, type TodoFilter } from './helpers'
-
-const LEVEL_BAR = ['bg-emerald-500', 'bg-lime-500', 'bg-amber-400', 'bg-orange-500', 'bg-rose-600']
+import { LEVEL_STYLE, PAYMENT_STYLE, awaitsConfirmation, dateText, trackLabel, type MhcuFilters, type StatusFilter, type TodoFilter } from './helpers'
 
 const selectClass =
   'min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100 sm:min-h-0 sm:w-auto'
@@ -36,50 +34,15 @@ export function ProofBadge() {
   return <span className="inline-block rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">{tx('Bukti transfer masuk', 'Proof of transfer received')}</span>
 }
 
+export function TrackChip({ track }: { track?: string }) {
+  const { isEn } = useTx()
+  const label = trackLabel(track, isEn ? 'en' : 'id')
+  return label ? <span className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-700">{label}</span> : null
+}
+
 export function StatusText({ status }: { status: string }) {
   const { tx } = useTx()
   return <>{status === 'new' ? tx('Baru', 'New') : status === 'reviewed' ? tx('Ditinjau', 'Reviewed') : tx('Dirilis', 'Released')}</>
-}
-
-/** Counts from the list: how many results, people, returning people, and what still needs doing. */
-export function CohortTiles({ items, onShowProof }: { items: readonly MhcuListItem[]; onShowProof?: () => void }) {
-  const { tx } = useTx()
-  const s = summarize(items)
-  const total = s.levels.reduce((a, b) => a + b, 0) || 1
-  const tiles: [string, number][] = [
-    [tx('Hasil', 'Results'), s.results],
-    [tx('Peserta unik', 'People'), s.people],
-    [tx('Pemeriksaan ulang (T2+)', 'Repeat check-ups (T2+)'), s.returning],
-    [tx('Belum bayar', 'Unpaid'), s.unpaid],
-    [tx('Belum ditugaskan', 'Not assigned'), s.unassigned],
-    [tx('Belum dirilis', 'Not released'), s.unreleased],
-  ]
-  return (
-    <section aria-label={tx('Ringkasan', 'Summary')} className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-      <button
-        aria-label={`${tx('Bukti transfer masuk', 'Proof of transfer received')}: ${s.awaiting}`}
-        className={`cursor-pointer rounded-2xl border px-4 py-3 text-left ${s.awaiting > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}
-        onClick={onShowProof}
-        type="button"
-      >
-        <span className={`block text-2xl font-bold ${s.awaiting > 0 ? 'text-amber-800' : 'text-navy-900'}`}>{s.awaiting}</span>
-        <span className="block text-xs text-slate-600">{tx('Bukti transfer masuk', 'Proof of transfer received')}</span>
-      </button>
-      {tiles.map(([label, value]) => (
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3" key={label}>
-          <p className="text-2xl font-bold text-navy-900">{value}</p>
-          <p className="text-xs text-slate-500">{label}</p>
-        </div>
-      ))}
-      <div className="col-span-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:col-span-4 lg:col-span-7">
-        <p className="text-xs text-slate-500">{tx('Sebaran level', 'Level distribution')}</p>
-        <div className="mt-2 flex h-3 overflow-hidden rounded-full bg-slate-100" role="img" aria-label={s.levels.map((n, i) => `L${i + 1}: ${n}`).join(', ')}>
-          {s.levels.map((n, i) => (n ? <span className={LEVEL_BAR[i]} key={i} style={{ width: `${(n / total) * 100}%` }} /> : null))}
-        </div>
-        <p className="mt-1 text-xs text-slate-600">{s.levels.map((n, i) => `L${i + 1} ${n}`).join(' · ')}</p>
-      </div>
-    </section>
-  )
 }
 
 const activeCount = (f: MhcuFilters): number => [f.status !== 'all', f.level !== '', f.payment !== '', f.psychologist !== '', f.todo !== ''].filter(Boolean).length
@@ -242,6 +205,7 @@ export function SessionTable({
               <span className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
                 <PaymentChip status={item.paymentStatus} />
                 {awaitsConfirmation(item) && <ProofBadge />}
+                <TrackChip track={item.track} />
                 <span><StatusText status={item.status} /></span>
                 <span>· {nameOf(item.psychologistId)}</span>
               </span>
@@ -277,6 +241,7 @@ export function SessionTable({
                   >
                     <span className="block truncate font-semibold text-slate-900">{item.name}</span>
                     <span className="block truncate text-xs text-slate-500">{item.code}</span>
+                    {item.track && <span className="mt-0.5 block"><TrackChip track={item.track} /></span>}
                   </button>
                 </td>
                 <td className="px-3 py-2 text-slate-700">{item.waveNo ? `T${item.waveNo}` : '–'}</td>

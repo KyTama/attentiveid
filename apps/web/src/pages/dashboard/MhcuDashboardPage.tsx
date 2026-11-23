@@ -3,10 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/features/auth/auth-context'
 import { useTx } from '@/features/i18n/use-tx'
-import { listMhcu, listPsychologistOptions, type MhcuDetail, type MhcuListItem, type PsychologistOption } from '@/features/mhcu-dashboard/api'
+import { getOverview, listMhcu, listPsychologistOptions, type MhcuDetail, type MhcuListItem, type Overview, type PsychologistOption } from '@/features/mhcu-dashboard/api'
 import { DetailPanel } from '@/features/mhcu-dashboard/DetailPanel'
 import { NO_FILTERS, filterItems, type MhcuFilters } from '@/features/mhcu-dashboard/helpers'
-import { CohortTiles, SessionFilters, SessionTable } from '@/features/mhcu-dashboard/ListParts'
+import { SessionFilters, SessionTable } from '@/features/mhcu-dashboard/ListParts'
+import { OverviewTiles } from '@/features/mhcu-dashboard/OverviewTiles'
 
 /**
  * Mental Health Check-Up dashboard for staff: the list with filters, and one result open beside it
@@ -19,6 +20,7 @@ export function MhcuDashboardPage() {
   const { id: selectedId = null } = useParams()
   const navigate = useNavigate()
   const [items, setItems] = useState<MhcuListItem[]>([])
+  const [overview, setOverview] = useState<Overview | null>(null)
   const [psychologists, setPsychologists] = useState<PsychologistOption[]>([])
   const [filters, setFilters] = useState<MhcuFilters>(NO_FILTERS)
   const [loading, setLoading] = useState(true)
@@ -27,8 +29,14 @@ export function MhcuDashboardPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [list, people] = await Promise.all([listMhcu(), isAdmin ? listPsychologistOptions().catch(() => []) : Promise.resolve([])])
+      const [list, people, stats] = await Promise.all([
+        listMhcu(),
+        isAdmin ? listPsychologistOptions().catch(() => []) : Promise.resolve([]),
+        // the summary is a nice-to-have: when it fails the tiles are counted from the list
+        getOverview().catch(() => null),
+      ])
       setItems(list)
+      setOverview(stats)
       setPsychologists(people)
       setError(null)
     } catch (caught) {
@@ -62,7 +70,17 @@ export function MhcuDashboardPage() {
             )}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {isAdmin && (
+            <>
+              <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments/mhcu/invites">
+                {tx('Tautan undangan', 'Invitation links')}
+              </Link>
+              <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments/mhcu/settings">
+                {tx('Pengaturan', 'Settings')}
+              </Link>
+            </>
+          )}
           <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments">
             {tx('Hasil asesmen', 'Assessment results')}
           </Link>
@@ -86,7 +104,7 @@ export function MhcuDashboardPage() {
 
       {/* On a phone the open result takes the whole screen; the summary and filters come back with "Daftar hasil". */}
       <div className={`space-y-5 ${selectedId ? 'hidden xl:block xl:space-y-5' : ''}`}>
-        <CohortTiles items={items} onShowProof={() => setFilters({ ...NO_FILTERS, todo: 'proof' })} />
+        <OverviewTiles items={items} onFilter={(tile) => setFilters({ ...NO_FILTERS, ...tile })} overview={overview} />
         <SessionFilters filters={filters} onChange={setFilters} psychologists={psychologists} shown={visible.length} />
       </div>
 
@@ -111,6 +129,7 @@ export function MhcuDashboardPage() {
               id={selectedId}
               isAdmin={isAdmin}
               onChanged={changed}
+              onOpenWave={(id) => navigate(`/dashboard/assessments/mhcu/${id}`)}
               onClose={() => navigate('/dashboard/assessments/mhcu')}
               psychologists={psychologists}
             />

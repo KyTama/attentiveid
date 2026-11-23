@@ -172,7 +172,7 @@ describe('MHCU dashboard', () => {
   it('opens one result beside the list with scores, triggers and areas', async () => {
     setup()
     const { panel } = await openFirst()
-    expect(within(panel).getByText('54,2')).toBeInTheDocument()
+    expect(within(panel).getAllByText('54,2').length).toBeGreaterThan(0)
     expect(within(panel).getByText('8 domain di atas ambang')).toBeInTheDocument()
     expect(within(panel).getByText('Depresi *')).toBeInTheDocument()
     expect(within(panel).getByText('Mania')).toBeInTheDocument()

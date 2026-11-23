@@ -12,6 +12,7 @@ import {
   MessageSquareQuote,
   ClipboardCheck,
   ClipboardList,
+  MailPlus,
   FlaskConical,
   TextCursorInput,
   Network,
@@ -182,6 +183,19 @@ export function DashboardLayout() {
           label: t('dashboard.navMhcuDashboard', 'Dasbor MHCU'),
           icon: <ClipboardCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
+          end: true,
+        },
+        {
+          to: '/dashboard/assessments/mhcu/invites',
+          label: t('dashboard.navMhcuInvites', 'Undangan MHCU'),
+          icon: <MailPlus className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/assessments/mhcu/settings',
+          label: t('dashboard.navMhcuSettings', 'Pengaturan MHCU'),
+          icon: <SlidersHorizontal className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
         },
         {
           to: '/dashboard/prayers',
