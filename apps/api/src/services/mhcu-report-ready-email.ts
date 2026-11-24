@@ -144,7 +144,7 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
     const summaryCard = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0"><tr><td bgcolor="#142B51" style="background:#142B51;padding:18px 20px;color:#FFFFFF"><div style="font-size:10px;letter-spacing:1.4px;font-weight:bold;color:#C9A55C">${esc(copy.summary)}</div><div style="font-size:24px;line-height:1.25;font-weight:bold;margin:4px 0 4px 0;color:#FFFFFF">${esc(copy.levelOf(level, levelName))}</div><div style="font-size:13px;line-height:1.5;color:#E4E8EF;margin:0 0 12px 0">${esc(oneLiner)}</div><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border:1px solid #3D5580;padding:8px 14px"><div style="font-size:9.5px;letter-spacing:1.4px;font-weight:bold;color:#C9A55C">${esc(copy.mhi)}</div><div style="font-size:26px;line-height:30px;font-weight:bold;color:#FFFFFF">${esc(mhiText)}</div><div style="font-size:10.5px;color:#C7CFDC">${esc(copy.outOf)}</div></td></tr></table></td></tr></table>`
 
     const safety = showSafety
-        ? `<div style="border:1px solid #D0D5DD;border-left:3px solid #142B51;background:#F4F5F7;padding:11px 14px;margin:0 0 16px 0;font-size:12.5px;color:#1B2533">${esc(copy.safety)}</div>`
+        ? `<div style="border:1px solid #142B51;background:#F4F5F7;padding:11px 14px;margin:0 0 16px 0;font-size:12.5px;color:#1B2533">${esc(copy.safety)}</div>`
         : ''
 
     const inner =
