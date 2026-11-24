@@ -33,13 +33,13 @@ const dateText = (iso: string) =>
   new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' })
 
 /** Mental Health Check-Up results. A psychologist reads the scores, writes a note, then marks the result as reviewed or released. */
-export function AssessmentsCmsPage() {
+export function AssessmentsCmsPage({ initialInstrument = 'mhcu' }: { initialInstrument?: AssessmentInstrument } = {}) {
   const { tx, isEn } = useTx()
   const { user } = useAuth()
   const [items, setItems] = useState<AssessmentListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [instrument, setInstrument] = useState<AssessmentInstrument>('mhcu')
+  const [instrument, setInstrument] = useState<AssessmentInstrument>(initialInstrument)
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const [detail, setDetail] = useState<AssessmentDetail | null>(null)

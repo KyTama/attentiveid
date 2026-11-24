@@ -25,6 +25,8 @@ import { AssessmentsPage } from './pages/AssessmentsPage'
 import { AssessmentPaymentPage } from './pages/AssessmentPaymentPage'
 import { AssessmentsCmsPage } from './pages/dashboard/AssessmentsCmsPage'
 import { MhcuDashboardPage } from './pages/dashboard/MhcuDashboardPage'
+import { FormsHubPage } from './pages/dashboard/FormsHubPage'
+import { MhcuWikiPage } from './pages/dashboard/MhcuWikiPage'
 import { MhcuInvitesPage } from './pages/dashboard/MhcuInvitesPage'
 import { MhcuSettingsPage } from './pages/dashboard/MhcuSettingsPage'
 import { AccountSettingsPage } from './pages/dashboard/AccountSettingsPage'
@@ -204,6 +206,30 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
                 <AssessmentsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="forms"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                <FormsHubPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="assessments/gsc"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                <AssessmentsCmsPage initialInstrument="gsc" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="wiki/mhcu"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'psychologist']}>
+                <MhcuWikiPage />
               </ProtectedRoute>
             }
           />

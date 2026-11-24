@@ -53,3 +53,47 @@ describe('PUT /api/auth/me/settings', () => {
         expect(saved['psych-1']).toBe(120);
     });
 });
+
+describe('POST /api/auth/me/password', () => {
+    const build = (result: 'ok' | 'wrong' | 'notFound' = 'ok') => {
+        const calls: Array<[string, string, string]> = [];
+        const app = new Elysia().use(createAccountSettingsRoutes({
+            tokenService,
+            userRepository: { findById: async (id: string) => (id === me.id ? me : null) },
+            changePassword: async (userId, current, next) => { calls.push([userId, current, next]); return result; }
+        }));
+        const post = (body: unknown, auth = true) =>
+            app.handle(new Request('http://localhost/api/auth/me/password', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json', ...(auth ? { authorization: `Bearer ${token}` } : {}) },
+                body: JSON.stringify(body)
+            }));
+        return { calls, post };
+    };
+
+    it('needs a signed-in user', async () => {
+        const { post, calls } = build();
+        expect((await post({ currentPassword: 'old-pass-123', newPassword: 'new-pass-12345' }, false)).status).toBe(401);
+        expect(calls).toEqual([]);
+    });
+
+    it('changes only the signed-in person\'s password', async () => {
+        const { post, calls } = build();
+        const response = await post({ currentPassword: 'old-pass-123', newPassword: 'new-pass-12345', userId: 'admin-1' });
+        expect(response.status).toBe(200);
+        expect(calls).toEqual([['psych-1', 'old-pass-123', 'new-pass-12345']]);
+    });
+
+    it('rejects a short, missing or unchanged new password without touching the account', async () => {
+        const { post, calls } = build();
+        expect((await post({ currentPassword: 'old-pass-123', newPassword: 'short' })).status).toBe(400);
+        expect((await post({ newPassword: 'new-pass-12345' })).status).toBe(400);
+        expect((await post({ currentPassword: 'same-pass-12345', newPassword: 'same-pass-12345' })).status).toBe(400);
+        expect(calls).toEqual([]);
+    });
+
+    it('answers 403 for a wrong current password', async () => {
+        const { post } = build('wrong');
+        expect((await post({ currentPassword: 'old-pass-123', newPassword: 'new-pass-12345' })).status).toBe(403);
+    });
+});

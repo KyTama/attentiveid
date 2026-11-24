@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/features/auth/auth-context'
 import { useTx } from '@/features/i18n/use-tx'
@@ -57,7 +57,7 @@ export function MhcuDashboardPage() {
     setItems((current) => current.map((item) => (item.id === row.id ? { ...item, psychologistId: row.psychologistId, paymentStatus: row.paymentStatus, status: row.status, level: row.level } : item)))
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 pb-12">
+    <div className="mx-auto max-w-[96rem] space-y-4 pb-12">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl" data-route-heading tabIndex={-1}>
@@ -71,19 +71,6 @@ export function MhcuDashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {isAdmin && (
-            <>
-              <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments/mhcu/invites">
-                {tx('Tautan undangan', 'Invitation links')}
-              </Link>
-              <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments/mhcu/settings">
-                {tx('Pengaturan', 'Settings')}
-              </Link>
-            </>
-          )}
-          <Link className="flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50" to="/dashboard/assessments">
-            {tx('Hasil asesmen', 'Assessment results')}
-          </Link>
           <button
             className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             disabled={loading}
@@ -103,13 +90,13 @@ export function MhcuDashboardPage() {
       )}
 
       {/* On a phone the open result takes the whole screen; the summary and filters come back with "Daftar hasil". */}
-      <div className={`space-y-5 ${selectedId ? 'hidden xl:block xl:space-y-5' : ''}`}>
+      <div className={`space-y-5 ${selectedId ? 'hidden 2xl:block 2xl:space-y-5' : ''}`}>
         <OverviewTiles items={items} onFilter={(tile) => setFilters({ ...NO_FILTERS, ...tile })} overview={overview} />
         <SessionFilters filters={filters} onChange={setFilters} psychologists={psychologists} shown={visible.length} />
       </div>
 
-      <div className={`grid min-w-0 gap-5 ${selectedId ? 'xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)]' : ''}`}>
-        <div className={`min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white ${selectedId ? 'hidden xl:block' : ''}`}>
+      <div className={`grid min-w-0 gap-5 ${selectedId ? '2xl:grid-cols-[minmax(0,1fr)_minmax(0,38rem)]' : ''}`}>
+        <div className={`min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white ${selectedId ? 'hidden 2xl:block' : ''}`}>
           {loading ? (
             <p className="flex items-center gap-2 p-6 text-sm text-slate-500" role="status">
               <Loader2 aria-hidden="true" className="size-4 animate-spin" /> {tx('Memuat...', 'Loading...')}
@@ -124,7 +111,7 @@ export function MhcuDashboardPage() {
           )}
         </div>
         {selectedId && (
-          <aside aria-label={tx('Detail hasil', 'Result detail')} className="min-w-0 rounded-2xl border border-slate-200 bg-white xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:self-start xl:overflow-y-auto">
+          <aside aria-label={tx('Detail hasil', 'Result detail')} className="min-w-0 rounded-2xl border border-slate-200 bg-white 2xl:sticky 2xl:top-4 2xl:max-h-[calc(100vh-2rem)] 2xl:self-start 2xl:overflow-y-auto">
             <DetailPanel
               id={selectedId}
               isAdmin={isAdmin}

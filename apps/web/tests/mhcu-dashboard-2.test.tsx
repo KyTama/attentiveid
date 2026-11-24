@@ -455,9 +455,10 @@ describe('MHCU invitation links page', () => {
     expect(screen.queryByRole('heading', { name: 'Tautan undangan' })).not.toBeInTheDocument()
   })
 
-  it('the dashboard links to both admin pages, a psychologist sees neither link', async () => {
+  it('keeps the header light: the invitation and settings pages are reached from the side menu, not from here', async () => {
     setup('/dashboard/assessments/mhcu')
-    expect(await screen.findByRole('link', { name: 'Pengaturan' })).toHaveAttribute('href', '/dashboard/assessments/mhcu/settings')
-    expect(screen.getByRole('link', { name: 'Tautan undangan' })).toHaveAttribute('href', '/dashboard/assessments/mhcu/invites')
+    expect(await screen.findByRole('button', { name: 'Muat ulang' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Tautan undangan' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Pengaturan' })).not.toBeInTheDocument()
   })
 })

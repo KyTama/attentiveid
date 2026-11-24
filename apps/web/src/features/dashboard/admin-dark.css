@@ -1,0 +1,144 @@
+/* Admin dark theme. Applied by adding the class admin-dark to <html> while the portal is open (see admin-theme.ts).
+   It re-maps the colour variables the utilities use, so every portal page follows without touching each one. */
+:root.admin-dark {
+  color-scheme: dark;
+  --admin-bg: #0a1220;
+  --color-white: #101b30;
+  --color-black: #f8fafc;
+  --color-slate-50: #14213a;
+  --color-gray-50: #14213a;
+  --color-slate-100: #1a2944;
+  --color-gray-100: #1a2944;
+  --color-slate-200: #263654;
+  --color-gray-200: #263654;
+  --color-slate-300: #34456a;
+  --color-gray-300: #34456a;
+  --color-slate-400: #6b7a96;
+  --color-gray-400: #6b7a96;
+  --color-slate-500: #8391ab;
+  --color-gray-500: #8391ab;
+  --color-slate-600: #a6b2c7;
+  --color-gray-600: #a6b2c7;
+  --color-slate-700: #c4cddd;
+  --color-gray-700: #c4cddd;
+  --color-slate-800: #dde3ee;
+  --color-gray-800: #dde3ee;
+  --color-slate-900: #eef2f8;
+  --color-gray-900: #eef2f8;
+  --color-slate-950: #f8fafc;
+  --color-gray-950: #f8fafc;
+  --color-emerald-50: color-mix(in oklab, #10b981 12%, #0f1a2e);
+  --color-emerald-100: color-mix(in oklab, #10b981 20%, #0f1a2e);
+  --color-emerald-200: color-mix(in oklab, #10b981 32%, #0f1a2e);
+  --color-emerald-300: color-mix(in oklab, #10b981 50%, #0f1a2e);
+  --color-emerald-400: color-mix(in oklab, #10b981 100%, white);
+  --color-emerald-500: #10b981;
+  --color-emerald-600: color-mix(in oklab, white 25%, #10b981);
+  --color-emerald-700: color-mix(in oklab, white 45%, #10b981);
+  --color-emerald-800: color-mix(in oklab, white 65%, #10b981);
+  --color-emerald-900: color-mix(in oklab, white 80%, #10b981);
+  --color-emerald-950: color-mix(in oklab, white 90%, #10b981);
+  --color-amber-50: color-mix(in oklab, #f59e0b 12%, #0f1a2e);
+  --color-amber-100: color-mix(in oklab, #f59e0b 20%, #0f1a2e);
+  --color-amber-200: color-mix(in oklab, #f59e0b 32%, #0f1a2e);
+  --color-amber-300: color-mix(in oklab, #f59e0b 50%, #0f1a2e);
+  --color-amber-400: color-mix(in oklab, #f59e0b 100%, white);
+  --color-amber-500: #f59e0b;
+  --color-amber-600: color-mix(in oklab, white 25%, #f59e0b);
+  --color-amber-700: color-mix(in oklab, white 45%, #f59e0b);
+  --color-amber-800: color-mix(in oklab, white 65%, #f59e0b);
+  --color-amber-900: color-mix(in oklab, white 80%, #f59e0b);
+  --color-amber-950: color-mix(in oklab, white 90%, #f59e0b);
+  --color-rose-50: color-mix(in oklab, #f43f5e 12%, #0f1a2e);
+  --color-rose-100: color-mix(in oklab, #f43f5e 20%, #0f1a2e);
+  --color-rose-200: color-mix(in oklab, #f43f5e 32%, #0f1a2e);
+  --color-rose-300: color-mix(in oklab, #f43f5e 50%, #0f1a2e);
+  --color-rose-400: color-mix(in oklab, #f43f5e 100%, white);
+  --color-rose-500: #f43f5e;
+  --color-rose-600: color-mix(in oklab, white 25%, #f43f5e);
+  --color-rose-700: color-mix(in oklab, white 45%, #f43f5e);
+  --color-rose-800: color-mix(in oklab, white 65%, #f43f5e);
+  --color-rose-900: color-mix(in oklab, white 80%, #f43f5e);
+  --color-rose-950: color-mix(in oklab, white 90%, #f43f5e);
+  --color-sky-50: color-mix(in oklab, #0ea5e9 12%, #0f1a2e);
+  --color-sky-100: color-mix(in oklab, #0ea5e9 20%, #0f1a2e);
+  --color-sky-200: color-mix(in oklab, #0ea5e9 32%, #0f1a2e);
+  --color-sky-300: color-mix(in oklab, #0ea5e9 50%, #0f1a2e);
+  --color-sky-400: color-mix(in oklab, #0ea5e9 100%, white);
+  --color-sky-500: #0ea5e9;
+  --color-sky-600: color-mix(in oklab, white 25%, #0ea5e9);
+  --color-sky-700: color-mix(in oklab, white 45%, #0ea5e9);
+  --color-sky-800: color-mix(in oklab, white 65%, #0ea5e9);
+  --color-sky-900: color-mix(in oklab, white 80%, #0ea5e9);
+  --color-sky-950: color-mix(in oklab, white 90%, #0ea5e9);
+  --color-orange-50: color-mix(in oklab, #f97316 12%, #0f1a2e);
+  --color-orange-100: color-mix(in oklab, #f97316 20%, #0f1a2e);
+  --color-orange-200: color-mix(in oklab, #f97316 32%, #0f1a2e);
+  --color-orange-300: color-mix(in oklab, #f97316 50%, #0f1a2e);
+  --color-orange-400: color-mix(in oklab, #f97316 100%, white);
+  --color-orange-500: #f97316;
+  --color-orange-600: color-mix(in oklab, white 25%, #f97316);
+  --color-orange-700: color-mix(in oklab, white 45%, #f97316);
+  --color-orange-800: color-mix(in oklab, white 65%, #f97316);
+  --color-orange-900: color-mix(in oklab, white 80%, #f97316);
+  --color-orange-950: color-mix(in oklab, white 90%, #f97316);
+  --color-red-50: color-mix(in oklab, #ef4444 12%, #0f1a2e);
+  --color-red-100: color-mix(in oklab, #ef4444 20%, #0f1a2e);
+  --color-red-200: color-mix(in oklab, #ef4444 32%, #0f1a2e);
+  --color-red-300: color-mix(in oklab, #ef4444 50%, #0f1a2e);
+  --color-red-400: color-mix(in oklab, #ef4444 100%, white);
+  --color-red-500: #ef4444;
+  --color-red-600: color-mix(in oklab, white 25%, #ef4444);
+  --color-red-700: color-mix(in oklab, white 45%, #ef4444);
+  --color-red-800: color-mix(in oklab, white 65%, #ef4444);
+  --color-red-900: color-mix(in oklab, white 80%, #ef4444);
+  --color-red-950: color-mix(in oklab, white 90%, #ef4444);
+  --color-blue-50: color-mix(in oklab, #3b82f6 12%, #0f1a2e);
+  --color-blue-100: color-mix(in oklab, #3b82f6 20%, #0f1a2e);
+  --color-blue-200: color-mix(in oklab, #3b82f6 32%, #0f1a2e);
+  --color-blue-300: color-mix(in oklab, #3b82f6 50%, #0f1a2e);
+  --color-blue-400: color-mix(in oklab, #3b82f6 100%, white);
+  --color-blue-500: #3b82f6;
+  --color-blue-600: color-mix(in oklab, white 25%, #3b82f6);
+  --color-blue-700: color-mix(in oklab, white 45%, #3b82f6);
+  --color-blue-800: color-mix(in oklab, white 65%, #3b82f6);
+  --color-blue-900: color-mix(in oklab, white 80%, #3b82f6);
+  --color-blue-950: color-mix(in oklab, white 90%, #3b82f6);
+  --color-navy-50: color-mix(in oklab, #5c73a3 12%, #0f1a2e);
+  --color-navy-100: color-mix(in oklab, #5c73a3 20%, #0f1a2e);
+  --color-navy-200: color-mix(in oklab, #5c73a3 32%, #0f1a2e);
+  --color-navy-300: color-mix(in oklab, #5c73a3 50%, #0f1a2e);
+  --color-navy-400: color-mix(in oklab, #5c73a3 100%, white);
+  --color-navy-500: #5c73a3;
+  --color-navy-600: color-mix(in oklab, white 25%, #5c73a3);
+  --color-navy-700: color-mix(in oklab, white 45%, #5c73a3);
+  --color-navy-800: color-mix(in oklab, white 65%, #5c73a3);
+  --color-navy-900: color-mix(in oklab, white 80%, #5c73a3);
+  --color-navy-950: color-mix(in oklab, white 90%, #5c73a3);
+  --color-gold-50: color-mix(in oklab, #d6a74d 12%, #0f1a2e);
+  --color-gold-100: color-mix(in oklab, #d6a74d 20%, #0f1a2e);
+  --color-gold-200: color-mix(in oklab, #d6a74d 32%, #0f1a2e);
+  --color-gold-300: color-mix(in oklab, #d6a74d 50%, #0f1a2e);
+  --color-gold-400: color-mix(in oklab, #d6a74d 100%, white);
+  --color-gold-500: #d6a74d;
+  --color-gold-600: color-mix(in oklab, white 25%, #d6a74d);
+  --color-gold-700: color-mix(in oklab, white 45%, #d6a74d);
+  --color-gold-800: color-mix(in oklab, white 65%, #d6a74d);
+  --color-gold-900: color-mix(in oklab, white 80%, #d6a74d);
+  --color-gold-950: color-mix(in oklab, white 90%, #d6a74d);
+}
+
+/* Things the colour variables cannot reach. */
+:root.admin-dark .admin-shell { background-color: var(--admin-bg); }
+:root.admin-dark input,
+:root.admin-dark textarea,
+:root.admin-dark select {
+  color-scheme: dark;
+  color: var(--color-slate-900);
+}
+:root.admin-dark input::placeholder,
+:root.admin-dark textarea::placeholder { color: var(--color-slate-500); }
+:root.admin-dark .admin-lang button { color: var(--color-slate-700); }
+:root.admin-dark .admin-lang button:hover { background-color: var(--color-slate-100); color: var(--color-slate-900); }
+:root.admin-dark img.admin-invert { filter: invert(1) hue-rotate(180deg); }
+:root.admin-dark .admin-keep-light { color-scheme: light; }

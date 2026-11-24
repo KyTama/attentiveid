@@ -2,7 +2,7 @@
  * Map of how content flows through the Attentive.id app:
  *   Portal menu  ->  where the data lives  ->  where visitors see it.
  *
- * This is hand-maintained documentation (read from the code on 2026-11-14), shown
+ * This is hand-maintained documentation (read from the code on 2026-11-14, forms and MHCU added 2026-11-24), shown
  * in the portal under Experimental > System Map. Update it when a connection is
  * added or fixed so the diagram stays true.
  */
@@ -77,6 +77,23 @@ export const MAP_NODES: MapNode[] = [
   { id: 'p-qr', column: 'portal', label: 'QR Generator', sub: 'Alat Bantu (semua akun staf)', status: 'live', route: '/dashboard/qr-generator',
     about: 'Membuat QR dengan logo Attentive di tengah (atau logo sendiri), menyimpan desainnya, dan mengunduh PNG. Bisa dipakai semua akun staf (admin dan psikolog).' },
 
+  // ---- Forms: MHCU & Goal System Compass (portal) ------------------------
+  { id: 'p-forms', column: 'portal', label: 'Semua Aktivitas Formulir', sub: 'Ringkasan semua formulir', status: 'live', route: '/dashboard/forms',
+    about: 'Satu halaman untuk aktivitas semua formulir: jumlah total, 7 hari terakhir, kiriman terbaru, dan tautan ke tiap formulir.' },
+  { id: 'p-mhcu', column: 'portal', label: 'Dasbor MHCU', sub: 'Hasil, pembayaran, catatan, rilis', status: 'live', route: '/dashboard/assessments/mhcu',
+    about: 'Daftar dan detail hasil MHCU: skor, 13 area, riwayat T1..Tn, tugaskan psikolog, catatan, status pembayaran, pratinjau laporan, rilis laporan, kirim ulang e-mail.',
+    note: 'Psikolog hanya melihat klien yang ditugaskan kepadanya.' },
+  { id: 'p-mhcu-inv', column: 'portal', label: 'Undangan MHCU', sub: 'Tautan sekali pakai', status: 'live', route: '/dashboard/assessments/mhcu/invites',
+    about: 'Membuat tautan undangan untuk Asesmen Awal dan Free Session, serta kuota paket 3x.' },
+  { id: 'p-mhcu-set', column: 'portal', label: 'Pengaturan MHCU', sub: 'Harga, promo, peringatan', status: 'live', route: '/dashboard/assessments/mhcu/settings',
+    about: 'Harga normal dan promo, tanggal akhir promo, level dan alamat peringatan, serta dua sakelar otomatis (tugaskan psikolog, rilis laporan).' },
+  { id: 'p-gsc', column: 'portal', label: 'Hasil GSC', sub: 'Goal System Compass', status: 'live', route: '/dashboard/assessments/gsc',
+    about: 'Hasil pengisian Goal System Compass.' },
+  { id: 'p-account', column: 'portal', label: 'Pengaturan Akun', sub: 'Password, sesi, tema', status: 'live', route: '/dashboard/account',
+    about: 'Setiap orang mengganti password sendiri, mengatur batas waktu tidak aktif, dan memilih tema terang atau gelap.' },
+  { id: 'p-wiki', column: 'portal', label: 'Wiki MHCU', sub: 'Panduan langkah demi langkah', status: 'live', route: '/dashboard/wiki/mhcu',
+    about: 'Panduan lengkap MHCU untuk staf, dari formulir sampai rilis laporan. Wiki sistem lain menyusul.' },
+
   // ---- Portal menus (proposed) --------------------------------------------
   { id: 'g-settings', column: 'portal', label: 'Site Settings', sub: 'Kontak, booking, kampanye', status: 'proposed',
     about: 'Satu tempat untuk nomor WhatsApp, email, tautan booking, media sosial, banner/kampanye (dengan tanggal mulai-selesai), dan thumbnail share default.',
@@ -89,6 +106,23 @@ export const MAP_NODES: MapNode[] = [
     about: 'Unggah gambar sekali, pakai ulang, dengan pengecilan otomatis agar foto tidak pecah/berat.' },
   { id: 'g-seo', column: 'portal', label: 'SEO & Sitemap', sub: 'Judul, deskripsi, share', status: 'proposed',
     about: 'Sisa yang belum ada: judul & deskripsi SEO untuk Google (bukan hanya thumbnail share) per halaman. Thumbnail share dan sitemap otomatis sudah tersedia.' },
+
+  // ---- Forms: where the data lives -----------------------------------------
+  { id: 'd-assess', column: 'source', label: 'Hasil formulir', sub: 'Database: MHCU & GSC', status: 'live',
+    about: 'Jawaban, skor, level, catatan psikolog, status, dan tautan laporan. Skor dihitung di server.' },
+  { id: 'd-people', column: 'source', label: 'Peserta & riwayat', sub: 'Database: nomor peserta, T1..Tn', status: 'live',
+    about: 'Orang yang sama dikenali dari e-mail atau nomor WhatsApp; pemeriksaan diberi nomor T1, T2, T3.' },
+  { id: 'd-pay', column: 'source', label: 'Pembayaran & bukti transfer', sub: 'Database', status: 'live',
+    about: 'Status pembayaran, paket, harga, dan berkas bukti transfer.' },
+  { id: 'd-invites', column: 'source', label: 'Undangan & kuota', sub: 'Database', status: 'live',
+    about: 'Tautan undangan (satu kali pakai) dan sisa kuota paket.' },
+  { id: 'd-mhcu-set', column: 'source', label: 'Pengaturan MHCU', sub: 'Database: site_settings', status: 'live',
+    about: 'Harga, promo, level peringatan, alamat peringatan, dan sakelar otomatis.' },
+  { id: 'd-audit', column: 'source', label: 'Catatan perubahan staf', sub: 'Database', status: 'live',
+    about: 'Siapa mengubah apa pada hasil mana, tanpa data pribadi.' },
+  { id: 'c-mail', column: 'source', label: 'Pengiriman e-mail (SMTP)', sub: 'Rahasia server', status: 'code',
+    about: 'Surel hasil, konfirmasi bukti transfer, rilis laporan, dan salinan ke contact@ dikirim lewat SMTP yang diatur di server.',
+    note: 'Pengaturan SMTP ada di rahasia server, bukan di portal.' },
 
   // ---- Where the data lives ------------------------------------------------
   { id: 'd-landing', column: 'source', label: 'Konten beranda', sub: 'Database (draft/publish)', status: 'live',
@@ -132,6 +166,18 @@ export const MAP_NODES: MapNode[] = [
     note: 'Sitemap utama kini dibuat otomatis dari database.' },
   { id: 'c-photos', column: 'source', label: 'Daftar foto (kode)', sub: 'assets/images.ts', status: 'code',
     about: 'Daftar nama file foto psikolog di kode. Perlu diperiksa apakah masih ada yang memakainya selain foto unggahan portal.' },
+
+  // ---- Forms: what visitors see ----------------------------------------------
+  { id: 'u-mhcu', column: 'public', label: '/assessments/mhcu', sub: 'Formulir & layar terima kasih', status: 'live',
+    about: 'Formulir MHCU, hasil singkat, dan tawaran laporan lengkap dengan harga.' },
+  { id: 'u-gsc', column: 'public', label: '/assessments/gsc', sub: 'Formulir GSC', status: 'live',
+    about: 'Formulir Goal System Compass.' },
+  { id: 'u-pay', column: 'public', label: '/assessments/payment', sub: 'Halaman pembayaran', status: 'live',
+    about: 'Rekening, pilihan 1x atau paket 3x, unggah bukti, dan pesan WhatsApp.' },
+  { id: 'u-report', column: 'public', label: 'Halaman laporan hasil', sub: 'Tautan bertanda tangan', status: 'live',
+    about: 'Laporan lengkap yang dirilis, dibuka dari tautan di e-mail; bisa dicetak atau disimpan sebagai PDF.' },
+  { id: 'u-mail', column: 'public', label: 'E-mail ke peserta', sub: 'Hasil, bukti diterima, rilis', status: 'live',
+    about: 'E-mail yang diterima peserta, serta salinan dan pemberitahuan ke tim.' },
 
   // ---- What visitors see ---------------------------------------------------
   { id: 'u-hero', column: 'public', label: 'Hero beranda', sub: 'Carousel 5 slide', status: 'live',
@@ -219,6 +265,27 @@ export const MAP_EDGES: MapEdge[] = [
   { from: 'd-psych', to: 'u-seo', status: 'live', label: 'sitemap otomatis' },
   { from: 'd-articles', to: 'u-seo', status: 'live', label: 'sitemap otomatis' },
   { from: 'd-sci', to: 'u-seo', status: 'live', label: 'sitemap otomatis' },
+
+  // Forms
+  { from: 'p-forms', to: 'd-assess', status: 'live', label: 'ringkasan semua formulir' },
+  { from: 'p-mhcu', to: 'd-assess', status: 'live', label: 'hasil, catatan, rilis' },
+  { from: 'p-mhcu', to: 'd-people', status: 'live', label: 'riwayat T1..Tn' },
+  { from: 'p-mhcu', to: 'd-pay', status: 'live', label: 'status & bukti transfer' },
+  { from: 'p-mhcu', to: 'd-audit', status: 'live', label: 'catatan perubahan' },
+  { from: 'p-mhcu-inv', to: 'd-invites', status: 'live', label: 'buat & batalkan undangan' },
+  { from: 'p-mhcu-set', to: 'd-mhcu-set', status: 'live', label: 'harga, promo, peringatan' },
+  { from: 'p-gsc', to: 'd-assess', status: 'live', label: 'hasil GSC' },
+  { from: 'p-account', to: 'd-users', status: 'live', label: 'password & batas waktu sesi' },
+  { from: 'u-mhcu', to: 'd-assess', status: 'live', label: 'kiriman formulir & skor' },
+  { from: 'u-mhcu', to: 'd-people', status: 'live', label: 'pengenalan peserta' },
+  { from: 'u-gsc', to: 'd-assess', status: 'live', label: 'kiriman formulir' },
+  { from: 'u-pay', to: 'd-pay', status: 'live', label: 'bukti transfer' },
+  { from: 'd-invites', to: 'u-mhcu', status: 'live', label: 'jalur undangan' },
+  { from: 'd-mhcu-set', to: 'u-mhcu', status: 'live', label: 'harga & tanggal promo' },
+  { from: 'd-mhcu-set', to: 'u-pay', status: 'live', label: 'harga & tanggal promo' },
+  { from: 'd-assess', to: 'u-report', status: 'live', label: 'laporan yang dirilis' },
+  { from: 'c-mail', to: 'u-mail', status: 'code', label: 'pengiriman SMTP' },
+  { from: 'd-assess', to: 'u-mail', status: 'live', label: 'isi hasil' },
 
   // Proposed portal menus
   { from: 'g-settings', to: 'c-booking', status: 'proposed', label: 'satu pengaturan' },
