@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { Elysia, t } from 'elysia';
 import { scoreMhcu, validateGscSubmission, validateMhcuSubmission } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
@@ -203,7 +204,19 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         const psychologistName = row.psychologistId ? await repository.getPsychologistName(row.psychologistId) : null;
         return { raw: row, input: { row: current, history, psychologistName, finalizedBy: psychologistName } };
     };
-    const htmlHeaders = (set: any) => {
+    /** Headers for a served report page. The page needs its own styles, the logo and font from this site, and one inline script (print / copy link), which is allowed by its hash only. */
+    const htmlHeaders = (set: any, html: string) => {
+        const scriptHashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => `'sha256-${createHash('sha256').update(match[1]).digest('base64')}'`);
+        set.headers['content-security-policy'] = [
+            "default-src 'none'",
+            "style-src 'unsafe-inline'",
+            "img-src 'self' data:",
+            "font-src 'self'",
+            `script-src ${scriptHashes.length ? scriptHashes.join(' ') : "'none'"}`,
+            "frame-ancestors 'none'",
+            "base-uri 'none'",
+            "form-action 'none'"
+        ].join('; ');
         set.headers['content-type'] = 'text/html; charset=utf-8';
         set.headers['cache-control'] = 'no-store';
         set.headers['x-robots-tag'] = 'noindex, nofollow';
@@ -608,8 +621,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 }
                 // The internal report holds comparisons for psychologists only; each opening is logged (who, which check-up).
                 if (params.kind === 'psychologist') await auditSafely({ actor: currentUser?.id ?? null, action: 'psychologist_report', submissionId: loaded.raw.id, detail: 'opened' });
-                htmlHeaders(set);
-                return params.kind === 'client' ? renderClientReportPage(loaded.input, 'staff') : renderPsychologistReportHtml(loaded.input);
+                const page = params.kind === 'client' ? renderClientReportPage(loaded.input, 'staff') : renderPsychologistReportHtml(loaded.input);
+                htmlHeaders(set, page);
+                return page;
             } catch (error) {
                 logFailure('report', error);
                 set.status = 503;
@@ -667,8 +681,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 if (!row || row.status !== 'released') return gone();
                 const loaded = await loadReportInput(row.id);
                 if (!loaded) return gone();
-                htmlHeaders(set);
-                return renderClientReportPage(loaded.input, 'public');
+                const page = renderClientReportPage(loaded.input, 'public');
+                htmlHeaders(set, page);
+                return page;
             } catch (error) {
                 logFailure('public-report', error);
                 set.status = 503;
