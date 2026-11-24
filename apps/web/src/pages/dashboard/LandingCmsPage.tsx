@@ -1425,7 +1425,7 @@ export function LandingCmsPage() {
 
           {/* --- HERO ONLY: Live Hero Highlight Card Simulator & Showcase --- */}
           {activeSection?.key === 'hero' && (
-            <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-2xl border border-slate-700 text-white space-y-4 shadow-md">
+            <div className="admin-keep-light p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-2xl border border-slate-700 text-white space-y-4 shadow-md">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="size-8 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center border border-amber-400/30 shrink-0">
