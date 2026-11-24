@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'bun:test';
 import { Elysia } from 'elysia';
 import type { UserDto } from '@attentiveid/shared';
@@ -458,6 +459,14 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         expect(open.headers.get('cache-control')).toBe('no-store');
         expect(open.headers.get('x-robots-tag')).toContain('noindex');
         const page = await open.text();
+        // the page's own policy lets it show its styles, logo and font, and run only its one inline script (by hash)
+        const policy = open.headers.get('content-security-policy') ?? '';
+        expect(policy).toContain("style-src 'unsafe-inline'");
+        expect(policy).toContain("img-src 'self'");
+        expect(policy).toContain("font-src 'self'");
+        expect(policy).toContain("frame-ancestors 'none'");
+        const script = /<script>([\s\S]*?)<\/script>/.exec(page)![1];
+        expect(policy).toContain(`'sha256-${createHash('sha256').update(script).digest('base64')}'`);
         expect(page).toContain('Rina Pratiwi');
         // the participant's page: title, print and copy buttons, then the A4 pages; no staff ribbon
         expect(page).toContain('Laporan Hasil Pemeriksaan MHCU');

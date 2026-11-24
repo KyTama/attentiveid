@@ -67,7 +67,10 @@ export const createApp = (dependencies: AppDependencies) => {
         .onAfterHandle({ as: 'global' }, ({ set }) => {
             set.headers['x-content-type-options'] = 'nosniff';
             set.headers['referrer-policy'] = 'no-referrer';
-            set.headers['content-security-policy'] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+            // A route that serves a real page (the report) sets its own, slightly wider policy; everything else gets the locked-down one.
+            if (!set.headers['content-security-policy']) {
+                set.headers['content-security-policy'] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+            }
             set.headers['cross-origin-resource-policy'] = 'same-site';
             set.headers['permissions-policy'] = 'camera=(), microphone=(), geolocation=(), payment=()';
         })
