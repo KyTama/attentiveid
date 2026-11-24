@@ -56,14 +56,14 @@ export const formatSubmittedDate = (date: Date, lang: 'id' | 'en'): string => {
     return `${jakarta.getUTCDate()} ${MONTHS[lang][jakarta.getUTCMonth()]} ${jakarta.getUTCFullYear()}`
 }
 
-const decimal = (value: number, lang: 'id' | 'en'): string => {
+export const decimal = (value: number, lang: 'id' | 'en'): string => {
     const text = (Math.round(value * 10) / 10).toFixed(1)
     return lang === 'id' ? text.replace('.', ',') : text
 }
 
 const rupiah = (amount: number): string => `Rp ${String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
 
-const LEVELS = {
+export const LEVELS = {
     id: ['Baik', 'Perlu Dipantau', 'Perlu Perhatian', 'Perlu Perhatian Serius', 'Prioritas'],
     en: ['Good', 'Needs Monitoring', 'Needs Attention', 'Needs Serious Attention', 'Priority']
 } as const
