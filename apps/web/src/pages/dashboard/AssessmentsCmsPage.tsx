@@ -13,6 +13,7 @@ import {
   type AssessmentStatus,
 } from '@/features/assessments/service'
 import { useTx } from '@/features/i18n/use-tx'
+import { OwnerDeleteButton } from '@/features/assessments/OwnerDeleteButton'
 
 type Filter = 'all' | AssessmentStatus
 
@@ -384,6 +385,15 @@ export function AssessmentsCmsPage({ initialInstrument = 'mhcu' }: { initialInst
               </label>
 
               <div className="flex flex-wrap items-center gap-2">
+                <OwnerDeleteButton
+                  id={detail.id}
+                  label={`${detail.code} · ${detail.name}`}
+                  onDeleted={() => {
+                    setDetail(null)
+                    void load()
+                  }}
+                  onError={setError}
+                />
                 <button
                   className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                   disabled={busy}

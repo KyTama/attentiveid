@@ -161,7 +161,13 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             return { status: 'ok', row };
         },
         getParticipant: async () => null,
-        audit: async (entry) => { audits.push(entry); }
+        audit: async (entry) => { audits.push(entry); },
+        deleteSubmission: async (id) => {
+            const index = rows.findIndex((row) => row.id === id);
+            if (index < 0) return null;
+            const [row] = rows.splice(index, 1);
+            return { code: row.code, instrument: row.instrument };
+        }
     };
     const app = new Elysia().use(
         createAssessmentsRoutes({
@@ -768,5 +774,41 @@ describe('Goal System Compass e-mails', () => {
         expect((await submitGsc(app, gscBody())).status).toBe(201);
         await settle();
         expect(rows.filter((row) => row.instrument === 'gsc')).toHaveLength(1);
+    });
+});
+
+describe('DELETE /api/admin/assessments/:id (owner only)', () => {
+    const ownerUser: UserDto = { ...makeUser('owner-1', 'superadmin'), email: 'nico.alex.ha@gmail.com' };
+    usersById.set(ownerUser.id, ownerUser);
+    const ownerToken = tokenService.issueAccessToken(ownerUser).accessToken;
+    const superToken = tokenService.issueAccessToken(superadmin).accessToken;
+
+    it('lets the owner delete a result, keeps an audit line without personal data, and returns 404 afterwards', async () => {
+        const { app, rows, audits } = createFixture();
+        await submit(app, body());
+        const id = rows[0].id;
+        const done = await send(app, `/api/admin/assessments/${id}`, 'DELETE', undefined, bearer(ownerToken));
+        expect(done.status).toBe(200);
+        expect((await done.json()).data).toEqual({ id, code: 'AT-MHCU-2026-100' });
+        expect(rows).toHaveLength(0);
+        expect(audits.at(-1)).toMatchObject({ action: 'delete', detail: 'AT-MHCU-2026-100', submissionId: id });
+        expect(JSON.stringify(audits.at(-1))).not.toContain('Rina');
+        expect((await send(app, `/api/admin/assessments/${id}`, 'DELETE', undefined, bearer(ownerToken))).status).toBe(404);
+    });
+
+    it('refuses everyone else (no login, psychologist, admin, another superadmin) and deletes nothing', async () => {
+        const { app, rows } = createFixture();
+        await submit(app, body());
+        const id = rows[0].id;
+        expect((await send(app, `/api/admin/assessments/${id}`, 'DELETE')).status).toBe(401);
+        expect((await send(app, `/api/admin/assessments/${id}`, 'DELETE', undefined, bearer(psychologistToken))).status).toBe(403);
+        expect((await send(app, `/api/admin/assessments/${id}`, 'DELETE', undefined, bearer(adminToken))).status).toBe(403);
+        expect((await send(app, `/api/admin/assessments/${id}`, 'DELETE', undefined, bearer(superToken))).status).toBe(403);
+        expect(rows).toHaveLength(1);
+    });
+
+    it('returns 404 for a bad id', async () => {
+        const { app } = createFixture();
+        expect((await send(app, '/api/admin/assessments/not-an-id', 'DELETE', undefined, bearer(ownerToken))).status).toBe(404);
     });
 });

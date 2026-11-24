@@ -188,6 +188,19 @@ export async function transitionAdminBookingStatus(
   }
 }
 
+/** Permanently deletes one booking (owner account only; the API refuses everyone else). */
+export async function deleteAdminBooking(id: string): Promise<void> {
+  const response = await fetch(`${apiBaseUrl()}/api/admin/bookings/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+    credentials: 'include',
+  })
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null
+    throw new Error(body?.message || 'Gagal menghapus reservasi.')
+  }
+}
+
 export async function retryAdminBookingWebhook(id: string): Promise<{
   ok: boolean
   deliveryId?: string

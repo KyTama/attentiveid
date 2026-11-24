@@ -133,6 +133,11 @@ export interface AssessmentsRepository {
     getParticipant(participantId: string): Promise<ParticipantInfo | null>;
     /** Writes one row of the staff audit trail. Never throws into the caller's flow: a failed audit row is logged by the caller if it wants to. */
     audit(entry: AuditEntry): Promise<void>;
+    /**
+     * Permanently removes one result with its proof of transfer (owner only). The person's record is removed too when this was their only
+     * result, otherwise its counters are recalculated. Returns what was removed, or null when it does not exist.
+     */
+    deleteSubmission(id: string): Promise<{ code: string; instrument: string } | null>;
     markReportReleased(id: string): Promise<AssessmentRow | null>;
     /** Records what the participant says they paid for and keeps the proof of transfer (a screenshot or PDF) with it. */
     savePayment(id: string, input: { paymentFor: string; mimeType: string; data: Buffer }): Promise<void>;
@@ -466,6 +471,30 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
             .where(eq(assessmentParticipants.id, participantId))
             .limit(1);
         return rows[0] ?? null;
+    },
+
+    async deleteSubmission(id) {
+        return db.transaction(async (tx) => {
+            const rows = await tx.select().from(assessmentSubmissions).where(eq(assessmentSubmissions.id, id)).limit(1);
+            const row = rows[0];
+            if (!row) return null;
+            await tx.delete(assessmentPaymentProofs).where(eq(assessmentPaymentProofs.submissionId, id));
+            // An invitation that was used for this result no longer points at it.
+            await tx.update(assessmentInvites).set({ usedSubmissionId: null }).where(eq(assessmentInvites.usedSubmissionId, id));
+            await tx.delete(assessmentSubmissions).where(eq(assessmentSubmissions.id, id));
+            if (row.participantId) {
+                const [rest] = await tx
+                    .select({ n: sql<number>`count(*)`, first: sql<string | null>`min(${assessmentSubmissions.createdAt})`, last: sql<string | null>`max(${assessmentSubmissions.createdAt})` })
+                    .from(assessmentSubmissions)
+                    .where(eq(assessmentSubmissions.participantId, row.participantId));
+                if (Number(rest?.n ?? 0) === 0) {
+                    await tx.delete(assessmentParticipants).where(eq(assessmentParticipants.id, row.participantId));
+                } else {
+                    await tx.update(assessmentParticipants).set({ nSessions: Number(rest.n), firstSessionAt: rest.first, lastSessionAt: rest.last }).where(eq(assessmentParticipants.id, row.participantId));
+                }
+            }
+            return { code: row.code, instrument: row.instrument };
+        });
     },
 
     async audit(entry) {

@@ -256,6 +256,7 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
             listForExport: async () => [sampleRecord],
             transitionStatus: async () => ({ ok: true, record: { ...sampleRecord, status: 'confirmed' } }),
             retryWebhookDelivery: async () => ({ ok: true, deliveryId: 'del-1' }),
+            deleteBooking: async (id) => id !== '00000000-0000-4000-8000-000000000000',
             getAttributionReport: async () => ({
                 total: 1,
                 attributed: 1,
@@ -720,5 +721,39 @@ describe('Booking Routes, Clinical Privacy Wall & Outbox Service', () => {
                 await db.delete(schema.bookings).where(inArray(schema.bookings.id, createdIds));
             }
         }
+    });
+});
+
+describe('DELETE /api/admin/bookings/:id (owner only)', () => {
+    const owner: UserDto = { ...makeUser('owner-1', 'superadmin'), email: 'nico.alex.ha@gmail.com' };
+    const otherSuper = makeUser('super-2', 'superadmin');
+    const users = new Map([[adminUser.id, adminUser], [psychUser.id, psychUser], [owner.id, owner], [otherSuper.id, otherSuper]]);
+    const SOME_ID = '763f973a-dae7-4481-840a-f61501f81640';
+    const MISSING_ID = '00000000-0000-4000-8000-000000000000';
+    const deleted: string[] = [];
+    const bookingRepository = { deleteBooking: async (id: string) => { deleted.push(id); return id !== MISSING_ID; } } as unknown as BookingRepository;
+    const app = new Elysia().use(createBookingAdminRoutes({
+        tokenService,
+        userRepository: { findById: async (id) => users.get(id) ?? null },
+        bookingRepository
+    }));
+    const del = (id: string, token?: string) =>
+        app.handle(new Request(`http://localhost/api/admin/bookings/${id}`, { method: 'DELETE', headers: token ? { authorization: `Bearer ${token}` } : {} }));
+
+    it('lets the owner delete, 404 for unknown or malformed ids', async () => {
+        const ownerToken = tokenService.issueAccessToken(owner).accessToken;
+        expect((await del(SOME_ID, ownerToken)).status).toBe(200);
+        expect((await del(MISSING_ID, ownerToken)).status).toBe(404);
+        expect((await del('not-an-id', ownerToken)).status).toBe(404);
+        expect(deleted).toEqual([SOME_ID, MISSING_ID]);
+    });
+
+    it('refuses everyone else and deletes nothing', async () => {
+        deleted.length = 0;
+        expect((await del(SOME_ID)).status).toBe(401);
+        expect((await del(SOME_ID, psychToken)).status).toBe(403);
+        expect((await del(SOME_ID, adminToken)).status).toBe(403);
+        expect((await del(SOME_ID, tokenService.issueAccessToken(otherSuper).accessToken)).status).toBe(403);
+        expect(deleted).toHaveLength(0);
     });
 });

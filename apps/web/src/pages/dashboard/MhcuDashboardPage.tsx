@@ -116,6 +116,10 @@ export function MhcuDashboardPage() {
               id={selectedId}
               isAdmin={isAdmin}
               onChanged={changed}
+              onDeleted={() => {
+                navigate('/dashboard/assessments/mhcu')
+                void load()
+              }}
               onOpenWave={(id) => navigate(`/dashboard/assessments/mhcu/${id}`)}
               onClose={() => navigate('/dashboard/assessments/mhcu')}
               psychologists={psychologists}
