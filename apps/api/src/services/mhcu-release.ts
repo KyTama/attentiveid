@@ -2,6 +2,7 @@ import type { AssessmentRow, AssessmentsRepository } from '../repositories/asses
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { Mailer } from './mailer';
 import { paymentToken } from './assessment-payment';
+import { buildReportReadyEmail } from './mhcu-report-ready-email';
 import { REPORT_READY_PAYMENT } from './mhcu-report-service';
 import type { MhcuSettings } from './mhcu-settings';
 
@@ -35,16 +36,19 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     if (released && deps.secret && deps.mailer?.isConfigured) {
         const origin = (deps.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
         const link = `${origin}/api/public/assessments/report?id=${encodeURIComponent(row.code)}&t=${paymentToken(deps.secret, row.code)}`;
-        const en = row.lang === 'en';
-        const safeName = row.name.replace(/[<>&"]/g, '');
         try {
             await deps.mailer.send({
                 to: row.email,
-                subject: en ? `Your full report is ready · ${row.code}` : `Laporan lengkap Anda sudah siap · ${row.code}`,
-                text: en
-                    ? `Dear ${row.name},\n\nYour full Mental Health Check-Up report is ready: ${link}\n\nYou can save it as a PDF from the page (Print > Save as PDF).\n\nAttentive Psychology Bureau`
-                    : `Yth. ${row.name},\n\nLaporan lengkap Mental Health Check-Up Anda sudah siap: ${link}\n\nAnda dapat menyimpannya sebagai PDF dari halaman tersebut (Cetak > Simpan sebagai PDF).\n\nBiro Psikologi Attentive`,
-                html: `<p>${en ? 'Dear' : 'Yth.'} ${safeName},</p><p>${en ? 'Your full Mental Health Check-Up report is ready' : 'Laporan lengkap Mental Health Check-Up Anda sudah siap'}: <a href="${link}">${en ? 'open the report' : 'buka laporan'}</a></p><p>${en ? 'Save it as a PDF from the page (Print &gt; Save as PDF).' : 'Simpan sebagai PDF dari halaman tersebut (Cetak &gt; Simpan sebagai PDF).'}</p><p>Attentive Psychology Bureau</p>`
+                ...buildReportReadyEmail({
+                    name: row.name,
+                    code: row.code,
+                    lang: row.lang === 'en' ? 'en' : 'id',
+                    scores: row.scores,
+                    level: row.level,
+                    reportLink: link,
+                    submittedAt: new Date(row.createdAt),
+                    siteOrigin: origin
+                })
             });
             emailed = true;
         } catch (error) {
