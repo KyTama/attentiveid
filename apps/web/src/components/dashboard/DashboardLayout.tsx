@@ -11,6 +11,13 @@ import {
   ShieldCheck,
   MessageSquareQuote,
   ClipboardCheck,
+  Compass,
+  LibraryBig,
+  UserCog,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
   ClipboardList,
   MailPlus,
   FlaskConical,
@@ -35,6 +42,8 @@ import { useTranslation } from 'react-i18next'
 import { canAccessExperimental } from '../../features/experimental/access'
 import { NAV_KEYWORDS, type NavSearchItem } from '../../features/dashboard/nav-search'
 import { NavSearch } from './NavSearch'
+import { useApplyAdminTheme, useThemeChoice } from '../../features/dashboard/admin-theme'
+import '../../features/dashboard/admin-dark.css'
 
 type NavLeaf = { to: string; label: string; icon: ReactNode; end?: boolean; show: boolean }
 type NavGroup = { id: string; label: string; icon: ReactNode; show: boolean; children: NavEntry[] }
@@ -48,8 +57,27 @@ export function DashboardLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  // Desktop: the side menu can be hidden to give wide pages (like the MHCU list) the full width. Remembered in this browser.
+  const [menuHidden, setMenuHidden] = useState(() => {
+    try {
+      return localStorage.getItem('attentive-admin-menu-hidden') === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleMenu = () =>
+    setMenuHidden((hidden) => {
+      try {
+        localStorage.setItem('attentive-admin-menu-hidden', hidden ? '0' : '1')
+      } catch {
+        /* storage blocked: the choice lasts until the page closes */
+      }
+      return !hidden
+    })
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
+  const isDark = useApplyAdminTheme()
+  const [, setTheme] = useThemeChoice()
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
   const showExperimental = isAdmin && canAccessExperimental(user?.email)
 
@@ -60,6 +88,74 @@ export function DashboardLayout() {
       label: t('dashboard.navOverview', 'Overview'),
       icon: <LayoutDashboard className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: true,
+    },
+    {
+      id: 'forms',
+      label: t('dashboard.groupForms', 'Formulir'),
+      icon: <ClipboardList className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: true,
+      children: [
+        {
+          to: '/dashboard/forms',
+          label: t('dashboard.navFormsAll', 'Semua Aktivitas Formulir'),
+          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true, end: true,
+        },
+        {
+          id: 'form-mhcu',
+          label: t('dashboard.navFormMhcu', 'MHCU'),
+          icon: <ClipboardCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+          children: [
+            {
+          to: '/dashboard/assessments/mhcu',
+          label: t('dashboard.navMhcuDashboard', 'Dasbor MHCU'),
+          icon: <ClipboardCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true, end: true,
+        },
+        {
+          to: '/dashboard/assessments/mhcu/invites',
+          label: t('dashboard.navMhcuInvites', 'Undangan MHCU'),
+          icon: <MailPlus className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/assessments/mhcu/settings',
+          label: t('dashboard.navMhcuSettings', 'Pengaturan MHCU'),
+          icon: <SlidersHorizontal className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+          ],
+        },
+        {
+          id: 'form-gsc',
+          label: t('dashboard.navFormGsc', 'Goal System Compass'),
+          icon: <Compass className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+          children: [
+            {
+          to: '/dashboard/assessments/gsc',
+          label: t('dashboard.navGscResults', 'Hasil GSC'),
+          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true, end: true,
+        },
+          ],
+        },
+        {
+          id: 'form-free',
+          label: t('dashboard.navFormFree', 'Sesi Gratis'),
+          icon: <CalendarDays className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: showExperimental,
+          children: [
+            {
+          to: '/dashboard/free-session',
+          label: t('dashboard.navFreeSessionLeads', 'Pendaftar Sesi Gratis'),
+          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+          ],
+        },
+      ],
     },
     {
       id: 'content',
@@ -151,52 +247,6 @@ export function DashboardLayout() {
           icon: <CalendarDays className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: isAdmin,
         },
-      ],
-    },
-    {
-      id: 'tools',
-      label: t('dashboard.groupTools', 'Alat Bantu'),
-      icon: <QrCode className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: true,
-      children: [
-        {
-          to: '/dashboard/qr-generator',
-          label: t('dashboard.navQrGenerator', 'QR Generator'),
-          icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-        },
-        {
-          to: '/dashboard/account',
-          label: t('dashboard.navAccount', 'Pengaturan Akun'),
-          icon: <SlidersHorizontal className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-        },
-        {
-          to: '/dashboard/assessments',
-          label: t('dashboard.navAssessments', 'Hasil Asesmen'),
-          icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-          end: true,
-        },
-        {
-          to: '/dashboard/assessments/mhcu',
-          label: t('dashboard.navMhcuDashboard', 'Dasbor MHCU'),
-          icon: <ClipboardCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-          end: true,
-        },
-        {
-          to: '/dashboard/assessments/mhcu/invites',
-          label: t('dashboard.navMhcuInvites', 'Undangan MHCU'),
-          icon: <MailPlus className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: isAdmin,
-        },
-        {
-          to: '/dashboard/assessments/mhcu/settings',
-          label: t('dashboard.navMhcuSettings', 'Pengaturan MHCU'),
-          icon: <SlidersHorizontal className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: isAdmin,
-        },
         {
           to: '/dashboard/prayers',
           label: t('dashboard.navPrayers', 'Doa Pengunjung'),
@@ -212,11 +262,45 @@ export function DashboardLayout() {
       ],
     },
     {
+      id: 'tools',
+      label: t('dashboard.groupTools', 'Alat Bantu'),
+      icon: <QrCode className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: true,
+      children: [
+        {
+          to: '/dashboard/qr-generator',
+          label: t('dashboard.navQrGenerator', 'QR Generator'),
+          icon: <QrCode className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+      ],
+    },
+    {
+      id: 'wiki',
+      label: t('dashboard.groupWiki', 'Wiki & Panduan'),
+      icon: <LibraryBig className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: true,
+      children: [
+        {
+          to: '/dashboard/wiki/mhcu',
+          label: t('dashboard.navWikiMhcu', 'Wiki MHCU'),
+          icon: <BookOpenText className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
+      ],
+    },
+    {
       id: 'settings',
       label: t('dashboard.groupSettings', 'Pengaturan'),
       icon: <ShieldCheck className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-      show: isAdmin,
+      show: true,
       children: [
+        {
+          to: '/dashboard/account',
+          label: t('dashboard.navAccount', 'Pengaturan Akun'),
+          icon: <UserCog className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: true,
+        },
         {
           to: '/dashboard/users',
           label: t('dashboard.navUsers', 'Manajemen Staff'),
@@ -242,20 +326,6 @@ export function DashboardLayout() {
           label: t('dashboard.navSystemMap', 'System Map'),
           icon: <Network className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: true,
-        },
-        {
-          id: 'events',
-          label: t('dashboard.navEvents', 'Events'),
-          icon: <CalendarDays className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-          show: true,
-          children: [
-            {
-              to: '/dashboard/free-session',
-              label: t('dashboard.navFreeSession', 'Sesi Gratis'),
-              icon: <ClipboardList className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
-              show: true,
-            },
-          ],
         },
       ],
     },
@@ -340,9 +410,9 @@ export function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex accent-navy-700">
+    <div className="admin-shell min-h-screen bg-[#FDFBF7] flex accent-navy-700">
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 shrink-0">
+      <aside className={`${menuHidden ? 'hidden' : 'hidden md:flex'} flex-col w-64 bg-white border-r border-slate-200/80 shrink-0`}>
         <div className="p-5 border-b border-slate-200/80 flex items-center justify-between">
           <Link to="/dashboard" className="flex flex-col gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-gold-500" aria-label="Attentive.id Internal Portal">
             <img alt="Attentive.id" className="h-auto w-36" height="144" src="/images/figma/attentive-logo.webp" width="528" />
@@ -384,13 +454,35 @@ export function DashboardLayout() {
             >
               <Menu className="size-5 stroke-[1.75]" aria-hidden="true" />
             </button>
+            <button
+              type="button"
+              onClick={toggleMenu}
+              aria-pressed={menuHidden}
+              aria-label={menuHidden ? t('dashboard.menuShow', 'Tampilkan menu samping') : t('dashboard.menuHide', 'Sembunyikan menu samping')}
+              title={menuHidden ? t('dashboard.menuShow', 'Tampilkan menu samping') : t('dashboard.menuHide', 'Sembunyikan menu samping')}
+              className="hidden md:inline-flex size-9 cursor-pointer items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+            >
+              {menuHidden ? <PanelLeftOpen className="size-5 stroke-[1.75]" aria-hidden="true" /> : <PanelLeftClose className="size-5 stroke-[1.75]" aria-hidden="true" />}
+            </button>
             <h2 className="text-base font-semibold text-slate-900 truncate">
               {user?.name || 'Dashboard'}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            <LanguageSwitcher />
+            <button
+              type="button"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              aria-pressed={isDark}
+              aria-label={isDark ? t('dashboard.themeToLight', 'Ganti ke tema terang') : t('dashboard.themeToDark', 'Ganti ke tema gelap')}
+              title={isDark ? t('dashboard.themeToLight', 'Ganti ke tema terang') : t('dashboard.themeToDark', 'Ganti ke tema gelap')}
+              className="inline-flex size-9 cursor-pointer items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition-colors hover:bg-slate-100"
+            >
+              {isDark ? <Sun className="size-4 stroke-[1.75]" aria-hidden="true" /> : <Moon className="size-4 stroke-[1.75]" aria-hidden="true" />}
+            </button>
+            <span className="admin-lang">
+              <LanguageSwitcher />
+            </span>
 
             <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 

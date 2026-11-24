@@ -52,7 +52,7 @@ describe('System Map', () => {
     renderMap()
 
     expect(await screen.findByRole('heading', { name: 'System Map' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'System Map' })).toHaveAttribute('href', '/dashboard/experimental/system-map')
+    expect(screen.getAllByRole('link', { name: 'System Map' }).map((link) => link.getAttribute('href'))).toContain('/dashboard/experimental/system-map')
   })
 
   it('shows details and connections when a box is selected', async () => {

@@ -60,7 +60,7 @@ describe('dashboard Experimental section', () => {
     expect(canAccessExperimental(null)).toBe(false)
   })
 
-  it('shows Experimental with Forms and Events, and Sesi Gratis inside Events', async () => {
+  it('shows Experimental with Forms and System Map, and Sesi Gratis under Formulir', async () => {
     signInAs(experimentalAdmin)
     const user = userEvent.setup()
     renderAt('/dashboard')
@@ -73,26 +73,25 @@ describe('dashboard Experimental section', () => {
     await user.click(experimental)
     const group = document.getElementById(experimental.getAttribute('aria-controls') as string) as HTMLElement
     expect(within(group).getByRole('link', { name: 'Forms' })).toHaveAttribute('href', '/dashboard/experimental/forms')
-    const events = within(group).getByRole('button', { name: 'Events' })
-    expect(events).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByRole('link', { name: /sesi gratis/i })).not.toBeInTheDocument()
+    expect(within(group).getByRole('link', { name: 'System Map' })).toHaveAttribute('href', '/dashboard/experimental/system-map')
 
-    await user.click(events)
-    expect(events).toHaveAttribute('aria-expanded', 'true')
-    const eventsPanel = document.getElementById(events.getAttribute('aria-controls') as string) as HTMLElement
-    expect(within(eventsPanel).getByRole('link', { name: 'Sesi Gratis' })).toHaveAttribute(
-      'href',
-      '/dashboard/free-session',
-    )
+    // The free-session form lives with the other forms.
+    const forms = screen.getByRole('button', { name: 'Formulir' })
+    await user.click(forms)
+    const formsPanel = document.getElementById(forms.getAttribute('aria-controls') as string) as HTMLElement
+    const free = within(formsPanel).getByRole('button', { name: 'Sesi Gratis' })
+    await user.click(free)
+    const freePanel = document.getElementById(free.getAttribute('aria-controls') as string) as HTMLElement
+    expect(within(freePanel).getByRole('link', { name: 'Pendaftar Sesi Gratis' })).toHaveAttribute('href', '/dashboard/free-session')
   })
 
-  it('opens both groups on its own when the Sesi Gratis page is active', async () => {
+  it('opens the Formulir groups on its own when the Sesi Gratis page is active', async () => {
     signInAs(experimentalAdmin)
     renderAt('/dashboard/free-session')
 
-    expect(await screen.findByRole('link', { name: 'Sesi Gratis' })).toHaveAttribute('href', '/dashboard/free-session')
-    expect(screen.getByRole('button', { name: /experimental/i })).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByRole('button', { name: 'Events' })).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByRole('link', { name: 'Pendaftar Sesi Gratis' })).toHaveAttribute('href', '/dashboard/free-session')
+    expect(screen.getByRole('button', { name: 'Formulir' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Sesi Gratis' })).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('hides Experimental from other admins', async () => {

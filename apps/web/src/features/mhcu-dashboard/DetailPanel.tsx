@@ -111,7 +111,7 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, on
 
   return (
     <div className="space-y-5 p-4 sm:p-5">
-      <button className="flex min-h-11 cursor-pointer items-center gap-1 text-sm font-semibold text-navy-800 xl:hidden" onClick={onClose} type="button">
+      <button className="flex min-h-11 cursor-pointer items-center gap-1 text-sm font-semibold text-navy-800 2xl:hidden" onClick={onClose} type="button">
         <ArrowLeft aria-hidden="true" className="size-4" /> {tx('Daftar hasil', 'Results list')}
       </button>
       <div className="flex items-start justify-between gap-3">
@@ -128,7 +128,7 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, on
             </p>
           )}
         </div>
-        <button aria-label={tx('Tutup', 'Close')} className="hidden cursor-pointer rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 xl:block" onClick={onClose} type="button">
+        <button aria-label={tx('Tutup', 'Close')} className="hidden cursor-pointer rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 2xl:block" onClick={onClose} type="button">
           <X aria-hidden="true" className="size-4" />
         </button>
       </div>

@@ -13,6 +13,7 @@ import {
   type MapNode,
   type MapStatus,
 } from '../../features/system-map/map-data'
+import { RoleAccessTable } from '../../features/system-map/RoleAccessTable'
 
 const COLUMN_X: Record<MapColumn, number> = { portal: 10, source: 340, public: 670 }
 const NODE_W = 230
@@ -305,6 +306,8 @@ export function SystemMapPage() {
           </div>
         </aside>
       </div>
+
+      <RoleAccessTable />
     </div>
   )
 }
