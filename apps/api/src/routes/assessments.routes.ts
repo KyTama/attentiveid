@@ -14,9 +14,10 @@ import { PAYMENT_OPTIONS, PROMO_UNTIL, paymentLink, priceFor, verifyPaymentToken
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
 import { buildGscReceivedEmail, buildGscStaffEmail } from '../services/form-notice-emails';
 import { renderClientReportHtml, renderClientReportPage, renderPsychologistReportHtml } from '../services/mhcu-report-service';
-import { renderPdf, type PdfRenderer } from '../services/pdf-render';
+import { findBrowser, renderPdf, type PdfRenderer } from '../services/pdf-render';
+import { RAW_SHEET_TAB, RAW_SHEET_TITLE, rawAnswerHeaders, rawAnswerRow } from '../services/mhcu-raw-sheet';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
-import type { DriveReports } from '../services/drive-reports';
+import type { DriveReports, ReportFile } from '../services/drive-reports';
 import { loadReportAssets, makeStandaloneReport } from '../services/mhcu-report-file';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { MhcuSettings } from '../services/mhcu-settings';
@@ -45,7 +46,7 @@ export interface AssessmentsRoutesDependencies {
     /** Saves released reports to Google Drive (optional; without it nothing is saved there). */
     driveReports?: DriveReports;
     /** Prints a report page to PDF (default: headless Chromium). Replaceable in tests. */
-    pdfRenderer?: PdfRenderer;
+    pdfRenderer?: PdfRenderer | null;
     rateLimit?: AssessmentsRateLimit;
     now?: () => number;
 }
@@ -197,7 +198,8 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             secret: dependencies.paymentSecret,
             siteOrigin: dependencies.siteOrigin,
             staffEmail: staffInbox,
-            saveFiles: saveReportFiles,
+            buildFiles: buildReportFiles,
+            saveFiles: saveToDrive,
             onError: logFailure,
             ops: dependencies.ops,
             getSettings: () => (dependencies.settings as { get(): Promise<MhcuSettings> }).get()
@@ -207,23 +209,73 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     /** ?lang=id or ?lang=en picks the language of a report; anything else keeps the participant's own. */
     const reportLang = (value: unknown): 'id' | 'en' | undefined => (value === 'en' ? 'en' : value === 'id' ? 'id' : undefined);
 
-    /** Both language versions of a released report as plain PDFs (the report pages only, no buttons), saved to Drive. Only when Drive is set up. */
-    const saveReportFiles = dependencies.driveReports
-        ? async (row: AssessmentRow) => {
+    /** True where reports can be printed to PDF (the production image has Chromium; so does a developer machine). */
+    const canPrint = dependencies.pdfRenderer === null ? false : Boolean(dependencies.pdfRenderer) || findBrowser() !== null;
+
+    /** Both language versions of the report as plain PDFs (the report pages only, no buttons), from the data as it is right now. */
+    const buildReportFiles = canPrint
+        ? async (row: AssessmentRow): Promise<ReportFile[] | null> => {
             const loaded = await loadReportInput(row.id);
             if (!loaded) return null;
             const assets = await loadReportAssets(dependencies.siteOrigin || 'https://attentiveid.com');
-            const print = dependencies.pdfRenderer ?? renderPdf;
-            const files = [];
+            const print = dependencies.pdfRenderer || renderPdf;
+            const files: ReportFile[] = [];
             // One after the other: each print starts a browser, and two at once would use a lot of memory.
             for (const lang of ['id', 'en'] as const) {
                 const html = makeStandaloneReport(renderClientReportHtml({ ...loaded.input, lang }), assets);
                 files.push({ name: `${row.code} - MHCU (${lang.toUpperCase()}).pdf`, mimeType: 'application/pdf', data: await print(html) });
             }
-            const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files });
-            return { path: saved.path };
+            return files;
         }
         : undefined;
+
+    /** Drive jobs of the same result run one after the other, so a late draft can never overwrite the final report. */
+    const driveTails = new Map<string, Promise<unknown>>();
+    const serial = <T>(key: string, job: () => Promise<T>): Promise<T> => {
+        const run = (driveTails.get(key) ?? Promise.resolve()).then(job, job);
+        const tail = run.catch(() => undefined);
+        driveTails.set(key, tail);
+        void tail.then(() => { if (driveTails.get(key) === tail) driveTails.delete(key); });
+        return run;
+    };
+
+    /** One row (who answered, the scores, every raw answer) in the raw-answers sheet. A sheet problem is logged and never blocks the PDFs. */
+    const saveRawRow = async (row: AssessmentRow) => {
+        const drive = dependencies.driveReports;
+        if (!drive) return;
+        try {
+            const history = row.participantId ? await repository.listHistory(row.participantId) : [];
+            await drive.upsertSheetRow({ title: RAW_SHEET_TITLE, tab: RAW_SHEET_TAB, headers: rawAnswerHeaders(), key: row.code, values: rawAnswerRow(row, { participantNo: history[0]?.participantNo ?? null }) });
+        } catch (error) {
+            logFailure('drive-sheet', error);
+        }
+    };
+
+    /** Saves the printed reports and the raw-answers row to Drive. Only when Drive is set up. */
+    const saveToDrive = dependencies.driveReports
+        ? (row: AssessmentRow, files: ReportFile[]) =>
+            serial(row.code, async () => {
+                const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files });
+                await saveRawRow(row);
+                return { path: saved.path };
+            })
+        : undefined;
+
+    /** Right after a check-up is submitted: print the reports as they are now and save them (and the raw answers) to Drive. Nothing is sent to the person. Never fails the submission. */
+    const saveDraftToDrive = (id: string) => {
+        if (!dependencies.driveReports) return;
+        void (async () => {
+            try {
+                const row = await repository.get(id);
+                if (!row) return;
+                const files = buildReportFiles ? await buildReportFiles(row) : null;
+                if (files && saveToDrive) await saveToDrive(row, files);
+                else await serial(row.code, () => saveRawRow(row));
+            } catch (error) {
+                logFailure('drive-draft', error);
+            }
+        })();
+    };
 
     /** Where release e-mails to staff go: the MHCU settings inbox, else the general alert address. */
     const staffInbox = async (): Promise<string | undefined> => {
@@ -339,6 +391,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 );
                 if (!created.duplicate) {
                     sync();
+                    saveDraftToDrive(created.id);
                     sendAdminAlert(created, { level: typeof scores.level === 'number' ? scores.level : 0, mhi: typeof scores.mhi === 'number' ? scores.mhi : null, name: value.name, phone: value.phone, email: value.email, lang: value.lang });
                     sendResultEmail(created, { name: value.name, email: value.email, lang: value.lang, scores, level: typeof scores.level === 'number' ? scores.level : null, track: created.track, psychologistId: created.psychologistId, creditsRemaining: created.creditsRemaining, waveNo: created.waveNo });
                 }
@@ -688,7 +741,8 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     secret: dependencies.paymentSecret,
                     siteOrigin: dependencies.siteOrigin,
                     staffEmail: staffInbox,
-                    saveFiles: saveReportFiles,
+                    buildFiles: buildReportFiles,
+                    saveFiles: saveToDrive,
                     onError: logFailure
                 }, row);
                 if (!result.ok) {
@@ -765,25 +819,26 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 set.status = 404;
                 return { status: 'notFound', message: 'Data tidak ditemukan.' };
             }
-            if (!saveReportFiles) {
+            if (!saveToDrive) {
                 set.status = 503;
                 return { status: 'error', message: 'Google Drive belum diatur di server (GOOGLE_DRIVE_REFRESH_TOKEN kosong).' };
+            }
+            if (!buildReportFiles) {
+                set.status = 503;
+                return { status: 'error', message: 'Mesin PDF belum tersedia di server.' };
             }
             const row = await repository.get(params.id);
             if (!row || row.instrument !== 'mhcu') {
                 set.status = 404;
                 return { status: 'notFound', message: 'Data tidak ditemukan.' };
             }
-            if (row.status !== 'released') {
-                set.status = 409;
-                return { status: 'error', message: 'Laporan belum dirilis.' };
-            }
             try {
-                const saved = await saveReportFiles(row);
-                if (!saved) {
+                const files = await buildReportFiles(row);
+                if (!files) {
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
+                const saved = await saveToDrive(row, files);
                 await auditSafely({ actor: currentUser?.id ?? null, action: 'drive', submissionId: row.id, detail: `saved to Drive: ${saved.path}` });
                 return { status: 'success', data: { path: saved.path } };
             } catch (error) {

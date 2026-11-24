@@ -2,6 +2,7 @@
  * Saves released MHCU reports to Google Drive, in this folder layout:
  *
  *   <root> / MHCU / <year> / <month> / <code> / <code> - MHCU (ID).pdf, <code> - MHCU (EN).pdf
+ *   <root> / <spreadsheet>   one Google Sheet with a row per submission (see upsertSheetRow)
  *
  * <root> is the folder with GOOGLE_DRIVE_ROOT_FOLDER_ID when that is set (a folder this app created itself, which the team may move
  * anywhere in Drive), otherwise a "Reports" folder in My Drive that the app creates on first use. The sub-folders are found by name
@@ -36,14 +37,37 @@ export interface SaveReportInput {
     files: ReportFile[]
 }
 
+export interface SheetRowInput {
+    /** File name of the spreadsheet in the root folder. */
+    title: string
+    /** Tab that holds the rows (the first tab is renamed to this when the spreadsheet is created). */
+    tab: string
+    /** Column titles, written to row 1. */
+    headers: string[]
+    /** The first cell of the row (the code): an existing row with the same key is updated instead of adding a second one. */
+    key: string
+    values: string[]
+}
+
 export interface DriveReports {
     isConfigured: boolean
     saveReport(input: SaveReportInput): Promise<{ path: string; folderId: string; files: string[] }>
+    /** Adds (or updates) one row of a Google Sheet in the root folder, creating the sheet when it does not exist yet. */
+    upsertSheetRow(input: SheetRowInput): Promise<{ spreadsheetId: string; updated: boolean }>
 }
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder'
 const API = 'https://www.googleapis.com/drive/v3/files'
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files'
+const SHEETS = 'https://sheets.googleapis.com/v4/spreadsheets'
+const SHEET_MIME = 'application/vnd.google-apps.spreadsheet'
+
+/** Column letters for a 1-based column number: 1 = A, 27 = AA. */
+export const columnName = (n: number): string => {
+    let out = ''
+    for (let x = n; x > 0; x = Math.floor((x - 1) / 26)) out = String.fromCharCode(65 + ((x - 1) % 26)) + out
+    return out
+}
 
 /** A value inside a Drive search query. */
 const quote = (value: string): string => `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
@@ -125,8 +149,69 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
         if (!response.ok) throw await failure('Drive file upload', response)
     }
 
+    const rootId = async (): Promise<string> => rootFolderId || ensureFolder(rootName, 'root', `/${rootName}`)
+
+    const sheetIds = new Map<string, string>()
+    const headerWritten = new Set<string>()
+
+    const sheetsCall = async (what: string, url: string, init: RequestInit & { json?: unknown }): Promise<Response> => {
+        const { json, ...rest } = init
+        const response = await fetchImpl(url, {
+            ...rest,
+            headers: await headers(json === undefined ? {} : { 'Content-Type': 'application/json' }),
+            ...(json === undefined ? {} : { body: JSON.stringify(json) }),
+        })
+        if (!response.ok) throw await failure(what, response)
+        return response
+    }
+
+    const ensureSpreadsheet = async (title: string, tab: string): Promise<string> => {
+        const cached = sheetIds.get(title)
+        if (cached) return cached
+        const parent = await rootId()
+        const query = `name = ${quote(title)} and ${quote(parent)} in parents and trashed = false and mimeType = '${SHEET_MIME}'`
+        const found = await fetchImpl(`${API}?${new URLSearchParams({ q: query, fields: 'files(id)', spaces: 'drive', pageSize: '1' })}`, { method: 'GET', headers: await headers() })
+        if (!found.ok) throw await failure('Drive search', found)
+        let id = ((await found.json()) as { files?: Array<{ id: string }> }).files?.[0]?.id ?? null
+        if (!id) {
+            const created = await sheetsCall('Drive sheet create', API, { method: 'POST', json: { name: title, mimeType: SHEET_MIME, parents: [parent] } })
+            id = ((await created.json()) as { id: string }).id
+            // The new spreadsheet has one tab called Sheet1: give it the wanted name.
+            const info = await sheetsCall('Sheets read', `${SHEETS}/${encodeURIComponent(id)}?fields=sheets.properties`, { method: 'GET' })
+            const first = ((await info.json()) as { sheets?: Array<{ properties: { sheetId: number; title: string } }> }).sheets?.[0]?.properties
+            if (first && first.title !== tab) {
+                await sheetsCall('Sheets rename tab', `${SHEETS}/${encodeURIComponent(id)}:batchUpdate`, {
+                    method: 'POST',
+                    json: { requests: [{ updateSheetProperties: { properties: { sheetId: first.sheetId, title: tab }, fields: 'title' } }] },
+                })
+            }
+        }
+        sheetIds.set(title, id)
+        return id
+    }
+
     return {
         isConfigured: true,
+        async upsertSheetRow(input) {
+            const spreadsheetId = await ensureSpreadsheet(input.title, input.tab)
+            const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
+            const range = (a1: string) => encodeURIComponent(`${input.tab}!${a1}`)
+            // RAW: every value is stored as plain text, so nothing can run as a formula and phone numbers keep their leading 0.
+            const headerKey = `${spreadsheetId}:${input.headers.length}`
+            if (!headerWritten.has(headerKey)) {
+                await sheetsCall('Sheets header', `${base}/${range(`A1:${columnName(input.headers.length)}1`)}?valueInputOption=RAW`, { method: 'PUT', json: { values: [input.headers] } })
+                headerWritten.add(headerKey)
+            }
+            const column = await sheetsCall('Sheets read', `${base}/${range('A:A')}`, { method: 'GET' })
+            const keys = ((await column.json()) as { values?: string[][] }).values ?? []
+            const index = keys.findIndex((cell, i) => i > 0 && cell?.[0] === input.key)
+            if (index >= 0) {
+                await sheetsCall('Sheets update', `${base}/${range(`A${index + 1}:${columnName(input.values.length)}${index + 1}`)}?valueInputOption=RAW`, { method: 'PUT', json: { values: [input.values] } })
+                return { spreadsheetId, updated: true }
+            }
+            await sheetsCall('Sheets append', `${base}/${range('A1')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: 'POST', json: { values: [input.values] } })
+            return { spreadsheetId, updated: false }
+        },
         async saveReport(input) {
             const { year, month } = jakartaYearMonth(input.at)
             const segments = rootFolderId ? ['MHCU', year, month, input.code] : [rootName, 'MHCU', year, month, input.code]

@@ -24,6 +24,8 @@ export interface ReportReadyInput {
     releasedAt?: Date
     psychologistName?: string | null
     siteOrigin?: string
+    /** The two report PDFs are attached to this e-mail. */
+    attached?: boolean
 }
 
 const num = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null)
@@ -69,6 +71,7 @@ const COPY = {
         openId: 'Buka laporan lengkap (Bahasa Indonesia)',
         openEn: 'Open the full report (English)',
         bothNote: 'Laporan tersedia dalam dua bahasa, Bahasa Indonesia dan English. Buka salah satu atau keduanya.',
+        attachedNote: 'Kedua laporan (Bahasa Indonesia dan English) juga terlampir sebagai PDF pada email ini.',
         saveNote: 'Anda dapat menyimpan laporan sebagai PDF dari halaman tersebut (Cetak > Simpan sebagai PDF).',
         safety: 'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, segera hubungi layanan darurat medis 119 atau datang ke IGD terdekat.',
         closing: 'Laporan ini paling bermakna bila dibahas bersama psikolog, supaya hasilnya bisa dikaitkan dengan keseharian dan pekerjaan Anda. Bila ada yang ingin ditanyakan atau Anda ingin menjadwalkan sesi, kabari admin kami.',
@@ -102,6 +105,7 @@ const COPY = {
         openId: 'Buka laporan lengkap (Bahasa Indonesia)',
         openEn: 'Open the full report (English)',
         bothNote: 'The report is available in two languages, Bahasa Indonesia and English. Open either one or both.',
+        attachedNote: 'Both reports (Bahasa Indonesia and English) are also attached to this e-mail as PDFs.',
         saveNote: 'You can save the report as a PDF from the page (Print > Save as PDF).',
         safety: 'If you are having thoughts of harming yourself or feel unsafe, contact the medical emergency line 119 or go to the nearest emergency room right away.',
         closing: 'This report is most useful when discussed with a psychologist, so the result can be connected to your daily life and work. If you have questions or want to book a session, let our admin know.',
@@ -168,7 +172,7 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
         `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px 0;border:1px solid #EAECF0;background:#FAFAFB"><tr><td style="padding:10px 16px"><table role="presentation" cellpadding="0" cellspacing="0">${details}</table></td></tr></table>` +
         `<div style="font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:0 0 6px 0">${esc(copy.insideHead)}</div>` +
         `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px 0">${insideRows}</table>` +
-        `<p style="margin:0 0 8px 0;color:#3C4858">${esc(copy.bothNote)}</p>` +
+        `<p style="margin:0 0 8px 0;color:#3C4858">${esc(copy.bothNote)}${input.attached ? ' ' + esc(copy.attachedNote) : ''}</p>` +
         buttons +
         `<p style="margin:0 0 18px 0;font-size:11.5px;color:#667085">${esc(copy.saveNote)}</p>` +
         `<p style="margin:0 0 14px 0;color:#3C4858">${esc(copy.closing)}</p>` +
@@ -200,7 +204,7 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
         copy.insideHead,
         ...copy.inside.map(([label, line]) => `- ${label}: ${line}`),
         '',
-        copy.bothNote,
+        copy.bothNote + (input.attached ? ' ' + copy.attachedNote : ''),
         `${copy.openId}: ${input.links.id}`,
         `${copy.openEn}: ${input.links.en}`,
         copy.saveNote,
