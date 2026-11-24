@@ -690,7 +690,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     return { status: 'error', message: result.message };
                 }
                 await auditSafely({ actor: currentUser?.id ?? null, action: 'send', submissionId: row.id, detail: `${result.emailed ? 'released, e-mailed' : 'released'}${result.drivePath ? `, saved to Drive: ${result.drivePath}` : ''}` });
-                return { status: 'success', data: { released: result.released, emailed: result.emailed, drivePath: result.drivePath ?? null } };
+                return { status: 'success', data: { released: result.released, emailed: result.emailed, drivePath: result.drivePath ?? null, drive: result.drive, driveError: result.driveError ?? null } };
             } catch (error) {
                 logFailure('release', error);
                 set.status = 503;
@@ -753,6 +753,41 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         }, {
             requireRole: ['admin'],
             detail: { tags: ['Assessments'], summary: 'Permanently delete one result and its proof of transfer (owner account only)' }
+        })
+        .post('/api/admin/assessments/:id/save-to-drive', async ({ params, set, currentUser }: any) => {
+            if (!UUID.test(params.id)) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            if (!saveReportFiles) {
+                set.status = 503;
+                return { status: 'error', message: 'Google Drive belum diatur di server (GOOGLE_DRIVE_REFRESH_TOKEN kosong).' };
+            }
+            const row = await repository.get(params.id);
+            if (!row || row.instrument !== 'mhcu') {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            if (row.status !== 'released') {
+                set.status = 409;
+                return { status: 'error', message: 'Laporan belum dirilis.' };
+            }
+            try {
+                const saved = await saveReportFiles(row);
+                if (!saved) {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'drive', submissionId: row.id, detail: `saved to Drive: ${saved.path}` });
+                return { status: 'success', data: { path: saved.path } };
+            } catch (error) {
+                logFailure('save-to-drive', error);
+                set.status = 502;
+                return { status: 'error', message: `Drive menolak permintaan: ${error instanceof Error ? error.message.slice(0, 300) : 'error'}` };
+            }
+        }, {
+            requireRole: ['admin'],
+            detail: { tags: ['Assessments'], summary: 'Save (or save again) the released report to Google Drive (admin)' }
         })
         .post('/api/admin/assessments/sync', async () => {
             if (!dependencies.sheetSync) return { status: 'success', data: { configured: false, synced: 0, error: 'Not configured.' } };

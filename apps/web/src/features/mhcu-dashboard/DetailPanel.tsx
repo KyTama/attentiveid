@@ -10,6 +10,7 @@ import {
   getMhcu,
   openReport,
   releaseReport,
+  saveReportToDrive,
   savePayment,
   saveNote,
   type MhcuDetail,
@@ -445,6 +446,22 @@ function ReportBlock({ detail, isAdmin, onSaved, onError }: BlockProps & { isAdm
         <button className={buttonClass} onClick={() => open('psychologist')} type="button">
           <FileText aria-hidden="true" className="mr-1 inline size-4" />{tx('Laporan psikolog (internal)', 'Psychologist report (internal)')}
         </button>
+        {isAdmin && blocker === 'released' && (
+          <button
+            className={buttonClass}
+            disabled={busy}
+            onClick={() => {
+              setBusy(true)
+              saveReportToDrive(detail.id)
+                .then(async (saved) => onSaved(await getMhcu(detail.id), tx(`Salinan disimpan di Drive: ${saved.path}.`, `A copy was saved to Drive: ${saved.path}.`)))
+                .catch((caught) => onError(caught, tx('Gagal menyimpan ke Drive.', 'Failed to save to Drive.')))
+                .finally(() => setBusy(false))
+            }}
+            type="button"
+          >
+            {tx('Simpan salinan ke Drive', 'Save copy to Drive')}
+          </button>
+        )}
         {isAdmin && (
           <button
             className={primaryClass}
@@ -460,7 +477,11 @@ function ReportBlock({ detail, isAdmin, onSaved, onError }: BlockProps & { isAdm
                     (result.emailed
                       ? tx('Laporan dirilis dan tautannya sudah dikirim lewat email.', 'The report is released and the link was sent by e-mail.')
                       : tx('Laporan dirilis, tetapi email belum terkirim. Kirim tautannya secara manual.', 'The report is released, but the e-mail was not sent. Send the link yourself.')) +
-                      (result.drivePath ? tx(` Salinan disimpan di Drive: ${result.drivePath}.`, ` A copy was saved to Drive: ${result.drivePath}.`) : ''),
+                      (result.drivePath
+                        ? tx(` Salinan disimpan di Drive: ${result.drivePath}.`, ` A copy was saved to Drive: ${result.drivePath}.`)
+                        : result.drive === 'failed'
+                          ? tx(` Salinan ke Drive gagal: ${result.driveError ?? 'tidak diketahui'}.`, ` The Drive copy failed: ${result.driveError ?? 'unknown'}.`)
+                          : tx(' Drive belum diatur di server, jadi salinan tidak disimpan.', ' Drive is not set up on the server, so no copy was saved.')),
                   )
                 })
                 .catch((caught) => onError(caught, tx('Gagal merilis laporan.', 'Failed to release the report.')))

@@ -459,7 +459,7 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         await send(app, `/api/admin/assessments/${idOf(1)}/payment`, 'PUT', { status: 'PAID' }, adminHeaders);
         const done = await send(app, release, 'POST', {}, adminHeaders);
         expect(done.status).toBe(200);
-        expect((await done.json()).data).toEqual({ released: true, emailed: true, drivePath: null });
+        expect((await done.json()).data).toEqual({ released: true, emailed: true, drivePath: null, drive: 'off', driveError: null });
         expect(rows[0].status).toBe('released');
         // the participant gets the report in both languages, and the staff inbox gets a copy with both links
         expect(sent.map((mail) => mail.to)).toEqual(['rina@example.com', 'alerts@attentive.id']);
@@ -847,12 +847,30 @@ describe('released reports saved to Drive', () => {
     it('a Drive failure never undoes the release', async () => {
         const { done, rows } = await release({ drive: 'fail' });
         expect(done.status).toBe(200);
-        expect((await done.json()).data).toMatchObject({ released: true, drivePath: null });
+        expect((await done.json()).data).toMatchObject({ released: true, drivePath: null, drive: 'failed', driveError: 'drive down' });
         expect(rows[0].status).toBe('released');
     });
 
     it('does nothing when Drive is not set up', async () => {
         const { done } = await release({});
-        expect((await done.json()).data.drivePath).toBeNull();
+        expect((await done.json()).data).toMatchObject({ drivePath: null, drive: 'off' });
+    });
+
+    it('save-to-drive: saves a released report again, refuses an unreleased one or when Drive is not set up', async () => {
+        const ready = await release({ drive: 'ok' });
+        const id = ready.rows[0].id;
+        ready.driveSaved.length = 0;
+        const again = await send(ready.app, `/api/admin/assessments/${id}/save-to-drive`, 'POST', undefined, bearer(adminToken));
+        expect(again.status).toBe(200);
+        expect((await again.json()).data.path).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
+        expect(ready.driveSaved).toHaveLength(1);
+
+        const fresh = createFixture({ drive: 'ok' });
+        await submit(fresh.app, body());
+        expect((await send(fresh.app, `/api/admin/assessments/${fresh.rows[0].id}/save-to-drive`, 'POST', undefined, bearer(adminToken))).status).toBe(409);
+
+        const off = await release({});
+        expect((await send(off.app, `/api/admin/assessments/${off.rows[0].id}/save-to-drive`, 'POST', undefined, bearer(adminToken))).status).toBe(503);
+        expect((await send(ready.app, `/api/admin/assessments/${id}/save-to-drive`, 'POST', undefined, bearer(psychologistToken))).status).toBe(403);
     });
 });
