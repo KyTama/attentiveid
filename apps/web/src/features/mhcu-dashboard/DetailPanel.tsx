@@ -457,9 +457,10 @@ function ReportBlock({ detail, isAdmin, onSaved, onError }: BlockProps & { isAdm
                   const row = await getMhcu(detail.id)
                   onSaved(
                     row,
-                    result.emailed
+                    (result.emailed
                       ? tx('Laporan dirilis dan tautannya sudah dikirim lewat email.', 'The report is released and the link was sent by e-mail.')
-                      : tx('Laporan dirilis, tetapi email belum terkirim. Kirim tautannya secara manual.', 'The report is released, but the e-mail was not sent. Send the link yourself.'),
+                      : tx('Laporan dirilis, tetapi email belum terkirim. Kirim tautannya secara manual.', 'The report is released, but the e-mail was not sent. Send the link yourself.')) +
+                      (result.drivePath ? tx(` Salinan disimpan di Drive: ${result.drivePath}.`, ` A copy was saved to Drive: ${result.drivePath}.`) : ''),
                   )
                 })
                 .catch((caught) => onError(caught, tx('Gagal merilis laporan.', 'Failed to release the report.')))

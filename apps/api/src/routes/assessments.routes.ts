@@ -4,7 +4,7 @@ import { scoreMhcu, validateGscSubmission, validateMhcuSubmission } from '@atten
 import { createRoleGuardPlugin } from '../security/role-guard';
 import { isOwnerUser } from '../security/owner';
 import type { AuthTokenService, AuthUserRepository } from './auth';
-import { InviteUnavailableError, type AssessmentsRepository, type AssessmentStatus } from '../repositories/assessments.repository';
+import { InviteUnavailableError, type AssessmentRow, type AssessmentsRepository, type AssessmentStatus } from '../repositories/assessments.repository';
 import { INVITE_TOKEN } from '../repositories/mhcu-invites.repository';
 import type { MhcuTrack } from '../services/mhcu-tracks';
 import type { AssessmentsSheetSync } from '../services/assessments-sheet-sync';
@@ -15,6 +15,8 @@ import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
 import { buildGscReceivedEmail, buildGscStaffEmail } from '../services/form-notice-emails';
 import { renderClientReportPage, renderPsychologistReportHtml } from '../services/mhcu-report-service';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
+import type { DriveReports } from '../services/drive-reports';
+import { loadReportAssets, makeStandaloneReport } from '../services/mhcu-report-file';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { MhcuSettings } from '../services/mhcu-settings';
 
@@ -39,6 +41,8 @@ export interface AssessmentsRoutesDependencies {
     paymentSecret?: string;
     /** The public address of the site, used in the links of the e-mail. */
     siteOrigin?: string;
+    /** Saves released reports to Google Drive (optional; without it nothing is saved there). */
+    driveReports?: DriveReports;
     rateLimit?: AssessmentsRateLimit;
     now?: () => number;
 }
@@ -190,6 +194,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             secret: dependencies.paymentSecret,
             siteOrigin: dependencies.siteOrigin,
             staffEmail: staffInbox,
+            saveFiles: saveReportFiles,
             onError: logFailure,
             ops: dependencies.ops,
             getSettings: () => (dependencies.settings as { get(): Promise<MhcuSettings> }).get()
@@ -198,6 +203,21 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
 
     /** ?lang=id or ?lang=en picks the language of a report; anything else keeps the participant's own. */
     const reportLang = (value: unknown): 'id' | 'en' | undefined => (value === 'en' ? 'en' : value === 'id' ? 'id' : undefined);
+
+    /** Both language versions of a released report, as self-contained files, saved to Drive. Only when Drive is set up. */
+    const saveReportFiles = dependencies.driveReports
+        ? async (row: AssessmentRow) => {
+            const loaded = await loadReportInput(row.id);
+            if (!loaded) return null;
+            const assets = await loadReportAssets(dependencies.siteOrigin || 'https://attentiveid.com');
+            const files = (['id', 'en'] as const).map((lang) => ({
+                name: `${row.code}-${lang.toUpperCase()}.html`,
+                html: makeStandaloneReport(renderClientReportPage({ ...loaded.input, lang }, 'file'), assets)
+            }));
+            const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files });
+            return { path: saved.path };
+        }
+        : undefined;
 
     /** Where release e-mails to staff go: the MHCU settings inbox, else the general alert address. */
     const staffInbox = async (): Promise<string | undefined> => {
@@ -662,14 +682,15 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     secret: dependencies.paymentSecret,
                     siteOrigin: dependencies.siteOrigin,
                     staffEmail: staffInbox,
+                    saveFiles: saveReportFiles,
                     onError: logFailure
                 }, row);
                 if (!result.ok) {
                     set.status = result.status;
                     return { status: 'error', message: result.message };
                 }
-                await auditSafely({ actor: currentUser?.id ?? null, action: 'send', submissionId: row.id, detail: result.emailed ? 'released, e-mailed' : 'released' });
-                return { status: 'success', data: { released: result.released, emailed: result.emailed } };
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'send', submissionId: row.id, detail: `${result.emailed ? 'released, e-mailed' : 'released'}${result.drivePath ? `, saved to Drive: ${result.drivePath}` : ''}` });
+                return { status: 'success', data: { released: result.released, emailed: result.emailed, drivePath: result.drivePath ?? null } };
             } catch (error) {
                 logFailure('release', error);
                 set.status = 503;

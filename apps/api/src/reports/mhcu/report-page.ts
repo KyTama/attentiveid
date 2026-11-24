@@ -15,8 +15,8 @@ export interface ReportPageMeta {
   code: string;
   /** When the check-up was taken (ISO timestamp); shown as a date in Jakarta time. */
   createdAt: string;
-  /** public = the participant's own page (link can be copied); staff = the preview in the portal. */
-  mode: 'public' | 'staff';
+  /** public = the participant's own page (link can be copied); staff = the preview in the portal; file = the copy saved to Drive (no link buttons). */
+  mode: 'public' | 'staff' | 'file';
 }
 
 const TEXT = {

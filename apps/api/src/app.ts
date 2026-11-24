@@ -16,6 +16,7 @@ import { createAccountSettingsRoutes } from './routes/account-settings.routes';
 import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import type { Mailer } from './services/mailer';
+import type { DriveReports } from './services/drive-reports';
 import { createAssessmentPaymentRoutes } from './routes/assessment-payment.routes';
 import { createMhcuOpsRoutes, type MhcuSettingsStore } from './routes/mhcu-ops.routes';
 import { createMhcuOpsRepository, type MhcuOpsRepository } from './repositories/mhcu-ops.repository';
@@ -44,6 +45,8 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     prayersRepository?: PrayersRepository;
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
+    /** Saves released reports to Google Drive (optional). */
+    driveReports?: DriveReports;
     mhcuInvitesRepository?: MhcuInvitesRepository;
     mailer?: Mailer;
     alertEmail?: string;
@@ -253,6 +256,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 ops: dependencies.mhcuSettings ? dependencies.mhcuOpsRepository || createMhcuOpsRepository(dependencies.db) : undefined,
                 paymentSecret: dependencies.paymentSecret,
                 siteOrigin: dependencies.frontendOrigin,
+                driveReports: dependencies.driveReports,
             }))
             .use(createMhcuOpsRoutes({
                 tokenService: dependencies.tokenService,

@@ -10,6 +10,7 @@ import { createFreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createAssessmentsRepository } from './repositories/assessments.repository';
 import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createMailer } from './services/mailer';
+import { createDriveReports } from './services/drive-reports';
 import { createMhcuOpsRepository } from './repositories/mhcu-ops.repository';
 import { createMhcuSettingsStore } from './services/mhcu-settings-store';
 import { processDueBookingOutbox } from './services/booking-outbox';
@@ -107,6 +108,16 @@ if (env.N8N_BOOKING_WEBHOOK_URL || googleOutboxConfig) {
     outboxTimer.unref();
 }
 
+// Released MHCU reports -> Google Drive (Reports / MHCU / year / month / code). Only when GOOGLE_DRIVE_REFRESH_TOKEN is set.
+const driveReports = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_DRIVE_REFRESH_TOKEN
+    ? createDriveReports({
+          clientId: env.GOOGLE_CLIENT_ID,
+          clientSecret: env.GOOGLE_CLIENT_SECRET,
+          refreshToken: env.GOOGLE_DRIVE_REFRESH_TOKEN,
+          rootName: env.GOOGLE_DRIVE_ROOT_FOLDER_NAME
+      })
+    : undefined;
+
 // Assessments (Mental Health Check-Up...) -> a PRIVATE Google Sheet. Only runs when ASSESSMENTS_SHEET_ID is set.
 const assessmentsRepository = createAssessmentsRepository(db);
 const assessmentsSheetSync = createAssessmentsSheetSync({
@@ -150,6 +161,7 @@ const app = createApp({
     paymentSecret: jwtSecretValue,
     assessmentsRepository,
     assessmentsSheetSync,
+    driveReports,
     freeSessionRepository,
     freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',
