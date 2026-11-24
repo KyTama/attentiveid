@@ -114,7 +114,8 @@ const driveReports = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOO
           clientId: env.GOOGLE_CLIENT_ID,
           clientSecret: env.GOOGLE_CLIENT_SECRET,
           refreshToken: env.GOOGLE_DRIVE_REFRESH_TOKEN,
-          rootName: env.GOOGLE_DRIVE_ROOT_FOLDER_NAME
+          rootName: env.GOOGLE_DRIVE_ROOT_FOLDER_NAME,
+          rootFolderId: env.GOOGLE_DRIVE_ROOT_FOLDER_ID
       })
     : undefined;
 

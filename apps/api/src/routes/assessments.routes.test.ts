@@ -66,7 +66,8 @@ const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
 const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail' } = {}) => {
-    const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; html: string }> }> = [];
+    const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; mimeType: string; data: Uint8Array | string }> }> = [];
+    const printed: string[] = [];
     const rows: AssessmentRow[] = [];
     const inputs: NewAssessmentSubmission[] = [];
     const audits: AuditEntry[] = [];
@@ -183,6 +184,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 }
             }))(),
             alertEmail: 'alerts@attentive.id',
+            pdfRenderer: async (html) => { printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
             driveReports: options.drive
                 ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; } }
                 : undefined,
@@ -192,7 +194,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, sent, emailed, alerted, inputs, audits, driveSaved, syncCalls: () => synced };
+    return { app, rows, sent, emailed, alerted, inputs, audits, driveSaved, printed, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -828,19 +830,23 @@ describe('released reports saved to Drive', () => {
         return { ...fixture, done };
     };
 
-    it('saves both languages as self-contained files and says where', async () => {
-        const { done, driveSaved, audits } = await release({ drive: 'ok' });
+    it('saves both languages as plain PDFs (the report pages only) and says where', async () => {
+        const { done, driveSaved, audits, printed } = await release({ drive: 'ok' });
         expect(done.status).toBe(200);
         expect((await done.json()).data.drivePath).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
         expect(driveSaved).toHaveLength(1);
-        expect(driveSaved[0].files.map((file) => file.name)).toEqual(['AT-MHCU-2026-100-ID.html', 'AT-MHCU-2026-100-EN.html']);
-        const [id, en] = driveSaved[0].files;
-        expect(id.html).toContain('Laporan Hasil Pemeriksaan MHCU');
-        expect(en.html).toContain('MHCU Assessment Report');
-        // the saved file has the print buttons but no link buttons or language switch
-        expect(id.html).toContain('id="rp-save"');
-        expect(id.html).not.toContain('id="rp-copy"');
-        expect(id.html).not.toContain('id="rp-lang"');
+        expect(driveSaved[0].files.map((file) => file.name)).toEqual(['AT-MHCU-2026-100 - MHCU (ID).pdf', 'AT-MHCU-2026-100 - MHCU (EN).pdf']);
+        expect(driveSaved[0].files.every((file) => file.mimeType === 'application/pdf')).toBe(true);
+        // what was printed is the report itself: its pages, in each language, with no page frame, title or buttons
+        expect(printed).toHaveLength(2);
+        for (const html of printed) {
+            expect(html).toContain('<div class="page">');
+            expect(html).not.toContain('rp-save');
+            expect(html).not.toContain('rp-frame');
+            expect(html).not.toContain('<script');
+        }
+        expect(printed[0]).toContain('Psikolog Pemeriksa');
+        expect(printed[1]).toContain('Examining Psychologist');
         expect(audits.some((entry) => entry.action === 'send' && String(entry.detail).includes('saved to Drive'))).toBe(true);
     });
 

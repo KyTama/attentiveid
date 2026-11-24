@@ -18,6 +18,10 @@ const EnvSchema = t.Object({
     GOOGLE_DRIVE_REFRESH_TOKEN: t.Optional(t.String()),
     /** Name of the top folder in My Drive (default: Reports). */
     GOOGLE_DRIVE_ROOT_FOLDER_NAME: t.Optional(t.String()),
+    /** Id of the Drive folder the reports go into (a folder this app created; it can be moved anywhere in Drive). Empty = a Reports folder in My Drive. */
+    GOOGLE_DRIVE_ROOT_FOLDER_ID: t.Optional(t.String()),
+    /** Path of the Chromium binary that prints the report PDFs (default: found automatically). */
+    CHROMIUM_PATH: t.Optional(t.String()),
     GOOGLE_SHEET_NAME: t.Optional(t.String()),
     FREE_SESSION_SHEET_ID: t.Optional(t.String()),
     FREE_SESSION_SHEET_NAME: t.Optional(t.String()),

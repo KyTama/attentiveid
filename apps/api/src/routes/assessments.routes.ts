@@ -13,7 +13,8 @@ import { buildMhcuResultEmail } from '../services/mhcu-result-email';
 import { PAYMENT_OPTIONS, PROMO_UNTIL, paymentLink, priceFor, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
 import { buildGscReceivedEmail, buildGscStaffEmail } from '../services/form-notice-emails';
-import { renderClientReportPage, renderPsychologistReportHtml } from '../services/mhcu-report-service';
+import { renderClientReportHtml, renderClientReportPage, renderPsychologistReportHtml } from '../services/mhcu-report-service';
+import { renderPdf, type PdfRenderer } from '../services/pdf-render';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
 import type { DriveReports } from '../services/drive-reports';
 import { loadReportAssets, makeStandaloneReport } from '../services/mhcu-report-file';
@@ -43,6 +44,8 @@ export interface AssessmentsRoutesDependencies {
     siteOrigin?: string;
     /** Saves released reports to Google Drive (optional; without it nothing is saved there). */
     driveReports?: DriveReports;
+    /** Prints a report page to PDF (default: headless Chromium). Replaceable in tests. */
+    pdfRenderer?: PdfRenderer;
     rateLimit?: AssessmentsRateLimit;
     now?: () => number;
 }
@@ -204,16 +207,19 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     /** ?lang=id or ?lang=en picks the language of a report; anything else keeps the participant's own. */
     const reportLang = (value: unknown): 'id' | 'en' | undefined => (value === 'en' ? 'en' : value === 'id' ? 'id' : undefined);
 
-    /** Both language versions of a released report, as self-contained files, saved to Drive. Only when Drive is set up. */
+    /** Both language versions of a released report as plain PDFs (the report pages only, no buttons), saved to Drive. Only when Drive is set up. */
     const saveReportFiles = dependencies.driveReports
         ? async (row: AssessmentRow) => {
             const loaded = await loadReportInput(row.id);
             if (!loaded) return null;
             const assets = await loadReportAssets(dependencies.siteOrigin || 'https://attentiveid.com');
-            const files = (['id', 'en'] as const).map((lang) => ({
-                name: `${row.code}-${lang.toUpperCase()}.html`,
-                html: makeStandaloneReport(renderClientReportPage({ ...loaded.input, lang }, 'file'), assets)
-            }));
+            const print = dependencies.pdfRenderer ?? renderPdf;
+            const files = [];
+            // One after the other: each print starts a browser, and two at once would use a lot of memory.
+            for (const lang of ['id', 'en'] as const) {
+                const html = makeStandaloneReport(renderClientReportHtml({ ...loaded.input, lang }), assets);
+                files.push({ name: `${row.code} - MHCU (${lang.toUpperCase()}).pdf`, mimeType: 'application/pdf', data: await print(html) });
+            }
             const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files });
             return { path: saved.path };
         }
