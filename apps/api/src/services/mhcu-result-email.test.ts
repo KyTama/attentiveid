@@ -25,7 +25,7 @@ describe('MHCU result e-mail (team template: Pemeriksaan mandiri)', () => {
         expect(mail.html).toContain('dari 100 (semakin tinggi semakin baik)')
         expect(mail.html).toContain('Level 1 dari 5: Baik')
         expect(mail.html).toContain('SKALA STATUS')
-        expect(mail.html).toContain('POSISI MHI PADA RENTANG RUJUKAN')
+        expect(mail.html).toContain('POSISI MHI PADA RENTANG ACUAN')
         expect(mail.html).toContain('Apa yang diukur MHI?')
         expect(mail.html).not.toContain('Tingkat keluhan')
         expect(mail.html).not.toContain('Kesejahteraan')

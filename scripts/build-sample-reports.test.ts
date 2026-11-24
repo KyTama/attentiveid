@@ -8,34 +8,34 @@ const pages = (html: string) => (html.match(/<div class="page">/g) ?? []).length
 
 describe('sample reports', () => {
   test('single check-up: one sheet, fictional name, marked CONTOH / SAMPLE', () => {
-    const html = sampleHtml('c1');
+    const html = sampleHtml('single');
     expect(pages(html)).toBe(1);
     expect(html).toContain('Nama Peserta (contoh)');
-    expect(html).not.toContain('Larasati Dewi');
+    expect(html).toContain('T1 (pengukuran ke-1)');
     expect(html.match(/class="sample-diag"/g)?.length).toBe(1);
     expect(html.match(/class="sample-bar"/g)?.length).toBe(1);
     expect(html).toContain('CONTOH LAPORAN');
-    // the numbers stay
-    expect(html).toContain('77,5');
+    // the numbers come from the real scorer
+    expect(html).toContain('66,8');
   });
 
-  test('over time: every sheet is marked, numbers and wave dates stay', () => {
-    const html = sampleHtml('c5');
+  test('over time: every sheet is marked, package of 3: T1 to T3', () => {
+    const html = sampleHtml('package3');
     expect(pages(html)).toBe(2);
-    expect(html).not.toContain('Nadia Putri Lestari');
+    expect(html).toContain('T3 (pengukuran ke-3)');
     expect(html.match(/class="sample-diag"/g)?.length).toBe(2);
-    expect(html).toContain('76,1');
-    expect(html).toContain('T1 sampai T5');
+    expect(html).toContain('75,1');
+    expect(html).toContain('T1 sampai T3');
   });
 
   test('the page is self-contained (logo inline, font from a local file)', () => {
-    const html = sampleHtml('c1');
+    const html = sampleHtml('single');
     expect(html).toContain('src="data:image/png;base64,');
     expect(html).toContain('url(file:///');
   });
 
   test('the marks sit in the margin or are see-through, never opaque over the content', () => {
-    const html = sampleHtml('c1');
+    const html = sampleHtml('single');
     expect(html).toContain('rgba(209,158,58,.16)');
     expect(html).toContain('pointer-events:none');
   });

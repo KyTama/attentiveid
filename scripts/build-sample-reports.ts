@@ -4,35 +4,77 @@
  *   bun scripts/build-sample-reports.ts
  *
  * Output (committed, served as static files):
- *   apps/web/public/assessments-static/contoh-laporan-1x.pdf        single check-up (demo data "c1")
- *   apps/web/public/assessments-static/contoh-laporan-paket-3x.pdf  over time, T1..T5 (demo data "c5")
+ *   apps/web/public/assessments-static/contoh-laporan-1x.pdf        single check-up
+ *   apps/web/public/assessments-static/contoh-laporan-paket-3x.pdf  a package of 3 check-ups (T1, T2, T3)
  *   apps/web/public/images/email/teaser-1x.png                      first page, about 520 px wide
  *   apps/web/public/images/email/teaser-paket-3x.png
  *
- * The data is the team's fictional demo data; only the name is replaced ("Nama Peserta (contoh)").
- * Every page carries a CONTOH / SAMPLE mark. The PDF is printed by headless Chrome or Edge (found automatically, or set
- * CHROME_PATH). Needs no network and no database.
+ * The samples go through the same builder and renderer as a real released report (buildClientReportData + renderClientReport),
+ * fed with fictional answers, so their layout and length are exactly what a participant receives. Names are fictional
+ * ("Nama Peserta (contoh)"). Every page carries a CONTOH / SAMPLE mark. The PDF is printed by headless Chrome or Edge
+ * (found automatically, or set CHROME_PATH). Needs no network and no database.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { MHCU_ANSWER_RANGE, MHCU_ITEMS, MHCU_LEVELS, buildClientReportData, mhcuCode, scoreMhcu } from '../packages/shared/src';
+import type { MhcuStoredSession } from '../packages/shared/src';
 import { renderClientReport } from '../apps/api/src/reports/mhcu/client-report';
-import { DEMO_CLIENT } from '../apps/api/src/reports/mhcu/demo-client-data';
 import { FONT_URL, LOGO_URL } from '../apps/api/src/reports/mhcu/html';
 
 const ROOT = resolve(import.meta.dir, '..');
 const PUBLIC = join(ROOT, 'apps/web/public');
 const MAX_PDF_BYTES = 1.5 * 1024 * 1024;
 const SAMPLE_NAME = 'Nama Peserta (contoh)';
+const SAMPLE_PSYCHOLOGIST = 'Nama Psikolog (contoh)';
+/** Fixed, so the committed PDFs do not change from one build to the next. */
+const REPORT_DATE = '2026-11-24';
 /** Thumbnail width in pixels; an A4 page is 794 CSS pixels wide. */
 const THUMB_WIDTH = 520;
 
+/** Average answer per part for each fictional check-up (cc = complaints, wb = well-being, hb = habits, ati = self-image). */
+type Means = { cc: number; wb: number; hb: number; ati: number };
+
 const SAMPLES = [
-  { key: 'c1' as const, pdf: 'contoh-laporan-1x.pdf', thumb: 'teaser-1x.png', title: 'Contoh laporan 1x pemeriksaan' },
-  { key: 'c5' as const, pdf: 'contoh-laporan-paket-3x.pdf', thumb: 'teaser-paket-3x.png', title: 'Contoh laporan paket 3x' },
+  {
+    key: 'single' as const,
+    pdf: 'contoh-laporan-1x.pdf',
+    thumb: 'teaser-1x.png',
+    title: 'Contoh laporan 1x pemeriksaan',
+    checkups: [{ date: '2026-11-16 09:30:00', means: { cc: 1.0, wb: 3.5, hb: 2.6, ati: 2 } as Means }],
+  },
+  {
+    key: 'package3' as const,
+    pdf: 'contoh-laporan-paket-3x.pdf',
+    thumb: 'teaser-paket-3x.png',
+    title: 'Contoh laporan paket 3x',
+    // three check-ups about three weeks apart, getting better over time
+    checkups: [
+      { date: '2026-10-05 09:30:00', means: { cc: 1.5, wb: 2.9, hb: 2.1, ati: 2 } as Means },
+      { date: '2026-10-26 09:30:00', means: { cc: 1.1, wb: 3.3, hb: 2.5, ati: 2 } as Means },
+      { date: '2026-11-16 09:30:00', means: { cc: 0.7, wb: 3.8, hb: 2.9, ati: 2 } as Means },
+    ],
+  },
 ];
+export type SampleKey = (typeof SAMPLES)[number]['key'];
+
+/** Same answers every build. The three safety items (cc 11-13) stay at 0 so a sample never shows an alert level. */
+const noise = (i: number) => {
+  const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+  return (x - Math.floor(x)) * 2 - 1;
+};
+const answersFor = (means: Means): Record<string, number> => {
+  const answers: Record<string, number> = {};
+  MHCU_ITEMS.forEach((item, i) => {
+    const range = MHCU_ANSWER_RANGE[item.part];
+    let value = Math.round(means[item.part] + noise(i) * 0.9);
+    if (item.part === 'cc' && [11, 12, 13].includes(item.n)) value = 0;
+    answers[mhcuCode(item.part, item.n)] = Math.min(range.max, Math.max(range.min, value));
+  });
+  return answers;
+};
 
 const SAMPLE_CSS =
   '<style>' +
@@ -64,8 +106,32 @@ function findBrowser(): string {
 }
 
 /** The report page as a standalone file: local font, logo as a data URI, and the sample marks on every sheet. */
-export function sampleHtml(key: (typeof SAMPLES)[number]['key']): string {
-  const data = structuredClone(DEMO_CLIENT[key]);
+export function sampleHtml(key: SampleKey): string {
+  const sample = SAMPLES.find((entry) => entry.key === key)!;
+  const sessions: MhcuStoredSession[] = sample.checkups.map((checkup, index) => ({
+    sessionId: `sample-${index + 1}`,
+    reportNo: `AT-MHCU-2026-${String(index + 1).padStart(3, '0')}`,
+    participantId: 'P00000',
+    submittedAt: checkup.date,
+    lang: 'id',
+    name: SAMPLE_NAME,
+    sex: 'Perempuan (Female)',
+    age: 28,
+    phone: '08xxxxxxxxxx',
+    email: 'contoh@example.com',
+    answers: answersFor(checkup.means),
+  }));
+  const current = sessions[sessions.length - 1];
+  const level = scoreMhcu(current.answers).level;
+  const data = buildClientReportData({
+    session: current,
+    history: sessions,
+    extras: {
+      psychologist: { name: SAMPLE_PSYCHOLOGIST, sipp: null },
+      note: { recommendation: MHCU_LEVELS[level].actionId, status: 'final', finalizedBy: SAMPLE_PSYCHOLOGIST },
+      reportDate: REPORT_DATE,
+    },
+  });
   data.header.name = SAMPLE_NAME;
   const fontPath = join(PUBLIC, FONT_URL);
   const logo = readFileSync(join(PUBLIC, LOGO_URL));

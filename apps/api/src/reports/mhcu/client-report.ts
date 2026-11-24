@@ -132,7 +132,7 @@ function indexTable(rows: MhcuClientIndexRow[], lang: Lang, longitudinal: boolea
   const header = [
     head(w[0] as number, 'left', L(lang, 'PEMERIKSAAN', 'TEST')),
     head(w[1] as number, 'center', L(lang, 'HASIL', 'RESULT')),
-    head(w[2] as number, 'left', L(lang, 'NILAI RUJUKAN', 'REFERENCE VALUES')),
+    head(w[2] as number, 'left', L(lang, 'NILAI ACUAN', 'REFERENCE VALUES')),
     head(w[3] as number, 'center', L(lang, 'KATEGORI', 'CATEGORY')),
   ];
   if (longitudinal) {
@@ -252,7 +252,7 @@ function clientProgressPage(data: MhcuClientReportData, pr: MhcuProgressData): s
       [
         td(411, '#FFFFFF', '0pt 0pt 0pt 0pt', 'middle', [para('left', 8.5, [img(SVG_DATA_URI(svg), 405, 170)])]),
         td(104, '#FFFFFF', '10pt 6pt 4pt 8pt', 'top', [
-          para('left', 6, run(L(lang, 'RENTANG RUJUKAN', 'REFERENCE RANGES'), 6, MUTE, { b: 1 })),
+          para('left', 6, run(L(lang, 'RENTANG ACUAN', 'REFERENCE RANGES'), 6, MUTE, { b: 1 })),
           ...legend(LEVEL_NAME[lang][0] as string, '70-100'),
           ...legend(LEVEL_NAME[lang][1] as string, '55-70'),
           ...legend(LEVEL_NAME[lang][2] as string, '40-55'),

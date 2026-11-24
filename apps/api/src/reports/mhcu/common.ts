@@ -117,7 +117,7 @@ export function indexCategory(key: IndexKey, v: number, lang: Lang): string {
 }
 
 export const INDEX_NOTE: Record<Lang, string> = {
-  id: 'Semua indeks memakai skala 0-100. Untuk Distress Index, skor yang lebih rendah lebih baik. Untuk Well-being Index dan Behavioral Health Index, skor yang lebih tinggi lebih baik. Nilai rujukan Well-being Index mengikuti acuan Warwick; nilai rujukan lainnya masih merupakan acuan sementara Attentive.',
+  id: 'Semua indeks memakai skala 0-100. Untuk Distress Index, skor yang lebih rendah lebih baik. Untuk Well-being Index dan Behavioral Health Index, skor yang lebih tinggi lebih baik. Nilai acuan Well-being Index mengikuti acuan Warwick; nilai acuan lainnya masih merupakan acuan sementara Attentive.',
   en: 'All indices use a 0-100 scale. For the Distress Index a lower score is better. For the Well-being Index and the Behavioral Health Index a higher score is better. Reference values for the Well-being Index follow the Warwick benchmark; the others are interim Attentive references.',
 };
 
@@ -222,7 +222,7 @@ export function mhiPosition(mhi: number, lang: Lang): string {
   const tick = (w: number, text: string, al: 'left' | 'right' = 'left') =>
     td(w, '#FFFFFF', '1pt 0pt 0pt 0pt', 'middle', [para(al, 6, run(text, 6, '#98A2B3'))]);
   return [
-    para('left', 6.5, run(L(lang, 'Posisi MHI pada rentang rujukan', 'Position of the MHI on the reference ranges'), 6.5, MUTE, { b: 1 }), { lh: LH_HEAD }),
+    para('left', 6.5, run(L(lang, 'Posisi MHI pada rentang acuan', 'Position of the MHI on the reference ranges'), 6.5, MUTE, { b: 1 }), { lh: LH_HEAD }),
     sp(2),
     table([
       [
