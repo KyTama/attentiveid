@@ -2,12 +2,17 @@ import { Elysia } from 'elysia';
 import {
     dedupeFreeSessionRecords,
     freeSessionRecordsToCsv,
+    genderLabel,
+    type FreeSessionSubmission,
+    keluhanLabel,
     validateFreeSessionSubmission
 } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { FreeSessionRepository } from '../repositories/free-session.repository';
 import type { FreeSessionSheetSync } from '../services/free-session-sheet-sync';
+import type { Mailer } from '../services/mailer';
+import { buildFreeSessionReceivedEmail, buildFreeSessionStaffEmail } from '../services/form-notice-emails';
 
 export interface FreeSessionRateLimit {
     max: number;
@@ -20,6 +25,11 @@ export interface FreeSessionRoutesDependencies {
     freeSessionRepository: FreeSessionRepository;
     /** Writes submissions to the Google Sheet (optional; without it submissions stay in the database only). */
     sheetSync?: FreeSessionSheetSync;
+    /** Sends the sign-up e-mails (optional; without it nothing is sent). */
+    mailer?: Mailer;
+    /** Staff inbox that gets every new sign-up. */
+    alertEmail?: string;
+    siteOrigin?: string;
     rateLimit?: FreeSessionRateLimit;
     now?: () => number;
 }
@@ -53,6 +63,35 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
     const hits = new Map<string, number[]>();
     // Sign-ups being saved right now, so two clicks that arrive together share one row.
     const inFlight = new Map<string, Promise<{ id: string }>>();
+
+    /** E-mails staff (and the visitor, if they gave an address). Never blocks or fails the sign-up; logs only the error name, never the person's data. */
+    const notify = (value: FreeSessionSubmission) => {
+        const mailer = dependencies.mailer;
+        if (!mailer?.isConfigured) return;
+        const send = (to: string, mail: { subject: string; html: string; text: string }, where: string) =>
+            void mailer.send({ to, ...mail }).catch((error) => {
+                console.error(`[free-session] ${where} e-mail failed:`, error instanceof Error ? error.name : 'error');
+            });
+        try {
+            if (dependencies.alertEmail) {
+                send(dependencies.alertEmail, buildFreeSessionStaffEmail({
+                    name: value.name,
+                    age: value.age,
+                    gender: value.gender ? genderLabel(value.gender) : null,
+                    phone: value.phone,
+                    email: value.email,
+                    keluhan: keluhanLabel(value.keluhan) ?? value.keluhan,
+                    keluhanDetail: value.keluhanDetail,
+                    siteOrigin: dependencies.siteOrigin
+                }), 'staff');
+            }
+            if (value.email) {
+                send(value.email, buildFreeSessionReceivedEmail({ name: value.name, siteOrigin: dependencies.siteOrigin }), 'visitor');
+            }
+        } catch (error) {
+            console.error('[free-session] e-mail failed:', error instanceof Error ? error.name : 'error');
+        }
+    };
 
     const isRateLimited = (key: string) => {
         const cutoff = now() - limit.windowMs;
@@ -95,7 +134,10 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
                         if (now() - new Date(earlier.createdAt).getTime() <= SAME_CLICK_MS) return { id: earlier.id };
                         throw new AlreadyRegistered();
                     }
-                    return repository.create(result.value);
+                    const row = await repository.create(result.value);
+                    // Only a brand new sign-up is e-mailed, so a double click or a retry never sends twice.
+                    notify(result.value);
+                    return row;
                 })();
                 inFlight.set(personKey, saving);
                 // Keep the entry briefly after saving so a click that lands just after still finds it.
