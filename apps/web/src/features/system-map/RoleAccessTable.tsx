@@ -28,7 +28,6 @@ function Cell({ level }: { level: Level }) {
 }
 
 function Table({ title, rows }: { title: string; rows: readonly AccessRow[] }) {
-  let lastArea = ''
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
       <table className="w-full min-w-[640px] text-left text-sm">
@@ -44,9 +43,8 @@ function Table({ title, rows }: { title: string; rows: readonly AccessRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
-            const showArea = row.area !== lastArea
-            lastArea = row.area
+          {rows.map((row, index) => {
+            const showArea = index === 0 || rows[index - 1].area !== row.area
             return (
               <Fragment key={row.id}>
                 {showArea && (
