@@ -99,6 +99,7 @@ jobs:
           # Google Drive copy of released reports (environment "staging"); empty = reports are not saved to Drive.
           GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
           GOOGLE_DRIVE_ROOT_FOLDER_NAME: ${{ vars.GOOGLE_DRIVE_ROOT_FOLDER_NAME }}
+          GOOGLE_DRIVE_ROOT_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_ROOT_FOLDER_ID }}
         run: |
           ./scripts/deploy/remote-deploy.sh \
             --host "${{ vars.DEPLOY_SSH_HOST }}" \

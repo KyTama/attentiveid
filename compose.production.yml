@@ -44,7 +44,7 @@ services:
     security_opt:
       - no-new-privileges:true
     tmpfs:
-      - /tmp:size=16m,uid=1000,gid=1000,mode=0700
+      - /tmp:size=128m,uid=1000,gid=1000,mode=0700
     volumes:
       - attentive_media:/app/apps/api/uploads/media
     env_file:
@@ -60,6 +60,7 @@ services:
       # Google Drive copy of released reports, delivered from GitHub secrets at deploy time (empty = not saved to Drive).
       GOOGLE_DRIVE_REFRESH_TOKEN: ${GOOGLE_DRIVE_REFRESH_TOKEN:-}
       GOOGLE_DRIVE_ROOT_FOLDER_NAME: ${GOOGLE_DRIVE_ROOT_FOLDER_NAME:-}
+      GOOGLE_DRIVE_ROOT_FOLDER_ID: ${GOOGLE_DRIVE_ROOT_FOLDER_ID:-}
     healthcheck:
       test: [CMD, bun, -e, "const response = await fetch('http://127.0.0.1:3000/ready'); if (!response.ok) process.exit(1)"]
       interval: 15s

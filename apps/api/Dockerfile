@@ -34,6 +34,12 @@ COPY --from=build --chown=bun:bun /app/apps/api/dist ./dist
 COPY --from=build --chown=bun:bun /app/apps/api/drizzle ./drizzle
 COPY --from=build --chown=bun:bun /app/apps/web/public/media ./uploads/media
 
+# Headless Chromium prints the released reports to PDF (the same engine as Print / Save as PDF, so the layout is identical).
+# Liberation fonts are the metric-compatible stand-in for Arial in the report text.
+USER root
+RUN apk add --no-cache chromium font-liberation
+ENV CHROMIUM_PATH=/usr/bin/chromium-browser
+
 USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 CMD ["bun", "-e", "const response = await fetch('http://127.0.0.1:3000/ready'); if (!response.ok) process.exit(1)"]
