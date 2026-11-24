@@ -20,7 +20,7 @@ export interface ReleaseDeps {
 }
 
 export type ReleaseResult =
-    | { ok: true; released: boolean; emailed: boolean; drivePath?: string }
+    | { ok: true; released: boolean; emailed: boolean; drivePath?: string; drive: 'off' | 'saved' | 'failed'; driveError?: string }
     | { ok: false; status: 409; message: string };
 
 /** Why a check-up cannot be released yet, or null when it can. The same rule is shown to staff in the dashboard. */
@@ -38,6 +38,8 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     const released = await deps.repository.markReportReleased(row.id);
     let emailed = false;
     let drivePath: string | undefined;
+    let drive: 'off' | 'saved' | 'failed' = deps.saveFiles ? 'saved' : 'off';
+    let driveError: string | undefined;
     if (released && deps.secret && deps.mailer?.isConfigured) {
         const origin = (deps.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
         // The same signed link opens the report in either language; the participant and staff get both.
@@ -79,11 +81,14 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     if (released && deps.saveFiles) {
         try {
             drivePath = (await deps.saveFiles(row))?.path;
+            if (!drivePath) drive = 'failed';
         } catch (error) {
+            drive = 'failed';
+            driveError = error instanceof Error ? error.message.slice(0, 300) : 'unknown error';
             deps.onError?.('release-drive', error);
         }
     }
-    return { ok: true, released: !!released, emailed, ...(drivePath ? { drivePath } : {}) };
+    return { ok: true, released: !!released, emailed, drive, ...(drivePath ? { drivePath } : {}), ...(driveError ? { driveError } : {}) };
 };
 
 export interface AutomationDeps extends ReleaseDeps {

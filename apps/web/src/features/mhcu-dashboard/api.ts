@@ -95,8 +95,12 @@ export interface PaymentInput {
 export const savePayment = async (id: string, input: PaymentInput): Promise<MhcuDetail> =>
   (await request<{ data: MhcuDetail }>(`${base(id)}/payment`, put(input))).data
 
-export const releaseReport = async (id: string): Promise<{ released: boolean; emailed: boolean; drivePath?: string | null }> =>
-  (await request<{ data: { released: boolean; emailed: boolean; drivePath?: string | null } }>(`${base(id)}/release-report`, { method: 'POST' })).data
+/** Saves (or saves again) the released report to Google Drive; returns the folder path. */
+export const saveReportToDrive = async (id: string): Promise<{ path: string }> =>
+  (await request<{ data: { path: string } }>(`${base(id)}/save-to-drive`, { method: 'POST' })).data
+
+export const releaseReport = async (id: string): Promise<{ released: boolean; emailed: boolean; drivePath?: string | null; drive?: 'off' | 'saved' | 'failed'; driveError?: string | null }> =>
+  (await request<{ data: { released: boolean; emailed: boolean; drivePath?: string | null; drive?: 'off' | 'saved' | 'failed'; driveError?: string | null } }>(`${base(id)}/release-report`, { method: 'POST' })).data
 
 /**
  * Opens a report as a print-ready page in a new tab. The page needs the staff login, so it is fetched here and shown from a
