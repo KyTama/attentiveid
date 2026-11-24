@@ -65,7 +65,7 @@ export const renderClientReportHtml = (input: ReportInput): string => {
 };
 
 /** The client report inside the report page (title, print and copy buttons, what is in it): the public page and the staff preview. */
-export const renderClientReportPage = (input: ReportInput, mode: 'public' | 'staff'): string =>
+export const renderClientReportPage = (input: ReportInput, mode: 'public' | 'staff' | 'file'): string =>
     wrapReportPage(renderClientReportHtml(input), {
         lang: langOf(input),
         name: input.row.name,

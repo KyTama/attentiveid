@@ -95,8 +95,8 @@ export interface PaymentInput {
 export const savePayment = async (id: string, input: PaymentInput): Promise<MhcuDetail> =>
   (await request<{ data: MhcuDetail }>(`${base(id)}/payment`, put(input))).data
 
-export const releaseReport = async (id: string): Promise<{ released: boolean; emailed: boolean }> =>
-  (await request<{ data: { released: boolean; emailed: boolean } }>(`${base(id)}/release-report`, { method: 'POST' })).data
+export const releaseReport = async (id: string): Promise<{ released: boolean; emailed: boolean; drivePath?: string | null }> =>
+  (await request<{ data: { released: boolean; emailed: boolean; drivePath?: string | null } }>(`${base(id)}/release-report`, { method: 'POST' })).data
 
 /**
  * Opens a report as a print-ready page in a new tab. The page needs the staff login, so it is fetched here and shown from a

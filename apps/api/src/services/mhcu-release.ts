@@ -14,11 +14,13 @@ export interface ReleaseDeps {
     siteOrigin?: string;
     /** Inbox that gets a copy (both language versions) each time a report is released. */
     staffEmail?: () => Promise<string | undefined>;
+    /** Saves the report files (both languages) to Drive; returns where they went, or null when nothing is set up. */
+    saveFiles?: (row: AssessmentRow) => Promise<{ path: string } | null>;
     onError?: (where: string, error: unknown) => void;
 }
 
 export type ReleaseResult =
-    | { ok: true; released: boolean; emailed: boolean }
+    | { ok: true; released: boolean; emailed: boolean; drivePath?: string }
     | { ok: false; status: 409; message: string };
 
 /** Why a check-up cannot be released yet, or null when it can. The same rule is shown to staff in the dashboard. */
@@ -35,6 +37,7 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     if (blocker) return { ok: false, status: 409, message: blocker };
     const released = await deps.repository.markReportReleased(row.id);
     let emailed = false;
+    let drivePath: string | undefined;
     if (released && deps.secret && deps.mailer?.isConfigured) {
         const origin = (deps.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
         // The same signed link opens the report in either language; the participant and staff get both.
@@ -72,7 +75,15 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
             deps.onError?.('release-staff-email', error);
         }
     }
-    return { ok: true, released: !!released, emailed };
+    // The Drive copy is independent of e-mail: a failure is logged and never undoes the release.
+    if (released && deps.saveFiles) {
+        try {
+            drivePath = (await deps.saveFiles(row))?.path;
+        } catch (error) {
+            deps.onError?.('release-drive', error);
+        }
+    }
+    return { ok: true, released: !!released, emailed, ...(drivePath ? { drivePath } : {}) };
 };
 
 export interface AutomationDeps extends ReleaseDeps {

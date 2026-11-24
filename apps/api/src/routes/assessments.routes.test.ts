@@ -65,7 +65,8 @@ const PSY_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail' } = {}) => {
+    const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; html: string }> }> = [];
     const rows: AssessmentRow[] = [];
     const inputs: NewAssessmentSubmission[] = [];
     const audits: AuditEntry[] = [];
@@ -182,13 +183,16 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 }
             }))(),
             alertEmail: 'alerts@attentive.id',
+            driveReports: options.drive
+                ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; } }
+                : undefined,
             paymentSecret: 'payment-secret-payment-secret-1234',
             siteOrigin: 'https://attentiveid.com',
             sheetSync: { isConfigured: true, syncPending: async () => { synced += 1; return { configured: true, synced: 0, error: null }; } },
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, sent, emailed, alerted, inputs, audits, syncCalls: () => synced };
+    return { app, rows, sent, emailed, alerted, inputs, audits, driveSaved, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -455,7 +459,7 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         await send(app, `/api/admin/assessments/${idOf(1)}/payment`, 'PUT', { status: 'PAID' }, adminHeaders);
         const done = await send(app, release, 'POST', {}, adminHeaders);
         expect(done.status).toBe(200);
-        expect((await done.json()).data).toEqual({ released: true, emailed: true });
+        expect((await done.json()).data).toEqual({ released: true, emailed: true, drivePath: null });
         expect(rows[0].status).toBe('released');
         // the participant gets the report in both languages, and the staff inbox gets a copy with both links
         expect(sent.map((mail) => mail.to)).toEqual(['rina@example.com', 'alerts@attentive.id']);
@@ -810,5 +814,45 @@ describe('DELETE /api/admin/assessments/:id (owner only)', () => {
     it('returns 404 for a bad id', async () => {
         const { app } = createFixture();
         expect((await send(app, '/api/admin/assessments/not-an-id', 'DELETE', undefined, bearer(ownerToken))).status).toBe(404);
+    });
+});
+
+describe('released reports saved to Drive', () => {
+    const release = async (options: { drive?: 'ok' | 'fail' }) => {
+        const fixture = createFixture(options);
+        await submit(fixture.app, body());
+        const id = fixture.rows[0].id;
+        await send(fixture.app, `/api/admin/assessments/${id}/note`, 'PUT', { template: null, custom: null, final: true }, bearer(adminToken));
+        await send(fixture.app, `/api/admin/assessments/${id}/payment`, 'PUT', { status: 'PAID' }, bearer(adminToken));
+        const done = await send(fixture.app, `/api/admin/assessments/${id}/release-report`, 'POST', {}, bearer(adminToken));
+        return { ...fixture, done };
+    };
+
+    it('saves both languages as self-contained files and says where', async () => {
+        const { done, driveSaved, audits } = await release({ drive: 'ok' });
+        expect(done.status).toBe(200);
+        expect((await done.json()).data.drivePath).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
+        expect(driveSaved).toHaveLength(1);
+        expect(driveSaved[0].files.map((file) => file.name)).toEqual(['AT-MHCU-2026-100-ID.html', 'AT-MHCU-2026-100-EN.html']);
+        const [id, en] = driveSaved[0].files;
+        expect(id.html).toContain('Laporan Hasil Pemeriksaan MHCU');
+        expect(en.html).toContain('MHCU Assessment Report');
+        // the saved file has the print buttons but no link buttons or language switch
+        expect(id.html).toContain('id="rp-save"');
+        expect(id.html).not.toContain('id="rp-copy"');
+        expect(id.html).not.toContain('id="rp-lang"');
+        expect(audits.some((entry) => entry.action === 'send' && String(entry.detail).includes('saved to Drive'))).toBe(true);
+    });
+
+    it('a Drive failure never undoes the release', async () => {
+        const { done, rows } = await release({ drive: 'fail' });
+        expect(done.status).toBe(200);
+        expect((await done.json()).data).toMatchObject({ released: true, drivePath: null });
+        expect(rows[0].status).toBe('released');
+    });
+
+    it('does nothing when Drive is not set up', async () => {
+        const { done } = await release({});
+        expect((await done.json()).data.drivePath).toBeNull();
     });
 });
