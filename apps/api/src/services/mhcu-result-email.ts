@@ -93,7 +93,7 @@ const COPY = {
         status: 'STATUS KESELURUHAN',
         levelOf: (level: number, name: string) => `Level ${level} dari 5: ${name}`,
         scale: 'SKALA STATUS',
-        position: 'POSISI MHI PADA RENTANG RUJUKAN',
+        position: 'POSISI MHI PADA RENTANG ACUAN',
         whatHead: 'Apa yang diukur MHI?',
         whatBody:
             'Mental Health Index (MHI) adalah angka 0 sampai 100 yang merangkum kondisi kesehatan mental Anda dalam 2 minggu terakhir. Semakin tinggi angkanya, semakin baik. MHI dihitung dari tiga indeks berikut.',

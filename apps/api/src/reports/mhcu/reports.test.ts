@@ -30,7 +30,15 @@ const demoBody = (name: string): string | null => {
   const file = resolve(DEMO_DIR, `${name}.html`);
   if (!existsSync(file)) return null;
   const html = readFileSync(file, 'utf8');
-  return html.slice(html.indexOf('<body>') + 6);
+  // 24 Nov 2026: the team (Andina) asked for "rujukan" (can read as "referral") to become "acuan" in the reports.
+  // The demo documents are the team's older source files and are left as they are, so the new wording is applied here.
+  return html
+    .slice(html.indexOf('<body>') + 6)
+    .replaceAll('NILAI RUJUKAN', 'NILAI ACUAN')
+    .replaceAll('RENTANG RUJUKAN', 'RENTANG ACUAN')
+    .replaceAll('rentang rujukan', 'rentang acuan')
+    .replaceAll('Nilai rujukan', 'Nilai acuan')
+    .replaceAll('nilai rujukan', 'nilai acuan');
 };
 /** Images (logo, chart) are hosted or data URIs; compare everything else. */
 const normalise = (body: string): string => body.replace(/src="[^"]*"/g, 'src="IMG"');

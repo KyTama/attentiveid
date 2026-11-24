@@ -70,7 +70,7 @@ export interface MhcuClientIndexRow {
   value: number | null
   category: MhcuCategory | null
   higherIsBetter: boolean
-  /** "NILAI RUJUKAN": the category bands as text, e.g. "Minimal 0-9,9; Ringan 10-24,9; ..." (derive from MHCU_CATEGORIES) */
+  /** "NILAI ACUAN": the category bands as text, e.g. "Minimal 0-9,9; Ringan 10-24,9; ..." (derive from MHCU_CATEGORIES) */
   referenceRanges: { id: string; en: string }
   /** Previous check-up (T(n-1)) and the change to it: only on longitudinal reports, null on T1 */
   previous: { waveNo: number; value: number | null; change: MhcuChange } | null
@@ -104,7 +104,7 @@ export interface MhcuProgressWave {
 }
 
 export interface MhcuProgressData {
-  /** T1..Tn in order. The MHI trend chart draws these against the bands (RENTANG RUJUKAN): Baik 70-100, Perlu Dipantau 55-70, Perlu Perhatian 40-55, Perlu Perhatian Serius 0-40 */
+  /** T1..Tn in order. The MHI trend chart draws these against the bands (RENTANG ACUAN): Baik 70-100, Perlu Dipantau 55-70, Perlu Perhatian 40-55, Perlu Perhatian Serius 0-40 */
   waves: MhcuProgressWave[]
   /** "RENTANG PEMANTAUAN": first and last date */
   firstDate: string

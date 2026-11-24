@@ -38,7 +38,7 @@ const TEXT = {
 
 const insideText = (pages: number, lang: Lang): string =>
   lang === 'id'
-    ? `Hasil per indeks (Distress, Well-being, Behavioral Health) dan Mental Health Index, nilai rujukan, serta keterangan dan rekomendasi dari psikolog Attentive. ${pages > 1 ? `${pages} halaman A4: hasil terkini dan perkembangan dari pemeriksaan ke pemeriksaan.` : '1 halaman A4.'}`
+    ? `Hasil per indeks (Distress, Well-being, Behavioral Health) dan Mental Health Index, nilai acuan, serta keterangan dan rekomendasi dari psikolog Attentive. ${pages > 1 ? `${pages} halaman A4: hasil terkini dan perkembangan dari pemeriksaan ke pemeriksaan.` : '1 halaman A4.'}`
     : `Your results per index (Distress, Well-being, Behavioral Health) and the Mental Health Index, reference values, plus notes and recommendations from an Attentive psychologist. ${pages > 1 ? `${pages} A4 pages: the latest result and progress from one check-up to the next.` : '1 A4 page.'}`;
 
 const keepText = (lang: Lang): string =>

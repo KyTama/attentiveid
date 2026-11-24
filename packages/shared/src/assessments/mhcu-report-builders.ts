@@ -117,7 +117,7 @@ function trimNumber(v: number, lang: MhcuReportLang): string {
   return lang === 'id' ? s.replace('.', ',') : s
 }
 
-/** "Minimal 0-9,9; Ringan 10-24,9; Sedang 25-49,9; Tinggi 50-100" (the NILAI RUJUKAN cell) */
+/** "Minimal 0-9,9; Ringan 10-24,9; Sedang 25-49,9; Tinggi 50-100" (the NILAI ACUAN cell) */
 export function referenceRangesText(kind: 'di' | 'wi' | 'bhi', lang: MhcuReportLang): string {
   const { lo, id, en } = MHCU_CATEGORIES[kind]
   const names = lang === 'id' ? id : en

@@ -50,7 +50,7 @@ export function SummaryBlock({ detail }: { detail: MhcuDetail }) {
 
       {position !== null && (
         <div>
-          <p className="mb-1 text-[10px] font-bold tracking-wide text-slate-500">{tx('POSISI MHI PADA RENTANG RUJUKAN', 'MHI POSITION ON THE REFERENCE RANGES')}</p>
+          <p className="mb-1 text-[10px] font-bold tracking-wide text-slate-500">{tx('POSISI MHI PADA RENTANG ACUAN', 'MHI POSITION ON THE REFERENCE RANGES')}</p>
           <div className="relative pt-6">
             <div className="absolute top-0 -translate-x-1/2 text-center text-xs font-bold leading-none text-navy-900" style={{ left: `${position}%` }}>
               {fmt1(mhi)}
