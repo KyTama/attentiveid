@@ -5,6 +5,7 @@ import { createTokenService } from '../security/token-service';
 import type { FreeSessionRepository } from '../repositories/free-session.repository';
 import { createFreeSessionRoutes } from './free-session.routes';
 import type { FreeSessionSheetSync } from '../services/free-session-sheet-sync';
+import type { MailMessage } from '../services/mailer';
 
 const testJwtSecret = 'test-secret-key-must-be-at-least-32-bytes-long-for-hmac-sha256-security';
 
@@ -49,7 +50,8 @@ const validBody = {
     website: ''
 };
 
-const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; sheetSync?: FreeSessionSheetSync } = {}) => {
+const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; sheetSync?: FreeSessionSheetSync; mail?: 'ok' | 'fail' | 'off' } = {}) => {
+    const sent: MailMessage[] = [];
     const created: FreeSessionSubmission[] = [];
     const createdAtMs: number[] = [];
     const repository: FreeSessionRepository = {
@@ -76,11 +78,14 @@ const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; shee
             userRepository: { findById: async (id: string) => usersById.get(id) ?? null },
             freeSessionRepository: repository,
             sheetSync: options.sheetSync,
+            mailer: { isConfigured: options.mail !== 'off', send: async (message) => { if (options.mail === 'fail') throw new Error('smtp down'); sent.push(message); } },
+            alertEmail: 'staff@attentive.id',
+            siteOrigin: 'https://attentiveid.com',
             rateLimit: { max: options.max ?? 5, windowMs: 60_000 },
             now: () => clock
         })
     );
-    return { app, created, advance: (ms: number) => { clock += ms; } };
+    return { app, created, sent, advance: (ms: number) => { clock += ms; } };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -274,6 +279,7 @@ describe('double submit guard', () => {
         const { app, created, advance } = createFixture();
         expect((await post(app, validBody)).status).toBe(201);
         advance(60_000);
+        await new Promise((resolve) => setTimeout(resolve, 3100)); // the route remembers a sign-up for 3 s
         // same phone written another way, even with another name
         const response = await post(app, { ...validBody, name: 'Another Name', phone: '+62 812 3456 7890' });
         expect(response.status).toBe(409);
@@ -288,5 +294,52 @@ describe('double submit guard', () => {
         await post(app, validBody);
         expect((await post(app, { ...validBody, name: 'Someone Else', phone: '0899-1111-2222' })).status).toBe(201);
         expect(created).toHaveLength(2);
+    });
+});
+
+const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+describe('free session e-mails', () => {
+    it('tells staff about a new sign-up, and the visitor too when they gave an e-mail', async () => {
+        const { app, sent } = createFixture();
+        expect((await post(app, { ...validBody, email: 'nico@example.com', keluhanDetail: 'sulit tidur' })).status).toBe(201);
+        await settle();
+        expect(sent.map((mail) => mail.to).sort()).toEqual(['nico@example.com', 'staff@attentive.id']);
+        const staff = sent.find((mail) => mail.to === 'staff@attentive.id')!;
+        expect(staff.subject).toContain('Nico Testerson');
+        expect(staff.text).toContain('081234567890');
+        expect(staff.text).toContain('/dashboard/free-session');
+        const visitor = sent.find((mail) => mail.to === 'nico@example.com')!;
+        expect(visitor.text).toContain('WhatsApp');
+        expect(visitor.text).not.toContain('sulit tidur');
+    });
+
+    it('only e-mails staff when the visitor left no address', async () => {
+        const { app, sent } = createFixture();
+        await post(app, validBody);
+        await settle();
+        expect(sent.map((mail) => mail.to)).toEqual(['staff@attentive.id']);
+    });
+
+    it('sends one set of e-mails for a double click, none for a refused repeat', { timeout: 10_000 }, async () => {
+        const { app, sent, advance } = createFixture();
+        await Promise.all([post(app, validBody), post(app, validBody)]);
+        await settle();
+        expect(sent).toHaveLength(1);
+        advance(60_000);
+        await new Promise((resolve) => setTimeout(resolve, 3100)); // the route remembers a sign-up for 3 s
+        expect((await post(app, validBody)).status).toBe(409);
+        await settle();
+        expect(sent).toHaveLength(1);
+    });
+
+    it('still saves the sign-up when e-mail is off or failing', async () => {
+        for (const mail of ['off', 'fail'] as const) {
+            const { app, created, sent } = createFixture({ mail });
+            expect((await post(app, { ...validBody, email: 'nico@example.com' })).status).toBe(201);
+            await settle();
+            expect(created).toHaveLength(1);
+            expect(sent).toHaveLength(0);
+        }
     });
 });

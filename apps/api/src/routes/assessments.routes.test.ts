@@ -570,11 +570,12 @@ describe('result e-mail after a submission', () => {
         expect(off.sent).toHaveLength(0);
     });
 
-    it('does not e-mail a Goal System Compass session', async () => {
+    it('sends a Goal System Compass session only its own e-mails, never the Mental Health Check-Up result', async () => {
         const { app, sent } = createFixture();
         await submitGsc(app, gscBody());
         await settle();
-        expect(sent).toHaveLength(0);
+        expect(sent).toHaveLength(2);
+        expect(sent.every((mail) => !mail.subject.startsWith('[MHCU]') && !mail.text.includes('Mental Health Index'))).toBe(true);
     });
 });
 
@@ -707,5 +708,48 @@ describe('PUT price and package payments (admin)', () => {
         expect(JSON.stringify(audits)).not.toContain('Rina');
         expect(JSON.stringify(audits)).not.toContain('rina@');
         expect((await send(app, url, 'PUT', { status: 'PAID', package: '1x' }, adminHeaders)).status).toBe(200);
+    });
+});
+
+describe('Goal System Compass e-mails', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+    it('confirms to the person and tells the staff inbox', async () => {
+        const { app, sent } = createFixture();
+        expect((await submitGsc(app, gscBody())).status).toBe(201);
+        await settle();
+        expect(sent.map((mail) => mail.to).sort()).toEqual(['alerts@attentive.id', 'rina@example.com']);
+        const person = sent.find((mail) => mail.to === 'rina@example.com')!;
+        expect(person.subject).toContain('Goal System Compass');
+        expect(person.text).toContain('Rina Pratiwi');
+        const staff = sent.find((mail) => mail.to === 'alerts@attentive.id')!;
+        expect(staff.subject).toContain('[GSC]');
+        expect(staff.text).toContain('/dashboard/assessments/gsc');
+        expect(staff.text).not.toContain('H4sI');
+    });
+
+    it('writes to the person in English when they filled in the form in English', async () => {
+        const { app, sent } = createFixture();
+        await submitGsc(app, gscBody({ lang: 'en' }));
+        await settle();
+        expect(sent.find((mail) => mail.to === 'rina@example.com')!.subject).toContain('We received');
+    });
+
+    it('sends once for a repeated submission and not at all for a bot', async () => {
+        const { app, sent } = createFixture();
+        await submitGsc(app, gscBody());
+        await submitGsc(app, gscBody());
+        await settle();
+        expect(sent).toHaveLength(2);
+        await submitGsc(app, gscBody({ website: 'x' }));
+        await settle();
+        expect(sent).toHaveLength(2);
+    });
+
+    it('still stores the session when e-mail is failing', async () => {
+        const { app, rows } = createFixture({ mail: 'fail' });
+        expect((await submitGsc(app, gscBody())).status).toBe(201);
+        await settle();
+        expect(rows.filter((row) => row.instrument === 'gsc')).toHaveLength(1);
     });
 });

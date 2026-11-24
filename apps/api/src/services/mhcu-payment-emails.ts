@@ -12,7 +12,7 @@ export interface BuiltMail {
     text: string
 }
 
-const esc = (value: unknown): string =>
+export const esc = (value: unknown): string =>
     String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
 const rupiah = (amount: number): string => `Rp ${String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
@@ -27,7 +27,7 @@ const labelOf = (paymentFor: string, lang: 'id' | 'en'): string =>
     (FOR_LABEL[lang] as Record<string, string>)[paymentFor] ?? paymentFor
 
 /** The same clean white header as the result e-mail (gold logo, navy rule), so the mails look like one family. */
-const shell = (origin: string, kicker: string, inner: string, footer: string): string =>
+export const shell = (origin: string, kicker: string, inner: string, footer: string): string =>
     `<!DOCTYPE html><meta charset="utf-8"><div style="background:#EEF0F3;padding:24px 10px;font-family:${FONT};"><table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #D0D5DD"><tr><td bgcolor="#FFFFFF" style="background:#FFFFFF;padding:22px 28px 16px 28px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td valign="middle"><img src="${esc(origin)}/images/assessments/attentive-logo-light.png" width="132" height="36" alt="attentive." style="display:block;border:0"></td><td align="right" valign="middle" style="font-family:${FONT};font-size:9.5px;line-height:1.6;letter-spacing:1.4px;font-weight:bold;color:#667085">${esc(kicker)}</td></tr></table></td></tr><tr><td height="2" bgcolor="#142B51" style="background:#142B51;font-size:1px;line-height:2px">&nbsp;</td></tr><tr><td style="padding:26px 28px 22px 28px;font-size:14px;line-height:1.6;color:#1B2533">${inner}</td></tr><tr><td style="padding:16px 28px 22px 28px;border-top:1px solid #EAECF0;font-size:11px;line-height:1.55;color:#667085">${footer}</td></tr></table></div>`
 
 export interface PaymentReceivedInput {

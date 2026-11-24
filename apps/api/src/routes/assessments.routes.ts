@@ -10,6 +10,7 @@ import type { Mailer } from '../services/mailer';
 import { buildMhcuResultEmail } from '../services/mhcu-result-email';
 import { PAYMENT_OPTIONS, PROMO_UNTIL, paymentLink, priceFor, verifyPaymentToken } from '../services/assessment-payment';
 import { buildAdminAlertEmail } from '../services/mhcu-admin-alert';
+import { buildGscReceivedEmail, buildGscStaffEmail } from '../services/form-notice-emails';
 import { renderClientReportPage, renderPsychologistReportHtml } from '../services/mhcu-report-service';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
@@ -144,6 +145,28 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 await repository.markAdminAlertSent(row.id);
             } catch (error) {
                 logFailure('admin-alert', error);
+            }
+        })();
+    };
+
+    /** Goal System Compass: "we received it" to the person and a heads-up to the admin inbox. Never blocks or fails the submission. */
+    const sendGscEmails = (row: { id: string; code: string }, input: { name: string; age: number; phone: string; email: string; lang: 'id' | 'en' }) => {
+        const mailer = dependencies.mailer;
+        if (!mailer?.isConfigured) return;
+        void (async () => {
+            const siteOrigin = dependencies.siteOrigin || 'https://attentiveid.com';
+            try {
+                await mailer.send({ to: input.email, ...buildGscReceivedEmail({ name: input.name, code: row.code, lang: input.lang, siteOrigin }) });
+            } catch (error) {
+                logFailure('gsc-received-email', error);
+            }
+            try {
+                const settings = dependencies.settings ? await dependencies.settings.get() : null;
+                const to = settings?.alertEmail || dependencies.alertEmail;
+                if (!to) return;
+                await mailer.send({ to, ...buildGscStaffEmail({ ...input, code: row.code, submissionId: row.id, siteOrigin }) });
+            } catch (error) {
+                logFailure('gsc-staff-email', error);
             }
         })();
     };
@@ -353,7 +376,10 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     },
                     { dedupeMs: DUPLICATE_WINDOW_MS }
                 );
-                if (!created.duplicate) sync();
+                if (!created.duplicate) {
+                    sync();
+                    sendGscEmails(created, { name: value.name, age: value.age, phone: value.phone, email: value.email, lang: value.lang });
+                }
                 set.status = 201;
                 return { ok: true, status: 'success', code: created.code };
             } catch (error) {

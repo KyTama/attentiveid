@@ -207,6 +207,9 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 freeSessionRepository: dependencies.freeSessionRepository || createFreeSessionRepository(dependencies.db),
                 sheetSync: dependencies.freeSessionSheetSync,
+                mailer: dependencies.mailer,
+                alertEmail: dependencies.alertEmail,
+                siteOrigin: dependencies.frontendOrigin,
             }))
             .use(createPrayersRoutes({
                 tokenService: dependencies.tokenService,
