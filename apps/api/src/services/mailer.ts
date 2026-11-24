@@ -1,10 +1,17 @@
 import nodemailer from 'nodemailer'
 
+export interface MailAttachment {
+    filename: string
+    content: Uint8Array
+    contentType: string
+}
+
 export interface MailMessage {
     to: string
     subject: string
     html: string
     text: string
+    attachments?: MailAttachment[]
 }
 
 export interface Mailer {
@@ -52,7 +59,10 @@ export const createMailer = (settings: SmtpSettings, transportFactory = nodemail
                 replyTo: settings.replyTo || fromAddress,
                 subject: message.subject,
                 html: message.html,
-                text: message.text
+                text: message.text,
+                ...(message.attachments?.length
+                    ? { attachments: message.attachments.map((file) => ({ filename: file.filename, content: Buffer.from(file.content), contentType: file.contentType })) }
+                    : {})
             })
         }
     }

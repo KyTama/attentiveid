@@ -1,6 +1,7 @@
 import type { AssessmentRow, AssessmentsRepository } from '../repositories/assessments.repository';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { Mailer } from './mailer';
+import type { ReportFile } from './drive-reports';
 import { paymentToken } from './assessment-payment';
 import { buildReportReadyEmail, buildReportReleasedStaffEmail } from './mhcu-report-ready-email';
 import { REPORT_READY_PAYMENT } from './mhcu-report-service';
@@ -14,8 +15,10 @@ export interface ReleaseDeps {
     siteOrigin?: string;
     /** Inbox that gets a copy (both language versions) each time a report is released. */
     staffEmail?: () => Promise<string | undefined>;
-    /** Saves the report files (both languages) to Drive; returns where they went, or null when nothing is set up. */
-    saveFiles?: (row: AssessmentRow) => Promise<{ path: string } | null>;
+    /** Prints the final report in both languages (PDF). Without it nothing is attached and nothing is saved. */
+    buildFiles?: (row: AssessmentRow) => Promise<ReportFile[] | null>;
+    /** Saves the printed reports to Drive; returns where they went, or null when Drive is not set up. */
+    saveFiles?: (row: AssessmentRow, files: ReportFile[]) => Promise<{ path: string } | null>;
     onError?: (where: string, error: unknown) => void;
 }
 
@@ -37,6 +40,16 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     if (blocker) return { ok: false, status: 409, message: blocker };
     const released = await deps.repository.markReportReleased(row.id);
     let emailed = false;
+    // The final reports, printed once: they are attached to the e-mails and saved to Drive.
+    let files: ReportFile[] | null = null;
+    if (released && deps.buildFiles) {
+        try {
+            files = await deps.buildFiles(row);
+        } catch (error) {
+            deps.onError?.('release-pdf', error);
+        }
+    }
+    const attachments = files?.map((file) => ({ filename: file.name, content: typeof file.data === 'string' ? new TextEncoder().encode(file.data) : file.data, contentType: file.mimeType }));
     let drivePath: string | undefined;
     let drive: 'off' | 'saved' | 'failed' = deps.saveFiles ? 'saved' : 'off';
     let driveError: string | undefined;
@@ -56,8 +69,10 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
                     level: row.level,
                     links,
                     submittedAt: new Date(row.createdAt),
-                    siteOrigin: origin
-                })
+                    siteOrigin: origin,
+                    attached: !!attachments
+                }),
+                ...(attachments ? { attachments } : {})
             });
             emailed = true;
         } catch (error) {
@@ -70,7 +85,8 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
                 const psychologistName = row.psychologistId ? await deps.repository.getPsychologistName(row.psychologistId) : null;
                 await deps.mailer.send({
                     to: staff,
-                    ...buildReportReleasedStaffEmail({ name: row.name, code: row.code, level: row.level, scores: row.scores, links, submissionId: row.id, psychologistName, siteOrigin: origin })
+                    ...buildReportReleasedStaffEmail({ name: row.name, code: row.code, level: row.level, scores: row.scores, links, submissionId: row.id, psychologistName, siteOrigin: origin }),
+                    ...(attachments ? { attachments } : {})
                 });
             }
         } catch (error) {
@@ -80,7 +96,8 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     // The Drive copy is independent of e-mail: a failure is logged and never undoes the release.
     if (released && deps.saveFiles) {
         try {
-            drivePath = (await deps.saveFiles(row))?.path;
+            if (!files) throw new Error('The report PDFs could not be made, so nothing was saved to Drive');
+            drivePath = (await deps.saveFiles(row, files))?.path;
             if (!drivePath) drive = 'failed';
         } catch (error) {
             drive = 'failed';

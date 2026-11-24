@@ -446,7 +446,7 @@ function ReportBlock({ detail, isAdmin, onSaved, onError }: BlockProps & { isAdm
         <button className={buttonClass} onClick={() => open('psychologist')} type="button">
           <FileText aria-hidden="true" className="mr-1 inline size-4" />{tx('Laporan psikolog (internal)', 'Psychologist report (internal)')}
         </button>
-        {isAdmin && blocker === 'released' && (
+        {isAdmin && (
           <button
             className={buttonClass}
             disabled={busy}

@@ -65,7 +65,8 @@ const PSY_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail' } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail'; pdf?: 'off' } = {}) => {
+    const sheetRows: Array<{ title: string; tab: string; headers: string[]; key: string; values: string[] }> = [];
     const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; mimeType: string; data: Uint8Array | string }> }> = [];
     const printed: string[] = [];
     const rows: AssessmentRow[] = [];
@@ -184,9 +185,9 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 }
             }))(),
             alertEmail: 'alerts@attentive.id',
-            pdfRenderer: async (html) => { printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
+            pdfRenderer: options.pdf === 'off' ? null : async (html) => { printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
             driveReports: options.drive
-                ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; } }
+                ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; }, upsertSheetRow: async (input) => { if (options.drive === 'fail') throw new Error('sheet down'); sheetRows.push(input); return { spreadsheetId: 'sheet-1', updated: false }; } }
                 : undefined,
             paymentSecret: 'payment-secret-payment-secret-1234',
             siteOrigin: 'https://attentiveid.com',
@@ -194,7 +195,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, sent, emailed, alerted, inputs, audits, driveSaved, printed, syncCalls: () => synced };
+    return { app, rows, sent, emailed, alerted, inputs, audits, driveSaved, printed, sheetRows, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -820,9 +821,15 @@ describe('DELETE /api/admin/assessments/:id (owner only)', () => {
 });
 
 describe('released reports saved to Drive', () => {
-    const release = async (options: { drive?: 'ok' | 'fail' }) => {
+    const release = async (options: { drive?: 'ok' | 'fail'; pdf?: 'off' }) => {
         const fixture = createFixture(options);
         await submit(fixture.app, body());
+        // the draft that is made right after the submission is finished first; this checks what the release itself does
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        fixture.driveSaved.length = 0;
+        fixture.printed.length = 0;
+        fixture.sheetRows.length = 0;
+        fixture.sent.length = 0;
         const id = fixture.rows[0].id;
         await send(fixture.app, `/api/admin/assessments/${id}/note`, 'PUT', { template: null, custom: null, final: true }, bearer(adminToken));
         await send(fixture.app, `/api/admin/assessments/${id}/payment`, 'PUT', { status: 'PAID' }, bearer(adminToken));
@@ -850,6 +857,55 @@ describe('released reports saved to Drive', () => {
         expect(audits.some((entry) => entry.action === 'send' && String(entry.detail).includes('saved to Drive'))).toBe(true);
     });
 
+    it('release e-mails both PDFs to the participant and to staff, with or without Drive', async () => {
+        for (const options of [{ drive: 'ok' as const }, {}, { drive: 'fail' as const }]) {
+            const { sent } = await release(options);
+            expect(sent.map((mail) => mail.to)).toEqual(['rina@example.com', 'alerts@attentive.id']);
+            for (const mail of sent) {
+                expect(mail.attachments?.map((file) => file.filename)).toEqual(['AT-MHCU-2026-100 - MHCU (ID).pdf', 'AT-MHCU-2026-100 - MHCU (EN).pdf']);
+                expect(mail.attachments?.every((file) => file.contentType === 'application/pdf')).toBe(true);
+            }
+            expect(sent[0].text).toContain('terlampir');
+        }
+    });
+
+    it('without a PDF engine the release still e-mails the links, just without attachments', async () => {
+        const { sent, done } = await release({ drive: 'ok', pdf: 'off' });
+        expect(done.status).toBe(200);
+        expect((await done.json()).data).toMatchObject({ released: true, emailed: true, drive: 'failed' });
+        expect(sent[0].attachments).toBeUndefined();
+        expect(sent[0].text).not.toContain('terlampir');
+    });
+
+    it('right after a submission the PDFs and the raw-answers row go to Drive, and nothing is sent to the person', async () => {
+        const { app, driveSaved, sheetRows, sent, rows } = createFixture({ drive: 'ok' });
+        await submit(app, body());
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        expect(driveSaved).toHaveLength(1);
+        expect(driveSaved[0].files.map((file) => file.name)).toEqual(['AT-MHCU-2026-100 - MHCU (ID).pdf', 'AT-MHCU-2026-100 - MHCU (EN).pdf']);
+        // the result e-mail and the staff alert carry no report
+        expect(sent.length).toBeGreaterThan(0);
+        expect(sent.every((mail) => mail.attachments === undefined)).toBe(true);
+        // the sheet row: who answered, then every raw answer
+        expect(sheetRows).toHaveLength(1);
+        const [{ headers, values, key, title, tab }] = sheetRows;
+        expect({ title, tab, key }).toEqual({ title: 'MHCU Raw Answers', tab: 'Answers', key: 'AT-MHCU-2026-100' });
+        expect(values).toHaveLength(headers.length);
+        const at = (column: string) => values[headers.indexOf(column)];
+        expect([at('Code'), at('Name'), at('Email'), at('WhatsApp'), at('Age'), at('Language')]).toEqual(['AT-MHCU-2026-100', 'Rina Pratiwi', 'rina@example.com', '081234567890', '29', 'id']);
+        expect(headers.slice(-58)).toEqual(MHCU_ITEMS.map((item) => mhcuCode(item.part, item.n)));
+        const firstItem = MHCU_ITEMS[0];
+        expect(at(mhcuCode(firstItem.part, firstItem.n))).toBe(String((rows[0].answers as Record<string, number>)[mhcuCode(firstItem.part, firstItem.n)]));
+    });
+
+    it('a Drive problem at submission never affects the submission', async () => {
+        const { app, rows } = createFixture({ drive: 'fail' });
+        const response = await submit(app, body());
+        expect(response.status).toBe(201);
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        expect(rows).toHaveLength(1);
+    });
+
     it('a Drive failure never undoes the release', async () => {
         const { done, rows } = await release({ drive: 'fail' });
         expect(done.status).toBe(200);
@@ -871,9 +927,10 @@ describe('released reports saved to Drive', () => {
         expect((await again.json()).data.path).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
         expect(ready.driveSaved).toHaveLength(1);
 
+        // an unreleased check-up can be saved too (it is a draft report until the psychologist releases it)
         const fresh = createFixture({ drive: 'ok' });
         await submit(fresh.app, body());
-        expect((await send(fresh.app, `/api/admin/assessments/${fresh.rows[0].id}/save-to-drive`, 'POST', undefined, bearer(adminToken))).status).toBe(409);
+        expect((await send(fresh.app, `/api/admin/assessments/${fresh.rows[0].id}/save-to-drive`, 'POST', undefined, bearer(adminToken))).status).toBe(200);
 
         const off = await release({});
         expect((await send(off.app, `/api/admin/assessments/${off.rows[0].id}/save-to-drive`, 'POST', undefined, bearer(adminToken))).status).toBe(503);
