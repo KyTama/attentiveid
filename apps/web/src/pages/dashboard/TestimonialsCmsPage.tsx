@@ -436,7 +436,7 @@ export function TestimonialsCmsPage() {
       </AnimatePresence>
 
       {/* Live Preview Strip: Moving Carousel Preview */}
-      <div className="p-6 bg-gradient-to-b from-[#fbf8f2] to-[#f4ece1] rounded-2xl border border-secondary/10 shadow-xs space-y-3">
+      <div className="admin-keep-light p-6 bg-gradient-to-b from-[#fbf8f2] to-[#f4ece1] rounded-2xl border border-secondary/10 shadow-xs space-y-3">
         <div className="flex items-center justify-between text-xs font-bold text-secondary">
           <div className="flex items-center gap-2">
             <Eye className="size-4 text-[#946a22]" />

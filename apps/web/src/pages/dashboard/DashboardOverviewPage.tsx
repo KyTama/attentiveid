@@ -62,7 +62,7 @@ export function DashboardOverviewPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="bg-gradient-to-r from-[#142c52] via-[#1a3865] to-navy-600 text-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/20"
+        className="admin-hero bg-gradient-to-r from-[#142c52] via-[#1a3865] to-navy-600 text-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/20"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

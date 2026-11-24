@@ -484,7 +484,7 @@ export function FeaturedProductsCmsPage() {
                 const style = CARD_THEME_STYLES[form.theme]
                 const Icon = CARD_ICONS[form.icon]
                 return (
-                  <div className={`mt-1.5 max-w-xs rounded-xl border p-5 shadow-xs ${style.card}`}>
+                  <div className={`admin-keep-light mt-1.5 max-w-xs rounded-xl border p-5 shadow-xs ${style.card}`}>
                     <div className="flex items-start justify-between gap-3">
                       <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${style.badge}`}>
                         {form.badgeId || 'Produk Baru'}
