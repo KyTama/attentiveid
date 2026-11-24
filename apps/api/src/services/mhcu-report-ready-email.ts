@@ -1,7 +1,7 @@
 /**
  * The e-mail a participant gets once the payment is confirmed and the psychologist has released the full report.
  * It follows the layout of the Attentive report e-mails (Big 10): a short summary of the result, a details box,
- * what is inside the report, and buttons to open the full report and to chat with the admin.
+ * what is inside the report, and buttons to open the full report (in Bahasa Indonesia and in English) and to chat with the admin.
  * Only the overall result (MHI and level) is shown here; the three indices and any clinical notes stay in the report itself.
  */
 
@@ -16,8 +16,8 @@ export interface ReportReadyInput {
     scores: unknown
     /** 1-5; null when unknown. */
     level: number | null
-    /** Signed link that opens the full report. */
-    reportLink: string
+    /** Signed links that open the full report in each language. Both are always sent. */
+    links: { id: string; en: string }
     /** When the check-up was submitted. */
     submittedAt?: Date
     /** When the report was released (defaults to now). */
@@ -66,7 +66,9 @@ const COPY = {
             ['Per indeks', 'Hasil Distress Index (DI), Well-being Index (WI) dan Behavioral Health Index (BHI) beserta keterangannya.'],
             ['Catatan psikolog', 'Catatan dan rekomendasi dari psikolog Attentive.']
         ],
-        open: 'Buka laporan lengkap',
+        openId: 'Buka laporan lengkap (Bahasa Indonesia)',
+        openEn: 'Open the full report (English)',
+        bothNote: 'Laporan tersedia dalam dua bahasa, Bahasa Indonesia dan English. Buka salah satu atau keduanya.',
         saveNote: 'Anda dapat menyimpan laporan sebagai PDF dari halaman tersebut (Cetak > Simpan sebagai PDF).',
         safety: 'Bila Anda memiliki pikiran untuk menyakiti diri sendiri atau merasa tidak aman, segera hubungi layanan darurat medis 119 atau datang ke IGD terdekat.',
         closing: 'Laporan ini paling bermakna bila dibahas bersama psikolog, supaya hasilnya bisa dikaitkan dengan keseharian dan pekerjaan Anda. Bila ada yang ingin ditanyakan atau Anda ingin menjadwalkan sesi, kabari admin kami.',
@@ -97,7 +99,9 @@ const COPY = {
             ['Per index', 'Your Distress Index (DI), Well-being Index (WI) and Behavioral Health Index (BHI) results with explanations.'],
             ['Psychologist notes', 'Notes and recommendations from an Attentive psychologist.']
         ],
-        open: 'Open the full report',
+        openId: 'Buka laporan lengkap (Bahasa Indonesia)',
+        openEn: 'Open the full report (English)',
+        bothNote: 'The report is available in two languages, Bahasa Indonesia and English. Open either one or both.',
         saveNote: 'You can save the report as a PDF from the page (Print > Save as PDF).',
         safety: 'If you are having thoughts of harming yourself or feel unsafe, contact the medical emergency line 119 or go to the nearest emergency room right away.',
         closing: 'This report is most useful when discussed with a psychologist, so the result can be connected to your daily life and work. If you have questions or want to book a session, let our admin know.',
@@ -147,6 +151,14 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
         ? `<div style="border:1px solid #142B51;background:#F4F5F7;padding:11px 14px;margin:0 0 16px 0;font-size:12.5px;color:#1B2533">${esc(copy.safety)}</div>`
         : ''
 
+    // Two report buttons, the participant's own language first and filled; the other one outlined.
+    const reportButton = (label: string, link: string, primary: boolean) =>
+        `<p style="margin:0 0 8px 0"><a href="${esc(link)}" style="display:inline-block;${primary ? 'background:#142B51;color:#FFFFFF;' : 'background:#FFFFFF;color:#142B51;border:1px solid #142B51;'}text-decoration:none;font-weight:bold;font-size:13.5px;padding:${primary ? '12px 22px' : '11px 21px'}">${esc(label)}</a></p>`
+    const buttons =
+        lang === 'en'
+            ? reportButton(copy.openEn, input.links.en, true) + reportButton(copy.openId, input.links.id, false)
+            : reportButton(copy.openId, input.links.id, true) + reportButton(copy.openEn, input.links.en, false)
+
     const inner =
         `<p style="margin:0 0 4px 0;font-size:11px;letter-spacing:1.4px;font-weight:bold;color:#667085">${esc(copy.kicker)} | ${esc(input.code)}</p>` +
         `<p style="margin:0 0 12px 0;font-size:20px;line-height:1.3;font-weight:bold;color:#142B51">${esc(copy.hello(input.name))}</p>` +
@@ -156,7 +168,8 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
         `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px 0;border:1px solid #EAECF0;background:#FAFAFB"><tr><td style="padding:10px 16px"><table role="presentation" cellpadding="0" cellspacing="0">${details}</table></td></tr></table>` +
         `<div style="font-size:10px;font-weight:bold;letter-spacing:1px;color:#667085;margin:0 0 6px 0">${esc(copy.insideHead)}</div>` +
         `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px 0">${insideRows}</table>` +
-        `<p style="margin:0 0 6px 0"><a href="${esc(input.reportLink)}" style="display:inline-block;background:#142B51;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:13.5px;padding:12px 22px">${esc(copy.open)}</a></p>` +
+        `<p style="margin:0 0 8px 0;color:#3C4858">${esc(copy.bothNote)}</p>` +
+        buttons +
         `<p style="margin:0 0 18px 0;font-size:11.5px;color:#667085">${esc(copy.saveNote)}</p>` +
         `<p style="margin:0 0 14px 0;color:#3C4858">${esc(copy.closing)}</p>` +
         `<p style="margin:0 0 18px 0"><a href="https://wa.me/6285156410912" style="display:inline-block;background:#FFFFFF;color:#142B51;border:1px solid #142B51;text-decoration:none;font-weight:bold;font-size:13px;padding:10px 20px">${esc(copy.whatsapp)}</a></p>` +
@@ -187,7 +200,9 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
         copy.insideHead,
         ...copy.inside.map(([label, line]) => `- ${label}: ${line}`),
         '',
-        `${copy.open}: ${input.reportLink}`,
+        copy.bothNote,
+        `${copy.openId}: ${input.links.id}`,
+        `${copy.openEn}: ${input.links.en}`,
         copy.saveNote,
         '',
         copy.closing,
@@ -202,4 +217,54 @@ export const buildReportReadyEmail = (input: ReportReadyInput): BuiltMail => {
     ].join('\n')
 
     return { subject: copy.subject(input.code), html: shell(origin, copy.kicker, inner, footer), text }
+}
+
+export interface ReportReleasedStaffInput {
+    name: string
+    code: string
+    level: number | null
+    scores: unknown
+    links: { id: string; en: string }
+    submissionId: string
+    psychologistName?: string | null
+    siteOrigin?: string
+}
+
+const FOOTER_STAFF = 'Email ini berisi data pribadi untuk staf saja. Jangan diteruskan.'
+
+/** To the admin inbox when a full report is released: who got it, and both language versions to open. For staff only. */
+export const buildReportReleasedStaffEmail = (input: ReportReleasedStaffInput): BuiltMail => {
+    const origin = (input.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '')
+    const dashboard = `${origin}/dashboard/assessments/mhcu/${encodeURIComponent(input.submissionId)}`
+    const scores = (input.scores && typeof input.scores === 'object' ? input.scores : {}) as Record<string, unknown>
+    const mhi = num(scores.mhi)
+    const level = input.level === null ? '-' : String(input.level)
+    const mhiText = mhi === null ? '-' : decimal(mhi, 'id')
+    const row = (label: string, value: string) =>
+        `<tr><td style="padding:3px 18px 3px 0;color:#667085">${esc(label)}</td><td style="padding:3px 0;color:#1B2533">${esc(value)}</td></tr>`
+    const button = (label: string, link: string, primary: boolean) =>
+        `<p style="margin:0 0 8px 0"><a href="${esc(link)}" style="display:inline-block;${primary ? 'background:#142B51;color:#FFFFFF;' : 'background:#FFFFFF;color:#142B51;border:1px solid #142B51;'}text-decoration:none;font-weight:bold;font-size:13.5px;padding:${primary ? '11px 20px' : '10px 19px'}">${esc(label)}</a></p>`
+    const inner =
+        `<p style="margin:0 0 4px 0;font-size:11px;letter-spacing:1.4px;font-weight:bold;color:#667085">LAPORAN DIRILIS | ${esc(input.code)}</p>` +
+        `<p style="margin:0 0 12px 0;font-size:19px;line-height:1.3;font-weight:bold;color:#142B51">Laporan lengkap sudah dikirim ke peserta</p>` +
+        `<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:13.5px;margin:0 0 16px 0">${row('Kode', input.code)}${row('Nama', input.name)}${row('Level', level)}${row('MHI', mhiText)}${input.psychologistName ? row('Psikolog', input.psychologistName) : ''}</table>` +
+        `<p style="margin:0 0 8px 0;color:#3C4858">Peserta menerima tautan ke kedua versi. Salinan untuk staf:</p>` +
+        button('Laporan lengkap (Bahasa Indonesia)', input.links.id, true) +
+        button('Full report (English)', input.links.en, false) +
+        `<p style="margin:10px 0 0 0;font-size:12.5px"><a href="${esc(dashboard)}" style="color:#142B51">Buka di dasbor</a></p>`
+    const text = [
+        `LAPORAN DIRILIS | ${input.code}`,
+        '',
+        `Nama: ${input.name}`,
+        `Level: ${level}`,
+        `MHI: ${mhiText}`,
+        ...(input.psychologistName ? [`Psikolog: ${input.psychologistName}`] : []),
+        '',
+        `Laporan lengkap (Bahasa Indonesia): ${input.links.id}`,
+        `Full report (English): ${input.links.en}`,
+        `Buka di dasbor: ${dashboard}`,
+        '',
+        FOOTER_STAFF
+    ].join('\n')
+    return { subject: `[MHCU] Laporan dirilis · ${input.code} · ${input.name}`, html: shell(origin, 'UNTUK STAF', inner, FOOTER_STAFF), text }
 }

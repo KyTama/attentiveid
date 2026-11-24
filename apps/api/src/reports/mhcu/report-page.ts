@@ -22,7 +22,9 @@ export interface ReportPageMeta {
 const TEXT = {
   kicker: { id: 'Laporan Mental Health Check-Up', en: 'Mental Health Check-Up Report' },
   title: { id: 'Laporan Hasil Pemeriksaan MHCU', en: 'MHCU Assessment Report' },
-  print: { id: 'Cetak / Simpan sebagai PDF', en: 'Print / Save as PDF' },
+  save: { id: 'Simpan sebagai PDF', en: 'Save as PDF' },
+  print: { id: 'Cetak', en: 'Print' },
+  otherLang: { id: 'English version', en: 'Versi Bahasa Indonesia' },
   copy: { id: 'Salin tautan', en: 'Copy link' },
   copied: { id: 'Tautan disalin.', en: 'Link copied.' },
   copyFailed: { id: 'Tautan tidak bisa disalin otomatis. Salin dari kolom alamat browser.', en: 'The link could not be copied automatically. Copy it from the address bar.' },
@@ -43,8 +45,8 @@ const insideText = (pages: number, lang: Lang): string =>
 
 const keepText = (lang: Lang): string =>
   lang === 'id'
-    ? 'Tekan "Cetak / Simpan sebagai PDF", lalu pilih "Simpan sebagai PDF" sebagai printer. Gunakan ukuran A4 dan matikan header serta footer browser agar halaman tercetak rapi.'
-    : 'Press "Print / Save as PDF", then choose "Save as PDF" as the printer. Use A4 and turn off the browser header and footer so the pages print cleanly.';
+    ? 'Tekan "Simpan sebagai PDF", lalu pada jendela yang terbuka pilih "Simpan sebagai PDF" sebagai printer dan klik Simpan. Gunakan ukuran A4 dan matikan header serta footer browser agar halaman tersimpan rapi.'
+    : 'Press "Save as PDF", then in the window that opens choose "Save as PDF" as the printer and click Save. Use A4 and turn off the browser header and footer so the pages save cleanly.';
 
 const CSS = `
 .rp-frame{font-family:Montserrat,'Segoe UI',Arial,sans-serif;color:#1B2533;-webkit-font-smoothing:antialiased}
@@ -62,6 +64,7 @@ const CSS = `
 .rp-btn{min-height:44px;padding:0 20px;border-radius:8px;border:1px solid #DCE2EA;background:#fff;color:#142B51;font:700 14px Montserrat,Arial,sans-serif;cursor:pointer}
 .rp-btn.pri{background:#142B51;border-color:#142B51;color:#fff}
 .rp-btn:focus-visible{outline:2px solid #142B51;outline-offset:2px}
+.rp-lang{font-size:13px;font-weight:700;color:#142B51;margin-left:auto}
 .rp-status{font-size:13px;color:#1E6B42;font-weight:600}
 .rp-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 4px}
 .rp-card{background:#fff;border:1px solid #DCE2EA;border-radius:10px;padding:16px 18px;font-size:13.5px;line-height:1.55}
@@ -74,7 +77,7 @@ const CSS = `
 @media print{.rp-frame,.rp-foot{display:none!important}.rp-pages{display:block;padding:0;zoom:1!important}}
 `;
 
-const SCRIPT = (texts: { copied: string; copyFailed: string }) => `
+const SCRIPT = (texts: { copied: string; copyFailed: string; fileName: string; otherLang: string }) => `
 (function(){
   var pages=document.getElementById('rp-pages');
   function fit(){var z=Math.min(1,(document.documentElement.clientWidth-16)/794);pages.style.zoom=z<1?String(z):'';}
@@ -83,6 +86,11 @@ const SCRIPT = (texts: { copied: string; copyFailed: string }) => `
   var status=document.getElementById('rp-status');
   var say=function(m){if(status){status.textContent=m;}};
   var print=document.getElementById('rp-print');if(print){print.addEventListener('click',function(){window.print();});}
+  // "Save as PDF" opens the print window with a good file name; the browser saves the PDF from there.
+  var save=document.getElementById('rp-save');
+  if(save){save.addEventListener('click',function(){var t=document.title;document.title=${JSON.stringify(texts.fileName)};window.print();document.title=t;});}
+  var lang=document.getElementById('rp-lang');
+  if(lang){try{var u=new URL(location.href);u.searchParams.set('lang',${JSON.stringify(texts.otherLang)});lang.href=u.toString();}catch(e){lang.style.display='none';}}
   var copy=document.getElementById('rp-copy');
   if(copy){copy.addEventListener('click',function(){
     var done=function(){say(${JSON.stringify(texts.copied)});};
@@ -113,9 +121,12 @@ export function wrapReportPage(reportHtml: string, meta: ReportPageMeta): string
     `<div class="rp-intro">` +
     `<h1>${esc(TEXT.title[l])}</h1>` +
     `<p class="rp-meta">${esc(meta.name)} · ${esc(meta.code)} · ${esc(date)}</p>` +
-    `<div class="rp-actions"><button class="rp-btn pri" id="rp-print" type="button">${esc(TEXT.print[l])}</button>` +
+    `<div class="rp-actions"><button class="rp-btn pri" id="rp-save" type="button">${esc(TEXT.save[l])}</button>` +
+    `<button class="rp-btn" id="rp-print" type="button">${esc(TEXT.print[l])}</button>` +
     (meta.mode === 'public' ? `<button class="rp-btn" id="rp-copy" type="button">${esc(TEXT.copy[l])}</button>` : '') +
-    `<span aria-live="polite" class="rp-status" id="rp-status" role="status"></span></div>` +
+    `<span aria-live="polite" class="rp-status" id="rp-status" role="status"></span>` +
+    (meta.mode === 'public' ? `<a class="rp-lang" id="rp-lang" href="?lang=${l === 'id' ? 'en' : 'id'}">${esc(TEXT.otherLang[l])}</a>` : '') +
+    `</div>` +
     `<div class="rp-cards">` +
     `<section class="rp-card"><h2>${esc(TEXT.inside[l])}</h2><p>${esc(insideText(pageCount, l))}</p></section>` +
     `<section class="rp-card"><h2>${esc(TEXT.keep[l])}</h2><p>${esc(keepText(l))}</p>${meta.mode === 'public' ? `<p>${esc(TEXT.privateLink[l])}</p>` : ''}</section>` +
@@ -124,6 +135,6 @@ export function wrapReportPage(reportHtml: string, meta: ReportPageMeta): string
   return (
     `${headWithMeta}<body>${frame}<main class="rp-pages" id="rp-pages">${pagesHtml}</main>` +
     `<div class="rp-foot">${esc(TEXT.footer[l])} | attentiveid.com | contact@attentiveid.com | WhatsApp +62 851-5641-0912</div>` +
-    `<script>${SCRIPT({ copied: TEXT.copied[l], copyFailed: TEXT.copyFailed[l] })}</script></body></html>`
+    `<script>${SCRIPT({ copied: TEXT.copied[l], copyFailed: TEXT.copyFailed[l], fileName: `Laporan-MHCU-${meta.code}${l === 'en' ? '-EN' : ''}`, otherLang: l === 'id' ? 'en' : 'id' })}</script></body></html>`
   );
 }

@@ -25,7 +25,11 @@ describe('report page', () => {
   test('has the print and copy buttons, a status line, and the two cards', () => {
     const html = wrapReportPage(single(), meta);
     expect(html).toContain('id="rp-print"');
-    expect(html).toContain('Cetak / Simpan sebagai PDF');
+    expect(html).toContain('id="rp-save"');
+    expect(html).toContain('Simpan sebagai PDF');
+    expect(html).toContain('id="rp-lang"');
+    expect(html).toContain('English version');
+    expect(html).toContain('Laporan-MHCU-AT-MHCU-2026-114');
     expect(html).toContain('id="rp-copy"');
     expect(html).toContain('Salin tautan');
     expect(html).toContain('aria-live="polite"');
@@ -75,7 +79,8 @@ describe('report page', () => {
   test('English page', () => {
     const html = wrapReportPage(renderClientReport(DEMO_CLIENT.c1en), { ...meta, lang: 'en', name: 'Kevin Wijaya', code: 'AT-MHCU-2026-115' });
     expect(html).toContain('<h1>MHCU Assessment Report</h1>');
-    expect(html).toContain('Print / Save as PDF');
+    expect(html).toContain('Save as PDF');
+    expect(html).toContain('Versi Bahasa Indonesia');
     expect(html).toContain('Copy link');
     expect(html).toContain('What is in the report');
     expect(html).toContain('15 November 2026');
