@@ -96,6 +96,9 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
+          # Google Drive copy of released reports (environment "staging"); empty = reports are not saved to Drive.
+          GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_ROOT_FOLDER_NAME: ${{ vars.GOOGLE_DRIVE_ROOT_FOLDER_NAME }}
         run: |
           ./scripts/deploy/remote-deploy.sh \
             --host "${{ vars.DEPLOY_SSH_HOST }}" \

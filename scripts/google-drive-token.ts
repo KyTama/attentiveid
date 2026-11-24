@@ -6,8 +6,12 @@
  * 1. Run it on your own computer. It prints a Google sign-in address and waits.
  * 2. Open the address, sign in with the Google account whose Drive should hold the reports (e.g. contact@attentiveid.com),
  *    and allow "See, edit, create and delete only the specific Drive files you use with this app" (scope drive.file).
- * 3. The page then shows "Done" and this script prints GOOGLE_DRIVE_REFRESH_TOKEN=... Put that line into the server's secret file
+ * 3. The page then shows "Done" and this script prints GOOGLE_DRIVE_REFRESH_TOKEN=... Add it as a GitHub secret (see below) or put that line into the server's secret file
  *    (the one that already holds GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) and restart the API. Nothing is saved on this computer.
+ *
+ * GitHub way (no server login needed): repository Settings > Environments > production (and staging) > Add secret, name
+ * GOOGLE_DRIVE_REFRESH_TOKEN, value = the token. The next deploy writes it into the server's settings. Optional variable
+ * GOOGLE_DRIVE_ROOT_FOLDER_NAME (default: Reports).
  *
  * Needs http://127.0.0.1:8765/callback as an allowed redirect address of the OAuth client (a "Desktop app" client allows it by
  * default; a "Web application" client needs it added in Google Cloud Console > APIs & Services > Credentials).
