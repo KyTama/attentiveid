@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { keluhanLabel, type FreeSessionRecord } from '@attentiveid/shared'
 import { useAuth } from '../../features/auth/auth-context'
 import { useTx } from '@/features/i18n/use-tx'
+import { canAccessExperimental } from '../../features/experimental/access'
 
 interface FreeSessionReport {
   total: number
@@ -21,8 +22,12 @@ interface SheetStatus {
 }
 
 export function FreeSessionCmsPage() {
-  const { accessToken } = useAuth()
+  const { accessToken, user } = useAuth()
   const { tx } = useTx()
+  // Only the owner superadmin account sees the delete button; the API refuses everyone else too.
+  const isOwner = user?.role === 'superadmin' && canAccessExperimental(user.email)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [sheet, setSheet] = useState<SheetStatus | null>(null)
   const [sheetMessage, setSheetMessage] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -54,7 +59,32 @@ export function FreeSessionCmsPage() {
     return () => {
       cancelled = true
     }
-  }, [authHeaders])
+  }, [authHeaders, reloadKey])
+
+  async function deleteRecord(record: FreeSessionRecord) {
+    const ok = window.confirm(
+      tx(
+        `Hapus "${record.name}" (${record.phone}) secara permanen? Baris di Google Sheet tidak ikut terhapus dan harus dihapus manual.`,
+        `Permanently delete "${record.name}" (${record.phone})? The Google Sheet row is not removed and must be deleted by hand.`,
+      ),
+    )
+    if (!ok) return
+    setDeletingId(record.id)
+    setError(null)
+    try {
+      const res = await fetch(`${apiBaseUrl()}/api/admin/free-session/submissions/${encodeURIComponent(record.id)}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      })
+      if (!res.ok) throw new Error(tx('Gagal menghapus data.', 'Failed to delete the entry.'))
+      setReloadKey((key) => key + 1)
+      void loadSheetStatus()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : tx('Gagal menghapus data.', 'Failed to delete the entry.'))
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const loadSheetStatus = useCallback(async () => {
     try {
@@ -207,6 +237,7 @@ export function FreeSessionCmsPage() {
               <th className="px-4 py-3">Umur</th>
               <th className="px-4 py-3">WhatsApp</th>
               <th className="px-4 py-3">Keluhan</th>
+              {isOwner ? <th className="px-4 py-3 text-right">{tx('Hapus', 'Delete')}</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -219,11 +250,24 @@ export function FreeSessionCmsPage() {
                 <td className="px-4 py-3">{record.age}</td>
                 <td className="px-4 py-3">{record.phone}</td>
                 <td className="px-4 py-3">{keluhanLabel(record.keluhan) ?? record.keluhan}</td>
+                {isOwner ? (
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => void deleteRecord(record)}
+                      disabled={deletingId === record.id}
+                      aria-label={tx(`Hapus ${record.name}`, `Delete ${record.name}`)}
+                      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingId === record.id ? tx('Menghapus…', 'Deleting…') : tx('Hapus', 'Delete')}
+                    </button>
+                  </td>
+                ) : null}
               </tr>
             ))}
             {!isLoading && report?.records.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={isOwner ? 6 : 5} className="px-4 py-8 text-center text-slate-500">
                   Belum ada pendaftar.
                 </td>
               </tr>

@@ -1,4 +1,4 @@
-import { desc, inArray, isNull, sql } from 'drizzle-orm';
+import { desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { FreeSessionGenderId, FreeSessionKeluhanId, FreeSessionRecord, FreeSessionSubmission } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
 import { freeSessionSubmissions } from '../db/schema';
@@ -13,6 +13,8 @@ export interface FreeSessionRepository {
     markSynced(ids: string[]): Promise<void>;
     markFailed(ids: string[], error: string): Promise<void>;
     sheetStatus(): Promise<{ pending: number; failed: number }>;
+    /** Permanently removes one submission (owner-only clean-up of test entries). Returns false when it does not exist. */
+    deleteById(id: string): Promise<boolean>;
 }
 
 const toRecord = (row: typeof freeSessionSubmissions.$inferSelect): FreeSessionRecord => ({
@@ -100,5 +102,13 @@ export const createFreeSessionRepository = (db: typeof defaultDb = defaultDb): F
             })
             .from(freeSessionSubmissions);
         return { pending: Number(row?.pending ?? 0), failed: Number(row?.failed ?? 0) };
+    },
+
+    async deleteById(id) {
+        const rows = await db
+            .delete(freeSessionSubmissions)
+            .where(eq(freeSessionSubmissions.id, id))
+            .returning({ id: freeSessionSubmissions.id });
+        return rows.length > 0;
     }
 });

@@ -8,11 +8,14 @@ import {
     validateFreeSessionSubmission
 } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
+import { isOwnerEmail } from '../security/owner';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { FreeSessionRepository } from '../repositories/free-session.repository';
 import type { FreeSessionSheetSync } from '../services/free-session-sheet-sync';
 import type { Mailer } from '../services/mailer';
 import { buildFreeSessionReceivedEmail, buildFreeSessionStaffEmail } from '../services/form-notice-emails';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface FreeSessionRateLimit {
     max: number;
@@ -197,6 +200,27 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
         }, {
             requireRole: 'admin',
             detail: { tags: ['Free Session'], summary: 'Send every submission not yet in the Google Sheet' }
+        })
+        .delete('/api/admin/free-session/submissions/:id', async ({ params, set, currentUser }: any) => {
+            // Owner only: the superadmin account that is on the owner list. Other admins (and other superadmins) get 403.
+            if (currentUser?.role !== 'superadmin' || !isOwnerEmail(currentUser.email)) {
+                set.status = 403;
+                return { status: 'forbidden', message: 'Hanya akun pemilik yang dapat menghapus data.' };
+            }
+            if (!UUID.test(params.id)) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            const removed = await repository.deleteById(params.id);
+            if (!removed) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            console.warn(`[free-session] submission ${params.id} deleted by owner`);
+            return { status: 'success', data: { id: params.id } };
+        }, {
+            requireRole: 'admin',
+            detail: { tags: ['Free Session'], summary: 'Delete one submission (owner account only, for clearing test entries)' }
         })
         .get('/api/admin/free-session/export.csv', async ({ set }: any) => {
             const records = dedupeFreeSessionRecords(await repository.listAll());
