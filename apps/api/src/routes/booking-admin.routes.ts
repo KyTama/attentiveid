@@ -5,6 +5,7 @@ import {
     type BookingStatus
 } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
+import { isOwnerUser } from '../security/owner';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { BookingRepository } from '../repositories/booking.repository';
 
@@ -13,7 +14,7 @@ export interface BookingAdminRoutesDependencies {
     userRepository: Pick<AuthUserRepository, 'findById'>;
     bookingRepository: Pick<
         BookingRepository,
-        'listAdmin' | 'listForExport' | 'transitionStatus' | 'retryWebhookDelivery' | 'getAttributionReport'
+        'listAdmin' | 'listForExport' | 'transitionStatus' | 'retryWebhookDelivery' | 'getAttributionReport' | 'deleteBooking'
     >;
     triggerOutboxDrain?: () => Promise<unknown>;
 }
@@ -114,6 +115,27 @@ export const createBookingAdminRoutes = (dependencies: BookingAdminRoutesDepende
                 tags: ['Booking'],
                 summary: 'Manually reschedule failed or dead-lettered booking webhook delivery'
             }
+        })
+        .delete('/api/admin/bookings/:id', async ({ params, set, currentUser }: any) => {
+            // Owner only: the superadmin on the owner list. Everyone else, other admins included, gets 403.
+            if (!isOwnerUser(currentUser)) {
+                set.status = 403;
+                return { status: 'forbidden', message: 'Hanya akun pemilik yang dapat menghapus data.' };
+            }
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id)) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Reservasi tidak ditemukan.' };
+            }
+            const removed = await dependencies.bookingRepository.deleteBooking(params.id);
+            if (!removed) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Reservasi tidak ditemukan.' };
+            }
+            console.warn(`[booking] booking ${params.id} deleted by owner`);
+            return { status: 'success', data: { id: params.id } };
+        }, {
+            requireRole: ['admin', 'superadmin'],
+            detail: { tags: ['Booking'], summary: 'Permanently delete one booking (owner account only)' }
         })
         .get('/api/admin/bookings/attribution', async ({ query }: any) => {
             const report = await dependencies.bookingRepository.getAttributionReport({

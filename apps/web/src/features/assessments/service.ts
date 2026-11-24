@@ -81,3 +81,7 @@ export const openPaymentProof = async (id: string): Promise<void> => {
     throw caught
   }
 }
+
+/** Permanently deletes one result (owner account only; the API refuses everyone else). */
+export const deleteAssessment = async (id: string) =>
+  (await request<{ data: { id: string; code: string } }>(`/api/admin/assessments/${encodeURIComponent(id)}`, { method: 'DELETE' })).data

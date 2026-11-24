@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { Elysia, t } from 'elysia';
 import { scoreMhcu, validateGscSubmission, validateMhcuSubmission } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
+import { isOwnerUser } from '../security/owner';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import { InviteUnavailableError, type AssessmentsRepository, type AssessmentStatus } from '../repositories/assessments.repository';
 import { INVITE_TOKEN } from '../repositories/mhcu-invites.repository';
@@ -703,6 +704,34 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             }
         }, {
             detail: { tags: ['Assessments'], summary: 'The released client report, opened with the signed link from the e-mail (public)' }
+        })
+        .delete('/api/admin/assessments/:id', async ({ params, set, currentUser }: any) => {
+            // Owner only: the superadmin on the owner list. Everyone else, other admins included, gets 403.
+            if (!isOwnerUser(currentUser)) {
+                set.status = 403;
+                return { status: 'forbidden', message: 'Hanya akun pemilik yang dapat menghapus data.' };
+            }
+            if (!UUID.test(params.id)) {
+                set.status = 404;
+                return { status: 'notFound', message: 'Data tidak ditemukan.' };
+            }
+            try {
+                const removed = await repository.deleteSubmission(params.id);
+                if (!removed) {
+                    set.status = 404;
+                    return { status: 'notFound', message: 'Data tidak ditemukan.' };
+                }
+                // The audit trail keeps the fact (who, which code), never the person's data.
+                await auditSafely({ actor: currentUser?.id ?? null, action: 'delete', submissionId: params.id, detail: removed.code });
+                return { status: 'success', data: { id: params.id, code: removed.code } };
+            } catch (error) {
+                logFailure('delete', error);
+                set.status = 503;
+                return { status: 'error', message: 'Data belum terhapus.' };
+            }
+        }, {
+            requireRole: ['admin'],
+            detail: { tags: ['Assessments'], summary: 'Permanently delete one result and its proof of transfer (owner account only)' }
         })
         .post('/api/admin/assessments/sync', async () => {
             if (!dependencies.sheetSync) return { status: 'success', data: { configured: false, synced: 0, error: 'Not configured.' } };

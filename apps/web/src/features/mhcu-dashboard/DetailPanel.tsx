@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle, ArrowLeft, CheckCircle2, FileText, Loader2, Send, X } from 'lucide-react'
 import { openPaymentProof } from '../assessments/service'
+import { OwnerDeleteButton } from '../assessments/OwnerDeleteButton'
 import { useTx } from '../i18n/use-tx'
 import {
   PAYMENT_STATUSES,
@@ -40,6 +41,8 @@ interface Props {
   onChanged: (detail: MhcuDetail) => void
   /** Opens another check-up of the same person (history chart and table). */
   onOpenWave: (id: string) => void
+  /** Called after the owner deleted this result (the list should drop the row and close the panel). */
+  onDeleted: () => void
 }
 
 type Scores = Record<string, unknown>
@@ -54,7 +57,7 @@ const buttonClass = 'min-h-11 cursor-pointer rounded-xl border border-slate-200 
 const primaryClass = 'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60'
 
 /** One result with its scores, assignment, note, payment and report actions. */
-export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, onOpenWave }: Props) {
+export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, onOpenWave, onDeleted }: Props) {
   const { tx, isEn } = useTx()
   const [detail, setDetail] = useState<MhcuDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -215,6 +218,9 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, on
       <PaymentBlock key={`pay:${detail.id}:${detail.paymentStatus}:${detail.paymentPackage}:${detail.paymentAmount}:${detail.paymentRef}`} detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} />
       <DeliveryBlock detail={detail} isAdmin={isAdmin} onError={fail} onNotice={(message) => { setError(null); setNotice(message) }} />
       <ReportBlock detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} />
+      <div className="border-t border-slate-100 pt-3">
+        <OwnerDeleteButton id={detail.id} label={`${detail.code} · ${detail.name}`} onDeleted={onDeleted} onError={(message) => fail(new Error(message), message)} />
+      </div>
     </div>
   )
 }

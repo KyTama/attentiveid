@@ -11,6 +11,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -20,7 +21,10 @@ import {
   type BookingStatus,
 } from '@attentiveid/shared'
 import { INTERACTIVE_SPRING } from '../../lib/motion'
+import { useAuth } from '../../features/auth/auth-context'
+import { isOwnerUser } from '../../features/auth/owner'
 import {
+  deleteAdminBooking,
   downloadAdminBookingsCsv,
   getAdminBookingAttribution,
   listAdminBookings,
@@ -97,6 +101,8 @@ const toLocalInputValue = (iso: string | null): string => {
 }
 
 export function BookingsCmsPage() {
+  const { user } = useAuth()
+  const isOwner = isOwnerUser(user)
   const [activeTab, setActiveTab] = useState<PortalTab>('queue')
 
   // Queue filters & data
@@ -280,6 +286,25 @@ export function BookingsCmsPage() {
         type: 'success',
         text: `Status booking ${result.record.bookingCode} diperbarui ke ${result.record.status}.`,
       })
+    } finally {
+      setActionBusy(false)
+    }
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    const ok = window.confirm(
+      `Hapus reservasi "${name}" secara permanen? Data reservasi, catatan intake, dan riwayat webhook hilang dan tidak bisa dikembalikan. Kalender atau sistem otomasi di luar situs tidak ikut terhapus.`,
+    )
+    if (!ok) return
+    setActionBusy(true)
+    setActionNotice(null)
+    try {
+      await deleteAdminBooking(id)
+      setSelectedId(null)
+      setActionNotice({ type: 'success', text: 'Reservasi dihapus.' })
+      await loadBookings()
+    } catch (caught) {
+      setActionNotice({ type: 'error', text: caught instanceof Error ? caught.message : 'Gagal menghapus reservasi.' })
     } finally {
       setActionBusy(false)
     }
@@ -849,6 +874,17 @@ export function BookingsCmsPage() {
                       <RefreshCw className="size-3.5" aria-hidden="true" />
                       <span>Retry Webhook</span>
                     </button>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        disabled={actionBusy}
+                        onClick={() => void handleDelete(selectedRecord.id, selectedRecord.name)}
+                        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="size-3.5" aria-hidden="true" />
+                        <span>Hapus reservasi</span>
+                      </button>
+                    )}
                   </div>
                 </>
               ) : (

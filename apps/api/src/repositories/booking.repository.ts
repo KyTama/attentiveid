@@ -116,6 +116,8 @@ export interface BookingRepository {
     ): Promise<TransitionBookingResult>;
     retryWebhookDelivery(bookingId: string): Promise<{ ok: true; deliveryId: string } | { ok: false; status: 404; message: string }>;
     getAttributionReport(query: { dateFrom?: string; dateTo?: string }): Promise<BookingAttributionReport>;
+    /** Permanently removes one booking with its intake note and webhook rows (owner only). False when it does not exist. */
+    deleteBooking(id: string): Promise<boolean>;
 }
 
 const mapAdminRows = async (
@@ -804,6 +806,12 @@ export const createBookingRepository = (
 
         const [record] = await mapAdminRows(database, [row]);
         return { ok: true, record };
+    },
+
+    async deleteBooking(id) {
+        // The clinical intake and the webhook deliveries are removed with it (ON DELETE CASCADE).
+        const rows = await database.delete(schema.bookings).where(eq(schema.bookings.id, id)).returning({ id: schema.bookings.id });
+        return rows.length > 0;
     },
 
     async retryWebhookDelivery(bookingId) {

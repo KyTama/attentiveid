@@ -8,7 +8,7 @@ import {
     validateFreeSessionSubmission
 } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
-import { isOwnerEmail } from '../security/owner';
+import { isOwnerUser } from '../security/owner';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 import type { FreeSessionRepository } from '../repositories/free-session.repository';
 import type { FreeSessionSheetSync } from '../services/free-session-sheet-sync';
@@ -203,7 +203,7 @@ export const createFreeSessionRoutes = (dependencies: FreeSessionRoutesDependenc
         })
         .delete('/api/admin/free-session/submissions/:id', async ({ params, set, currentUser }: any) => {
             // Owner only: the superadmin account that is on the owner list. Other admins (and other superadmins) get 403.
-            if (currentUser?.role !== 'superadmin' || !isOwnerEmail(currentUser.email)) {
+            if (!isOwnerUser(currentUser)) {
                 set.status = 403;
                 return { status: 'forbidden', message: 'Hanya akun pemilik yang dapat menghapus data.' };
             }
