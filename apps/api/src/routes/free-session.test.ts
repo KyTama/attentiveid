@@ -23,7 +23,9 @@ const makeUser = (id: string, role: UserDto['role']): UserDto => ({
 
 const admin = makeUser('admin-1', 'admin');
 const psychologist = makeUser('psych-1', 'psychologist');
-const usersById = new Map([[admin.id, admin], [psychologist.id, psychologist]]);
+const owner: UserDto = { ...makeUser('owner-1', 'superadmin'), email: 'nico.alex.ha@gmail.com' };
+const otherSuperadmin = makeUser('super-2', 'superadmin');
+const usersById = new Map([[admin.id, admin], [psychologist.id, psychologist], [owner.id, owner], [otherSuperadmin.id, otherSuperadmin]]);
 
 const tokenService = createTokenService({
     secret: testJwtSecret,
@@ -36,6 +38,8 @@ const tokenService = createTokenService({
 });
 const adminToken = tokenService.issueAccessToken(admin).accessToken;
 const psychologistToken = tokenService.issueAccessToken(psychologist).accessToken;
+const ownerToken = tokenService.issueAccessToken(owner).accessToken;
+const otherSuperadminToken = tokenService.issueAccessToken(otherSuperadmin).accessToken;
 
 const validBody = {
     eligible: 'baru',
@@ -54,6 +58,7 @@ const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; shee
     const sent: MailMessage[] = [];
     const created: FreeSessionSubmission[] = [];
     const createdAtMs: number[] = [];
+    const deleted: string[] = [];
     const repository: FreeSessionRepository = {
         create: async (submission) => {
             created.push(submission);
@@ -69,7 +74,11 @@ const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; shee
         listUnsynced: async () => [],
         markSynced: async () => {},
         markFailed: async () => {},
-        sheetStatus: async () => ({ pending: 0, failed: 0 })
+        sheetStatus: async () => ({ pending: 0, failed: 0 }),
+        deleteById: async (id) => {
+            deleted.push(id);
+            return id !== MISSING_ID;
+        }
     };
     let clock = 1_000_000;
     const app = new Elysia().use(
@@ -85,8 +94,11 @@ const createFixture = (options: { max?: number; seed?: FreeSessionRecord[]; shee
             now: () => clock
         })
     );
-    return { app, created, sent, advance: (ms: number) => { clock += ms; } };
+    return { app, created, sent, deleted, advance: (ms: number) => { clock += ms; } };
 };
+
+const SOME_ID = '763f973a-dae7-4481-840a-f61501f81640';
+const MISSING_ID = '00000000-0000-4000-8000-000000000000';
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
 
@@ -341,5 +353,37 @@ describe('free session e-mails', () => {
             expect(created).toHaveLength(1);
             expect(sent).toHaveLength(0);
         }
+    });
+});
+
+describe('DELETE /api/admin/free-session/submissions/:id (owner only)', () => {
+    const del = (app: TestApp, id: string, token?: string) =>
+        app.handle(new Request(`http://localhost/api/admin/free-session/submissions/${id}`, {
+            method: 'DELETE',
+            headers: token ? { authorization: `Bearer ${token}` } : {}
+        }));
+
+    it('lets the owner superadmin delete a submission', async () => {
+        const { app, deleted } = createFixture();
+        const response = await del(app, SOME_ID, ownerToken);
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ status: 'success', data: { id: SOME_ID } });
+        expect(deleted).toEqual([SOME_ID]);
+    });
+
+    it('refuses everyone else and deletes nothing', async () => {
+        const { app, deleted } = createFixture();
+        expect((await del(app, SOME_ID)).status).toBe(401);
+        expect((await del(app, SOME_ID, psychologistToken)).status).toBe(403);
+        expect((await del(app, SOME_ID, adminToken)).status).toBe(403);
+        expect((await del(app, SOME_ID, otherSuperadminToken)).status).toBe(403);
+        expect(deleted).toHaveLength(0);
+    });
+
+    it('returns 404 for a bad or unknown id', async () => {
+        const { app, deleted } = createFixture();
+        expect((await del(app, 'not-an-id', ownerToken)).status).toBe(404);
+        expect((await del(app, MISSING_ID, ownerToken)).status).toBe(404);
+        expect(deleted).toEqual([MISSING_ID]);
     });
 });
