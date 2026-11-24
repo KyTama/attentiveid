@@ -9,12 +9,12 @@ type HistoryRow = AssessmentRow & { participantNo: number };
 
 export const participantLabel = (participantNo: number): string => `P${String(participantNo).padStart(5, '0')}`;
 
-const toStored = (row: HistoryRow): MhcuStoredSession => ({
+const toStored = (row: HistoryRow, lang: 'id' | 'en'): MhcuStoredSession => ({
     sessionId: row.id,
     reportNo: row.code,
     participantId: participantLabel(row.participantNo),
     submittedAt: new Date(row.createdAt).toISOString(),
-    lang: row.lang === 'en' ? 'en' : 'id',
+    lang,
     name: row.name,
     sex: row.sex ?? '',
     age: row.age,
@@ -31,38 +31,43 @@ export interface ReportInput {
     psychologistName: string | null;
     /** Name of whoever marked the note final. */
     finalizedBy: string | null;
+    /** Language of the report. Left out = the language the participant filled the form in. The same check-up can be opened in both. */
+    lang?: 'id' | 'en';
 }
 
+const langOf = (input: ReportInput): 'id' | 'en' => input.lang ?? (input.row.lang === 'en' ? 'en' : 'id');
+
 /** The recommendation printed in the report: the level's standard text (or the psychologist's edited version) plus the special note. */
-const recommendationOf = (row: HistoryRow, level: number): string => {
-    const lang = row.lang === 'en' ? 'en' : 'id';
+const recommendationOf = (row: HistoryRow, level: number, lang: 'id' | 'en'): string => {
     const def = MHCU_LEVELS[Math.min(5, Math.max(1, level)) as 1 | 2 | 3 | 4 | 5];
     const template = row.noteTemplate?.trim() || (lang === 'en' ? def.actionEn : def.actionId);
     return [template, row.noteCustom?.trim()].filter(Boolean).join(' ');
 };
 
-const buildInput = ({ row, history, psychologistName, finalizedBy }: ReportInput) => {
+const buildInput = (input: ReportInput) => {
+    const { row, history, psychologistName, finalizedBy } = input;
+    const lang = langOf(input);
     const level = typeof row.level === 'number' ? row.level : 1;
     return {
-        session: toStored(row),
-        history: history.map(toStored),
+        session: toStored(row, lang),
+        history: history.map((h) => toStored(h, lang)),
         extras: {
             psychologist: psychologistName ? { name: psychologistName, sipp: null } : null,
-            note: { recommendation: recommendationOf(row, level), status: row.noteFinal ? ('final' as const) : ('draft' as const), finalizedBy: row.noteFinal ? finalizedBy : null },
+            note: { recommendation: recommendationOf(row, level, lang), status: row.noteFinal ? ('final' as const) : ('draft' as const), finalizedBy: row.noteFinal ? finalizedBy : null },
             reportDate: todayJakarta()
         }
     };
 };
 
 export const renderClientReportHtml = (input: ReportInput): string => {
-    const lang = input.row.lang === 'en' ? 'en' : 'id';
+    const lang = langOf(input);
     return renderClientReport(buildClientReportData(buildInput(input)), { lang, title: `${input.row.code} · Mental Health Check-Up` });
 };
 
 /** The client report inside the report page (title, print and copy buttons, what is in it): the public page and the staff preview. */
 export const renderClientReportPage = (input: ReportInput, mode: 'public' | 'staff'): string =>
     wrapReportPage(renderClientReportHtml(input), {
-        lang: input.row.lang === 'en' ? 'en' : 'id',
+        lang: langOf(input),
         name: input.row.name,
         code: input.row.code,
         createdAt: new Date(input.row.createdAt).toISOString(),
@@ -70,7 +75,7 @@ export const renderClientReportPage = (input: ReportInput, mode: 'public' | 'sta
     });
 
 export const renderPsychologistReportHtml = (input: ReportInput): string => {
-    const lang = input.row.lang === 'en' ? 'en' : 'id';
+    const lang = langOf(input);
     return renderPsychologistReport(buildPsychologistReportData(buildInput(input)), { lang, title: `${input.row.code} · MHCU (internal)` });
 };
 

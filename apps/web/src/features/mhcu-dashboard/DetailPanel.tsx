@@ -421,7 +421,7 @@ function ReportBlock({ detail, isAdmin, onSaved, onError }: BlockProps & { isAdm
         : blocker === 'payment'
           ? tx('Belum bisa dirilis: pembayaran belum dikonfirmasi (PAID, FREE, INCLUDED, atau LEGACY).', 'Cannot be released yet: payment is not confirmed (PAID, FREE, INCLUDED or LEGACY).')
           : tx('Siap dirilis: catatan final dan pembayaran terkonfirmasi.', 'Ready to release: the note is final and the payment is confirmed.')
-  const open = (kind: 'client' | 'psychologist') => void openReport(detail.id, kind).catch((caught) => onError(caught, tx('Gagal membuka laporan.', 'Could not open the report.')))
+  const open = (kind: 'client' | 'psychologist', lang?: 'id' | 'en') => void openReport(detail.id, kind, lang).catch((caught) => onError(caught, tx('Gagal membuka laporan.', 'Could not open the report.')))
   return (
     <section className="space-y-2">
       <h3 className="text-sm font-bold text-slate-900">{tx('Laporan', 'Report')}</h3>
@@ -430,8 +430,11 @@ function ReportBlock({ detail, isAdmin, onSaved, onError }: BlockProps & { isAdm
       </p>
       <p className="text-sm text-slate-600">{reason}</p>
       <div className="flex flex-wrap gap-2">
-        <button className={buttonClass} onClick={() => open('client')} type="button">
-          <FileText aria-hidden="true" className="mr-1 inline size-4" />{tx('Pratinjau laporan klien', 'Preview client report')}
+        <button className={buttonClass} onClick={() => open('client', 'id')} type="button">
+          <FileText aria-hidden="true" className="mr-1 inline size-4" />{tx('Pratinjau laporan klien (Indonesia)', 'Preview client report (Indonesian)')}
+        </button>
+        <button className={buttonClass} onClick={() => open('client', 'en')} type="button">
+          <FileText aria-hidden="true" className="mr-1 inline size-4" />{tx('Pratinjau laporan klien (English)', 'Preview client report (English)')}
         </button>
         <button className={buttonClass} onClick={() => open('psychologist')} type="button">
           <FileText aria-hidden="true" className="mr-1 inline size-4" />{tx('Laporan psikolog (internal)', 'Psychologist report (internal)')}

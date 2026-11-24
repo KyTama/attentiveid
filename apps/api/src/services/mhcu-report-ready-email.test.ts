@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { buildReportReadyEmail } from './mhcu-report-ready-email'
+import { buildReportReadyEmail, buildReportReleasedStaffEmail } from './mhcu-report-ready-email'
 
 const base = {
     name: 'Boim',
@@ -7,7 +7,7 @@ const base = {
     lang: 'id' as const,
     scores: { mhi: 61.4, level: 3 },
     level: 3,
-    reportLink: 'https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&t=abc',
+    links: { id: 'https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&t=abc&lang=id', en: 'https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&t=abc&lang=en' },
     submittedAt: new Date('2026-11-14T05:00:00Z'),
     releasedAt: new Date('2026-11-24T05:00:00Z'),
     siteOrigin: 'https://attentiveid.com'
@@ -23,10 +23,13 @@ describe('report ready e-mail', () => {
         expect(mail.html).toContain('14 November 2026')
         expect(mail.html).toContain('24 November 2026')
         expect(mail.html).toContain('YANG ADA DI LAPORAN ANDA')
-        expect(mail.html).toContain('href="https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&amp;t=abc"')
-        expect(mail.html).toContain('Buka laporan lengkap')
+        expect(mail.html).toContain('href="https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&amp;t=abc&amp;lang=id"')
+        expect(mail.html).toContain('href="https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&amp;t=abc&amp;lang=en"')
+        expect(mail.html).toContain('Buka laporan lengkap (Bahasa Indonesia)')
+        expect(mail.html).toContain('Open the full report (English)')
         expect(mail.html).toContain('https://wa.me/6285156410912')
-        expect(mail.text).toContain('Buka laporan lengkap: https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&t=abc')
+        expect(mail.text).toContain('Buka laporan lengkap (Bahasa Indonesia): https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&t=abc&lang=id')
+        expect(mail.text).toContain('Open the full report (English): https://attentiveid.com/api/public/assessments/report?id=AT-MHCU-2026-120&t=abc&lang=en')
     })
 
     test('shows the emergency line only from level 4', () => {
@@ -47,7 +50,7 @@ describe('report ready e-mail', () => {
         const mail = buildReportReadyEmail({ ...base, lang: 'en', name: '<b>Eve</b>' })
         expect(mail.subject).toBe('Your full report is ready · AT-MHCU-2026-120')
         expect(mail.html).toContain('Level 3 of 5: Needs Attention')
-        expect(mail.html).toContain('Open the full report')
+        expect(mail.html.indexOf('Open the full report (English)')).toBeLessThan(mail.html.indexOf('Buka laporan lengkap (Bahasa Indonesia)'))
         expect(mail.html).not.toContain('<b>Eve</b>')
         expect(mail.html).toContain('&lt;b&gt;Eve&lt;/b&gt;')
     })
@@ -56,5 +59,26 @@ describe('report ready e-mail', () => {
         const mail = buildReportReadyEmail({ ...base, scores: null, level: null })
         expect(mail.html).toContain('Level 1 dari 5: Baik')
         expect(mail.html).toContain('–')
+    })
+})
+
+describe('report released e-mail to staff', () => {
+    test('has both language links, the dashboard link and the staff-only footer', () => {
+        const mail = buildReportReleasedStaffEmail({
+            name: 'Boim',
+            code: 'AT-MHCU-2026-120',
+            level: 3,
+            scores: { mhi: 61.4 },
+            links: base.links,
+            submissionId: '00000000-0000-4000-8000-000000000001',
+            psychologistName: 'Dr. Haykal Hafizul Arifin, S.Psi., M.Si.',
+            siteOrigin: 'https://attentiveid.com'
+        })
+        expect(mail.subject).toBe('[MHCU] Laporan dirilis · AT-MHCU-2026-120 · Boim')
+        expect(mail.html).toContain('lang=id')
+        expect(mail.html).toContain('lang=en')
+        expect(mail.html).toContain('/dashboard/assessments/mhcu/00000000-0000-4000-8000-000000000001')
+        expect(mail.html).toContain('Dr. Haykal Hafizul Arifin, S.Psi., M.Si.')
+        expect(mail.text).toContain('Jangan diteruskan')
     })
 })

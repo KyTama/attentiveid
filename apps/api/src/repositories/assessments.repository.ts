@@ -1,9 +1,10 @@
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { matchParticipant, normalizeParticipantEmail as normalizeEmail, normalizeParticipantPhone as normalizePhone } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { assessmentAudit, assessmentInvites, assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions, psychologists } from '../db/schema';
+import { assessmentAudit, assessmentInvites, assessmentParticipants, assessmentPaymentProofs, assessmentSubmissions, psychologistProfiles, psychologists } from '../db/schema';
 import { priceFor } from '../services/assessment-payment';
 import { creditDelta, decideTrack, PACKAGE_SIZE, type TrackDecision } from '../services/mhcu-tracks';
+import { withCredential } from '../services/psychologist-title';
 
 export type AssessmentInstrument = 'mhcu' | 'gsc';
 export type AssessmentStatus = 'new' | 'reviewed' | 'released';
@@ -369,8 +370,14 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
     },
 
     async getPsychologistName(id) {
-        const rows = await db.select({ name: psychologists.name }).from(psychologists).where(eq(psychologists.id, id)).limit(1);
-        return rows[0]?.name ?? null;
+        // The name as printed on reports and e-mails: with the professional title (gelar) from the psychologist's profile.
+        const rows = await db
+            .select({ name: psychologists.name, credential: psychologistProfiles.credential })
+            .from(psychologists)
+            .leftJoin(psychologistProfiles, eq(psychologistProfiles.psychologistId, psychologists.id))
+            .where(eq(psychologists.id, id))
+            .limit(1);
+        return rows[0] ? withCredential(rows[0].name, rows[0].credential) : null;
     },
 
     async assign(id, psychologistId) {

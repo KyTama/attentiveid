@@ -102,11 +102,11 @@ export const releaseReport = async (id: string): Promise<{ released: boolean; em
  * Opens a report as a print-ready page in a new tab. The page needs the staff login, so it is fetched here and shown from a
  * temporary local address; `<base>` makes the logo and font links work from there.
  */
-export const openReport = async (id: string, kind: 'client' | 'psychologist'): Promise<void> => {
+export const openReport = async (id: string, kind: 'client' | 'psychologist', lang?: 'id' | 'en'): Promise<void> => {
   const tab = window.open('', '_blank')
   if (tab) tab.opener = null
   try {
-    const response = await fetch(`${base(id)}/report/${kind}`, { credentials: 'include', headers: { ...getActiveAuthHeaders() } })
+    const response = await fetch(`${base(id)}/report/${kind}${lang ? `?lang=${lang}` : ''}`, { credentials: 'include', headers: { ...getActiveAuthHeaders() } })
     if (!response.ok) throw new Error(response.status === 404 ? 'Laporan tidak ditemukan.' : `Laporan belum bisa dimuat (${response.status})`)
     const html = (await response.text()).replace('<head>', `<head><base href="${window.location.origin}/">`)
     const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))

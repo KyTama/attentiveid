@@ -188,10 +188,20 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             mailer: dependencies.mailer,
             secret: dependencies.paymentSecret,
             siteOrigin: dependencies.siteOrigin,
+            staffEmail: staffInbox,
             onError: logFailure,
             ops: dependencies.ops,
             getSettings: () => (dependencies.settings as { get(): Promise<MhcuSettings> }).get()
         }, id);
+    };
+
+    /** ?lang=id or ?lang=en picks the language of a report; anything else keeps the participant's own. */
+    const reportLang = (value: unknown): 'id' | 'en' | undefined => (value === 'en' ? 'en' : value === 'id' ? 'id' : undefined);
+
+    /** Where release e-mails to staff go: the MHCU settings inbox, else the general alert address. */
+    const staffInbox = async (): Promise<string | undefined> => {
+        const settings = dependencies.settings ? await dependencies.settings.get() : null;
+        return settings?.alertEmail || dependencies.alertEmail || undefined;
     };
 
     /** Loads a check-up and the person's other check-ups, ready for a report. */
@@ -608,7 +618,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             body: t.Any(),
             detail: { tags: ['Assessments'], summary: "Set the psychologist's report price for a 'lanjutan' check-up (admin)" }
         })
-        .get('/api/admin/assessments/:id/report/:kind', async ({ params, set, currentUser }: any) => {
+        .get('/api/admin/assessments/:id/report/:kind', async ({ params, query, set, currentUser }: any) => {
             if (!UUID.test(params.id) || (params.kind !== 'client' && params.kind !== 'psychologist')) {
                 set.status = 404;
                 return 'Not found';
@@ -621,7 +631,8 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 }
                 // The internal report holds comparisons for psychologists only; each opening is logged (who, which check-up).
                 if (params.kind === 'psychologist') await auditSafely({ actor: currentUser?.id ?? null, action: 'psychologist_report', submissionId: loaded.raw.id, detail: 'opened' });
-                const page = params.kind === 'client' ? renderClientReportPage(loaded.input, 'staff') : renderPsychologistReportHtml(loaded.input);
+                const input = { ...loaded.input, lang: reportLang(query?.lang) };
+                const page = params.kind === 'client' ? renderClientReportPage(input, 'staff') : renderPsychologistReportHtml(input);
                 htmlHeaders(set, page);
                 return page;
             } catch (error) {
@@ -649,6 +660,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     mailer: dependencies.mailer,
                     secret: dependencies.paymentSecret,
                     siteOrigin: dependencies.siteOrigin,
+                    staffEmail: staffInbox,
                     onError: logFailure
                 }, row);
                 if (!result.ok) {
@@ -681,7 +693,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 if (!row || row.status !== 'released') return gone();
                 const loaded = await loadReportInput(row.id);
                 if (!loaded) return gone();
-                const page = renderClientReportPage(loaded.input, 'public');
+                const page = renderClientReportPage({ ...loaded.input, lang: reportLang(query?.lang) }, 'public');
                 htmlHeaders(set, page);
                 return page;
             } catch (error) {

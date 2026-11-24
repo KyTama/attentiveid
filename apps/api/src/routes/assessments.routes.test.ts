@@ -451,8 +451,16 @@ describe('MHCU staff workflow: assignment, notes, payment, reports', () => {
         expect(done.status).toBe(200);
         expect((await done.json()).data).toEqual({ released: true, emailed: true });
         expect(rows[0].status).toBe('released');
-        expect(sent).toHaveLength(1);
-        const link = /https:\/\/attentiveid\.com(\/api\/public\/assessments\/report\?[^\s"<]+)/.exec(sent[0].text ?? '');
+        // the participant gets the report in both languages, and the staff inbox gets a copy with both links
+        expect(sent.map((mail) => mail.to)).toEqual(['rina@example.com', 'alerts@attentive.id']);
+        expect(sent[0].text).toContain('lang=id');
+        expect(sent[0].text).toContain('lang=en');
+        expect(sent[1].subject).toContain('[MHCU] Laporan dirilis');
+        const english = /https:\/\/attentiveid\.com(\/api\/public\/assessments\/report\?[^\s"<]+lang=en)/.exec(sent[0].text ?? '');
+        expect(english).not.toBeNull();
+        const englishPage = await (await send(app, english![1], 'GET')).text();
+        expect(englishPage).toContain('Mental Health Check-Up Report');
+        const link = /https:\/\/attentiveid\.com(\/api\/public\/assessments\/report\?[^\s"<]+lang=id)/.exec(sent[0].text ?? '');
         expect(link).not.toBeNull();
         const open = await send(app, link![1], 'GET');
         expect(open.status).toBe(200);

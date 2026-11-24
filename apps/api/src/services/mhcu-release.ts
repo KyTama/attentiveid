@@ -2,7 +2,7 @@ import type { AssessmentRow, AssessmentsRepository } from '../repositories/asses
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { Mailer } from './mailer';
 import { paymentToken } from './assessment-payment';
-import { buildReportReadyEmail } from './mhcu-report-ready-email';
+import { buildReportReadyEmail, buildReportReleasedStaffEmail } from './mhcu-report-ready-email';
 import { REPORT_READY_PAYMENT } from './mhcu-report-service';
 import type { MhcuSettings } from './mhcu-settings';
 
@@ -12,6 +12,8 @@ export interface ReleaseDeps {
     /** Secret that signs the participant's links. */
     secret?: string;
     siteOrigin?: string;
+    /** Inbox that gets a copy (both language versions) each time a report is released. */
+    staffEmail?: () => Promise<string | undefined>;
     onError?: (where: string, error: unknown) => void;
 }
 
@@ -35,7 +37,9 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
     let emailed = false;
     if (released && deps.secret && deps.mailer?.isConfigured) {
         const origin = (deps.siteOrigin || 'https://attentiveid.com').replace(/\/$/, '');
-        const link = `${origin}/api/public/assessments/report?id=${encodeURIComponent(row.code)}&t=${paymentToken(deps.secret, row.code)}`;
+        // The same signed link opens the report in either language; the participant and staff get both.
+        const base = `${origin}/api/public/assessments/report?id=${encodeURIComponent(row.code)}&t=${paymentToken(deps.secret, row.code)}`;
+        const links = { id: `${base}&lang=id`, en: `${base}&lang=en` };
         try {
             await deps.mailer.send({
                 to: row.email,
@@ -45,7 +49,7 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
                     lang: row.lang === 'en' ? 'en' : 'id',
                     scores: row.scores,
                     level: row.level,
-                    reportLink: link,
+                    links,
                     submittedAt: new Date(row.createdAt),
                     siteOrigin: origin
                 })
@@ -53,6 +57,19 @@ export const releaseReport = async (deps: ReleaseDeps, row: AssessmentRow): Prom
             emailed = true;
         } catch (error) {
             deps.onError?.('release-email', error);
+        }
+        // The staff copy never decides whether the release worked.
+        try {
+            const staff = deps.staffEmail ? await deps.staffEmail() : undefined;
+            if (staff) {
+                const psychologistName = row.psychologistId ? await deps.repository.getPsychologistName(row.psychologistId) : null;
+                await deps.mailer.send({
+                    to: staff,
+                    ...buildReportReleasedStaffEmail({ name: row.name, code: row.code, level: row.level, scores: row.scores, links, submissionId: row.id, psychologistName, siteOrigin: origin })
+                });
+            }
+        } catch (error) {
+            deps.onError?.('release-staff-email', error);
         }
     }
     return { ok: true, released: !!released, emailed };
