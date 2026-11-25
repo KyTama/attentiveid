@@ -1,3 +1,4 @@
+import { DEFAULT_HEADER_FOOTER, mergeSiteSettings, validateHeaderFooter } from '@attentiveid/shared'
 import { describe, expect, it } from 'bun:test'
 import { Elysia } from 'elysia'
 import type { QrCodeDto, TrafficDayRow, UserDto } from '@attentiveid/shared'
@@ -200,6 +201,38 @@ describe('site settings', () => {
     expect(stored.frequency).toBe('always')
     expect(stored.pages['/articles']).toBe(true)
     expect(Object.keys(stored.pages)).not.toContain('/booking')
+  })
+
+  it('lets admins save the top menu and footer, refuses bad links and half-sent data', async () => {
+    const { repository, saved } = makeRepository()
+    const app = makeApp(repository)
+    const put = (body: unknown, headers: Record<string, string>) =>
+      app.handle(new Request('http://localhost/api/admin/site-settings/header-footer', { method: 'PUT', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) }))
+    const good = structuredClone(DEFAULT_HEADER_FOOTER)
+    expect((await put(good, {})).status).toBe(401)
+    expect((await put(good, bearer(psychologist))).status).toBe(403)
+    expect((await put({}, bearer(otherAdmin))).status).toBe(400)
+
+    const bad = structuredClone(good)
+    bad.header.items[0].url = 'javascript:alert(1)'
+    bad.footer.instagramUrl = '//evil.example'
+    bad.footer.email = 'x@y.com?bcc=z@y.com'
+    const rejected = await put(bad, bearer(otherAdmin))
+    expect(rejected.status).toBe(400)
+    expect(Object.keys(((await rejected.json()) as any).errors).sort()).toEqual(['footer.email', 'footer.instagramUrl', 'header.items.0.url'])
+    expect(saved.headerFooter).toBeUndefined()
+
+    good.header.items[0].label = { id: 'Layanan', en: '' }
+    expect((await put(good, bearer(otherAdmin))).status).toBe(200)
+    const stored = saved.headerFooter as typeof good
+    expect(stored.header.items[0].label.en).toBe('Layanan')
+    expect(mergeSiteSettings({ headerFooter: stored }).headerFooter).toEqual(stored)
+    expect(mergeSiteSettings({ headerFooter: { header: 1 } }).headerFooter).toEqual(DEFAULT_HEADER_FOOTER)
+  })
+
+  it('the default menu and footer pass their own validation unchanged', () => {
+    const checked = validateHeaderFooter(DEFAULT_HEADER_FOOTER)
+    expect(checked).toEqual({ ok: true, value: DEFAULT_HEADER_FOOTER })
   })
 
   it('lets admins save the walking cats settings, nobody else', async () => {

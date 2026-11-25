@@ -3,9 +3,14 @@
  *  - the floating quick bar at the bottom of the public pages
  *  - the browser tab (title and icon)
  *  - the walking cats (on/off, and on which pages)
+ *  - the top menu and footer (see site-header-footer.ts)
  */
 import { FEATURED_CARD_ICONS, type FeaturedCardIcon } from './featured-product'
 import { DEFAULT_GIFT, validateGift, type GiftSettings } from './gift'
+import { normalizeLinkUrl } from './link-url'
+import { DEFAULT_HEADER_FOOTER, validateHeaderFooter, type HeaderFooterSettings } from './site-header-footer'
+
+export { normalizeLinkUrl }
 
 export const FLOATING_BAR_MAX_ITEMS = 4
 
@@ -79,6 +84,7 @@ export interface SiteSettings {
   browserTab: BrowserTabSettings
   cats: CatSettings
   gift: GiftSettings
+  headerFooter: HeaderFooterSettings
 }
 
 export const DEFAULT_FLOATING_BAR: FloatingBarSettings = {
@@ -114,22 +120,10 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   browserTab: DEFAULT_BROWSER_TAB,
   cats: DEFAULT_CATS,
   gift: DEFAULT_GIFT,
+  headerFooter: DEFAULT_HEADER_FOOTER,
 }
 
 const asString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
-
-/** Internal path ("/x"), https/http URL, or empty. Returns null when unusable. */
-export const normalizeLinkUrl = (value: string): string | null => {
-  const text = value.trim()
-  if (!text) return ''
-  if (text.startsWith('/') && !text.startsWith('//') && !/\s/.test(text)) return text
-  try {
-    const parsed = new URL(text)
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.toString() : null
-  } catch {
-    return null
-  }
-}
 
 const imageUrlOk = (value: string) => value === '' || (value.startsWith('/') && !value.startsWith('//')) || /^https:\/\//.test(value)
 
@@ -235,14 +229,21 @@ const mergeGift = (stored: unknown): GiftSettings => {
   return checked.ok ? checked.value : DEFAULT_GIFT
 }
 
+const mergeHeaderFooter = (stored: unknown): HeaderFooterSettings => {
+  if (!stored) return DEFAULT_HEADER_FOOTER
+  const checked = validateHeaderFooter(stored)
+  return checked.ok ? checked.value : DEFAULT_HEADER_FOOTER
+}
+
 /** Fills anything missing/invalid in stored settings with the defaults, so the site never breaks. */
-export const mergeSiteSettings = (stored: { floatingBar?: unknown; browserTab?: unknown; cats?: unknown; gift?: unknown } | null | undefined): SiteSettings => {
+export const mergeSiteSettings = (stored: { floatingBar?: unknown; browserTab?: unknown; cats?: unknown; gift?: unknown; headerFooter?: unknown } | null | undefined): SiteSettings => {
   const bar = stored?.floatingBar ? validateFloatingBar(stored.floatingBar) : null
   const tab = stored?.browserTab ? validateBrowserTab(stored.browserTab) : null
   return {
     floatingBar: bar?.ok ? bar.value : DEFAULT_FLOATING_BAR,
     browserTab: tab?.ok ? tab.value : DEFAULT_BROWSER_TAB,
     gift: mergeGift(stored?.gift),
+    headerFooter: mergeHeaderFooter(stored?.headerFooter),
     cats: stored?.cats ? (validateCats(stored.cats) as { ok: true; value: CatSettings }).value : DEFAULT_CATS,
   }
 }
