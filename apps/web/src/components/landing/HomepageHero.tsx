@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
-import { resolveHeroSlides, type ResolvedHeroSlide } from '@/features/content/hero-slides'
+import { getHeroStepsGridLayout, resolveHeroSlides, type ResolvedHeroSlide } from '@/features/content/hero-slides'
 import { useSciBriefHeroChips } from '@/features/sci-brief/use-hero-chips'
 import { HeroSlideVisual } from './HeroSlideVisual'
 import { useCampaignDock } from './use-campaign-dock'
@@ -276,19 +276,26 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
   }
 
   if (slide.layout === 'big10' && slide.steps && slide.steps.length > 0) {
+    const { colCount, gridColsClass } = getHeroStepsGridLayout(slide.steps.length)
     return (
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 overflow-hidden rounded-[14px] border border-[#E8E1D5] bg-white">
-        {slide.steps.map((step, idx) => (
-          <div
-            key={`${slide.id}-step-${idx}`}
-            className="border-t sm:border-t-0 sm:border-l border-[#E8E1D5] first:border-t-0 first:border-l-0 px-3.5 py-3 text-[12.5px] leading-[1.35] font-semibold text-[#14284B]"
-          >
-            <small className="mb-1 block text-[11.5px] font-bold text-[#C08A2C]">
-              {String(idx + 1).padStart(2, '0')}
-            </small>
-            <span>{step}</span>
-          </div>
-        ))}
+      <div className={`mt-6 grid grid-cols-1 ${gridColsClass} overflow-hidden rounded-[14px] border border-[#E8E1D5] bg-white`}>
+        {slide.steps.map((step, idx) => {
+          const isFirstRowSm = idx < colCount
+          const isFirstColSm = idx % colCount === 0
+          return (
+            <div
+              key={`${slide.id}-step-${idx}`}
+              className={`border-[#E8E1D5] ${idx > 0 ? 'border-t' : ''} ${
+                isFirstRowSm ? 'sm:border-t-0' : 'sm:border-t'
+              } ${isFirstColSm ? 'sm:border-l-0' : 'sm:border-l'} px-3.5 py-3 text-[12.5px] leading-[1.35] font-semibold text-[#14284B]`}
+            >
+              <small className="mb-1 block text-[11.5px] font-bold text-[#C08A2C]">
+                {String(idx + 1).padStart(2, '0')}
+              </small>
+              <span>{step}</span>
+            </div>
+          )
+        })}
       </div>
     )
   }

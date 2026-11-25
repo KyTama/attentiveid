@@ -30,6 +30,7 @@ import { uploadLandingImage } from '../../features/content/service'
 import {
   buildMergedHeroSlideItems,
   getDefaultHeroSlideItems,
+  getHeroStepsGridLayout,
   HERO_SLIDE_LAYOUT_LABELS,
   resolveHeroSlides,
 } from '../../features/content/hero-slides'
@@ -523,60 +524,48 @@ export function LandingCmsPage() {
     setContent({ ...content, sections: newSections })
   }
 
+  const updateHeroSlideSteps = (
+    slideIndex: number,
+    updater: (steps: LocalizedText[]) => LocalizedText[]
+  ) => {
+    const slideItems = getMergedHeroSlideItems()
+    const currentSteps = [...(slideItems[slideIndex]?.steps || [])]
+    slideItems[slideIndex] = {
+      ...slideItems[slideIndex],
+      steps: updater(currentSteps),
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      slideItems,
+    } as LandingSection
+    setContent({ ...content, sections: newSections })
+  }
+
   const updateHeroSlideStep = (
     slideIndex: number,
     stepIndex: number,
     lang: 'id' | 'en',
     value: string
   ) => {
-    const slideItems = getMergedHeroSlideItems()
-    const currentSteps = [...(slideItems[slideIndex]?.steps || [])]
-    currentSteps[stepIndex] = {
-      ...(currentSteps[stepIndex] || { id: '', en: '' }),
-      [lang]: value,
-    }
-    slideItems[slideIndex] = {
-      ...slideItems[slideIndex],
-      steps: currentSteps,
-    }
-    const newSections = [...content.sections]
-    newSections[activeSectionIndex] = {
-      ...activeSection,
-      slideItems,
-    } as LandingSection
-    setContent({ ...content, sections: newSections })
+    updateHeroSlideSteps(slideIndex, (steps) => {
+      const next = [...steps]
+      next[stepIndex] = {
+        ...(next[stepIndex] || { id: '', en: '' }),
+        [lang]: value,
+      }
+      return next
+    })
   }
 
   const addHeroSlideStep = (slideIndex: number) => {
-    const slideItems = getMergedHeroSlideItems()
-    const currentSteps = [...(slideItems[slideIndex]?.steps || [])]
-    if (currentSteps.length >= 5) return
-    currentSteps.push({ id: '', en: '' })
-    slideItems[slideIndex] = {
-      ...slideItems[slideIndex],
-      steps: currentSteps,
-    }
-    const newSections = [...content.sections]
-    newSections[activeSectionIndex] = {
-      ...activeSection,
-      slideItems,
-    } as LandingSection
-    setContent({ ...content, sections: newSections })
+    updateHeroSlideSteps(slideIndex, (steps) =>
+      steps.length >= 5 ? steps : [...steps, { id: '', en: '' }]
+    )
   }
 
   const removeHeroSlideStep = (slideIndex: number, stepIndex: number) => {
-    const slideItems = getMergedHeroSlideItems()
-    const currentSteps = (slideItems[slideIndex]?.steps || []).filter((_, idx) => idx !== stepIndex)
-    slideItems[slideIndex] = {
-      ...slideItems[slideIndex],
-      steps: currentSteps,
-    }
-    const newSections = [...content.sections]
-    newSections[activeSectionIndex] = {
-      ...activeSection,
-      slideItems,
-    } as LandingSection
-    setContent({ ...content, sections: newSections })
+    updateHeroSlideSteps(slideIndex, (steps) => steps.filter((_, idx) => idx !== stepIndex))
   }
 
   const resetHeroSlidesToDefault = () => {
@@ -1565,21 +1554,28 @@ export function LandingCmsPage() {
                           </div>
                         )}
 
-                        {activeSimSlide.layout === 'big10' && activeSimSlide.steps && activeSimSlide.steps.length > 0 && (
-                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 overflow-hidden rounded-xl border border-[#E8E1D5] bg-white">
-                            {activeSimSlide.steps.map((step, sIdx) => (
-                              <div
-                                key={`${activeSimSlide.id}-sim-step-${sIdx}`}
-                                className="border-t sm:border-t-0 sm:border-l border-[#E8E1D5] first:border-t-0 first:border-l-0 px-2.5 py-2 text-[10.5px] leading-tight font-semibold text-[#14284B]"
-                              >
-                                <small className="mb-0.5 block text-[9.5px] font-bold text-[#C08A2C]">
-                                  {String(sIdx + 1).padStart(2, '0')}
-                                </small>
-                                <span>{step}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        {activeSimSlide.layout === 'big10' && activeSimSlide.steps && activeSimSlide.steps.length > 0 && (() => {
+                          const { colCount: simColCount, gridColsClass: simGridCols } = getHeroStepsGridLayout(
+                            activeSimSlide.steps.length
+                          )
+                          return (
+                            <div className={`mt-3 grid grid-cols-1 ${simGridCols} overflow-hidden rounded-xl border border-[#E8E1D5] bg-white`}>
+                              {activeSimSlide.steps.map((step, sIdx) => (
+                                <div
+                                  key={`${activeSimSlide.id}-sim-step-${sIdx}`}
+                                  className={`border-[#E8E1D5] ${sIdx > 0 ? 'border-t' : ''} ${
+                                    sIdx < simColCount ? 'sm:border-t-0' : 'sm:border-t'
+                                  } ${sIdx % simColCount === 0 ? 'sm:border-l-0' : 'sm:border-l'} px-2.5 py-2 text-[10.5px] leading-tight font-semibold text-[#14284B]`}
+                                >
+                                  <small className="mb-0.5 block text-[9.5px] font-bold text-[#C08A2C]">
+                                    {String(sIdx + 1).padStart(2, '0')}
+                                  </small>
+                                  <span>{step}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        })()}
 
                         <div className="mt-4 flex flex-wrap items-center gap-3">
                           <span

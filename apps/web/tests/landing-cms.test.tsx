@@ -205,7 +205,12 @@ describe('Landing & Testimonials CMS Page Components', () => {
   })
 
   it('LandingCmsPage allows editing, adding, and removing Slide 3 steps and persists them on Save Draft', async () => {
-    let savedDraftBody: any = null
+    let savedDraftBody: {
+      sections: Array<{
+        key: string
+        slideItems?: Array<{ steps?: Array<{ id: string; en: string }> }>
+      }>
+    } | null = null
 
     const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
       if (url.endsWith('/api/auth/refresh')) {
@@ -267,12 +272,26 @@ describe('Landing & Testimonials CMS Page Components', () => {
     fireEvent.click(screen.getByText('Simpan Draft'))
     await waitFor(() => {
       expect(savedDraftBody).not.toBeNull()
-      const hero = savedDraftBody.sections.find((s: { key: string }) => s.key === 'hero')
-      expect(hero.slideItems[2].steps).toEqual([
+      const hero = savedDraftBody?.sections.find((s) => s.key === 'hero')
+      expect(hero?.slideItems?.[2]?.steps).toEqual([
         { id: 'Latihan fokus 30 detik', en: 'Try the 30-second focus demo' },
         { id: 'Dapatkan Tipe Attentive', en: 'Get your Attentive Type' },
         { id: 'Lihat skor demo', en: 'See demo score' },
       ])
+    })
+
+    // Also verify deleting all steps down to 0 persists empty steps array
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 3' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 2' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 1' }))
+    expect(screen.getByText(/Belum ada kartu langkah/i)).toBeDefined()
+
+    savedDraftBody = null
+    fireEvent.click(screen.getByText('Simpan Draft'))
+    await waitFor(() => {
+      expect(savedDraftBody).not.toBeNull()
+      const hero = savedDraftBody?.sections.find((s) => s.key === 'hero')
+      expect(hero?.slideItems?.[2]?.steps).toEqual([])
     })
   })
 })

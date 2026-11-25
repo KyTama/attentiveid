@@ -19,9 +19,10 @@ export function HeroSlideVisual({
   compact = false,
 }: HeroSlideVisualProps) {
   const portalPsychologist = useHeroPsychologist(slide.layout === 'wisdom-ella' ? 'gisella' : null, isId ? 'id' : 'en')
+  const useWarmBackdrop = slide.layout === 'big10' && slide.hasCustomMedia
   const containerClass = compact
-    ? 'relative h-[260px] w-full overflow-hidden rounded-tl-[110px] bg-[#ECE3D4]'
-    : 'relative h-[340px] sm:h-[400px] lg:h-[640px] w-full overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px] bg-[#ECE3D4]'
+    ? `relative h-[260px] w-full overflow-hidden rounded-tl-[110px] ${useWarmBackdrop ? 'bg-[#F6F0E6]' : 'bg-[#ECE3D4]'}`
+    : `relative h-[340px] sm:h-[400px] lg:h-[640px] w-full overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px] ${useWarmBackdrop ? 'bg-[#F6F0E6]' : 'bg-[#ECE3D4]'}`
 
   if (slide.layout === 'pet-garden') {
     return (
@@ -102,13 +103,7 @@ export function HeroSlideVisual({
   if (slide.layout === 'big10') {
     if (slide.hasCustomMedia) {
       return (
-        <div
-          className={
-            compact
-              ? 'relative h-[260px] w-full overflow-hidden rounded-tl-[110px] bg-[#F6F0E6]'
-              : 'relative h-[340px] sm:h-[400px] lg:h-[640px] w-full overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px] bg-[#F6F0E6]'
-          }
-        >
+        <div className={containerClass}>
           <img
             src={slide.imageSrc}
             alt={slide.imageAlt}

@@ -551,6 +551,8 @@ describe('homepage', () => {
 
     const customImg = screen.getByRole('img', { name: 'Cognitive Profile demo sample' })
     expect(customImg).toHaveAttribute('src', '/media/landing/hero-slide-3-mwvmzpwx-a3e7a4.png')
+    expect(customImg).toHaveAttribute('width', '1448')
+    expect(customImg).toHaveAttribute('height', '1086')
     expect(screen.queryByText('Your scores vs. the norm')).not.toBeInTheDocument()
   })
 })
