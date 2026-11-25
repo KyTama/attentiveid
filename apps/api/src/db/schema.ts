@@ -973,6 +973,33 @@ export const assessmentPaymentProofs = pgTable('assessment_payment_proofs', {
     index('assessment_payment_proofs_submission_idx').on(table.submissionId)
 ]);
 
+// Bug reports and suggestions about the website (public form, read by the owner account only).
+export const feedbackReports = pgTable('feedback_reports', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kind: text('kind').notNull(),
+    name: text('name').notNull(),
+    message: text('message').notNull(),
+    page: text('page').default('').notNull(),
+    doneAt: timestamp('done_at', { withTimezone: true, mode: 'string' }),
+    driveFolderId: text('drive_folder_id'),
+    driveError: text('drive_error'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('feedback_reports_created_at_idx').on(table.createdAt)
+]);
+
+// Files attached to a report. The content is kept only until it is in Google Drive, then emptied to save disk space.
+export const feedbackFiles = pgTable('feedback_files', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportId: uuid('report_id').notNull().references(() => feedbackReports.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data')
+}, (table) => [
+    index('feedback_files_report_idx').on(table.reportId)
+]);
+
 export const siteSettings = pgTable('site_settings', {
     key: text('key').primaryKey(),
     value: jsonb('value').notNull(),

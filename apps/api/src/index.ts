@@ -119,6 +119,9 @@ const driveReports = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOO
       })
     : undefined;
 
+// Make "Web App Development / Update Request" exist as soon as the server runs, before the first request arrives.
+void driveReports?.ensureRequestFolder().catch((error) => console.error('[feedback] Drive folder not ready:', error instanceof Error ? error.message : 'error'));
+
 // Assessments (Mental Health Check-Up...) -> a PRIVATE Google Sheet. Only runs when ASSESSMENTS_SHEET_ID is set.
 const assessmentsRepository = createAssessmentsRepository(db);
 const assessmentsSheetSync = createAssessmentsSheetSync({
@@ -163,6 +166,7 @@ const app = createApp({
     assessmentsRepository,
     assessmentsSheetSync,
     driveReports,
+    driveRequests: driveReports,
     freeSessionRepository,
     freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',

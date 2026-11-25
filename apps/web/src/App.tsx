@@ -15,6 +15,9 @@ import { PreviewLandingPage } from './pages/PreviewLandingPage'
 import { ArticlesPage } from './pages/ArticlesPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
+import { FeedbackPage } from './pages/FeedbackPage'
+import { FeedbackReportsPage } from './pages/dashboard/FeedbackReportsPage'
+import { UpdateLogPage } from './pages/dashboard/UpdateLogPage'
 import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { PageViewTracker } from './components/common/PageViewTracker'
 import { BrowserTabManager } from './components/common/BrowserTabManager'
@@ -82,6 +85,7 @@ export function AppRoutes({
           <Route path="articles" element={<ArticlesPage />} />
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
+          <Route path="feedback" element={<FeedbackPage />} />
           <Route path="our-services" element={<OurServicesPage />} />
           <Route path="assessments" element={<AssessmentsPage />} />
           <Route path="assessments/payment" element={<AssessmentPaymentPage />} />
@@ -290,6 +294,22 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
                 <FreeSessionCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="experimental/reports"
+            element={
+              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+                <FeedbackReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="updates"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UpdateLogPage />
               </ProtectedRoute>
             }
           />

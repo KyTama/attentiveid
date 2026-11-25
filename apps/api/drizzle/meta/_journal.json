@@ -169,6 +169,13 @@
       "when": 1795419412915,
       "tag": "0023_mhcu_invites_tracks_quota",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795600070637,
+      "tag": "0024_feedback_reports",
+      "breakpoints": true
     }
   ]
 }

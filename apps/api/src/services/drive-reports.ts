@@ -8,7 +8,11 @@
  * anywhere in Drive), otherwise a "Reports" folder in My Drive that the app creates on first use. The sub-folders are found by name
  * and created when missing. The Drive account is the one that owns the refresh token (GOOGLE_DRIVE_REFRESH_TOKEN, scope drive.file:
  * the app only sees files and folders it created itself). Saving again overwrites the file with the same name.
- */
+ *
+ * Website bug reports and update requests go to their own place (see DriveRequests):
+ *
+ *   Web App Development / Update Request / <year-month> / <one folder per request> / its files
+  */
 
 import { getGoogleAccessToken } from './booking-outbox'
 
@@ -49,6 +53,17 @@ export interface SheetRowInput {
     values: string[]
 }
 
+/** Folder for the web team's own material; "Update Request" is its first sub-folder. */
+export const WEBDEV_FOLDER = 'Web App Development'
+export const REQUEST_FOLDER = 'Update Request'
+
+export interface DriveRequests {
+    /** Creates "Web App Development / Update Request" when missing and returns the inner folder's id. */
+    ensureRequestFolder(): Promise<string>
+    /** Saves one request into its own folder under the month it arrived in. */
+    saveRequest(input: { folderName: string; at: Date; files: ReportFile[] }): Promise<{ folderId: string }>
+}
+
 export interface DriveReports {
     isConfigured: boolean
     saveReport(input: SaveReportInput): Promise<{ path: string; folderId: string; files: string[] }>
@@ -85,7 +100,7 @@ export const jakartaYearMonth = (at: Date): { year: string; month: string } => {
     return { year: String(jakarta.getUTCFullYear()), month: String(jakarta.getUTCMonth() + 1).padStart(2, '0') }
 }
 
-export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetcher = fetch): DriveReports => {
+export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetcher = fetch): DriveReports & DriveRequests => {
     const rootName = config.rootName?.trim() || 'Reports'
     const rootFolderId = config.rootFolderId?.trim() || ''
     /** path -> folder id, so a busy day does not search for the same folders again. */
@@ -149,6 +164,22 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
         if (!response.ok) throw await failure('Drive file upload', response)
     }
 
+    /** The top folder is found by name anywhere in Drive, so the team may move it without a second one appearing. */
+    const webDevId = async (): Promise<string> => {
+        const key = `/${WEBDEV_FOLDER}`
+        const cached = folderIds.get(key)
+        if (cached) return cached
+        const query = `name = ${quote(WEBDEV_FOLDER)} and trashed = false and mimeType = '${FOLDER_MIME}'`
+        const response = await fetchImpl(`${API}?${new URLSearchParams({ q: query, fields: 'files(id)', spaces: 'drive', pageSize: '1' })}`, { method: 'GET', headers: await headers() })
+        if (!response.ok) throw await failure('Drive search', response)
+        const found = ((await response.json()) as { files?: Array<{ id: string }> }).files?.[0]?.id
+        if (!found) return ensureFolder(WEBDEV_FOLDER, 'root', key)
+        folderIds.set(key, found)
+        return found
+    }
+
+    const requestFolderId = async (): Promise<string> => ensureFolder(REQUEST_FOLDER, await webDevId(), `/${WEBDEV_FOLDER}/${REQUEST_FOLDER}`)
+
     const rootId = async (): Promise<string> => rootFolderId || ensureFolder(rootName, 'root', `/${rootName}`)
 
     const sheetIds = new Map<string, string>()
@@ -192,6 +223,15 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
 
     return {
         isConfigured: true,
+        ensureRequestFolder: requestFolderId,
+        async saveRequest(input) {
+            const { year, month } = jakartaYearMonth(input.at)
+            const base = `/${WEBDEV_FOLDER}/${REQUEST_FOLDER}`
+            const monthId = await ensureFolder(`${year}-${month}`, await requestFolderId(), `${base}/${year}-${month}`)
+            const folderId = await ensureFolder(input.folderName, monthId, `${base}/${year}-${month}/${input.folderName}`)
+            for (const file of input.files) await upload(file, folderId)
+            return { folderId }
+        },
         async upsertSheetRow(input) {
             const spreadsheetId = await ensureSpreadsheet(input.title, input.tab)
             const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
