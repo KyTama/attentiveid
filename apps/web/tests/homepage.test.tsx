@@ -459,4 +459,98 @@ describe('homepage', () => {
       vi.useRealTimers()
     }
   })
+
+  it('renders custom Slide 3 steps and custom uploaded media when configured in CMS', async () => {
+    const user = userEvent.setup()
+    const localized = (id: string, en: string) => ({ id, en })
+    const customHeroSection = {
+      key: 'hero',
+      visible: true,
+      headline: localized('Headline ID', 'Headline EN'),
+      description: localized('Desc ID', 'Desc EN'),
+      primaryCta: localized('Mulai', 'Start'),
+      secondaryCta: localized('Eksplor', 'Explore'),
+      slideItems: [
+        {
+          id: 'hero-slide-1',
+          visible: true,
+          layout: 'practice',
+          tabLabel: localized('Praktik kami', 'Our practice'),
+          tag: localized('Layanan', 'Practice'),
+          headline: localized('Headline 1', 'Headline 1'),
+          description: localized('Desc 1', 'Desc 1'),
+          primaryCta: localized('Mulai', 'Start'),
+          primaryCtaUrl: '/psychologists',
+          secondaryCta: localized('Lokasi', 'Locations'),
+          secondaryCtaUrl: '#locations',
+        },
+        {
+          id: 'hero-slide-2',
+          visible: false,
+          layout: 'pet-garden',
+          tabLabel: localized('Taman', 'Pet garden'),
+          tag: localized('Taman', 'Pet garden'),
+          headline: localized('Taman', 'Pet garden'),
+          description: localized('Desc 2', 'Desc 2'),
+          primaryCta: localized('Mulai', 'Start'),
+          primaryCtaUrl: '#locations',
+          secondaryCta: localized('Lokasi', 'Locations'),
+          secondaryCtaUrl: '#locations',
+        },
+        {
+          id: 'hero-slide-3',
+          visible: true,
+          layout: 'big10',
+          tabLabel: localized('Coba tes fokus 30 detik', 'Try a 30-second focus test'),
+          tag: localized('PROFIL KOGNITIF LENGKAP', 'COMPLETE COGNITIVE PROFILE'),
+          headline: localized('Kenali cara kamu **fokus, mengingat, dan merespons.**', 'See how you **focus, remember, and respond.**'),
+          description: localized('Demo 30 detik.', 'Free 30-second demo task.'),
+          steps: [
+            localized('Uji fokus berkelanjutan', 'Test sustained attention'),
+            localized('Uji memori kerja', 'Test working memory'),
+            localized('Lihat skor kontrol respons', 'See response control score'),
+          ],
+          primaryCta: localized('Coba demo gratis', 'Try the free demo'),
+          primaryCtaUrl: 'https://ourservices.attentiveid.com/?lang=en#demo-p-profil-kognitif-lengkap',
+          secondaryCta: localized('Lihat detail asesmen', 'Explore the assessment'),
+          secondaryCtaUrl: 'https://ourservices.attentiveid.com/profil-kognitif-lengkap',
+          media: {
+            reference: 'media/landing/hero-slide-3-mwvmzpwx-a3e7a4.png',
+            width: 1448,
+            height: 1086,
+            alt: localized('Cuplikan demo Profil Kognitif', 'Cognitive Profile demo sample'),
+          },
+        },
+      ],
+      items: [
+        { id: 'metric-1', position: 0, title: localized('Sesi', 'Sessions'), description: localized('3,000+', '3,000+') },
+        { id: 'metric-2', position: 1, title: localized('Psikolog', 'Psychologists'), description: localized('18', '18') },
+        { id: 'metric-3', position: 2, title: localized('Rating', 'Rating'), description: localized('5.0', '5.0') },
+      ],
+    }
+
+    render(
+      <MemoryRouter>
+        <LandingContentContext.Provider
+          value={{
+            locale: 'en',
+            content: { sections: [customHeroSection] as unknown as LandingContentMutation['sections'] },
+          }}
+        >
+          <Homepage />
+        </LandingContentContext.Provider>
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('tab', { name: /try a 30-second focus test/i }))
+
+    expect(screen.getByText('Test sustained attention')).toBeInTheDocument()
+    expect(screen.getByText('Test working memory')).toBeInTheDocument()
+    expect(screen.getByText('See response control score')).toBeInTheDocument()
+    expect(screen.queryByText('Take the Big 10')).not.toBeInTheDocument()
+
+    const customImg = screen.getByRole('img', { name: 'Cognitive Profile demo sample' })
+    expect(customImg).toHaveAttribute('src', '/media/landing/hero-slide-3-mwvmzpwx-a3e7a4.png')
+    expect(screen.queryByText('Your scores vs. the norm')).not.toBeInTheDocument()
+  })
 })

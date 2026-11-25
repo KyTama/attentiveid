@@ -25,6 +25,9 @@ export interface ResolvedHeroSlide {
   secondaryCtaUrl: string
   imageSrc: string
   imageAlt: string
+  hasCustomMedia: boolean
+  imageWidth?: number
+  imageHeight?: number
 }
 
 export const HERO_SLIDE_LAYOUT_LABELS: Record<HeroSlideLayout, string> = {
@@ -264,6 +267,9 @@ export function resolveHeroSlides(
       secondaryCtaUrl: legacyBriefUrl(layout, item.secondaryCtaUrl),
       imageSrc,
       imageAlt: item.media?.alt?.[locale] || fallbackMedia.alt[locale],
+      hasCustomMedia: Boolean(customRef),
+      imageWidth: item.media?.width,
+      imageHeight: item.media?.height,
     }
   })
 }

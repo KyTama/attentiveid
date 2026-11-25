@@ -100,6 +100,28 @@ export function HeroSlideVisual({
   }
 
   if (slide.layout === 'big10') {
+    if (slide.hasCustomMedia) {
+      return (
+        <div
+          className={
+            compact
+              ? 'relative h-[260px] w-full overflow-hidden rounded-tl-[110px] bg-[#F6F0E6]'
+              : 'relative h-[340px] sm:h-[400px] lg:h-[640px] w-full overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px] bg-[#F6F0E6]'
+          }
+        >
+          <img
+            src={slide.imageSrc}
+            alt={slide.imageAlt}
+            width={slide.imageWidth || 1448}
+            height={slide.imageHeight || 1086}
+            loading={isActive ? 'eager' : 'lazy'}
+            fetchPriority={isActive ? 'auto' : 'low'}
+            className="h-full w-full object-contain"
+          />
+        </div>
+      )
+    }
+
     return (
       <div
         className={containerClass}
