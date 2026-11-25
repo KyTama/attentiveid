@@ -6,6 +6,7 @@ import type {
   FeaturedProductAdminDto,
   FloatingBarSettings,
   SiteSettings,
+  HeaderFooterSettings,
   FeaturedProductInput,
   FeaturedProductPublicDto,
   QrCodeDto,
@@ -148,6 +149,9 @@ export const getAdminSiteSettings = async () =>
 
 export const saveFloatingBarSettings = async (input: FloatingBarSettings) =>
   (await request<{ settings: SiteSettings }>('/api/admin/site-settings/floating-bar', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan bar melayang')).settings
+
+export const saveHeaderFooterSettings = async (input: HeaderFooterSettings) =>
+  (await request<{ settings: SiteSettings }>('/api/admin/site-settings/header-footer', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan menu atas dan footer')).settings
 
 export const saveCatSettings = async (input: CatSettings) =>
   (await request<{ settings: SiteSettings }>('/api/admin/site-settings/cats', { method: 'PUT', body: JSON.stringify(input) }, 'Gagal menyimpan pengaturan kucing')).settings

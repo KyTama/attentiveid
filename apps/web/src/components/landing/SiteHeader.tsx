@@ -3,23 +3,30 @@ import { ChevronDown, ChevronRight, Menu, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
+import type { MenuItem } from '@attentiveid/shared'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { CatToggle } from '@/components/common/CatToggle'
+import { useSiteSettings } from '@/features/site-settings/use-site-settings'
+import { SiteLink } from './SiteLink'
 
-const navItems = [
-  { key: 'psychologists', href: '/#psychologists' },
-  { key: 'locations', href: '/#locations' },
-  { key: 'faq', href: '/#faq' },
-] as const
+const desktopLinkClass =
+  'rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary'
+/** "Our Services" keeps its stronger look. */
+const desktopStrongClass =
+  'rounded-md py-1 text-sm font-medium text-secondary transition-colors hover:text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary'
+const mobileRowClass =
+  'flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary'
 
-const scienceItems = [
-  { key: 'academicArticles', href: '/articles', comingSoon: false },
-  { key: 'scientificBrief', href: '/sci-brief', comingSoon: false },
-  { key: 'laboratory', href: null, comingSoon: true },
-] as const
+/** Indonesian or English text of an editable entry. */
+function useLabel() {
+  const { i18n } = useTranslation()
+  const isEnglish = i18n.resolvedLanguage?.startsWith('en') ?? true
+  return (label: { id: string; en: string }) => (isEnglish ? label.en || label.id : label.id)
+}
 
-function ScienceMenu() {
+function DropdownMenu({ item }: { item: MenuItem }) {
   const { t } = useTranslation()
+  const text = useLabel()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
@@ -57,7 +64,7 @@ function ScienceMenu() {
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
-        {t('homepage.nav.ourScience')}
+        {text(item.label)}
         <ChevronDown aria-hidden="true" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`} size={15} />
       </button>
       <AnimatePresence initial={false}>
@@ -71,22 +78,22 @@ function ScienceMenu() {
             transition={INTERACTIVE_SPRING}
           >
             <ul className="min-w-60 rounded-xl border border-secondary/10 bg-white p-1.5 shadow-lg">
-              {scienceItems.map((item) => (
-                <li key={item.key}>
-                  {item.comingSoon || !item.href ? (
+              {item.children.filter((child) => child.visible).map((child) => (
+                <li key={child.id}>
+                  {child.comingSoon ? (
                     <div
                       aria-disabled="true"
                       className="flex items-center justify-between gap-3 whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium text-secondary/45 cursor-not-allowed select-none"
                     >
-                      <span>{t(`homepage.nav.${item.key}`)}</span>
+                      <span>{text(child.label)}</span>
                       <span className="shrink-0 rounded-full bg-secondary/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary/60">
                         {t('homepage.nav.comingSoon')}
                       </span>
                     </div>
                   ) : (
-                    <Link className={itemClass} onClick={() => setOpen(false)} to={item.href}>
-                      {t(`homepage.nav.${item.key}`)}
-                    </Link>
+                    <SiteLink className={itemClass} onNavigate={() => setOpen(false)} url={child.url}>
+                      {text(child.label)}
+                    </SiteLink>
                   )}
                 </li>
               ))}
@@ -98,43 +105,42 @@ function ScienceMenu() {
   )
 }
 
-function MobileScience({ onNavigate }: { onNavigate: () => void }) {
+function MobileDropdown({ item, onNavigate }: { item: MenuItem; onNavigate: () => void }) {
   const { t } = useTranslation()
+  const text = useLabel()
   const [open, setOpen] = useState(false)
   const panelId = useId()
-  const rowClass =
-    'flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary'
 
   return (
     <div>
       <button
         aria-controls={panelId}
         aria-expanded={open}
-        className={`${rowClass} w-full cursor-pointer`}
+        className={`${mobileRowClass} w-full cursor-pointer`}
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
-        <span>{t('homepage.nav.ourScience')}</span>
+        <span>{text(item.label)}</span>
         <ChevronDown aria-hidden="true" className={`text-secondary/40 transition-transform ${open ? 'rotate-180' : ''}`} size={16} />
       </button>
       {open && (
         <ul className="mb-1 ml-3 border-l border-secondary/10 pl-2" id={panelId}>
-          {scienceItems.map((item) => (
-            <li key={item.key}>
-              {item.comingSoon || !item.href ? (
+          {item.children.filter((child) => child.visible).map((child) => (
+            <li key={child.id}>
+              {child.comingSoon ? (
                 <div
                   aria-disabled="true"
                   className="flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 text-base font-semibold text-secondary/45 cursor-not-allowed select-none"
                 >
-                  <span>{t(`homepage.nav.${item.key}`)}</span>
+                  <span>{text(child.label)}</span>
                   <span className="shrink-0 rounded-full bg-secondary/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary/60">
                     {t('homepage.nav.comingSoon')}
                   </span>
                 </div>
               ) : (
-                <Link className={rowClass} onClick={onNavigate} to={item.href}>
-                  <span>{t(`homepage.nav.${item.key}`)}</span>
-                </Link>
+                <SiteLink className={mobileRowClass} onNavigate={onNavigate} url={child.url}>
+                  <span>{text(child.label)}</span>
+                </SiteLink>
               )}
             </li>
           ))}
@@ -183,13 +189,16 @@ export function SiteHeader() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const reduceMotion = useReducedMotion()
+  const text = useLabel()
+  const { header } = useSiteSettings().headerFooter
+  const menu = header.items.filter((item) => item.visible)
 
+  /** A section link on the homepage scrolls there instead of reloading. */
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (location.pathname === '/' && href.startsWith('/#')) {
-      e.preventDefault()
-      const targetId = href.replace('/#', '')
-      const targetEl = document.getElementById(targetId)
+      const targetEl = document.getElementById(href.replace('/#', ''))
       if (targetEl) {
+        e.preventDefault()
         targetEl.scrollIntoView({ behavior: 'smooth' })
         window.history.pushState(null, '', href)
       }
@@ -210,37 +219,20 @@ export function SiteHeader() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
-          <Link
-            className="rounded-md py-1 text-sm font-medium text-secondary transition-colors hover:text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            to="/our-services"
-          >
-            {t('homepage.nav.ourServices')}
-          </Link>
-          <ScienceMenu />
-          {navItems.map((item) => {
-            const isInternal = !item.href.includes('#')
-            if (isInternal) {
-              return (
-                <Link
-                  className="rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  key={item.key}
-                  to={item.href}
-                >
-                  {t(`homepage.nav.${item.key}`)}
-                </Link>
-              )
-            }
-            return (
-              <a
-                className="rounded-md py-1 text-sm font-medium text-secondary/75 transition-colors duration-150 hover:text-secondary outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                href={item.href}
-                key={item.key}
-                onClick={(e) => handleNavClick(e, item.href)}
+          {menu.map((item) =>
+            item.children.length > 0 ? (
+              <DropdownMenu item={item} key={item.id} />
+            ) : (
+              <SiteLink
+                className={item.id === 'our-services' ? desktopStrongClass : desktopLinkClass}
+                key={item.id}
+                onAnchorClick={handleNavClick}
+                url={item.url}
               >
-                {t(`homepage.nav.${item.key}`)}
-              </a>
-            )
-          })}
+                {text(item.label)}
+              </SiteLink>
+            ),
+          )}
         </div>
 
         {/* Desktop Actions & Single Primary CTA */}
@@ -250,17 +242,16 @@ export function SiteHeader() {
             <LanguageToggle />
           </div>
 
-          <motion.a
-            href="https://booking.attentiveid.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-            transition={INTERACTIVE_SPRING}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {t('homepage.nav.headerCta')}
-          </motion.a>
+          {header.cta.visible && (
+            <motion.div transition={INTERACTIVE_SPRING} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+              <SiteLink
+                className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                url={header.cta.url}
+              >
+                {text(header.cta.label)}
+              </SiteLink>
+            </motion.div>
+          )}
         </div>
 
         {/* Mobile Header Controls */}
@@ -306,57 +297,35 @@ export function SiteHeader() {
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6">
               <nav className="flex flex-col divide-y divide-secondary/10 rounded-2xl border border-secondary/10 bg-white/80 p-1.5 shadow-2xs">
-                <Link
-                  className="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  onClick={() => setMenuOpen(false)}
-                  to="/our-services"
-                >
-                  <span>{t('homepage.nav.ourServices')}</span>
-                </Link>
-                <MobileScience onNavigate={() => setMenuOpen(false)} />
-                {navItems.map((item) => {
-                  const isInternal = !item.href.includes('#')
-                  if (isInternal) {
-                    return (
-                      <Link
-                        className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                        key={item.key}
-                        onClick={() => setMenuOpen(false)}
-                        to={item.href}
-                      >
-                        <span>{t(`homepage.nav.${item.key}`)}</span>
-                        <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
-                      </Link>
-                    )
-                  }
-                  return (
-                    <a
-                      className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold text-secondary transition-colors hover:bg-black/[0.03] outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      href={item.href}
-                      key={item.key}
-                      onClick={(e) => {
-                        setMenuOpen(false)
-                        handleNavClick(e, item.href)
-                      }}
+                {menu.map((item) =>
+                  item.children.length > 0 ? (
+                    <MobileDropdown item={item} key={item.id} onNavigate={() => setMenuOpen(false)} />
+                  ) : (
+                    <SiteLink
+                      className={mobileRowClass}
+                      key={item.id}
+                      onAnchorClick={handleNavClick}
+                      onNavigate={() => setMenuOpen(false)}
+                      url={item.url}
                     >
-                      <span>{t(`homepage.nav.${item.key}`)}</span>
-                      <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />
-                    </a>
-                  )
-                })}
+                      <span>{text(item.label)}</span>
+                      {item.url.includes('#') && <ChevronRight aria-hidden="true" className="text-secondary/40" size={16} />}
+                    </SiteLink>
+                  ),
+                )}
               </nav>
 
-              <div className="mt-2">
-                <a
-                  href="https://booking.attentiveid.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {t('homepage.nav.headerCta')}
-                </a>
-              </div>
+              {header.cta.visible && (
+                <div className="mt-2">
+                  <SiteLink
+                    className="block w-full rounded-full bg-primary px-5 py-3.5 text-center font-bold text-secondary shadow-xs transition-colors hover:bg-[#ffcf4d] outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                    onNavigate={() => setMenuOpen(false)}
+                    url={header.cta.url}
+                  >
+                    {text(header.cta.label)}
+                  </SiteLink>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

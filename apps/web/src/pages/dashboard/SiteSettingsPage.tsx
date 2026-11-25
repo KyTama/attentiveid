@@ -32,6 +32,7 @@ import {
 import { CARD_ICONS, CARD_ICON_LABELS, CARD_ICON_LABELS_EN } from '../../features/featured/card-style'
 import { setSiteSettings } from '../../features/site-settings/use-site-settings'
 import { FloatingBarView } from '../../components/landing/FloatingBarView'
+import { HeaderFooterSection } from './HeaderFooterSection'
 import { useTx } from '@/features/i18n/use-tx'
 
 const inputClass =
@@ -221,7 +222,7 @@ export function SiteSettingsPage() {
           {tx('Pengaturan Situs', 'Site Settings')}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          {tx('Atur bar melayang di bagian bawah halaman publik dan judul serta ikon tab browser.', 'Set the floating bar at the bottom of the public pages and the browser tab title and icon.')}
+          {tx('Atur menu atas, footer, bar melayang di bagian bawah halaman publik, serta judul dan ikon tab browser.', 'Set the top menu, the footer, the floating bar at the bottom of the public pages, and the browser tab title and icon.')}
         </p>
       </div>
 
@@ -235,6 +236,8 @@ export function SiteSettingsPage() {
           {notice}
         </div>
       )}
+
+      <HeaderFooterSection />
 
       {/* ---------------- Floating bar ---------------- */}
       <section aria-labelledby="bar-heading" className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6">

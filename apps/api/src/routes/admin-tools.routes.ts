@@ -8,6 +8,7 @@ import {
   validateBrowserTab,
   validateCats,
   validateGift,
+  validateHeaderFooter,
   validateFeaturedProductInput,
   validateFloatingBar,
   validateQrCodeInput,
@@ -242,6 +243,15 @@ export const createAdminToolsRoutes = (dependencies: AdminToolsRoutesDependencie
       await repository.saveSiteSetting('gift', parsed.value)
       return { status: 'success', settings: await repository.getSiteSettings() }
     }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Site settings'], summary: 'Save the gift settings' } })
+    .put('/api/admin/site-settings/header-footer', async ({ body, set }: any) => {
+      const parsed = validateHeaderFooter(body)
+      if (!parsed.ok) {
+        set.status = 400
+        return { status: 'badRequest', message: 'Menu atas / footer belum valid.', errors: parsed.errors }
+      }
+      await repository.saveSiteSetting('headerFooter', parsed.value)
+      return { status: 'success', settings: await repository.getSiteSettings() }
+    }, { requireRole: ['admin'], body: t.Any(), detail: { tags: ['Site settings'], summary: 'Save the top menu and footer' } })
     // ---- Admin: share previews ---------------------------------------------
     .get('/api/admin/share-previews', async () => ({ status: 'success', previews: await repository.listSharePreviews() }),
       { requireRole: ['admin'], detail: { tags: ['Share previews'], summary: 'List link previews' } })

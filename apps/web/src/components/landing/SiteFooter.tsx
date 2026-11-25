@@ -1,11 +1,16 @@
 import { ExternalLink, Instagram, Linkedin, Mail, MessageCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { clinicBranches, contact, createWhatsAppLink, defaultContactMessage } from '@/data/contact'
+import { clinicBranches, defaultContactMessage } from '@/data/contact'
+import { useSiteSettings } from '@/features/site-settings/use-site-settings'
+import { SiteLink } from './SiteLink'
 
 export function SiteFooter() {
-  const { t } = useTranslation()
-  const whatsappUrl = createWhatsAppLink(defaultContactMessage)
+  const { t, i18n } = useTranslation()
+  const isEnglish = i18n.resolvedLanguage?.startsWith('en') ?? true
+  const text = (label: { id: string; en: string }) => (isEnglish ? label.en || label.id : label.id)
+  const { footer } = useSiteSettings().headerFooter
+  const whatsappUrl = `https://wa.me/${footer.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(defaultContactMessage)}`
 
   return (
     <footer className="border-t border-white/10 bg-secondary px-5 py-12 text-white lg:px-8">
@@ -15,25 +20,25 @@ export function SiteFooter() {
           <Link className="inline-block outline-none focus-visible:ring-2 focus-visible:ring-primary" to="/">
             <img alt="Attentive.id" className="h-auto w-36" height="144" loading="lazy" src="/images/figma/attentive-logo.webp" width="528" />
           </Link>
-          <p className="mt-3 max-w-xs text-xs font-[450] leading-relaxed text-white/80">{t('homepage.footer.statement')}</p>
+          <p className="mt-3 max-w-xs text-xs font-[450] leading-relaxed text-white/80">{text(footer.statement)}</p>
         </div>
 
         {/* Explore Links */}
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">{t('homepage.footer.explore')}</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">{text(footer.exploreHeading)}</h2>
           <div className="mt-3 grid gap-1.5 text-xs font-medium text-white/80">
-            <a className="inline-flex min-h-7 items-center hover:text-white" href="/#support">{t('homepage.nav.support')}</a>
-            <a className="inline-flex min-h-7 items-center hover:text-white" href="/#psychologists">{t('homepage.nav.psychologists')}</a>
-            <a className="inline-flex min-h-7 items-center hover:text-white" href="/#locations">{t('homepage.nav.locations', 'Lokasi')}</a>
-            <a className="inline-flex min-h-7 items-center hover:text-white" href="/#faq">{t('homepage.nav.faq')}</a>
-            <Link className="inline-flex min-h-7 items-center hover:text-white" to="/articles">{t('homepage.nav.articles', 'Artikel')}</Link>
+            {footer.exploreLinks.filter((link) => link.visible).map((link) => (
+              <SiteLink className="inline-flex min-h-7 items-center hover:text-white" key={link.id} url={link.url}>
+                {text(link.label)}
+              </SiteLink>
+            ))}
           </div>
         </div>
 
         {/* Location Linked Titles */}
         <div>
           <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-            {t('homepage.footer.locations', 'Lokasi Praktik')}
+            {text(footer.locationsHeading)}
           </h2>
           <div className="mt-3 grid gap-1.5 text-xs font-medium text-white/80">
             {clinicBranches.map((branch) => {
@@ -64,31 +69,39 @@ export function SiteFooter() {
         {/* Contact Links */}
         <div id="contact">
           <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-            {t('homepage.footer.contact', 'Kontak')}
+            {text(footer.contactHeading)}
           </h2>
           <div className="mt-3 grid gap-1.5 text-xs font-medium text-white/80">
-            <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={whatsappUrl} rel="noopener noreferrer" target="_blank">
-              <MessageCircle aria-hidden="true" className="size-3.5 text-primary" />
-              <span>{contact.whatsapp.displayNumber}</span>
-            </a>
-            <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.instagram} rel="noopener noreferrer" target="_blank">
-              <Instagram aria-hidden="true" className="size-3.5 text-primary" />
-              <span>Instagram: @attentive.id</span>
-            </a>
-            <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.linkedin} rel="noopener noreferrer" target="_blank">
-              <Linkedin aria-hidden="true" className="size-3.5 text-primary" />
-              <span>LinkedIn: Attentive.id</span>
-            </a>
-            <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={contact.social.email}>
-              <Mail aria-hidden="true" className="size-3.5 text-primary" />
-              <span>contact@attentiveid.com</span>
-            </a>
+            {footer.whatsappNumber && (
+              <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={whatsappUrl} rel="noopener noreferrer" target="_blank">
+                <MessageCircle aria-hidden="true" className="size-3.5 text-primary" />
+                <span>{footer.whatsappNumber}</span>
+              </a>
+            )}
+            {footer.instagramUrl && (
+              <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={footer.instagramUrl} rel="noopener noreferrer" target="_blank">
+                <Instagram aria-hidden="true" className="size-3.5 text-primary" />
+                <span>{footer.instagramLabel || 'Instagram'}</span>
+              </a>
+            )}
+            {footer.linkedinUrl && (
+              <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={footer.linkedinUrl} rel="noopener noreferrer" target="_blank">
+                <Linkedin aria-hidden="true" className="size-3.5 text-primary" />
+                <span>{footer.linkedinLabel || 'LinkedIn'}</span>
+              </a>
+            )}
+            {footer.email && (
+              <a className="inline-flex min-h-7 items-center gap-2 hover:text-white" href={`mailto:${footer.email}`}>
+                <Mail aria-hidden="true" className="size-3.5 text-primary" />
+                <span>{footer.email}</span>
+              </a>
+            )}
           </div>
         </div>
       </div>
 
       <p className="mx-auto mt-8 max-w-7xl border-t border-white/10 pt-4 text-[0.7rem] font-medium text-white/60">
-        © {new Date().getFullYear()} Attentive.id. {t('homepage.footer.rights')}
+        © {new Date().getFullYear()} {text(footer.copyright)}
       </p>
     </footer>
   )
