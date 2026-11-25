@@ -2,7 +2,8 @@ import { describe, expect, it } from 'bun:test';
 import { Elysia } from 'elysia';
 import type { FeedbackReport, FeedbackSubmission, UserDto } from '@attentiveid/shared';
 import { createTokenService } from '../security/token-service';
-import type { FeedbackRepository } from '../repositories/feedback.repository';
+import type { FeedbackRepository, FeedbackUpload } from '../repositories/feedback.repository';
+import type { DriveRequests } from '../services/drive-reports';
 import { createFeedbackRoutes } from './feedback.routes';
 
 const tokenService = createTokenService({ jwtSecret: 'feedback_test_secret_that_is_long_enough_123456' });
@@ -19,13 +20,35 @@ const make = () => {
     const created: FeedbackSubmission[] = [];
     const done: Array<[string, boolean]> = [];
     const deleted: string[] = [];
+    const uploads: FeedbackUpload[][] = [];
+    const stored = new Map<string, FeedbackReport>();
+    const copied: string[] = [];
     const repository: FeedbackRepository = {
-        create: async (value) => { created.push(value); },
+        create: async (value, files) => {
+            created.push(value);
+            uploads.push(files);
+            stored.set(ID, {
+                ...value, id: ID, createdAt: '2026-11-25T09:43:00Z', doneAt: null, driveFolderId: null, driveError: null,
+                files: files.map((file) => ({ name: file.name, size: file.data.length }))
+            });
+            return { id: ID };
+        },
         list: async () => [] as FeedbackReport[],
+        get: async (id) => stored.get(id) ?? null,
+        pendingFiles: async () => uploads[uploads.length - 1] ?? [],
+        pendingBytes: async () => 0,
+        markCopied: async (_id, folderId) => { copied.push(folderId); },
+        markCopyFailed: async (id, error) => { const report = stored.get(id); if (report) report.driveError = error; },
         setDone: async (id, value) => { done.push([id, value]); return id === ID; },
         delete: async (id) => { deleted.push(id); return id === ID; }
     };
+    const driven: Array<{ folderName: string; names: string[] }> = [];
+    const driveRequests: DriveRequests = {
+        ensureRequestFolder: async () => 'top',
+        saveRequest: async (input) => { driven.push({ folderName: input.folderName, names: input.files.map((file) => file.name) }); return { folderId: 'folder-1' }; }
+    };
     const app = new Elysia().use(createFeedbackRoutes({
+        driveRequests,
         tokenService,
         userRepository: { findById: async (id: string) => users.get(id) ?? null },
         feedbackRepository: repository,
@@ -37,7 +60,13 @@ const make = () => {
             headers: { ...headers, 'content-type': 'application/json' },
             body: body === undefined ? undefined : JSON.stringify(body)
         }));
-    return { call, created, done, deleted };
+    const upload = (files: File[]) => {
+        const form = new FormData();
+        for (const [key, value] of Object.entries(good)) form.append(key, value);
+        for (const file of files) form.append('files', file);
+        return app.handle(new Request('http://localhost/api/public/feedback', { method: 'POST', body: form }));
+    };
+    return { call, created, done, deleted, uploads, driven, copied, upload };
 };
 
 const good = { kind: 'bug', name: 'Dina', message: 'Tombol di halaman layanan tidak bisa diklik.', page: '/our-services' };
@@ -48,6 +77,27 @@ describe('feedback', () => {
         expect((await call('POST', '/api/public/feedback', {}, { ...good, name: ' ' })).status).toBe(400);
         expect((await call('POST', '/api/public/feedback', {}, good)).status).toBe(201);
         expect(created).toEqual([good]);
+    });
+
+    it('accepts attached files and copies them, with the request, into its own Drive folder', async () => {
+        const { upload, uploads, driven, copied } = make();
+        const png = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2])], '../../layar.png');
+        const same = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 3])], 'layar.png');
+        expect((await upload([png, same])).status).toBe(201);
+        expect(uploads[0].map((file) => file.name)).toEqual(['layar.png', '2-layar.png']);
+        await Bun.sleep(20);
+        expect(driven).toEqual([{ folderName: '2026-11-25 1643 - Bug - Dina (11111111)', names: ['Request.txt', 'layar.png', '2-layar.png'] }]);
+        expect(copied).toEqual(['folder-1']);
+    });
+
+    it('accepts a single file, and refuses wrong types, disguised content and too many files', async () => {
+        const { upload, created } = make();
+        const text = (name: string, body = 'halo') => new File([body], name);
+        expect((await upload([text('catatan.txt')])).status).toBe(201);
+        expect((await upload([text('virus.exe')])).status).toBe(400);
+        expect((await upload([text('palsu.png')])).status).toBe(400);
+        expect((await upload([text('a.txt'), text('b.txt'), text('c.txt'), text('d.txt')])).status).toBe(400);
+        expect(created).toHaveLength(1);
     });
 
     it('drops bot submissions and slows repeated ones', async () => {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { FeedbackReport } from '@attentiveid/shared'
-import { Check, RotateCcw, Trash2 } from 'lucide-react'
+import { Check, ExternalLink, Paperclip, RotateCcw, Trash2, UploadCloud } from 'lucide-react'
 import { useAuth } from '@/features/auth/auth-context'
 import { isOwnerUser } from '@/features/auth/owner'
-import { deleteFeedback, listFeedback, setFeedbackDone } from '@/features/feedback/service'
+import { copyFeedbackToDrive, deleteFeedback, listFeedback, setFeedbackDone } from '@/features/feedback/service'
 import { useTx } from '@/features/i18n/use-tx'
 
 type Filter = 'open' | 'done' | 'all'
@@ -47,6 +47,19 @@ export function FeedbackReportsPage() {
     void act(report.id, () => setFeedbackDone(report.id, done), (current) =>
       current.map((item) => (item.id === report.id ? { ...item, doneAt: done ? new Date().toISOString() : null } : item)),
     )
+  }
+
+  const copy = async (report: FeedbackReport) => {
+    setBusy(report.id)
+    setError(null)
+    try {
+      const updated = await copyFeedbackToDrive(report.id)
+      setReports((current) => current?.map((item) => (item.id === report.id ? updated : item)) ?? current)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : tx('Gagal menyalin ke Drive.', 'Failed to copy to Drive.'))
+    } finally {
+      setBusy(null)
+    }
   }
 
   const remove = (report: FeedbackReport) => {
@@ -114,7 +127,45 @@ export function FeedbackReportsPage() {
                   {report.doneAt && <span className="font-semibold text-emerald-700">· {tx('Selesai', 'Done')} {when(report.doneAt)}</span>}
                 </div>
                 <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-800">{report.message}</p>
+                {report.files.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {report.files.map((file) => (
+                      <li className="flex items-center gap-1.5 text-xs text-slate-600" key={file.name}>
+                        <Paperclip aria-hidden="true" className="size-3.5 shrink-0" />
+                        <span className="break-all">{file.name}</span>
+                        <span className="shrink-0 text-slate-400">{file.size < 1024 * 1024 ? `${Math.ceil(file.size / 1024)} KB` : `${(file.size / 1024 / 1024).toFixed(1)} MB`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {report.driveFolderId ? (
+                  <a
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-navy-800 underline"
+                    href={`https://drive.google.com/drive/folders/${encodeURIComponent(report.driveFolderId)}`}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <ExternalLink aria-hidden="true" className="size-3.5" />
+                    {tx('Buka folder di Drive', 'Open the Drive folder')}
+                  </a>
+                ) : (
+                  <p className="mt-2 text-xs text-amber-700">
+                    {tx('Belum ada di Drive.', 'Not in Drive yet.')}
+                    {report.driveError && <span className="break-all"> {report.driveError}</span>}
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {!report.driveFolderId && (
+                    <button
+                      className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      disabled={busy === report.id}
+                      onClick={() => void copy(report)}
+                      type="button"
+                    >
+                      <UploadCloud aria-hidden="true" className="size-4" />
+                      {tx('Salin ke Drive', 'Copy to Drive')}
+                    </button>
+                  )}
                   <button
                     className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-navy-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-800 disabled:opacity-60"
                     disabled={busy === report.id}

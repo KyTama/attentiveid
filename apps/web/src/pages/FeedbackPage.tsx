@@ -1,9 +1,12 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
+  FEEDBACK_FILE_TYPES,
+  FEEDBACK_MAX_FILES,
   FEEDBACK_MESSAGE_MAX,
   FEEDBACK_NAME_MAX,
   FEEDBACK_PAGE_MAX,
+  feedbackFilesProblem,
   validateFeedback,
   type FeedbackErrors,
   type FeedbackKind,
@@ -36,6 +39,7 @@ export function FeedbackPage() {
   const [page, setPage] = useState(from.startsWith('/') && from !== '/feedback' ? from.slice(0, FEEDBACK_PAGE_MAX) : '')
   const [message, setMessage] = useState('')
   const [website, setWebsite] = useState('')
+  const [files, setFiles] = useState<File[]>([])
   const [errors, setErrors] = useState<FeedbackErrors>({})
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'failed' | 'rateLimited'>('idle')
 
@@ -49,24 +53,34 @@ export function FeedbackPage() {
     }
   }, [title])
 
+  const fileProblem = feedbackFilesProblem(files)
+  const fileProblemText = {
+    count: tx(`Maksimal ${FEEDBACK_MAX_FILES} berkas.`, `At most ${FEEDBACK_MAX_FILES} files.`),
+    type: tx('Jenis berkas tidak didukung.', 'This file type is not supported.'),
+    empty: tx('Ada berkas yang kosong.', 'A file is empty.'),
+    size: tx('Satu berkas maksimal 5 MB.', 'Each file can be up to 5 MB.'),
+    total: tx('Total semua berkas maksimal 7 MB.', 'All files together can be up to 7 MB.'),
+  }
+
   // The shared rules answer in Indonesian; say the same in English when the page is in English.
   const shown = (field: keyof FeedbackErrors) => {
     if (!errors[field]) return undefined
     if (!isEn) return errors[field]
-    return { kind: 'Choose a type.', name: 'Please write your name (2 to 80 characters).', message: 'Please write 10 to 2000 characters.', page: 'Too long.' }[field]
+    return { kind: 'Choose a type.', name: 'Please write your name (2 to 80 characters).', message: 'Please write 10 to 2000 characters.', page: 'Too long.', files: 'These files could not be accepted. Check their type and size.' }[field]
   }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     const values = { kind, name, message, page }
     const checked = validateFeedback(values)
+    if (fileProblem) return
     if (!checked.ok) {
       setErrors(checked.errors)
       return
     }
     setErrors({})
     setState('sending')
-    const result = await sendFeedback({ ...checked.value, website })
+    const result = await sendFeedback({ ...checked.value, website }, files)
     if (result.status === 'success') return setState('sent')
     if (result.status === 'invalid') setErrors(result.errors)
     setState(result.status === 'invalid' ? 'idle' : result.status)
@@ -85,6 +99,7 @@ export function FeedbackPage() {
               className="mt-3 cursor-pointer text-sm font-semibold underline"
               onClick={() => {
                 setMessage('')
+                setFiles([])
                 setState('idle')
               }}
               type="button"
@@ -126,6 +141,28 @@ export function FeedbackPage() {
               </Field>
               <Field error={shown('message')} label={tx('Ceritakan', 'What happened, or your idea')}>
                 <textarea className={`${fieldClass} min-h-36`} maxLength={FEEDBACK_MESSAGE_MAX} onChange={(e) => setMessage(e.target.value)} required value={message} />
+              </Field>
+
+              <Field
+                error={(fileProblem && fileProblemText[fileProblem]) || shown('files')}
+                label={tx('Lampiran (boleh dikosongkan)', 'Attachments (optional)')}
+              >
+                <input
+                  accept={Object.keys(FEEDBACK_FILE_TYPES).map((extension) => `.${extension}`).join(',')}
+                  className={`${fieldClass} file:mr-3 file:cursor-pointer file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white`}
+                  multiple
+                  onChange={(e) => {
+                    setFiles(Array.from(e.target.files ?? []))
+                    setErrors((current) => ({ ...current, files: undefined }))
+                  }}
+                  type="file"
+                />
+                <span className="mt-1 block text-xs font-normal text-secondary/70">
+                  {tx(
+                    'Maks 3 berkas, 5 MB per berkas, total 7 MB: gambar, PDF, video MP4/MOV, Word, Excel, PowerPoint, TXT. Jangan unggah data klien.',
+                    'Up to 3 files, 5 MB each, 7 MB together: images, PDF, MP4/MOV video, Word, Excel, PowerPoint, TXT. Do not upload client data.',
+                  )}
+                </span>
               </Field>
 
               {/* Honeypot: real people never see or fill this. */}

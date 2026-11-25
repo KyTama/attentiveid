@@ -12,6 +12,7 @@ import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
 import { createFeedbackRoutes } from './routes/feedback.routes';
+import type { DriveRequests } from './services/drive-reports';
 import { createFeedbackRepository, type FeedbackRepository } from './repositories/feedback.repository';
 import { createAssessmentsRoutes } from './routes/assessments.routes';
 import { createAccountSettingsRoutes } from './routes/account-settings.routes';
@@ -46,6 +47,8 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     freeSessionRepository?: FreeSessionRepository;
     prayersRepository?: PrayersRepository;
     feedbackRepository?: FeedbackRepository;
+    /** Copies website bug reports and update requests into Drive (optional). */
+    driveRequests?: DriveRequests;
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
     /** Saves released reports to Google Drive (optional). */
@@ -224,6 +227,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 feedbackRepository: dependencies.feedbackRepository || createFeedbackRepository(dependencies.db),
+                driveRequests: dependencies.driveRequests,
             }))
             .use(createPrayersRoutes({
                 tokenService: dependencies.tokenService,

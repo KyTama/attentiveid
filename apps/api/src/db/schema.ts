@@ -981,9 +981,23 @@ export const feedbackReports = pgTable('feedback_reports', {
     message: text('message').notNull(),
     page: text('page').default('').notNull(),
     doneAt: timestamp('done_at', { withTimezone: true, mode: 'string' }),
+    driveFolderId: text('drive_folder_id'),
+    driveError: text('drive_error'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 }, (table) => [
     index('feedback_reports_created_at_idx').on(table.createdAt)
+]);
+
+// Files attached to a report. The content is kept only until it is in Google Drive, then emptied to save disk space.
+export const feedbackFiles = pgTable('feedback_files', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportId: uuid('report_id').notNull().references(() => feedbackReports.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data')
+}, (table) => [
+    index('feedback_files_report_idx').on(table.reportId)
 ]);
 
 export const siteSettings = pgTable('site_settings', {
