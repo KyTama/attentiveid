@@ -5,6 +5,7 @@ deploy/ingress/nginx.conf
 deploy/ingress/traefik.yml
 scripts/deploy/activate-ingress.sh
 scripts/deploy/bootstrap-host.sh
+scripts/deploy/cleanup-images.sh
 scripts/deploy/deploy.sh
 scripts/deploy/healthcheck.sh
 scripts/deploy/install-release-bundle.sh

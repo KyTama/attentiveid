@@ -47,10 +47,18 @@ else
 fi
 env_file="$candidate_env"
 
+# Old images fill the disk (that stops the database), so clear them before downloading new ones.
+cleanup_images() {
+    "$deploy_root/current/scripts/deploy/cleanup-images.sh" --root "$deploy_root" ||
+        printf 'Image cleanup failed; carrying on with the deployment\n' >&2
+}
+cleanup_images
+
 docker compose --profile maintenance --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" pull
 docker compose --profile maintenance --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" run --rm --no-deps migrate
 docker compose --env-file "$env_file" -f "$deploy_root/current/compose.production.yml" up -d --remove-orphans --wait
 "$deploy_root/current/scripts/deploy/healthcheck.sh" --web-url "$PUBLIC_WEB_URL" --api-url "$PUBLIC_API_URL"
 mv "$candidate_env" "$manifest_dir/current.env"
+cleanup_images
 
 printf 'Deployment passed: %s\n' "$ENVIRONMENT"
