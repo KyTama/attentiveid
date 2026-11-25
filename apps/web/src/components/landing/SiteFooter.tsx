@@ -1,6 +1,6 @@
 import { ExternalLink, Instagram, Linkedin, Mail, MessageCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { clinicBranches, defaultContactMessage } from '@/data/contact'
 import { useSiteSettings } from '@/features/site-settings/use-site-settings'
 import { SiteLink } from './SiteLink'
@@ -10,6 +10,7 @@ export function SiteFooter() {
   const isEnglish = i18n.resolvedLanguage?.startsWith('en') ?? true
   const text = (label: { id: string; en: string }) => (isEnglish ? label.en || label.id : label.id)
   const { footer } = useSiteSettings().headerFooter
+  const { pathname } = useLocation()
   const whatsappUrl = `https://wa.me/${footer.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(defaultContactMessage)}`
 
   return (
@@ -100,9 +101,14 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-7xl border-t border-white/10 pt-4 text-[0.7rem] font-medium text-white/60">
-        © {new Date().getFullYear()} {text(footer.copyright)}
-      </p>
+      <div className="mx-auto mt-8 flex max-w-7xl flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4 text-[0.7rem] font-medium text-white/60">
+        <p>
+          © {new Date().getFullYear()} {text(footer.copyright)}
+        </p>
+        <Link className="inline-flex min-h-7 items-center underline hover:text-white" to={`/feedback?from=${encodeURIComponent(pathname)}`}>
+          {isEnglish ? 'Report a bug or suggest something' : 'Laporkan bug atau beri saran'}
+        </Link>
+      </div>
     </footer>
   )
 }

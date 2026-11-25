@@ -56,6 +56,8 @@ export const PAGE_ACCESS: AccessRow[] = [
   { id: 'wiki', area: 'Wiki', label: 'Wiki MHCU', route: '/dashboard/wiki/mhcu', superadmin: 'all', admin: 'all', psychologist: 'all' },
   { id: 'account', area: 'Pengaturan', label: 'Pengaturan Akun', route: '/dashboard/account', superadmin: 'all', admin: 'all', psychologist: 'all', note: 'Setiap orang hanya mengubah akunnya sendiri.' },
   { id: 'users', area: 'Pengaturan', label: 'Manajemen Staff', route: '/dashboard/users', superadmin: 'all', admin: 'all', psychologist: 'none', note: 'Admin tidak bisa membuat atau mengubah akun Superadmin.' },
+  { id: 'reports', area: 'Experimental', label: 'Laporan Bug & Saran', route: '/dashboard/experimental/reports', superadmin: 'all', admin: 'none', psychologist: 'none', note: 'Hanya akun pemilik (superadmin pada daftar Experimental).' },
+  { id: 'updates', area: 'Pengaturan', label: 'Riwayat Update', route: '/dashboard/updates', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'system-map', area: 'Experimental', label: 'System Map', route: '/dashboard/experimental/system-map', superadmin: 'all', admin: 'all', psychologist: 'none', note: 'Hanya akun yang masuk daftar Experimental.' },
 ]
 

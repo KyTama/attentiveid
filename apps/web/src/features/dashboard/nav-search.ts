@@ -34,6 +34,8 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/assessments/mhcu/settings': 'mhcu settings prices promo package alert level e-mail automatic assign release pengaturan harga promo paket peringatan level email otomatis tugaskan rilis',
   '/dashboard/prayers': 'prayers doa pengunjung moderation hide approve gift hadiah let there be light kirim doa moderasi sembunyikan setujui',
   '/dashboard/qr-generator': 'qr code barcode logo attentive scan poster print tools qr code barcode logo attentive kode scan poster cetak alat bantu',
+  '/dashboard/experimental/reports': 'bug report suggestion feedback error issue done laporan bug saran masukan kendala error selesai keluhan website',
+  '/dashboard/updates': 'update log history changelog release version changes riwayat update pembaruan perubahan versi rilis catatan',
   '/dashboard/experimental/system-map': 'system map roles access permissions table who can role admin superadmin psychologist peran akses izin tabel hak siapa boleh system map diagram connections architecture peta sistem diagram koneksi hubungan arsitektur',
 }
 

@@ -11,6 +11,8 @@ import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes'
 import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
+import { createFeedbackRoutes } from './routes/feedback.routes';
+import { createFeedbackRepository, type FeedbackRepository } from './repositories/feedback.repository';
 import { createAssessmentsRoutes } from './routes/assessments.routes';
 import { createAccountSettingsRoutes } from './routes/account-settings.routes';
 import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
@@ -43,6 +45,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     db?: any;
     freeSessionRepository?: FreeSessionRepository;
     prayersRepository?: PrayersRepository;
+    feedbackRepository?: FeedbackRepository;
     assessmentsRepository?: AssessmentsRepository;
     assessmentsSheetSync?: AssessmentsSheetSync;
     /** Saves released reports to Google Drive (optional). */
@@ -216,6 +219,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 mailer: dependencies.mailer,
                 alertEmail: dependencies.alertEmail,
                 siteOrigin: dependencies.frontendOrigin,
+            }))
+            .use(createFeedbackRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                feedbackRepository: dependencies.feedbackRepository || createFeedbackRepository(dependencies.db),
             }))
             .use(createPrayersRoutes({
                 tokenService: dependencies.tokenService,

@@ -34,12 +34,15 @@ import {
   Menu,
   X,
   LogOut,
+  Bug,
+  History,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { IdleSessionGuard } from '../auth/IdleSessionGuard'
 import { LanguageSwitcher } from '../common/LanguageSwitcher'
 import { useTranslation } from 'react-i18next'
 import { canAccessExperimental } from '../../features/experimental/access'
+import { isOwnerUser } from '../../features/auth/owner'
 import { NAV_KEYWORDS, type NavSearchItem } from '../../features/dashboard/nav-search'
 import { NavSearch } from './NavSearch'
 import { useApplyAdminTheme, useThemeChoice } from '../../features/dashboard/admin-theme'
@@ -302,6 +305,12 @@ export function DashboardLayout() {
           show: true,
         },
         {
+          to: '/dashboard/updates',
+          label: t('dashboard.navUpdates', 'Riwayat Update'),
+          icon: <History className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
           to: '/dashboard/users',
           label: t('dashboard.navUsers', 'Manajemen Staff'),
           icon: <ShieldCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
@@ -315,6 +324,13 @@ export function DashboardLayout() {
       icon: <FlaskConical className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
       show: showExperimental,
       children: [
+        {
+          to: '/dashboard/experimental/reports',
+          label: t('dashboard.navReports', 'Laporan Bug & Saran'),
+          icon: <Bug className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          // Reading reports is for the owner account only (the server checks it again).
+          show: isOwnerUser(user),
+        },
         {
           to: '/dashboard/experimental/forms',
           label: t('dashboard.navForms', 'Forms'),
