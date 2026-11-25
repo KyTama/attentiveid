@@ -30,6 +30,7 @@ import { uploadLandingImage } from '../../features/content/service'
 import {
   buildMergedHeroSlideItems,
   getDefaultHeroSlideItems,
+  getHeroStepsGridLayout,
   HERO_SLIDE_LAYOUT_LABELS,
   resolveHeroSlides,
 } from '../../features/content/hero-slides'
@@ -521,6 +522,50 @@ export function LandingCmsPage() {
       slideItems,
     } as any
     setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroSlideSteps = (
+    slideIndex: number,
+    updater: (steps: LocalizedText[]) => LocalizedText[]
+  ) => {
+    const slideItems = getMergedHeroSlideItems()
+    const currentSteps = [...(slideItems[slideIndex]?.steps || [])]
+    slideItems[slideIndex] = {
+      ...slideItems[slideIndex],
+      steps: updater(currentSteps),
+    }
+    const newSections = [...content.sections]
+    newSections[activeSectionIndex] = {
+      ...activeSection,
+      slideItems,
+    } as LandingSection
+    setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroSlideStep = (
+    slideIndex: number,
+    stepIndex: number,
+    lang: 'id' | 'en',
+    value: string
+  ) => {
+    updateHeroSlideSteps(slideIndex, (steps) => {
+      const next = [...steps]
+      next[stepIndex] = {
+        ...(next[stepIndex] || { id: '', en: '' }),
+        [lang]: value,
+      }
+      return next
+    })
+  }
+
+  const addHeroSlideStep = (slideIndex: number) => {
+    updateHeroSlideSteps(slideIndex, (steps) =>
+      steps.length >= 5 ? steps : [...steps, { id: '', en: '' }]
+    )
+  }
+
+  const removeHeroSlideStep = (slideIndex: number, stepIndex: number) => {
+    updateHeroSlideSteps(slideIndex, (steps) => steps.filter((_, idx) => idx !== stepIndex))
   }
 
   const resetHeroSlidesToDefault = () => {
@@ -1496,6 +1541,42 @@ export function LandingCmsPage() {
                           {activeSimSlide.description}
                         </p>
 
+                        {activeSimSlide.layout === 'practice' && activeSimSlide.location && (
+                          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-[#7B8496]">
+                            <MapPin size={12} className="shrink-0 text-[#C08A2C]" />
+                            <span>{activeSimSlide.location}</span>
+                          </div>
+                        )}
+
+                        {activeSimSlide.layout === 'pet-garden' && activeSimSlide.note && (
+                          <div className="mt-2.5 rounded-lg border border-[#E8E1D5] bg-white px-2.5 py-1.5 text-[10.5px] text-[#7B8496]">
+                            {activeSimSlide.note}
+                          </div>
+                        )}
+
+                        {activeSimSlide.layout === 'big10' && activeSimSlide.steps && activeSimSlide.steps.length > 0 && (() => {
+                          const { colCount: simColCount, gridColsClass: simGridCols } = getHeroStepsGridLayout(
+                            activeSimSlide.steps.length
+                          )
+                          return (
+                            <div className={`mt-3 grid grid-cols-1 ${simGridCols} overflow-hidden rounded-xl border border-[#E8E1D5] bg-white`}>
+                              {activeSimSlide.steps.map((step, sIdx) => (
+                                <div
+                                  key={`${activeSimSlide.id}-sim-step-${sIdx}`}
+                                  className={`border-[#E8E1D5] ${sIdx > 0 ? 'border-t' : ''} ${
+                                    sIdx < simColCount ? 'sm:border-t-0' : 'sm:border-t'
+                                  } ${sIdx % simColCount === 0 ? 'sm:border-l-0' : 'sm:border-l'} px-2.5 py-2 text-[10.5px] leading-tight font-semibold text-[#14284B]`}
+                                >
+                                  <small className="mb-0.5 block text-[9.5px] font-bold text-[#C08A2C]">
+                                    {String(sIdx + 1).padStart(2, '0')}
+                                  </small>
+                                  <span>{step}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        })()}
+
                         <div className="mt-4 flex flex-wrap items-center gap-3">
                           <span
                             className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[11px] font-bold shadow-xs ${
@@ -2139,6 +2220,98 @@ export function LandingCmsPage() {
                                 onChange={(e) => updateHeroSlideField(safeHeroSlideIndex, 'note', 'en', e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
                               />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {(activeHeroSlideItem.layout === 'big10' || (activeHeroSlideItem.steps && activeHeroSlideItem.steps.length > 0)) && (
+                        <div className="pt-3 border-t border-slate-200 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <h5 className="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                                Kartu Langkah / Poin Ringkas Slide {safeHeroSlideIndex + 1} ({(activeHeroSlideItem.steps || []).length}/5)
+                              </h5>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Kotak langkah bernomor 01, 02, 03 yang tampil di bawah deskripsi slide.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => addHeroSlideStep(safeHeroSlideIndex)}
+                              disabled={(activeHeroSlideItem.steps || []).length >= 5}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-navy-700 text-white hover:bg-navy-800 disabled:opacity-50 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                            >
+                              <Plus className="size-3.5" />
+                              <span>Tambah Langkah</span>
+                            </button>
+                          </div>
+
+                          {(activeHeroSlideItem.steps || []).length === 0 ? (
+                            <div className="p-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-500">
+                              Belum ada kartu langkah. Klik &ldquo;Tambah Langkah&rdquo; jika ingin menampilkan 1–5 poin ringkas di slide ini.
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              {(activeHeroSlideItem.steps || []).map((step, stepIdx) => (
+                                <div
+                                  key={`slide-${safeHeroSlideIndex}-step-${stepIdx}`}
+                                  className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold text-[#9A5D02] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                                      Langkah {String(stepIdx + 1).padStart(2, '0')}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeHeroSlideStep(safeHeroSlideIndex, stepIdx)}
+                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 cursor-pointer"
+                                      aria-label={`Hapus langkah ${stepIdx + 1}`}
+                                    >
+                                      <Trash2 className="size-3.5" />
+                                      <span>Hapus</span>
+                                    </button>
+                                  </div>
+                                  <div className={languageView === 'both' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-2'}>
+                                    {(languageView === 'both' || languageView === 'id') && (
+                                      <div>
+                                        <label
+                                          htmlFor={`hero-slide-${safeHeroSlideIndex}-step-${stepIdx}-id`}
+                                          className="block text-[10px] font-semibold text-slate-500 mb-1"
+                                        >
+                                          Teks Langkah {String(stepIdx + 1).padStart(2, '0')} (ID)
+                                        </label>
+                                        <input
+                                          id={`hero-slide-${safeHeroSlideIndex}-step-${stepIdx}-id`}
+                                          type="text"
+                                          value={step.id || ''}
+                                          onChange={(e) => updateHeroSlideStep(safeHeroSlideIndex, stepIdx, 'id', e.target.value)}
+                                          placeholder={`Contoh: Langkah ${stepIdx + 1}`}
+                                          className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
+                                        />
+                                      </div>
+                                    )}
+                                    {(languageView === 'both' || languageView === 'en') && (
+                                      <div>
+                                        <label
+                                          htmlFor={`hero-slide-${safeHeroSlideIndex}-step-${stepIdx}-en`}
+                                          className="block text-[10px] font-semibold text-slate-500 mb-1"
+                                        >
+                                          Step {String(stepIdx + 1).padStart(2, '0')} Label (EN)
+                                        </label>
+                                        <input
+                                          id={`hero-slide-${safeHeroSlideIndex}-step-${stepIdx}-en`}
+                                          type="text"
+                                          value={step.en || ''}
+                                          onChange={(e) => updateHeroSlideStep(safeHeroSlideIndex, stepIdx, 'en', e.target.value)}
+                                          placeholder={`Example: Step ${stepIdx + 1}`}
+                                          className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-gold-500"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>

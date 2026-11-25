@@ -172,3 +172,16 @@
   1. Always generate a unique versioned filename (`buildVersionedMediaFilename(slug, ext)`) for uploaded CMS media so every replacement produces a distinct URL, bypasses stale HTTP/CDN caches, and keeps historical revision attachments immutable.
   2. Always clear `e.target.value = ''` immediately after reading `e.target.files?.[0]` in file input `onChange` handlers.
   3. In async React upload handlers (`LandingCmsPage`, `PsychologistsCmsPage`), use functional state updaters (`setContent((prev) => ...)`), track and revoke `blob:` URLs, and revert preview state on upload failure.
+
+---
+
+## Lesson: Hero Slide CMS Schema vs Editor & Visual Renderer Parity (2026-11-25)
+
+- **Symptom:** Editing Hero Highlight Card #3 (`layout: "big10"`) in `LandingCmsPage` updated headline, description, CTAs, and uploaded a custom visual, yet the 3-step cards (`01 Take the Big 10`...) stayed frozen and the hardcoded Big 10 collage kept rendering instead of the uploaded image.
+- **Root Causes:**
+  1. `HeroSlideItemSchema` and `HomepageHero.tsx` supported `slideItems[].steps` (0–5 items), but `LandingCmsPage.tsx` omitted inputs and Live Simulator preview for `steps`.
+  2. `HeroSlideVisual.tsx` (`layout === 'big10'`) ignored `slide.imageSrc` / custom `slide.media` and unconditionally rendered the hardcoded Big 10 collage.
+- **Rules:**
+  1. Whenever a slide layout exposes CMS-owned fields (`steps`, `location`, `note`, `media`), ensure `LandingCmsPage.tsx` renders both the bilingual editor controls and the Live Simulator preview for them.
+  2. Every layout in `HeroSlideVisual.tsx` must honor `slide.hasCustomMedia` so uploading a custom photo/graphic replaces hardcoded collage graphics instead of being silently ignored.
+

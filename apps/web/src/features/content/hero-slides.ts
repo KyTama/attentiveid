@@ -25,6 +25,9 @@ export interface ResolvedHeroSlide {
   secondaryCtaUrl: string
   imageSrc: string
   imageAlt: string
+  hasCustomMedia: boolean
+  imageWidth?: number
+  imageHeight?: number
 }
 
 export const HERO_SLIDE_LAYOUT_LABELS: Record<HeroSlideLayout, string> = {
@@ -254,9 +257,9 @@ export function resolveHeroSlides(
       tag: item.tag?.[locale] || item.tag?.id || '',
       headline: item.headline?.[locale] || item.headline?.id || '',
       description: item.description?.[locale] || item.description?.id || '',
-      location: item.location?.[locale] || item.location?.id,
-      note: item.note?.[locale] || item.note?.id,
-      steps: item.steps?.map((s) => s[locale] || s.id),
+      location: item.location?.[locale] || item.location?.id || item.location?.en,
+      note: item.note?.[locale] || item.note?.id || item.note?.en,
+      steps: item.steps?.map((s) => s[locale] || s.id || s.en),
       chips: item.chips,
       primaryCta: item.primaryCta?.[locale] || item.primaryCta?.id || '',
       primaryCtaUrl: legacyBriefUrl(layout, item.primaryCtaUrl),
@@ -264,6 +267,15 @@ export function resolveHeroSlides(
       secondaryCtaUrl: legacyBriefUrl(layout, item.secondaryCtaUrl),
       imageSrc,
       imageAlt: item.media?.alt?.[locale] || fallbackMedia.alt[locale],
+      hasCustomMedia: Boolean(customRef),
+      imageWidth: item.media?.width,
+      imageHeight: item.media?.height,
     }
   })
+}
+
+export function getHeroStepsGridLayout(stepCount: number) {
+  const colCount = stepCount === 1 ? 1 : stepCount === 2 || stepCount === 4 ? 2 : 3
+  const gridColsClass = colCount === 1 ? 'sm:grid-cols-1' : colCount === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
+  return { colCount, gridColsClass }
 }

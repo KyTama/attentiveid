@@ -203,4 +203,95 @@ describe('Landing & Testimonials CMS Page Components', () => {
       expect(stories.items.map((i: any) => i.position)).toEqual([0, 1, 2])
     })
   })
+
+  it('LandingCmsPage allows editing, adding, and removing Slide 3 steps and persists them on Save Draft', async () => {
+    let savedDraftBody: {
+      sections: Array<{
+        key: string
+        slideItems?: Array<{ steps?: Array<{ id: string; en: string }> }>
+      }>
+    } | null = null
+
+    const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      if (url.endsWith('/api/auth/refresh')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success', accessToken: 'valid.jwt.token', user: adminUser }),
+        })
+      }
+      if (url.endsWith('/api/admin/landing/draft') && init?.method === 'PUT') {
+        savedDraftBody = JSON.parse(String(init.body))
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success', revision: { content: savedDraftBody } }),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ status: 'success', content: validLandingContent }),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard/landing']}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Landing Content Editor')).toBeDefined()
+    })
+
+    // Select Slide 03 in the slide selector tabs
+    fireEvent.click(screen.getAllByRole('button', { name: /03\s+Big 10 \+ sesi gratis/i })[0])
+
+    const step1IdInput = (await screen.findByLabelText('Teks Langkah 01 (ID)')) as HTMLInputElement
+    const step1EnInput = screen.getByLabelText('Step 01 Label (EN)') as HTMLInputElement
+    expect(step1IdInput.value).toBe('Ikuti Tes Big 10')
+    expect(step1EnInput.value).toBe('Take the Big 10')
+
+    // Edit step 1 ID & EN
+    fireEvent.change(step1IdInput, {
+      target: { value: 'Latihan fokus 30 detik' },
+    })
+    fireEvent.change(step1EnInput, {
+      target: { value: 'Try the 30-second focus demo' },
+    })
+
+    // Remove step 3 and add a new step
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 3' }))
+    expect(screen.queryByLabelText('Teks Langkah 03 (ID)')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Tambah Langkah/i }))
+    fireEvent.change(screen.getByLabelText('Teks Langkah 03 (ID)'), { target: { value: 'Lihat skor demo' } })
+    fireEvent.change(screen.getByLabelText('Step 03 Label (EN)'), { target: { value: 'See demo score' } })
+
+    fireEvent.click(screen.getByText('Simpan Draft'))
+    await waitFor(() => {
+      expect(savedDraftBody).not.toBeNull()
+      const hero = savedDraftBody?.sections.find((s) => s.key === 'hero')
+      expect(hero?.slideItems?.[2]?.steps).toEqual([
+        { id: 'Latihan fokus 30 detik', en: 'Try the 30-second focus demo' },
+        { id: 'Dapatkan Tipe Attentive', en: 'Get your Attentive Type' },
+        { id: 'Lihat skor demo', en: 'See demo score' },
+      ])
+    })
+
+    // Also verify deleting all steps down to 0 persists empty steps array
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 3' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 2' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus langkah 1' }))
+    expect(screen.getByText(/Belum ada kartu langkah/i)).toBeDefined()
+
+    savedDraftBody = null
+    fireEvent.click(screen.getByText('Simpan Draft'))
+    await waitFor(() => {
+      expect(savedDraftBody).not.toBeNull()
+      const hero = savedDraftBody?.sections.find((s) => s.key === 'hero')
+      expect(hero?.slideItems?.[2]?.steps).toEqual([])
+    })
+  })
 })
