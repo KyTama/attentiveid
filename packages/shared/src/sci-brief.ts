@@ -24,6 +24,8 @@ export interface SciBriefInput {
   releaseAt: string
   status: SciBriefStatus
   previewPages: number
+  /** True: everyone can read the whole document. */
+  isFree: boolean
 }
 
 export type SciBriefField = keyof SciBriefInput
@@ -43,9 +45,12 @@ export interface SciBriefPublicDto {
   previewPages: number
   /** Relative URL of the public preview PDF, or null until a document is uploaded. */
   previewUrl: string | null
+  isFree: boolean
+  /** The whole document, only for a free brief that has one. */
+  documentUrl: string | null
 }
 
-export interface SciBriefAdminDto extends Omit<SciBriefPublicDto, 'previewUrl'> {
+export interface SciBriefAdminDto extends Omit<SciBriefPublicDto, 'previewUrl' | 'documentUrl'> {
   status: SciBriefStatus
   documentName: string | null
   hasDocument: boolean
@@ -114,6 +119,8 @@ export const validateSciBriefInput = (input: unknown): SciBriefValidationResult 
       releaseAt: new Date(releaseMs).toISOString(),
       status: status as SciBriefStatus,
       previewPages: previewPagesRaw,
+      // Locked unless the box is clearly ticked.
+      isFree: raw.isFree === true,
     },
   }
 }

@@ -31,6 +31,8 @@ import { createPrayersRepository, type PrayersRepository } from './repositories/
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
+import { createTeamRoutes } from './routes/team.routes';
+import { createTeamRepository, type TeamRepository } from './repositories/team.repository';
 import { createAdminToolsRoutes } from './routes/admin-tools.routes';
 import { createAdminToolsRepository, type AdminToolsRepository } from './repositories/admin-tools.repository';
 import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
@@ -63,6 +65,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     paymentSecret?: string;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
+    teamRepository?: TeamRepository;
     adminToolsRepository?: AdminToolsRepository;
     bookingRepository?: BookingRepository;
     triggerOutboxDrain?: () => Promise<unknown>;
@@ -286,6 +289,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 mailer: dependencies.mailer,
                 paymentSecret: dependencies.paymentSecret,
                 siteOrigin: dependencies.frontendOrigin,
+            }))
+            .use(createTeamRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                teamRepository: dependencies.teamRepository || createTeamRepository(dependencies.db),
             }))
             .use(createSciBriefsRoutes({
                 tokenService: dependencies.tokenService,

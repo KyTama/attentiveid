@@ -15,6 +15,7 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/featured-products': 'featured cards products campaign order start end date schedule icon label gold unggulan featured kartu campaign produk ltbl let there be light social world tanggal mulai selesai masa tampil menu',
   '/dashboard/share-previews': 'thumbnail link share preview image title description social media whatsapp thumbnail link share bagikan whatsapp preview gambar og judul deskripsi sosial media',
   '/dashboard/site-settings': 'pengaturan situs menu atas navigasi header footer bagian bawah kontak whatsapp instagram linkedin email hak cipta top menu navigation contact links copyright bar melayang floating bar tombol cepat sesi gratis booking tes kepribadian big 10 logo lampu attend judul tab browser favicon ikon tab site settings quick bar browser tab title icon',
+  '/dashboard/team': 'team members staff scientist counselor operations advisor practitioners names tim anggota staf ilmuwan konselor operasional penasihat praktisi nama',
   '/dashboard/psychologists': 'psychologists profile bio photo quote featured order directory status active inactive team psikolog profil bio foto kutipan featured urutan direktori status aktif nonaktif tim',
   '/dashboard/profile': 'my profile account own bio profil saya akun diri sendiri psikolog bio',
   '/dashboard/articles': 'articles publications writing journal publish draft artikel publikasi tulisan jurnal tulis terbit draft',

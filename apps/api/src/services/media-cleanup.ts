@@ -10,6 +10,12 @@ const notMentionedInContent = sql`not exists (
   where position(${schema.mediaObjects.objectKey} in coalesce(${schema.landingSectionTranslations.contact}, '')) > 0
 )`;
 
+// The same for a team member's photo, which is only an address on the team row.
+const notUsedByTeam = sql`not exists (
+  select 1 from ${schema.teamMembers}
+  where position(${schema.mediaObjects.objectKey} in coalesce(${schema.teamMembers.photoUrl}, '')) > 0
+)`;
+
 const ABANDONED_UPLOAD_TTL_MS = 60 * 60 * 1000; // 1 hour grace window for active editing sessions
 const CLEANUP_THROTTLE_MS = 10 * 60 * 1000;
 
@@ -48,7 +54,8 @@ export async function sweepAbandonedVersionedMedia(
           select 1 from ${schema.mediaAttachments}
           where ${schema.mediaAttachments.mediaObjectId} = ${schema.mediaObjects.id}
         )`,
-        notMentionedInContent
+        notMentionedInContent,
+        notUsedByTeam
       ))
       .limit(50);
 
@@ -72,7 +79,8 @@ export async function sweepAbandonedVersionedMedia(
           select 1 from ${schema.mediaAttachments}
           where ${schema.mediaAttachments.mediaObjectId} = ${schema.mediaObjects.id}
         )`,
-        notMentionedInContent
+        notMentionedInContent,
+        notUsedByTeam
       ));
 
     return deletedIds.length;

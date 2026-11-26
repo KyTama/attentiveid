@@ -19,6 +19,8 @@ const brief = (overrides: Record<string, unknown> = {}) => ({
   totalPages: 8,
   previewPages: 3,
   previewUrl: '/api/content/sci-briefs/being-liked/preview.pdf',
+  isFree: false,
+  documentUrl: null,
   ...overrides,
 })
 
@@ -71,6 +73,14 @@ describe('public Sci-Brief pages', () => {
     expect(email.getAttribute('href')).toMatch(/^mailto:contact@attentiveid\.com\?subject=/)
     expect(decodeURIComponent(email.getAttribute('href') as string)).toMatch(/Being Liked|Menjadi Disukai/)
     expect(whatsapp.getAttribute('href')).toMatch(/^https:\/\/wa\.me\/\d+\?text=/)
+  })
+
+  it('shows the whole document of a free brief with no lock', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respond({ status: 'success', brief: brief({ isFree: true, documentUrl: '/api/content/sci-briefs/being-liked/document.pdf' }) })))
+    renderAt('/sci-brief/being-liked')
+    const shown = await screen.findByTestId('pdf-preview')
+    expect(shown.getAttribute('data-url')).toContain('/document.pdf')
+    expect(screen.queryByRole('button', { name: /request to see more|minta akses/i })).toBeNull()
   })
 
   it('does not lock anything when the whole document fits in the preview', async () => {

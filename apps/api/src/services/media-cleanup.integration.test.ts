@@ -26,6 +26,8 @@ describeIntegration('cleaning up abandoned uploads', () => {
         const english = key('hero-slide-3-en');
         const part = key('hero-part');
         const abandoned = key('hero-slide-4');
+        const team = key('team-photo');
+        const [member] = await database.insert(schema.teamMembers).values({ team: 'ops', name: 'Foto', photoUrl: `/${team}` }).returning({ id: schema.teamMembers.id });
 
         await database.insert(schema.landingAggregates).values({}).onConflictDoNothing();
         const [aggregate] = await database.select().from(schema.landingAggregates).limit(1);
@@ -44,16 +46,17 @@ describeIntegration('cleaning up abandoned uploads', () => {
         });
 
         const old = new Date(Date.now() - 3 * 3600_000).toISOString();
-        await database.insert(schema.mediaObjects).values([slide, english, part, abandoned].map((objectKey) => ({
+        await database.insert(schema.mediaObjects).values([slide, english, part, team, abandoned].map((objectKey) => ({
             objectKey, width: 10, height: 10, altId: '', altEn: '', mimeType: 'image/png', createdAt: old, updatedAt: old
         })));
 
         await sweepAbandonedVersionedMedia(database as never, { force: true });
 
         const left = await database.select({ objectKey: schema.mediaObjects.objectKey }).from(schema.mediaObjects)
-            .where(inArray(schema.mediaObjects.objectKey, [slide, english, part, abandoned]));
-        expect(left.map((row) => row.objectKey).sort()).toEqual([slide, english, part].sort());
-        await database.delete(schema.mediaObjects).where(inArray(schema.mediaObjects.objectKey, [slide, english, part]));
+            .where(inArray(schema.mediaObjects.objectKey, [slide, english, part, team, abandoned]));
+        expect(left.map((row) => row.objectKey).sort()).toEqual([slide, english, part, team].sort());
+        await database.delete(schema.mediaObjects).where(inArray(schema.mediaObjects.objectKey, [slide, english, part, team]));
+        await database.delete(schema.teamMembers).where(eq(schema.teamMembers.id, member!.id));
         await database.delete(schema.landingSectionTranslations).where(eq(schema.landingSectionTranslations.sectionId, section.id));
     });
 });

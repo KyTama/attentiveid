@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { Elysia } from 'elysia'
 import { PDFDocument } from 'pdf-lib'
-import type { SciBriefAdminDto, SciBriefInput, UserDto } from '@attentiveid/shared'
+import { isSciBriefPublic, type SciBriefAdminDto, type SciBriefInput, type UserDto } from '@attentiveid/shared'
 import { createTokenService } from '../security/token-service'
 import { createSciBriefsRoutes } from './sci-briefs.routes'
 import type { SciBriefsRepository } from '../repositories/sci-briefs.repository'
@@ -40,14 +40,15 @@ const memoryRepository = () => {
   let counter = 0
   const asPublic = (b: SciBriefAdminDto) => ({
     id: b.id, slug: b.slug, title: b.title, summary: b.summary, periodMonth: b.periodMonth,
-    releaseAt: b.releaseAt, totalPages: b.totalPages, previewPages: b.previewPages,
+    releaseAt: b.releaseAt, totalPages: b.totalPages, previewPages: b.previewPages, isFree: b.isFree,
+    documentUrl: b.isFree && files.get(b.id)?.preview ? `/api/content/sci-briefs/${b.slug}/document.pdf` : null,
     previewUrl: files.get(b.id)?.preview ? `/api/content/sci-briefs/${b.slug}/preview.pdf` : null,
   })
   const visible = (b: SciBriefAdminDto) => b.status === 'published' && Date.parse(b.releaseAt) <= NOW.getTime()
   const toDto = (id: string, input: SciBriefInput, previous?: SciBriefAdminDto): SciBriefAdminDto => ({
     id, slug: input.slug, title: { id: input.titleId, en: input.titleEn },
     summary: { id: input.summaryId, en: input.summaryEn }, periodMonth: input.periodMonth,
-    releaseAt: input.releaseAt, totalPages: previous?.totalPages ?? null, previewPages: input.previewPages,
+    releaseAt: input.releaseAt, totalPages: previous?.totalPages ?? null, previewPages: input.previewPages, isFree: input.isFree,
     status: input.status, documentName: previous?.documentName ?? null,
     hasDocument: Boolean(files.get(id)?.full), createdAt: '2026-10-01T00:00:00.000Z', updatedAt: '2026-10-01T00:00:00.000Z',
   })
@@ -68,6 +69,10 @@ const memoryRepository = () => {
       files.set(id, { preview: doc.previewBytes, full: doc.fullBytes })
       const dto = { ...prev, documentName: doc.documentName, totalPages: doc.totalPages, previewPages: doc.previewPages, hasDocument: true }
       briefs.set(id, dto); return dto
+    },
+    getFreeDocumentBySlug: async (slug, now = new Date()) => {
+      const brief = [...briefs.values()].find((b) => b.slug === slug)
+      return brief?.isFree && isSciBriefPublic(brief, now) ? (files.get(brief.id)?.full ?? null) : null
     },
     savePreview: async (id, previewPages, bytes) => { files.set(id, { ...files.get(id), preview: bytes }); const prev = briefs.get(id); if (prev) briefs.set(id, { ...prev, previewPages }) },
     getFile: async (id, kind) => { const data = files.get(id)?.[kind]; return data ? { data, documentName: briefs.get(id)?.documentName ?? null } : null },
@@ -161,6 +166,24 @@ describe('Sci-Brief routes', () => {
     expect(updated.status).toBe(200)
     const preview = await app.handle(new Request('http://localhost/api/content/sci-briefs/being-liked/preview.pdf'))
     expect((await PDFDocument.load(new Uint8Array(await preview.arrayBuffer()))).getPageCount()).toBe(2)
+  })
+
+  it('opens the whole document only for a free, released brief, and locks it again', async () => {
+    const { app, bearer, post, upload } = setup()
+    const brief = (await (await post('/api/admin/sci-briefs', bearer(admin), input())).json()).brief
+    await upload(brief.id, await makePdf(6))
+    const open = () => app.handle(new Request('http://localhost/api/content/sci-briefs/being-liked/document.pdf'))
+    const setFree = (isFree: boolean) => app.handle(new Request(`http://localhost/api/admin/sci-briefs/${brief.id}`, {
+      method: 'PUT', headers: bearer(admin), body: JSON.stringify(input({ isFree })),
+    }))
+
+    expect((await open()).status).toBe(404)
+    await setFree(true)
+    const full = await open()
+    expect(full.headers.get('cache-control')).toBe('no-store')
+    expect((await PDFDocument.load(new Uint8Array(await full.arrayBuffer()))).getPageCount()).toBe(6)
+    await setFree(false)
+    expect((await open()).status).toBe(404)
   })
 
   it('rejects a document that is not a PDF', async () => {

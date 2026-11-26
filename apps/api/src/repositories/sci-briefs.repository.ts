@@ -17,6 +17,8 @@ export interface SciBriefsRepository {
   listPublic(now?: Date): Promise<SciBriefPublicDto[]>
   getPublicBySlug(slug: string, now?: Date): Promise<SciBriefPublicDto | null>
   getPreviewBySlug(slug: string, now?: Date): Promise<Buffer | null>
+  /** The whole document, only when the brief is released and marked free. */
+  getFreeDocumentBySlug(slug: string, now?: Date): Promise<Buffer | null>
   listAdmin(): Promise<SciBriefAdminDto[]>
   getAdminById(id: string): Promise<SciBriefAdminDto | null>
   create(input: SciBriefInput): Promise<SciBriefAdminDto>
@@ -40,6 +42,9 @@ const toPublic = (row: BriefRow, hasPreview: boolean): SciBriefPublicDto => ({
   totalPages: row.totalPages,
   previewPages: row.previewPages,
   previewUrl: hasPreview ? `/api/content/sci-briefs/${row.slug}/preview.pdf` : null,
+  isFree: row.isFree,
+  // The preview and the full file are saved together, so a preview means there is a full file too.
+  documentUrl: row.isFree && hasPreview ? `/api/content/sci-briefs/${row.slug}/document.pdf` : null,
 })
 
 const toAdmin = (row: BriefRow, hasDocument: boolean): SciBriefAdminDto => ({
@@ -51,6 +56,7 @@ const toAdmin = (row: BriefRow, hasDocument: boolean): SciBriefAdminDto => ({
   releaseAt: toIso(row.releaseAt),
   totalPages: row.totalPages,
   previewPages: row.previewPages,
+  isFree: row.isFree,
   status: row.status as SciBriefAdminDto['status'],
   documentName: row.documentName,
   hasDocument,
@@ -81,6 +87,7 @@ export const createSciBriefsRepository = (database: typeof defaultDb = defaultDb
     releaseAt: input.releaseAt,
     status: input.status,
     previewPages: input.previewPages,
+    isFree: input.isFree,
   })
 
   return {
@@ -118,6 +125,16 @@ export const createSciBriefsRepository = (database: typeof defaultDb = defaultDb
         .select({ data: sciBriefFiles.data })
         .from(sciBriefFiles)
         .where(and(eq(sciBriefFiles.briefId, row.id), eq(sciBriefFiles.kind, 'preview')))
+        .limit(1)
+      return file ? Buffer.from(file.data) : null
+    },
+
+    async getFreeDocumentBySlug(slug, now = new Date()) {
+      const [file] = await database
+        .select({ data: sciBriefFiles.data })
+        .from(sciBriefFiles)
+        .innerJoin(sciBriefs, eq(sciBriefs.id, sciBriefFiles.briefId))
+        .where(and(eq(sciBriefs.slug, slug), publicWhere(now), eq(sciBriefs.isFree, true), eq(sciBriefFiles.kind, 'full')))
         .limit(1)
       return file ? Buffer.from(file.data) : null
     },
