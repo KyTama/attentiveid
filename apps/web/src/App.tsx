@@ -51,6 +51,7 @@ import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
 import { BookingsCmsPage } from './pages/dashboard/BookingsCmsPage'
 import { SciBriefCmsPage } from './pages/dashboard/SciBriefCmsPage'
+import { TeamCmsPage } from './pages/dashboard/TeamCmsPage'
 import { ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
 import { SystemMapPage } from './pages/dashboard/SystemMapPage'
 import { EXPERIMENTAL_EMAILS } from './features/experimental/access'
@@ -136,6 +137,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <PsychologistsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="team"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TeamCmsPage />
               </ProtectedRoute>
             }
           />

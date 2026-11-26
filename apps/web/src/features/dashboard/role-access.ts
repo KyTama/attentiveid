@@ -46,6 +46,7 @@ export const PAGE_ACCESS: AccessRow[] = [
   { id: 'share', area: 'Konten Website', label: 'Thumbnail Link', route: '/dashboard/share-previews', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'site-settings', area: 'Konten Website', label: 'Pengaturan Situs', route: '/dashboard/site-settings', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'psychologists', area: 'Tim', label: 'Psychologists', route: '/dashboard/psychologists', superadmin: 'all', admin: 'all', psychologist: 'none' },
+  { id: 'team', area: 'Tim', label: 'Tim di Website', route: '/dashboard/team', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'profile', area: 'Tim', label: 'Profil Saya', route: '/dashboard/profile', superadmin: 'all', admin: 'all', psychologist: 'own', note: 'Psikolog hanya mengubah profilnya sendiri.' },
   { id: 'articles', area: 'Riset', label: 'Articles Management', route: '/dashboard/articles', superadmin: 'all', admin: 'all', psychologist: 'own', note: 'Psikolog mengelola artikelnya sendiri.' },
   { id: 'sci-brief', area: 'Riset', label: 'Sci-Brief', route: '/dashboard/sci-brief', superadmin: 'all', admin: 'all', psychologist: 'none' },

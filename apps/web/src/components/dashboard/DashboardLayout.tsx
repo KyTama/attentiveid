@@ -210,6 +210,12 @@ export function DashboardLayout() {
           show: isAdmin,
         },
         {
+          to: '/dashboard/team',
+          label: t('dashboard.navTeam', 'Tim di Website'),
+          icon: <Users className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
           to: '/dashboard/profile',
           label: t('dashboard.navProfile', 'Profil Saya'),
           icon: <UserCheck className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,

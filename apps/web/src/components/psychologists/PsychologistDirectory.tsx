@@ -17,6 +17,7 @@ import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { PsychologistDirectoryCard } from './PsychologistDirectoryCard'
 import { PsychologistDirectoryFilters } from './PsychologistDirectoryFilters'
 import { PsychologistDirectoryReassurance } from './PsychologistDirectoryReassurance'
+import { TeamSections } from './TeamSections'
 
 function DirectoryLoadingState() {
   const { t } = useTranslation()
@@ -218,6 +219,7 @@ export function PsychologistDirectory() {
           </div>
         </section>
 
+        <TeamSections />
         <PsychologistDirectoryReassurance />
       </main>
       <SiteFooter />

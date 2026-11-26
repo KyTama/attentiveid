@@ -6,7 +6,7 @@ import { formatSciBriefMonth } from '@attentiveid/shared'
 import { SiteHeader } from '@/components/landing/SiteHeader'
 import { SiteFooter } from '@/components/landing/SiteFooter'
 import { LockedPages } from '@/components/sci-brief/LockedPages'
-import { getSciBrief, sciBriefPreviewUrl, type SciBriefLookup } from '@/features/sci-brief/service'
+import { getSciBrief, sciBriefDocumentUrl, sciBriefPreviewUrl, type SciBriefLookup } from '@/features/sci-brief/service'
 
 const PdfPreview = lazy(() => import('@/components/sci-brief/PdfPreview').then((module) => ({ default: module.PdfPreview })))
 
@@ -35,6 +35,7 @@ export function SciBriefDetailPage() {
   }, [title])
 
   const previewUrl = brief ? sciBriefPreviewUrl(brief) : null
+  const freeUrl = brief ? sciBriefDocumentUrl(brief) : null
   const hiddenPages = brief && brief.totalPages !== null ? Math.max(0, brief.totalPages - brief.previewPages) : 0
 
   return (
@@ -77,7 +78,16 @@ export function SciBriefDetailPage() {
               </header>
 
               <div className="mt-8">
-                {previewUrl ? (
+                {freeUrl ? (
+                  <>
+                    <a className="mb-3 inline-block text-sm font-semibold text-secondary underline" href={freeUrl} rel="noopener noreferrer" target="_blank">
+                      {locale === 'id' ? 'Buka PDF lengkap (gratis)' : 'Open the full PDF (free)'}
+                    </a>
+                    <Suspense fallback={<div className="aspect-[3/4] w-full animate-pulse rounded-xl bg-[#eee8df]" />}>
+                      <PdfPreview url={freeUrl} />
+                    </Suspense>
+                  </>
+                ) : previewUrl ? (
                   <>
                     <p className="mb-3 text-xs font-medium uppercase tracking-wider text-secondary/50">
                       {t('sciBrief.previewNotice', { count: result.brief.previewPages })}

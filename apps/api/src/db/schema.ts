@@ -740,6 +740,8 @@ export const sciBriefs = pgTable('sci_briefs', {
     documentName: text('document_name'),
     totalPages: integer('total_pages'),
     previewPages: integer('preview_pages').default(3).notNull(),
+    /** Free briefs show the whole document to everyone; the others stay locked after the preview pages. */
+    isFree: boolean('is_free').default(false).notNull(),
     ...auditTimestamps
 }, (table) => [
     uniqueIndex('sci_briefs_slug_unique').on(table.slug),
@@ -747,6 +749,21 @@ export const sciBriefs = pgTable('sci_briefs', {
     check('sci_briefs_status_valid', sql`${table.status} in ('draft', 'published')`),
     check('sci_briefs_period_month_format', sql`${table.periodMonth} ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'`),
     check('sci_briefs_preview_pages_range', sql`${table.previewPages} between 1 and 10`)
+]);
+
+/** People shown under the team sub-sections on the Our Practitioners page. */
+export const teamMembers = pgTable('team_members', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    team: text('team').notNull(),
+    name: text('name').notNull(),
+    roleId: text('role_id').default('').notNull(),
+    roleEn: text('role_en').default('').notNull(),
+    photoUrl: text('photo_url'),
+    sortOrder: integer('sort_order').default(0).notNull(),
+    visible: boolean('visible').default(true).notNull(),
+    ...auditTimestamps
+}, (table) => [
+    check('team_members_team_valid', sql`${table.team} in ('psych', 'scientist', 'counsel', 'ops', 'advisor')`)
 ]);
 
 export const sciBriefFiles = pgTable('sci_brief_files', {

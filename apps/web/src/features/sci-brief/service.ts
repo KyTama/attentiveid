@@ -11,6 +11,9 @@ export const SCI_BRIEF_REQUEST_WHATSAPP = import.meta.env.VITE_FREE_SESSION_WA_N
 export const sciBriefPreviewUrl = (brief: Pick<SciBriefPublicDto, 'previewUrl'>) =>
   brief.previewUrl ? `${apiBaseUrl()}${brief.previewUrl}` : null
 
+export const sciBriefDocumentUrl = (brief: Pick<SciBriefPublicDto, 'documentUrl'>) =>
+  brief.documentUrl ? `${apiBaseUrl()}${brief.documentUrl}` : null
+
 // ---- Public ---------------------------------------------------------------
 
 export async function listSciBriefs(): Promise<SciBriefPublicDto[] | null> {
