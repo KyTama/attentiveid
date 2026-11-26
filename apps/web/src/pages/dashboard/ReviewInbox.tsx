@@ -64,7 +64,7 @@ export function ReviewInbox({ onShow, taken }: Props) {
             disabled={busy || !state.configured}
             onClick={() => void run(async () => {
               const result = await call('/import', { method: 'POST' })
-              return `${result.added} baru, ${result.duplicates} sudah ada, ${result.skipped} baris tidak lengkap.`
+              return `${result.added} baru, ${result.duplicates} sudah ada, ${result.skipped} baris tidak lengkap.${result.waiting ? ` ${result.waiting} lagi menunggu: tekan Impor sekarang sekali lagi.` : ''}`
             })}
             type="button"
           >

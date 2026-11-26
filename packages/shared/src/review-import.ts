@@ -1,8 +1,8 @@
 /** Reviews pasted into a Google Sheet while Google API access is pending. Everything from the sheet is plain text. */
 export const REVIEW_SHEET_HEADERS = ['Nama / inisial', 'Ulasan (Indonesia)', 'Review (English, optional)', 'Tanggal (optional)'] as const
 
-/** Per import and per cell, so a wrong paste cannot flood the portal. */
-export const REVIEW_LIMITS = { rows: 500, name: 120, quote: 1000 } as const
+/** New reviews per import and size per cell, so a wrong paste cannot flood the portal. `rows` bounds how far the sheet is read. */
+export const REVIEW_LIMITS = { newPerImport: 500, rows: 20_000, name: 120, quote: 1000 } as const
 
 export interface ReviewDraft {
   name: string

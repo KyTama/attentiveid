@@ -10,6 +10,8 @@ export interface ReviewImportResult {
   added: number
   duplicates: number
   skipped: number
+  /** New ones beyond this import's limit; the next import takes them. */
+  waiting: number
 }
 
 export interface ReviewSheet {
@@ -26,8 +28,8 @@ export const createReviewSheet = (repository: Pick<ReviewImportsRepository, 'add
     const sheet = await drive.readRequestSheet({ title: REVIEW_SHEET_TITLE, tab: REVIEW_SHEET_TAB, headers: [...REVIEW_SHEET_HEADERS], maxRows: REVIEW_LIMITS.rows })
     spreadsheetId = sheet.spreadsheetId
     const { reviews, skipped } = parseReviewRows(sheet.rows)
-    const added = await repository.add(reviews)
-    return { added, duplicates: reviews.length - added, skipped }
+    const { added, waiting } = await repository.add(reviews)
+    return { added, duplicates: reviews.length - added - waiting, skipped, waiting }
   }
 
   return {

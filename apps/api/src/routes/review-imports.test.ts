@@ -13,17 +13,18 @@ describe('review sheet rows', () => {
     expect(skipped).toBe(1)
     expect(reviews[0]).toEqual({ name: 'Rina', quoteId: 'Bagus sekali <b>ya</b>', quoteEn: 'Bagus sekali <b>ya</b>' })
     expect([reviews[1]!.name.length, reviews[1]!.quoteId.length, reviews[1]!.quoteEn]).toEqual([REVIEW_LIMITS.name, REVIEW_LIMITS.quote, 'Good'])
-    expect(parseReviewRows(Array.from({ length: 900 }, (_, i) => [`n${i}`, 'q'])).reviews.length).toBe(REVIEW_LIMITS.rows)
+    // The whole sheet is read, not just the first 500 rows.
+    expect(parseReviewRows(Array.from({ length: 900 }, (_, i) => [`n${i}`, 'q'])).reviews.length).toBe(900)
   })
 
   it('reports what was added and what was already known', async () => {
     const stored: ReviewDraft[] = []
     const sheet = createReviewSheet(
-      { add: async (reviews) => { const fresh = reviews.filter((r) => !stored.some((s) => s.name === r.name)); stored.push(...fresh); return fresh.length } },
+      { add: async (reviews) => { const fresh = reviews.filter((r) => !stored.some((s) => s.name === r.name)); stored.push(...fresh); return { added: fresh.length, waiting: 0 } } },
       { readRequestSheet: async () => ({ spreadsheetId: 'abc', rows: [['A', 'x'], ['B', 'y'], ['C', '']] }) },
     )
-    expect(await sheet.importNow()).toEqual({ added: 2, duplicates: 0, skipped: 1 })
-    expect(await sheet.importNow()).toEqual({ added: 0, duplicates: 2, skipped: 1 })
+    expect(await sheet.importNow()).toEqual({ added: 2, duplicates: 0, skipped: 1, waiting: 0 })
+    expect(await sheet.importNow()).toEqual({ added: 0, duplicates: 2, skipped: 1, waiting: 0 })
     expect(sheet.url()).toContain('/d/abc')
   })
 })
