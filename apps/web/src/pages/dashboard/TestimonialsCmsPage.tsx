@@ -16,6 +16,7 @@ import {
   Quote,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
+import { ReviewInbox } from './ReviewInbox'
 import {
   generateSafeCmsId,
   getLandingContentMutationErrors,
@@ -114,6 +115,18 @@ export function TestimonialsCmsPage() {
 
     fetchLanding()
   }, [getAuthHeaders])
+
+  // Imported reviews put into the list. They leave the inbox only once the list is saved, so none is lost by leaving early.
+  const [takenReviews, setTakenReviews] = useState<string[]>([])
+  const markReviewsShown = () => {
+    for (const id of takenReviews) {
+      void fetch(`/api/admin/reviews/${id}`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'shown' }),
+      }).catch(() => undefined)
+    }
+  }
 
   // Open modal for new item
   const handleAddNew = () => {
@@ -282,6 +295,7 @@ export function TestimonialsCmsPage() {
       })
       const json = await res.json().catch(() => ({}))
       if (res.ok && json.status === 'success') {
+        markReviewsShown()
         setLandingContent(json.revision?.content ?? payload)
         setHasUnsavedChanges(false)
         setMessage({
@@ -338,6 +352,7 @@ export function TestimonialsCmsPage() {
 
       const resJson = await res.json().catch(() => ({}))
       if (res.ok && resJson.status === 'success') {
+        markReviewsShown()
         setLandingContent(resJson.content ?? payload)
         setHasUnsavedChanges(false)
         setMessage({
@@ -488,6 +503,20 @@ export function TestimonialsCmsPage() {
           </div>
         </div>
       </div>
+
+      <ReviewInbox
+        onShow={(review) => {
+          setTestimonials((current) => [
+            // First in the list, so it is within the number shown on the homepage.
+            { id: generateSafeCmsId('story'), position: 0, title: { id: review.name, en: review.name }, description: { id: review.quoteId, en: review.quoteEn } },
+            ...current,
+          ].map((item, position) => ({ ...item, position })))
+          setTakenReviews((current) => [...current, review.id])
+          setHasUnsavedChanges(true)
+          setMessage({ type: 'success', text: 'Ditambahkan ke urutan teratas. Simpan draft, lalu terbitkan.' })
+        }}
+        taken={takenReviews}
+      />
 
       {/* Testimonials List */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">

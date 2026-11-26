@@ -12,6 +12,9 @@ import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
 import { createFeedbackRoutes } from './routes/feedback.routes';
+import { createReviewImportsRoutes } from './routes/review-imports.routes';
+import { createReviewImportsRepository, type ReviewImportsRepository } from './repositories/review-imports.repository';
+import type { ReviewSheet } from './services/review-sheet';
 import type { DriveRequests } from './services/drive-reports';
 import { createFeedbackRepository, type FeedbackRepository } from './repositories/feedback.repository';
 import { createAssessmentsRoutes } from './routes/assessments.routes';
@@ -45,6 +48,8 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     landingContentRepository?: any;
     contentTransitions?: any;
     db?: any;
+    reviewImportsRepository?: ReviewImportsRepository;
+    reviewSheet?: ReviewSheet;
     freeSessionRepository?: FreeSessionRepository;
     prayersRepository?: PrayersRepository;
     feedbackRepository?: FeedbackRepository;
@@ -194,6 +199,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 contentTransitions: dependencies.contentTransitions,
                 previewCapabilities: dependencies.previewCapabilities,
                 db: dependencies.db,
+            }))
+            .use(createReviewImportsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                reviewImportsRepository: dependencies.reviewImportsRepository || createReviewImportsRepository(dependencies.db),
+                reviewSheet: dependencies.reviewSheet,
             }))
             .use(createPsychologistsCmsRoutes({
                 tokenService: dependencies.tokenService,

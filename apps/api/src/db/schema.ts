@@ -113,6 +113,20 @@ export const landingSections = pgTable('landing_sections', {
     `)
 ]);
 
+/** Reviews read from the review Sheet. A row stays (also when dismissed) so the same review never comes back. */
+export const reviewImports = pgTable('review_imports', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sourceHash: text('source_hash').notNull(),
+    name: text('name').notNull(),
+    quoteId: text('quote_id').notNull(),
+    quoteEn: text('quote_en').notNull(),
+    status: text('status').default('new').notNull(),
+    importedAt: timestamp('imported_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('review_imports_source_hash_unique').on(table.sourceHash),
+    check('review_imports_status_valid', sql`${table.status} in ('new', 'shown', 'dismissed')`)
+]);
+
 export const landingSectionTranslations = pgTable('landing_section_translations', {
     id: uuid('id').defaultRandom().primaryKey(),
     sectionId: uuid('section_id').notNull().references(() => landingSections.id, { onDelete: 'restrict' }),
