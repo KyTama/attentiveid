@@ -973,7 +973,7 @@ export const assessmentPaymentProofs = pgTable('assessment_payment_proofs', {
     index('assessment_payment_proofs_submission_idx').on(table.submissionId)
 ]);
 
-// Bug reports and suggestions about the website (public form, read by the owner account only).
+// Bug reports and suggestions about the website (public form; admins read them in the portal).
 export const feedbackReports = pgTable('feedback_reports', {
     id: uuid('id').defaultRandom().primaryKey(),
     kind: text('kind').notNull(),
@@ -981,6 +981,8 @@ export const feedbackReports = pgTable('feedback_reports', {
     message: text('message').notNull(),
     page: text('page').default('').notNull(),
     doneAt: timestamp('done_at', { withTimezone: true, mode: 'string' }),
+    status: text('status').default('new').notNull(),
+    assignee: text('assignee').default('').notNull(),
     driveFolderId: text('drive_folder_id'),
     driveError: text('drive_error'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
@@ -995,9 +997,34 @@ export const feedbackFiles = pgTable('feedback_files', {
     name: text('name').notNull(),
     mimeType: text('mime_type').notNull(),
     byteSize: integer('byte_size').notNull(),
-    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data')
+    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data'),
+    /** Set when the file belongs to a note added in the portal, not to the original report. */
+    noteId: uuid('note_id').references(() => feedbackNotes.id, { onDelete: 'cascade' })
 }, (table) => [
     index('feedback_files_report_idx').on(table.reportId)
+]);
+
+// Notes added to a report in the portal.
+export const feedbackNotes = pgTable('feedback_notes', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportId: uuid('report_id').notNull().references(() => feedbackReports.id, { onDelete: 'cascade' }),
+    author: text('author').notNull(),
+    body: text('body').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('feedback_notes_report_idx').on(table.reportId)
+]);
+
+// What happened to each report (received, status changes, notes...).
+export const feedbackEvents = pgTable('feedback_events', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportId: uuid('report_id').notNull().references(() => feedbackReports.id, { onDelete: 'cascade' }),
+    actor: text('actor').default('').notNull(),
+    action: text('action').notNull(),
+    detail: text('detail').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('feedback_events_report_idx').on(table.reportId)
 ]);
 
 export const siteSettings = pgTable('site_settings', {

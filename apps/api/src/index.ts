@@ -11,6 +11,8 @@ import { createAssessmentsRepository } from './repositories/assessments.reposito
 import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createMailer } from './services/mailer';
 import { createDriveReports } from './services/drive-reports';
+import { createFeedbackSheet } from './services/feedback-sheet';
+import { createFeedbackRepository } from './repositories/feedback.repository';
 import { createMhcuOpsRepository } from './repositories/mhcu-ops.repository';
 import { createMhcuSettingsStore } from './services/mhcu-settings-store';
 import { processDueBookingOutbox } from './services/booking-outbox';
@@ -122,6 +124,11 @@ const driveReports = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOO
 // Make "Web App Development / Update Request" exist as soon as the server runs, before the first request arrives.
 void driveReports?.ensureRequestFolder().catch((error) => console.error('[feedback] Drive folder not ready:', error instanceof Error ? error.message : 'error'));
 
+// Feedback reports -> a Google Sheet beside "Update Request". Written once at start, then after every change.
+const feedbackRepository = createFeedbackRepository(db);
+const feedbackSheet = driveReports ? createFeedbackSheet(() => feedbackRepository.list(), driveReports) : undefined;
+void feedbackSheet?.sync();
+
 // Assessments (Mental Health Check-Up...) -> a PRIVATE Google Sheet. Only runs when ASSESSMENTS_SHEET_ID is set.
 const assessmentsRepository = createAssessmentsRepository(db);
 const assessmentsSheetSync = createAssessmentsSheetSync({
@@ -167,6 +174,8 @@ const app = createApp({
     assessmentsSheetSync,
     driveReports,
     driveRequests: driveReports,
+    feedbackRepository,
+    feedbackSheet,
     freeSessionRepository,
     freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',

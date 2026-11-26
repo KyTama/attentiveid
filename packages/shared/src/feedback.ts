@@ -1,4 +1,4 @@
-/** Bug reports and suggestions about the website, sent from /feedback and read by the owner account. */
+/** Bug reports and suggestions about the website, sent from /feedback; admins read them, a few named people work on them. */
 
 export const FEEDBACK_KINDS = ['bug', 'suggestion'] as const
 export type FeedbackKind = typeof FEEDBACK_KINDS[number]
@@ -49,16 +49,77 @@ export interface FeedbackSubmission {
   page: string
 }
 
+export const FEEDBACK_STATUSES = ['new', 'in_progress', 'done', 'canceled'] as const
+export type FeedbackStatus = typeof FEEDBACK_STATUSES[number]
+
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, { id: string; en: string }> = {
+  new: { id: 'Baru', en: 'New' },
+  in_progress: { id: 'Dikerjakan', en: 'On progress' },
+  done: { id: 'Selesai', en: 'Done' },
+  canceled: { id: 'Dibatalkan', en: 'Canceled' },
+}
+
+// Word lists for guessing the type, Indonesian and English. Plain rules on purpose: report text is not sent to any outside service.
+const BUG_WORDS = /\b(errors?|bugs?|broken|crash(es|ed)?|failed|fails|not working|does ?n[o']t work|can ?not|can't|blank|wrong|stuck|404|500|rusak|gagal|macet|salah|eror|tidak (bisa|muncul|jalan|berfungsi)|nggak (bisa|muncul|jalan)|ga(k)? ?(bisa|muncul|jalan)|belum bisa)\b/i
+const SUGGESTION_WORDS = /\b(suggest(ion)?|would be (nice|good|great)|please add|add (a|an|new)|need(s)? (a|an|to add)|feature|idea|tambah(kan|in)?|usul(an)?|saran|sebaiknya|ingin|pengen|perlu ada|mungkin bisa|kalau bisa|kalo bisa|klo bisa)\b/i
+
+/** The type the text clearly points to, or null when it points to both or neither. */
+export const guessFeedbackKind = (message: string): FeedbackKind | null => {
+  const bug = BUG_WORDS.test(message)
+  const suggestion = SUGGESTION_WORDS.test(message)
+  if (bug === suggestion) return null
+  return bug ? 'bug' : 'suggestion'
+}
+
+export const FEEDBACK_NOTE_MAX = 2000
+
+export interface FeedbackFileInfo {
+  name: string
+  size: number
+}
+
+export interface FeedbackNote {
+  id: string
+  createdAt: string
+  author: string
+  body: string
+  files: FeedbackFileInfo[]
+}
+
+export interface FeedbackEvent {
+  id: string
+  at: string
+  /** Who did it; empty for the website itself. */
+  actor: string
+  action: 'received' | 'auto_kind' | 'kind' | 'status' | 'assignee' | 'note'
+  detail: string
+}
+
 export interface FeedbackReport extends FeedbackSubmission {
   id: string
   createdAt: string
-  /** When the owner marked it done; null while it is open. */
+  status: FeedbackStatus
+  /** E-mail of the person processing it; empty when nobody has taken it. */
+  assignee: string
+  /** When it was marked done; null otherwise. */
   doneAt: string | null
-  files: Array<{ name: string; size: number }>
+  files: FeedbackFileInfo[]
+  notes: FeedbackNote[]
+  log: FeedbackEvent[]
   /** The report's folder in Drive; null until it has been copied there. */
   driveFolderId: string | null
   /** Why the last copy to Drive failed. */
   driveError: string | null
+}
+
+/** What the portal gets: the reports, plus what the signed-in account may do. */
+export interface FeedbackBoard {
+  reports: FeedbackReport[]
+  handlers: string[]
+  canHandle: boolean
+  canDelete: boolean
+  /** Link to the Google Sheet mirror; empty when there is none. */
+  sheetUrl: string
 }
 
 export type FeedbackField = keyof FeedbackSubmission | 'files'

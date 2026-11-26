@@ -37,6 +37,16 @@ export const readLastActivity = (fallback: number): number => {
   }
 }
 
+/** The saved time of the last activity, or 0 when there is none. */
+export const readStoredActivity = (): number => {
+  try {
+    const stored = Number(window.localStorage.getItem(ACTIVITY_STORAGE_KEY))
+    return Number.isFinite(stored) && stored > 0 ? stored : 0
+  } catch {
+    return 0
+  }
+}
+
 export const writeLastActivity = (time: number) => {
   try {
     window.localStorage.setItem(ACTIVITY_STORAGE_KEY, String(time))

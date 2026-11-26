@@ -298,13 +298,14 @@ export function AppRoutes({
             }
           />
           <Route
-            path="experimental/reports"
+            path="reports"
             element={
-              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <FeedbackReportsPage />
               </ProtectedRoute>
             }
           />
+          <Route path="experimental/reports" element={<Navigate to="/dashboard/reports" replace />} />
           <Route
             path="updates"
             element={

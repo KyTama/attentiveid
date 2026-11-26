@@ -25,7 +25,8 @@ export interface AuthTokenService {
     verifyAccessToken(token: string): JwtAccessTokenPayload;
     issueRefreshToken(userId: string, ttlSeconds?: number): Promise<{ refreshToken: string; expiresAt: string }>;
     verifyRefreshToken(token: string): Promise<RefreshTokenRecord>;
-    revokeRefreshToken(token: string): Promise<void>;
+    /** False when the token had already been used or revoked. */
+    revokeRefreshToken(token: string): Promise<boolean | void>;
     /** Signs the user out everywhere (used when a used refresh token is replayed). */
     revokeAllRefreshTokens?(userId: string): Promise<void>;
 }
@@ -39,6 +40,18 @@ export interface AuthDependencies {
 }
 
 const refreshCookieName = 'attentive_refresh';
+
+// A browser only deletes a cookie when the path matches the one it was set with.
+const clearRefreshCookie = (cookie: { set(options: Record<string, unknown>): unknown }) =>
+    cookie.set({
+        value: '',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/api/auth',
+        maxAge: 0,
+        expires: new Date(0)
+    });
 
 // A real argon2id hash of a random string nobody knows. Checking a password against it when the e-mail is unknown or the
 // account is not active makes that answer take as long as a real one, so response time does not reveal which e-mails exist.
@@ -133,13 +146,18 @@ export const createAuthRoutes = (dependencies: AuthDependencies) => {
             const user = await dependencies.userRepository.findById(tokenRecord.userId);
             if (!user || user.status !== 'active') {
                 await dependencies.tokenService.revokeRefreshToken(rawRefreshToken);
-                refreshCookie.remove();
+                clearRefreshCookie(refreshCookie);
                 set.status = 401;
                 return { status: 'unauthorized', message: 'User account inactive.' };
             }
 
             // Rotate refresh token
-            await dependencies.tokenService.revokeRefreshToken(rawRefreshToken);
+            // Only the request that actually used up the token gets a new one. The cookie is left alone for the others,
+            // because the winner has just given the browser a fresh one.
+            if ((await dependencies.tokenService.revokeRefreshToken(rawRefreshToken)) === false) {
+                set.status = 401;
+                return { status: 'unauthorized', message: 'Invalid or expired refresh token.' };
+            }
             const { refreshToken: newRefreshToken, expiresAt: refreshExpiresAt } = await dependencies.tokenService.issueRefreshToken(user.id);
             const { accessToken, expiresAt: accessExpiresAt } = dependencies.tokenService.issueAccessToken(user);
 
@@ -159,15 +177,17 @@ export const createAuthRoutes = (dependencies: AuthDependencies) => {
                 user
             };
         } catch (error) {
+            // Two tabs sending the same token moments apart is normal; the new cookie must survive it.
+            const justRotated = error instanceof RefreshTokenReuseError && Date.now() - Date.parse(error.revokedAt) <= REUSE_GRACE_MS;
             // A token that was already used is shown again: it may have been copied. Sign that user out everywhere.
-            if (error instanceof RefreshTokenReuseError && Date.now() - Date.parse(error.revokedAt) > REUSE_GRACE_MS) {
+            if (error instanceof RefreshTokenReuseError && !justRotated) {
                 try {
                     await dependencies.tokenService.revokeAllRefreshTokens?.(error.userId);
                 } catch {
                     // the request is refused either way
                 }
             }
-            refreshCookie.remove();
+            if (!justRotated) clearRefreshCookie(refreshCookie);
             set.status = 401;
             return { status: 'unauthorized', message: 'Invalid or expired refresh token.' };
         }
@@ -183,7 +203,7 @@ export const createAuthRoutes = (dependencies: AuthDependencies) => {
         if (rawRefreshToken && typeof rawRefreshToken === 'string') {
             await dependencies.tokenService.revokeRefreshToken(rawRefreshToken);
         }
-        refreshCookie.remove();
+        clearRefreshCookie(refreshCookie);
         return { status: 'success' };
     }, {
         detail: {
