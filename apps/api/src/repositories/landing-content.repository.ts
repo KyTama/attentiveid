@@ -45,6 +45,18 @@ const encodeHeroExtraPayload = (section: LandingSectionInput): string | null => 
     return Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 };
 
+const decodeTestimonialDisplay = (raw: string | null | undefined): { homepageCount: number; hiddenKeys: string[] } | null => {
+    if (!raw?.startsWith('{')) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        return Number.isInteger(parsed?.homepageCount) && Array.isArray(parsed?.hiddenKeys)
+            ? { homepageCount: parsed.homepageCount, hiddenKeys: parsed.hiddenKeys }
+            : null;
+    } catch {
+        return null;
+    }
+};
+
 export const decodeHeroExtraPayload = (raw: string | null | undefined): Record<string, unknown> => {
     if (!raw || !raw.trim().startsWith('{')) return {};
     try {
@@ -85,9 +97,12 @@ export const mapLandingSectionMutation = (section: LandingSectionInput, position
             description: section.description[locale],
             primaryCta: 'primaryCta' in section ? section.primaryCta[locale] : null,
             secondaryCta: 'secondaryCta' in section ? section.secondaryCta[locale] : null,
+            // The otherwise unused contact column holds the JSON extras of the hero and of the testimonials.
             contact: section.key === 'hero'
                 ? heroExtraJson
-                : ('contact' in section ? section.contact[locale] : null),
+                : section.key === 'clientStories'
+                    ? (section.display ? JSON.stringify(section.display) : null)
+                    : ('contact' in section ? section.contact[locale] : null),
             sessionLabel: 'sessionLabel' in section ? section.sessionLabel[locale] : null,
             price: 'price' in section ? section.price[locale] : null,
             priceUnit: 'priceUnit' in section ? section.priceUnit[locale] : null
@@ -315,10 +330,13 @@ const mapSectionRow = (section: DrizzleLandingSectionRow, mediaAttachments?: Dri
         const contact = localizedFromRows(section.translations, (row) => row.contact);
         return primaryCta && contact ? { ...base, key: section.key, primaryCta, contact } : null;
     }
+    if (section.key === 'clientStories') {
+        const display = decodeTestimonialDisplay(section.translations.find((row) => row.contact)?.contact);
+        return { ...base, key: section.key, ...(display ? { display } : {}), items: items.filter((item) => item !== null) };
+    }
     if (section.key === 'supportExplorer'
         || section.key === 'carePromise'
         || section.key === 'careJourney'
-        || section.key === 'clientStories'
         || section.key === 'frequentlyAskedQuestions') {
         return { ...base, key: section.key, items: items.filter((item) => item !== null) };
     }

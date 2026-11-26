@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, ShieldCheck, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { homepageTestimonials } from '@attentiveid/shared'
 import { contact } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
@@ -13,8 +14,7 @@ export function ClientStories() {
   const { t } = useTranslation()
   const managed = useLandingSection('clientStories')
   const testimonials = managed
-    ? [...managed.section.items]
-      .sort((left, right) => left.position - right.position)
+    ? homepageTestimonials(managed.section)
       .map((item) => ({ id: item.id, name: item.title[managed.locale], content: item.description[managed.locale] }))
     : (t('testimonials', { returnObjects: true }) as TestimonialItem[]).map((item, index) => ({ ...item, id: `story-${index}` }))
   const title = managed?.section.headline[managed.locale] ?? t('homepage.stories.title')

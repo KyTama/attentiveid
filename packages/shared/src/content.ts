@@ -20,7 +20,8 @@ export const LANDING_REPEATER_BOUNDS = {
   supportExplorer: { min: 3, max: 6 },
   carePromise: { min: 3, max: 4 },
   careJourney: { min: 3, max: 5 },
-  clientStories: { min: 3, max: 24 },
+  /** The maximum is a safety bound, not a product limit: the homepage shows `homepageCount` of them. */
+  clientStories: { min: 3, max: 500 },
   frequentlyAskedQuestions: { min: 3, max: 10 },
 } as const
 
@@ -182,9 +183,30 @@ const CareJourneySectionSchema = Type.Object({
   }),
 }, { additionalProperties: false })
 
+export const TESTIMONIALS_HOMEPAGE_DEFAULT = 24
+export const TESTIMONIALS_HOMEPAGE_MAX = 60
+
+/** A short fingerprint of a testimonial's own words (FNV-1a), which stays the same through saves and reordering. */
+export const testimonialKey = (item: { title: { id: string }; description: { id: string } }): string => {
+  let hash = 0x811c9dc5
+  for (const char of `${item.title.id.trim()}
+${item.description.id.trim()}`) {
+    hash = Math.imul(hash ^ char.codePointAt(0)!, 0x01000193) >>> 0
+  }
+  return hash.toString(16).padStart(8, '0')
+}
+
+/** Which testimonials the homepage shows: the first `homepageCount` (in list order) that are not hidden. */
+const TestimonialDisplaySchema = Type.Object({
+  homepageCount: Type.Integer({ minimum: 3, maximum: TESTIMONIALS_HOMEPAGE_MAX }),
+  /** `testimonialKey` of each hidden one. Not ids: the database gives items new ids on every save. */
+  hiddenKeys: Type.Array(Type.String({ minLength: 1, maxLength: 16 }), { maxItems: 500 }),
+}, { additionalProperties: false })
+
 const ClientStoriesSectionSchema = Type.Object({
   key: Type.Literal('clientStories'),
   ...sectionCopyProperties,
+  display: Type.Optional(TestimonialDisplaySchema),
   items: Type.Array(LandingItemSchema, {
     minItems: LANDING_REPEATER_BOUNDS.clientStories.min,
     maxItems: LANDING_REPEATER_BOUNDS.clientStories.max,
@@ -716,11 +738,27 @@ export const normalizeLandingContentMutation = <T extends { sections?: unknown }
       }
     }
 
+    if (key === 'clientStories') {
+      const items = normalizeRepeaterItems(section.items, key)
+      const raw = (section.display && typeof section.display === 'object' ? section.display : null) as Record<string, unknown> | null
+      const count = Number(raw?.homepageCount)
+      const keys = new Set(items.map(testimonialKey))
+      return {
+        ...baseSection,
+        ...(raw ? {
+          display: {
+            homepageCount: Number.isInteger(count) ? Math.min(Math.max(count, 3), TESTIMONIALS_HOMEPAGE_MAX) : TESTIMONIALS_HOMEPAGE_DEFAULT,
+            hiddenKeys: Array.isArray(raw.hiddenKeys) ? raw.hiddenKeys.filter((key): key is string => typeof key === 'string' && keys.has(key)) : [],
+          },
+        } : {}),
+        items,
+      }
+    }
+
     if (
       key === 'supportExplorer'
       || key === 'carePromise'
       || key === 'careJourney'
-      || key === 'clientStories'
       || key === 'frequentlyAskedQuestions'
     ) {
       return {
@@ -1052,4 +1090,29 @@ export const validateCreateUserMutation = (value: unknown): value is CreateUserM
 export const validateLoginCredentials = (value: unknown): value is LoginCredentials => (
   Value.Check(LoginCredentialsSchema, value)
 )
+
+/** The testimonials the homepage shows, in order. */
+export const homepageTestimonials = <T extends { position: number; title: { id: string }; description: { id: string } }>(
+  section: { items: readonly T[]; display?: { homepageCount: number; hiddenKeys: readonly string[] } },
+): T[] => {
+  const hidden = new Set(section.display?.hiddenKeys ?? [])
+  return [...section.items]
+    .sort((left, right) => left.position - right.position)
+    .filter((item) => !hidden.has(testimonialKey(item)))
+    .slice(0, section.display?.homepageCount ?? TESTIMONIALS_HOMEPAGE_DEFAULT)
+}
+
+/** Visitors receive only the testimonials that are shown, so hundreds of stored ones do not weigh on the page. */
+export const trimPublicTestimonials = <T extends { content: LandingContentMutation } | null>(landing: T): T => {
+  if (!landing) return landing
+  const sections = landing.content.sections.map((section) => {
+    if (section.key !== 'clientStories') return section
+    const shown = homepageTestimonials(section)
+    // A section needs its minimum to be valid; with fewer than that shown, the page does the filtering itself.
+    if (shown.length < LANDING_REPEATER_BOUNDS.clientStories.min) return section
+    const { display: _display, ...rest } = section
+    return { ...rest, items: shown.map((item, position) => ({ ...item, position })) }
+  })
+  return { ...landing, content: { ...landing.content, sections } as LandingContentMutation }
+}
 
