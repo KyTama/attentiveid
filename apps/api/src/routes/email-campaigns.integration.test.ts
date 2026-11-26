@@ -113,6 +113,20 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
         expect(await campaigns.storedBytes()).toBeGreaterThan(0);
     });
 
+    test('parallel uploads cannot pass the limits', async () => {
+        const other = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
+        const big = `%PDF${'x'.repeat(3 * 1024 * 1024)}`;
+        const results = await Promise.all(Array.from({ length: 8 }, (_, i) => {
+            const form = new FormData();
+            form.append('file', new File([big], `f${i}.pdf`));
+            return call('POST', `/api/admin/email/campaigns/${other}/files`, admin, form);
+        }));
+        expect(results.filter((r) => r.status === 201)).toHaveLength(3);
+        expect((await campaigns.get(other))!.files).toHaveLength(3);
+        await call('DELETE', `/api/admin/email/campaigns/${other}`);
+        expect((await call('POST', '/api/admin/email/campaigns', admin, { title: 'x', html: '<a href="{{name}}">x</a>' })).status).toBe(400);
+    });
+
     test('a test goes only to the person pressing, marked TEST, without tracking', async () => {
         const result = await call('POST', `/api/admin/email/campaigns/${id}/test`);
         expect(result.status).toBe(200);
@@ -218,6 +232,28 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
         expect((await call('POST', `/api/admin/email/campaigns/${third}/cancel`)).status).toBe(200);
         expect((await campaigns.get(third))!.counts).toMatchObject({ queued: 0, skipped: 2 });
         expect((await call('POST', `/api/admin/email/campaigns/${third}/resume`)).status).toBe(409);
+    });
+
+    test('switched off: running sends are paused and do not start by themselves again', async () => {
+        const made = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
+        await call('POST', `/api/admin/email/campaigns/${made}/send`, admin, { audience: { mode: 'contacts', ids: [contactIds.ani] }, expected: 1 });
+        expect(await campaigns.parkQueued()).toBe(1);
+        outbox.length = 0;
+        expect(await tick()).toBe('idle');
+        expect([(await campaigns.get(made))!.status, (await campaigns.get(made))!.pausedReason]).toEqual(['paused', 'switched_off']);
+        await call('POST', `/api/admin/email/campaigns/${made}/cancel`);
+    });
+
+    test('deleting a contact for good erases address and name from the log; an old unsubscribe link still counts', async () => {
+        const [row] = await database.select().from(schema.emailCampaignRecipients).where(eq(schema.emailCampaignRecipients.email, 'dewi@example.test'));
+        const before = (await campaigns.get(id))!.counts;
+        await contacts.deleteContacts([contactIds.dewi!]);
+        const log = await campaigns.recipients(id, 0, 500);
+        expect(log.map((r) => r.email)).not.toContain('dewi@example.test');
+        expect(log.filter((r) => r.email === '' && r.name === '')).toHaveLength(1);
+        expect((await campaigns.get(id))!.counts).toEqual(before);
+        expect(await campaigns.unsubscribe(row!.id)).toBe(true);
+        expect((await campaigns.suppressed(['dewi@example.test'])).has('dewi@example.test')).toBe(true);
     });
 
     test('an e-mail left half-sent by a restart becomes unknown, not sent again', async () => {

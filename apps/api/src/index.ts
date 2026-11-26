@@ -1,5 +1,6 @@
 import { createEmailCampaignsRepository } from './repositories/email-campaigns.repository';
 import { createEmailSender } from './services/email-sender';
+import { createEmailContactsRepository } from './repositories/email-contacts.repository';
 import { createApp, type App } from './app';
 import { env } from './config/env';
 import { db } from './db';
@@ -50,6 +51,12 @@ const contentTransitions = createContentTransitions(createDrizzleContentTransiti
 
 const landingRepository = createLandingContentRepository(createDrizzleLandingContentSource(db));
 const bookingRepository = createBookingRepository(db);
+
+// Excel previews of the Email menu hold contact details: remove them when they expire, not only on the next upload.
+const emailImportCleanup = createEmailContactsRepository(db);
+const purgeEmailImports = () => void emailImportCleanup.purgeImports(new Date()).catch(() => console.error('[email] preview cleanup failed'));
+purgeEmailImports();
+setInterval(purgeEmailImports, 10 * 60 * 1000).unref();
 
 const googleOutboxConfig =
     env.GOOGLE_CLIENT_ID &&
@@ -177,7 +184,10 @@ const emailBulk = {
     replyTo: env.EMAIL_BULK_REPLY_TO || emailFrom.replace('@', '+bulk@')
 };
 const emailCampaignsRepository = createEmailCampaignsRepository(db);
-if (emailBulk.enabled && mailer.isConfigured) {
+if (!(emailBulk.enabled && mailer.isConfigured)) {
+    // Switched off: whatever was running is paused and waits for an admin, even after it is switched on again.
+    void emailCampaignsRepository.parkQueued().catch(() => console.error('[email-bulk] could not pause queued sends'));
+} else {
     const sender = createEmailSender({
         queue: emailCampaignsRepository,
         mailer,

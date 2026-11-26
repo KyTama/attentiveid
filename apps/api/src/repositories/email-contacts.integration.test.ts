@@ -65,14 +65,41 @@ describeIntegration('email contacts repository (PostgreSQL)', () => {
         expect(await repository.deleteCategory(made.id)).toBe('ok');
     });
 
-    test('a checked file is handed out once, only to its uploader, before it expires', async () => {
+    test('a preview is applied all or nothing, once, only by its uploader, before it expires', async () => {
         const plan = { added: [], edited: [], overlapping: [], invalid: [], conflicts: [], unchanged: 3, newCategories: [] };
         const later = new Date(Date.now() + 60_000);
         const id = await repository.saveImport('a', plan, later);
-        expect(await repository.takeImport(id, 'b', new Date())).toBeNull();
-        expect(await repository.takeImport(id, 'a', new Date(later.getTime() + 1))).toBeNull();
-        const both = await Promise.all([repository.takeImport(id, 'a', new Date()), repository.takeImport(id, 'a', new Date())]);
-        expect(both.filter(Boolean)).toEqual([plan]);
+        const never = async () => 'ran';
+        expect(await repository.applyImport(id, 'b', new Date(), never)).toBeNull();
+        expect(await repository.applyImport(id, 'a', new Date(later.getTime() + 1), never)).toBeNull();
+
+        // Fails half-way: nothing is kept and the preview is still there.
+        const failing = repository.applyImport(id, 'a', new Date(), async (_plan, inside) => {
+            await inside.createContact(contact('half@example.test', [clientId]), 'import', 'a');
+            await inside.createCategory('Mitra Impor');
+            throw new Error('broke');
+        });
+        await expect(failing).rejects.toThrow('broke');
+        expect((await repository.listContacts({ archived: false })).some((c) => c.email === 'half@example.test')).toBe(false);
+        expect((await repository.listCategories()).some((c) => c.name === 'Mitra Impor')).toBe(false);
+
+        // A duplicate inside the transaction must not abort the rest of it; two confirms apply once.
+        const run = () => repository.applyImport(id, 'a', new Date(), async (_plan, inside) => {
+            expect(await inside.createCategory('client')).toBeNull();
+            await inside.createContact(contact('whole@example.test', [clientId]), 'import', 'a');
+            return 'done';
+        });
+        expect((await Promise.all([run(), run()])).filter(Boolean)).toEqual(['done']);
+        const [kept] = (await repository.listContacts({ archived: false })).filter((c) => c.email === 'whole@example.test');
+        await repository.deleteContacts([kept!.id]);
+    });
+
+    test('expired previews are removed', async () => {
+        const plan = { added: [], edited: [], overlapping: [], invalid: [], conflicts: [], unchanged: 0, newCategories: [] };
+        await repository.saveImport('a', plan, new Date(Date.now() - 1000));
+        await repository.purgeImports(new Date());
+        const [row] = await database.execute(sql`select count(*)::int as n from email_imports where expires_at < now()`) as unknown as Array<{ n: number }>;
+        expect(row!.n).toBe(0);
     });
 
     test('archived contacts leave the normal list and can come back', async () => {

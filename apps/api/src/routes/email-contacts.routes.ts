@@ -66,7 +66,7 @@ export const createEmailContactsRoutes = (dependencies: EmailContactsRoutesDepen
     };
 
     /** Applies a confirmed plan. Anything that changed since the check is skipped, never overwritten. */
-    const apply = async (plan: EmailImportPlan, include: ReadonlySet<string>, actor: string): Promise<EmailImportResult> => {
+    const apply = async (repository: EmailContactsRepository, plan: EmailImportPlan, include: ReadonlySet<string>, actor: string): Promise<EmailImportResult> => {
         const rows = [...plan.added, ...plan.overlapping.filter((row) => row.canInclude && include.has(row.key))];
         const ids = new Map((await repository.listCategories()).map((category) => [category.name.toLowerCase(), category.id]));
         for (const name of new Set([...rows, ...plan.edited].flatMap((row) => row.categories))) {
@@ -130,6 +130,7 @@ export const createEmailContactsRoutes = (dependencies: EmailContactsRoutesDepen
                 if (error instanceof XlsxError) return fail(set, 400, FILE_PROBLEMS[error.reason]);
                 throw error;
             }
+            await repository.purgeImports(new Date());
             const id = await repository.saveImport(currentUser.email, plan, new Date(Date.now() + IMPORT_TTL_MS));
             set.headers['cache-control'] = 'no-store';
             return { status: 'success', data: { id, plan } };
@@ -138,9 +139,9 @@ export const createEmailContactsRoutes = (dependencies: EmailContactsRoutesDepen
             const gone = () => fail(set, 410, 'Pratinjau sudah dipakai atau kedaluwarsa. Unggah berkasnya lagi.');
             if (!UUID.test(params.id)) return gone();
             const include = new Set<string>(Array.isArray(body?.include) ? body.include.filter((key: unknown) => typeof key === 'string') : []);
-            const plan = await repository.takeImport(params.id, currentUser.email, new Date());
-            if (!plan) return gone();
-            const result = await apply(plan, include, currentUser.email);
+            await repository.purgeImports(new Date());
+            const result = await repository.applyImport(params.id, currentUser.email, new Date(), (plan, inside) => apply(inside, plan, include, currentUser.email));
+            if (!result) return gone();
             await repository.audit(currentUser.email, 'contacts_imported', `added ${result.added}, updated ${result.updated}, skipped ${result.skipped}`);
             return { status: 'success', data: result };
         }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Apply a checked Excel file' } })
