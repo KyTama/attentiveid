@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -74,11 +75,13 @@ describe('our services page', () => {
 })
 
 describe('/our-services/<slug>', () => {
-  let go: (to: string) => void
-  let path = ''
+  const router: { go: (to: string) => void; path: string } = { go: () => {}, path: '' }
   function Spy() {
-    go = useNavigate()
-    path = useLocation().pathname
+    const navigate = useNavigate()
+    const { pathname } = useLocation()
+    useEffect(() => {
+      Object.assign(router, { go: navigate, path: pathname })
+    })
     return null
   }
   const at = (start: string) =>
@@ -105,14 +108,14 @@ describe('/our-services/<slug>', () => {
     say(frame, { type: 'attentive-service', id: 'p-konseling-family' })
     say(frame, { type: 'attentive-service', id: '../dashboard' })
     say(frame, { type: 'attentive-service', id: 'p-other' }, 'https://example.com')
-    expect(path).toBe('/our-services/p-konseling-family')
+    expect(router.path).toBe('/our-services/p-konseling-family')
     expect(newTab().href).toContain('#detail-p-konseling-family')
     // The frame that already shows it is left alone.
     expect(frameOf(view)).toBe(frame)
     expect(frame.src).toContain('#detail-p-konseling-anak')
 
     // "Layanan kami" in the header: the catalog starts again at the list.
-    act(() => go('/our-services'))
+    act(() => router.go('/our-services'))
     expect(frameOf(view)).not.toBe(frame)
     expect(frameOf(view).src).not.toContain('#detail-')
     view.unmount()
