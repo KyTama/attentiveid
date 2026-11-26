@@ -10,6 +10,13 @@ import { buildPersonalMail } from './email-content';
 export const MAX_ATTEMPTS = 3;
 const RETRY_AFTER_MS = 10 * 60 * 1000;
 const STALE_AFTER_MS = 5 * 60 * 1000;
+/** This many identical refusals in a row mean something is wrong with the message or the account, not with the addresses. */
+export const SAME_REFUSALS_PAUSE = 5;
+
+const refusalKind = (error: unknown) => {
+    const e = (error ?? {}) as { responseCode?: number; response?: string };
+    return `${e.responseCode ?? ''} ${/\b5\.\d{1,3}\.\d{1,3}\b/.exec(e.response ?? '')?.[0] ?? ''}`;
+};
 
 export type SendFailure =
     /** Google refuses more mail today: stop everything. */
@@ -53,6 +60,7 @@ export const createEmailSender = (dependencies: EmailSenderDependencies) => {
     const now = dependencies.now ?? (() => new Date());
     const limit = dependencies.dailyLimit ?? EMAIL_DAILY_LIMIT;
     let running = false;
+    let streak = { key: '', n: 0 };
 
     const deliver = async (mail: ClaimedMail): Promise<TickResult> => {
         const reason = await queue.blocked(mail);
@@ -88,6 +96,15 @@ export const createEmailSender = (dependencies: EmailSenderDependencies) => {
                 await queue.pauseAll(mail.id, failure);
                 return 'paused';
             }
+            if (failure === 'refused') {
+                const key = `${mail.campaignId} ${refusalKind(error)}`;
+                streak = { key, n: streak.key === key ? streak.n + 1 : 1 };
+                if (streak.n >= SAME_REFUSALS_PAUSE) {
+                    streak = { key: '', n: 0 };
+                    await queue.pauseCampaign(mail.id, mail.campaignId, 'rejected');
+                    return 'paused';
+                }
+            } else streak = { key: '', n: 0 };
             if (failure === 'temporary' && mail.attempts < MAX_ATTEMPTS) {
                 await queue.markRetry(mail.id, failure, new Date(now().getTime() + RETRY_AFTER_MS));
                 return 'failed';
@@ -95,6 +112,7 @@ export const createEmailSender = (dependencies: EmailSenderDependencies) => {
             await queue.markDone(mail.id, failure === 'unknown' ? 'unknown' : 'failed', failure);
             return 'failed';
         }
+        streak = { key: '', n: 0 };
         await queue.markSent(mail.id, now());
         return 'sent';
     };

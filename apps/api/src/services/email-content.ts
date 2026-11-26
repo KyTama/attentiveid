@@ -31,7 +31,11 @@ const ATTRIBUTE = /([^\s"'=<>/`]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+
 
 // eslint-disable-next-line no-control-regex
 const compact = (value: string) => decodeEntities(value).replace(/[\u0000- \u007f- ]/g, '').toLowerCase();
-const safeHref = (value: string) => /^(https?:\/\/|mailto:|tel:|#|\{\{)/.test(compact(value));
+const safeHref = (value: string) => /^(https?:\/\/|mailto:|tel:|#)/.test(compact(value));
+/** {{name}} in the scheme or host part (or at the very start) would let a contact's name choose the destination. */
+const nameDecidesAddress = (value: string) => /^(?:[a-z][a-z0-9+.-]*:(?:\/\/)?)?[^/?#]*\{\{/.test(compact(value));
+export const hasNameInAddress = (html: string) =>
+    [...html.matchAll(/\s(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+))/gi)].some((m) => nameDecidesAddress(m[1] ?? m[2] ?? m[3] ?? ''));
 const safeSrc = (value: string) => compact(value).startsWith('https://');
 const safeCss = (value: string) => !/(javascript:|expression\(|-moz-binding|behavior:)/.test(compact(value).replace(/\/\*.*?\*\//g, ''));
 
@@ -47,8 +51,8 @@ const cleanTag = (token: string): string => {
         const key = found[1]!.toLowerCase();
         const value = found[2] ?? found[3] ?? found[4] ?? '';
         if (!/^[a-z][a-z0-9:_-]*$/.test(key) || key.startsWith('on') || ['srcdoc', 'srcset', 'formaction', 'action', 'background', 'xlink:href'].includes(key)) continue;
-        if (key === 'href' && (name !== 'a' || !safeHref(value))) continue;
-        if (key === 'src' && (name !== 'img' || !safeSrc(value))) continue;
+        if (key === 'href' && (name !== 'a' || !safeHref(value) || nameDecidesAddress(value))) continue;
+        if (key === 'src' && (name !== 'img' || !safeSrc(value) || nameDecidesAddress(value))) continue;
         if (key === 'style' && !safeCss(value)) continue;
         kept.push(` ${key}="${value.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"`);
     }

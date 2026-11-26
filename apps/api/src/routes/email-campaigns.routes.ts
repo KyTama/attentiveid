@@ -12,7 +12,7 @@ import {
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { CampaignDraft, EmailCampaignsRepository, Recipient } from '../repositories/email-campaigns.repository';
 import type { EmailContactsRepository } from '../repositories/email-contacts.repository';
-import { buildPersonalMail, cleanEmailHtml, escapeHtml, readTrackToken, trackedLinks } from '../services/email-content';
+import { buildPersonalMail, cleanEmailHtml, escapeHtml, hasNameInAddress, readTrackToken, trackedLinks } from '../services/email-content';
 import { EMAIL_COPY } from '../services/email-copy';
 import { cleanName, contentMatches } from '../services/feedback-files';
 import type { Mailer } from '../services/mailer';
@@ -79,6 +79,7 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
         const raw = typeof body?.html === 'string' ? body.html : '';
         if (!title || title.length > EMAIL_TITLE_MAX) return `Judul wajib diisi, maksimal ${EMAIL_TITLE_MAX} karakter.`;
         if (raw.length > EMAIL_BODY_MAX) return 'Isi e-mail terlalu panjang.';
+        if (hasNameInAddress(raw)) return '{{name}} tidak boleh dipakai di awal atau di nama situs sebuah tautan atau gambar.';
         const html = cleanEmailHtml(raw);
         if (!html.replace(/<(?!img)[^>]*>|&nbsp;|\s/g, '')) return 'Isi e-mail masih kosong.';
         const lang: EmailLanguage = body?.lang === 'en' ? 'en' : 'id';
@@ -166,10 +167,8 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
             if (!(file instanceof File)) return fail(set, 400, 'Pilih berkas.');
             const extension = feedbackFileExtension(file.name);
             if (!(EMAIL_FILE_EXTENSIONS as readonly string[]).includes(extension)) return fail(set, 400, 'Jenis berkas tidak didukung. Pakai PDF, gambar, Word, Excel, PowerPoint, atau TXT.');
-            if (campaign.files.length >= EMAIL_FILE_MAX_COUNT) return fail(set, 400, `Maksimal ${EMAIL_FILE_MAX_COUNT} lampiran.`);
-            const total = campaign.files.reduce((sum, item) => sum + item.size, 0) + file.size;
-            if (file.size === 0 || file.size > EMAIL_FILE_MAX_BYTES || total > EMAIL_FILES_MAX_TOTAL) return fail(set, 400, 'Satu lampiran maksimal 7 MB, semuanya maksimal 10 MB.');
-            if ((await campaigns.storedBytes()) + file.size > MAX_STORED_BYTES) return fail(set, 507, 'Ruang lampiran penuh. Selesaikan atau hapus kiriman lain dulu.');
+            const tooBig = 'Satu lampiran maksimal 7 MB, semuanya maksimal 10 MB.';
+            if (file.size === 0 || file.size > EMAIL_FILE_MAX_BYTES) return fail(set, 400, tooBig);
             const data = Buffer.from(await file.arrayBuffer());
             if (!contentMatches(extension, data)) return fail(set, 400, 'Isi berkas tidak sesuai dengan jenisnya.');
             const added = await campaigns.addFile(campaign.id, {
@@ -177,7 +176,11 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
                 mimeType: FEEDBACK_FILE_TYPES[extension]!,
                 data,
                 sha256: createHash('sha256').update(data).digest('hex')
-            });
+            }, { count: EMAIL_FILE_MAX_COUNT, totalBytes: EMAIL_FILES_MAX_TOTAL, storedBytes: MAX_STORED_BYTES });
+            if (added === 'not_draft') return notDraft(set);
+            if (added === 'count') return fail(set, 400, `Maksimal ${EMAIL_FILE_MAX_COUNT} lampiran.`);
+            if (added === 'size') return fail(set, 400, tooBig);
+            if (added === 'full') return fail(set, 507, 'Ruang lampiran penuh. Selesaikan atau hapus kiriman lain dulu.');
             set.status = 201;
             return { status: 'success', data: added };
         }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Attach one file to a draft' } })

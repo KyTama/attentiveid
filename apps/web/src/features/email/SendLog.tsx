@@ -40,6 +40,8 @@ export function SendLog({ detail, onChanged, onPage }: Props) {
     manual: tx('Dijeda oleh admin.', 'Paused by an admin.'),
     daily_limit: tx('Dijeda: Google menolak karena batas harian. Lanjutkan besok.', 'Paused: Google refused because of its daily limit. Resume tomorrow.'),
     sign_in: tx('Dijeda: akun e-mail tidak bisa masuk. Hubungi pengelola sebelum melanjutkan.', 'Paused: the mail account could not sign in. Ask the administrator before resuming.'),
+    rejected: tx('Dijeda: beberapa e-mail berturut-turut ditolak dengan alasan yang sama. Periksa isi dan lampiran sebelum melanjutkan.', 'Paused: several e-mails in a row were refused for the same reason. Check the content and attachments before resuming.'),
+    switched_off: tx('Dijeda karena pengiriman sempat dimatikan di server. Lanjutkan bila masih ingin dikirim.', 'Paused because sending was switched off at the server. Resume if it should still go out.'),
   }
   const recipientStatus: Record<EmailRecipientStatus, string> = {
     queued: tx('menunggu', 'waiting'), sending: tx('mengirim', 'sending'), sent: tx('terkirim', 'sent'),
@@ -89,7 +91,7 @@ export function SendLog({ detail, onChanged, onPage }: Props) {
       <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white empty:hidden">
         {recipients.map((row) => (
           <li className="px-3 py-2 text-sm" key={row.id}>
-            <p className="break-words font-medium text-slate-900">{row.name || row.email}{row.name && <span className="font-normal text-slate-500"> · {row.email}</span>}</p>
+            <p className="break-words font-medium text-slate-900">{row.name || row.email || tx('(kontak sudah dihapus)', '(deleted contact)')}{row.name && <span className="font-normal text-slate-500"> · {row.email}</span>}</p>
             <p className="text-xs text-slate-600">
               {recipientStatus[row.status]}
               {row.sentAt && ` ${when(row.sentAt)}`}

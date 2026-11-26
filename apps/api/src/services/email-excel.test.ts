@@ -129,6 +129,41 @@ describe('contact import plan', () => {
         ]);
     });
 
+    it('a tiny file whose rows all point at one huge category text is refused quickly', () => {
+        // One 4 MB shared string, referenced by every row: small on disk, enormous if each row split it.
+        const cell = (ref: string, index: number) => '<c r="' + ref + '" t="s"><v>' + index + '</v></c>';
+        const rows = Array.from({ length: 3000 }, (_, i) => '<row r="' + (i + 2) + '">' + cell('A' + (i + 2), 2) + cell('D' + (i + 2), 1) + '</row>').join('');
+        const data = zip([
+            ['xl/workbook.xml', '<workbook><sheets><sheet name="' + NEW_SHEET + '" r:id="r1"/></sheets></workbook>'],
+            ['xl/_rels/workbook.xml.rels', '<Relationships><Relationship Id="r1" Target="worksheets/s.xml"/></Relationships>'],
+            ['xl/sharedStrings.xml', '<sst><si><t>E-mail</t></si><si><t>' + 'a;'.repeat(2_000_000) + '</t></si><si><t>p@example.test</t></si><si><t>Kategori</t></si></sst>'],
+            ['xl/worksheets/s.xml', '<worksheet><sheetData><row r="1">' + cell('A1', 0) + cell('D1', 3) + '</row>' + rows + '</sheetData></worksheet>']
+        ]);
+        expect(data.length).toBeLessThan(60_000);
+        const started = Date.now();
+        const read = readContactsWorkbook(data);
+        const result = planImport(read, CONTACTS, CATEGORIES);
+        expect(Date.now() - started).toBeLessThan(3000);
+        expect(read[0]!.categories.length).toBeLessThanOrEqual(2001);
+        expect(result.invalid).toHaveLength(3000);
+        expect(result.added).toHaveLength(0);
+    });
+
+    it('a file that is mostly empty rows is refused', () => {
+        const data = zip([
+            ['xl/workbook.xml', '<workbook><sheets><sheet name="One" r:id="r1"/></sheets></workbook>'],
+            ['xl/_rels/workbook.xml.rels', '<Relationships><Relationship Id="r1" Target="worksheets/s.xml"/></Relationships>'],
+            ['xl/worksheets/s.xml', '<row/>'.repeat(200_000)]
+        ]);
+        expect(() => readXlsx(data)).toThrow('too_many_rows');
+    });
+
+    it('a changed existing row without its version is a conflict, not an overwrite', () => {
+        const result = plan([], [['budi@example.test', 'Lain', '0812 0000 0001', 'client', 'id-1', '']]);
+        expect(result.conflicts.map((r) => r.email)).toEqual(['budi@example.test']);
+        expect(result.edited).toEqual([]);
+    });
+
     it('a file without our sheets or without an e-mail column is refused', () => {
         expect(() => readContactsWorkbook(writeXlsx([{ name: 'Sheet1', rows: [HEAD] }]))).toThrow(XlsxError);
         expect(() => readContactsWorkbook(writeXlsx([{ name: NEW_SHEET, rows: [['Nama']] }]))).toThrow(XlsxError);

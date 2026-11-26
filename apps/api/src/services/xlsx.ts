@@ -24,6 +24,13 @@ export class XlsxError extends Error {
     }
 }
 
+/** No cell of the contact list is longer; the rest is cut off, so later checks still see "too long". */
+export const MAX_CELL_CHARS = 2_001;
+/** Far above any real contact list; they stop a file that is mostly empty rows or cells from taking seconds of work. */
+const MAX_ROW_ELEMENTS = 50_000;
+const MAX_CELL_ELEMENTS = 400_000;
+const MAX_SHARED_STRINGS = 200_000;
+
 /* ---------------------------------------------------------------- zip */
 
 const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
@@ -244,7 +251,13 @@ export const readXlsx = (data: Buffer, limits: ReadLimits = {}): SheetData[] => 
         const target = attribute(attributes, 'Target');
         if (id && target) targets.set(id, target.startsWith('/') ? target.slice(1) : `xl/${target}`);
     }
-    const shared = [...elements(files.get('xl/sharedStrings.xml') ?? '', 'si')].map((found) => textOf(found.inner));
+    const shared: string[] = [];
+    for (const found of elements(files.get('xl/sharedStrings.xml') ?? '', 'si')) {
+        if (shared.length >= MAX_SHARED_STRINGS) throw new XlsxError('too_big');
+        shared.push(textOf(found.inner).slice(0, MAX_CELL_CHARS));
+    }
+    let rowElements = 0;
+    let cellElements = 0;
 
     return [...elements(workbook, 'sheet')].slice(0, maxSheets).map((entry) => {
         const name = attribute(entry.attributes, 'name') ?? '';
@@ -253,22 +266,24 @@ export const readXlsx = (data: Buffer, limits: ReadLimits = {}): SheetData[] => 
         const rows: string[][] = [];
         let rowNumber = 0;
         for (const row of elements(xml, 'row')) {
+            if (++rowElements > MAX_ROW_ELEMENTS) throw new XlsxError('too_many_rows');
             rowNumber = Number(attribute(row.attributes, 'r')) || rowNumber + 1;
             const cells: string[] = [];
             let column = -1;
             for (const cell of elements(row.inner, 'c')) {
+                if (++cellElements > MAX_CELL_ELEMENTS) throw new XlsxError('too_big');
                 const reference = attribute(cell.attributes, 'r');
                 column = reference ? columnIndex(reference) : column + 1;
                 if (column < 0 || column >= maxColumns) continue;
                 const type = attribute(cell.attributes, 't');
                 const inner = cell.inner;
-                const value = unescapeXml([...elements(inner, 'v')][0]?.inner ?? '');
+                const value = unescapeXml([...elements(inner, 'v')][0]?.inner ?? '').slice(0, MAX_CELL_CHARS);
                 let text = value;
                 if (type === 's') text = shared[Number(value)] ?? '';
                 else if (type === 'inlineStr') text = textOf(inner);
                 // A number typed into a cell may be stored as 6.28E+12.
                 else if ((!type || type === 'n') && /e\+?\d+$/i.test(value)) text = Number(value).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
-                if (text !== '') cells[column] = text;
+                if (text !== '') cells[column] = text.slice(0, MAX_CELL_CHARS);
             }
             // Excel also stores empty rows that only carry formatting; they do not count against the limit.
             if (cells.length === 0) continue;

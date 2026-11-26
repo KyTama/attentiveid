@@ -13,7 +13,7 @@ export const EMAIL_FILE_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'
 
 export type EmailLanguage = 'id' | 'en'
 export type EmailCampaignStatus = 'draft' | 'queued' | 'paused' | 'done' | 'cancelled'
-export type EmailPauseReason = 'manual' | 'daily_limit' | 'sign_in'
+export type EmailPauseReason = 'manual' | 'daily_limit' | 'sign_in' | 'rejected' | 'switched_off'
 export type EmailRecipientStatus = 'queued' | 'sending' | 'sent' | 'failed' | 'skipped' | 'unknown'
 
 export type EmailAudience =

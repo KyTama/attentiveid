@@ -1,7 +1,7 @@
 import { describe, expect, it, spyOn } from 'bun:test';
 import type { ClaimedMail, EmailQueue } from '../repositories/email-campaigns.repository';
 import type { MailMessage } from './mailer';
-import { MAX_ATTEMPTS, classifySendError, createEmailSender } from './email-sender';
+import { MAX_ATTEMPTS, SAME_REFUSALS_PAUSE, classifySendError, createEmailSender } from './email-sender';
 
 spyOn(console, 'error').mockImplementation(() => {});
 
@@ -23,6 +23,7 @@ const make = (options: { next?: ClaimedMail | null; error?: object; blocked?: 'u
         markRetry: record('retry'),
         markDone: record('done'),
         pauseAll: record('pause'),
+        pauseCampaign: record('pauseCampaign'),
         finishIfDone: record('finish')
     };
     const sender = createEmailSender({
@@ -91,6 +92,23 @@ describe('bulk sender', () => {
         const { sender } = make({ next: null });
         const [first, second] = await Promise.all([sender.tick(), sender.tick()]);
         expect([first, second]).toEqual(['idle', 'busy']);
+    });
+
+    it('pauses the campaign after identical refusals in a row, not for mixed ones', async () => {
+        const same = make({ error: { responseCode: 550, response: '550 5.7.1 message rejected' } });
+        const results = [];
+        for (let i = 0; i < SAME_REFUSALS_PAUSE; i += 1) results.push(await same.sender.tick());
+        expect(results.at(-1)).toBe('paused');
+        expect(same.calls.filter((c) => c[0] === 'done')).toHaveLength(SAME_REFUSALS_PAUSE - 1);
+        expect(same.calls.at(-1)).toEqual(['pauseCampaign', mail().id, 'c1', 'rejected']);
+
+        const error = { responseCode: 550, response: '' };
+        const mixed = make({ error });
+        for (let i = 0; i < SAME_REFUSALS_PAUSE + 2; i += 1) {
+            error.response = i % 2 ? '550 5.1.1 no user' : '550 5.7.1 rejected';
+            await mixed.sender.tick();
+        }
+        expect(mixed.calls.some((c) => c[0] === 'pauseCampaign')).toBe(false);
     });
 
     it('classifies errors', () => {

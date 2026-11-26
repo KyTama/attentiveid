@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { EMAIL_COPY } from './email-copy';
-import { buildPersonalMail, cleanEmailHtml, htmlToText, readTrackToken, trackToken, trackedLinks } from './email-content';
+import { buildPersonalMail, cleanEmailHtml, hasNameInAddress, htmlToText, readTrackToken, trackToken, trackedLinks } from './email-content';
 
 const SECRET = 'bulk_test_secret_that_is_long_enough_123456';
 const ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
@@ -26,6 +26,14 @@ describe('cleaning the HTML', () => {
             const clean = cleanEmailHtml(bad);
             expect(clean).not.toMatch(/<(script|iframe|svg|form|input|link|base)\b|\son\w+\s*=|javascript:|data:|expression\(|http-equiv/i);
         }
+    });
+
+    it('a name may fill a path or query, never the start or the site of an address', () => {
+        for (const bad of ['<a href="{{name}}">x</a>', '<a href="https://{{name}}/a">x</a>', '<a href="https://x.{{ name }}">x</a>', '<img src="{{name}}">', '<a href="mailto:{{name}}">x</a>', "<a href='&#123;&#123;name}}'>x</a>"]) {
+            expect(hasNameInAddress(bad)).toBe(true);
+            expect(cleanEmailHtml(bad)).not.toMatch(/(href|src)=/);
+        }
+        for (const good of ['<a href="https://x.test/hai/{{name}}">x</a>', '<a href="https://x.test?n={{name}}">x</a>', '<p>{{name}}</p>']) expect(hasNameInAddress(good)).toBe(false);
     });
 
     it('text that only looks like a tag stays text', () => {

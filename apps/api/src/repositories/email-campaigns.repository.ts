@@ -4,7 +4,8 @@ import type {
     EmailPauseReason, EmailRecipientRow, EmailRecipientStatus
 } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { emailCampaignFiles, emailCampaignRecipients, emailCampaigns, emailSuppressions } from '../db/schema';
+import { emailCampaignFiles, emailCampaignRecipients, emailCampaigns, emailContacts, emailSuppressions } from '../db/schema';
+import { suppressedAmong } from './email-contacts.repository';
 
 export interface CampaignDraft {
     title: string;
@@ -17,6 +18,13 @@ export interface NewCampaignFile {
     mimeType: string;
     data: Buffer;
     sha256: string;
+}
+
+export interface FileLimits {
+    count: number;
+    totalBytes: number;
+    /** All attachments waiting in the database, every campaign together. */
+    storedBytes: number;
 }
 
 export interface Recipient {
@@ -57,6 +65,8 @@ export interface EmailQueue {
     markDone(id: string, status: 'failed' | 'skipped' | 'unknown', error: string): Promise<void>;
     /** Puts the claimed e-mail back as it was and pauses every running campaign. */
     pauseAll(id: string, reason: EmailPauseReason): Promise<void>;
+    /** Puts the claimed e-mail back as it was and pauses only its campaign. */
+    pauseCampaign(id: string, campaignId: string, reason: EmailPauseReason): Promise<void>;
     /** Marks the campaign finished (and empties its attachments) when nothing is waiting. */
     finishIfDone(campaignId: string, at: Date): Promise<void>;
 }
@@ -68,7 +78,8 @@ export interface EmailCampaignsRepository extends EmailQueue {
     /** Only a draft can change. */
     update(id: string, draft: CampaignDraft): Promise<boolean>;
     deleteDraft(id: string): Promise<boolean>;
-    addFile(campaignId: string, file: NewCampaignFile): Promise<EmailCampaignFile>;
+    /** Checks the limits and adds in one step, so parallel uploads cannot slip past them; only drafts take files. */
+    addFile(campaignId: string, file: NewCampaignFile, limits: FileLimits): Promise<EmailCampaignFile | 'not_draft' | 'count' | 'size' | 'full'>;
     removeFile(campaignId: string, fileId: string): Promise<boolean>;
     storedBytes(): Promise<number>;
     suppressed(emails: string[]): Promise<Set<string>>;
@@ -76,6 +87,8 @@ export interface EmailCampaignsRepository extends EmailQueue {
     queue(id: string, audience: EmailAudience, recipients: Recipient[], links: string[], actor: string): Promise<boolean>;
     setStatus(id: string, from: EmailCampaignStatus[], to: EmailCampaignStatus, reason: EmailPauseReason | null): Promise<boolean>;
     recipients(campaignId: string, offset: number, limit: number): Promise<EmailRecipientRow[]>;
+    /** Sending is switched off: everything running is paused, so nothing starts by itself when it is switched on again. */
+    parkQueued(): Promise<number>;
 
     recordOpen(recipientId: string, at: Date): Promise<void>;
     /** Counts the click and returns where the link at this position leads, or null. */
@@ -149,6 +162,15 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
     const emptyFiles = (campaignId: string) =>
         database.update(emailCampaignFiles).set({ data: null }).where(eq(emailCampaignFiles.campaignId, campaignId));
 
+    /** The claimed e-mail was not handed over: waiting again, this attempt not counted. */
+    const putBack = (id: string) => database.update(emailCampaignRecipients)
+        .set({
+            status: 'queued',
+            attempts: sql`${emailCampaignRecipients.attempts} - 1`,
+            attemptedAt: sql`case when ${emailCampaignRecipients.attempts} <= 1 then null else ${emailCampaignRecipients.attemptedAt} end`
+        })
+        .where(eq(emailCampaignRecipients.id, id));
+
     const setRecipient = (id: string, values: Partial<typeof emailCampaignRecipients.$inferInsert>) =>
         database.update(emailCampaignRecipients).set(values).where(eq(emailCampaignRecipients.id, id));
 
@@ -181,20 +203,41 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
             return rows.length > 0;
         },
 
-        async addFile(campaignId, file) {
-            const [row] = await database
-                .insert(emailCampaignFiles)
-                .values({ campaignId, name: file.name, mimeType: file.mimeType, byteSize: file.data.length, sha256: file.sha256, data: file.data })
-                .returning({ id: emailCampaignFiles.id });
-            return { id: row!.id, name: file.name, size: file.data.length };
+        async addFile(campaignId, file, limits) {
+            return database.transaction(async (tx) => {
+                // One upload at a time (the store limit spans campaigns), and the draft stays a draft until we are done.
+                await tx.execute(sql`select pg_advisory_xact_lock(hashtext('email_campaign_files'))`);
+                const [campaign] = await tx.select({ status: emailCampaigns.status }).from(emailCampaigns).where(eq(emailCampaigns.id, campaignId)).for('update');
+                if (campaign?.status !== 'draft') return 'not_draft' as const;
+                const [own] = await tx
+                    .select({ n: sql<number>`count(*)::int`, bytes: sql<number>`coalesce(sum(${emailCampaignFiles.byteSize}), 0)::int` })
+                    .from(emailCampaignFiles)
+                    .where(eq(emailCampaignFiles.campaignId, campaignId));
+                if (own!.n >= limits.count) return 'count' as const;
+                if (own!.bytes + file.data.length > limits.totalBytes) return 'size' as const;
+                const [all] = await tx
+                    .select({ bytes: sql<number>`coalesce(sum(${emailCampaignFiles.byteSize}), 0)::int` })
+                    .from(emailCampaignFiles)
+                    .where(isNotNull(emailCampaignFiles.data));
+                if (all!.bytes + file.data.length > limits.storedBytes) return 'full' as const;
+                const [row] = await tx
+                    .insert(emailCampaignFiles)
+                    .values({ campaignId, name: file.name, mimeType: file.mimeType, byteSize: file.data.length, sha256: file.sha256, data: file.data })
+                    .returning({ id: emailCampaignFiles.id });
+                return { id: row!.id, name: file.name, size: file.data.length };
+            });
         },
 
         async removeFile(campaignId, fileId) {
-            const rows = await database
-                .delete(emailCampaignFiles)
-                .where(and(eq(emailCampaignFiles.id, fileId), eq(emailCampaignFiles.campaignId, campaignId)))
-                .returning({ id: emailCampaignFiles.id });
-            return rows.length > 0;
+            return database.transaction(async (tx) => {
+                const [campaign] = await tx.select({ status: emailCampaigns.status }).from(emailCampaigns).where(eq(emailCampaigns.id, campaignId)).for('update');
+                if (campaign?.status !== 'draft') return false;
+                const rows = await tx
+                    .delete(emailCampaignFiles)
+                    .where(and(eq(emailCampaignFiles.id, fileId), eq(emailCampaignFiles.campaignId, campaignId)))
+                    .returning({ id: emailCampaignFiles.id });
+                return rows.length > 0;
+            });
         },
 
         async storedBytes() {
@@ -206,9 +249,7 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
         },
 
         async suppressed(emails) {
-            if (emails.length === 0) return new Set();
-            const rows = await database.select({ email: emailSuppressions.email }).from(emailSuppressions).where(inArray(emailSuppressions.email, emails));
-            return new Set(rows.map((row) => row.email));
+            return suppressedAmong(database, emails);
         },
 
         async queue(id, audience, recipients, links, actor) {
@@ -257,7 +298,7 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
                 .limit(limit);
             return rows.map((row) => ({
                 id: row.id,
-                email: row.email,
+                email: row.email.startsWith('sha256:') ? '' : row.email,
                 name: row.name,
                 status: row.status as EmailRecipientStatus,
                 error: row.error,
@@ -280,7 +321,8 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
 
         async attemptsSince(since) {
             const [row] = await database
-                .select({ n: sql<number>`count(*)::int` })
+                // Every try is a message to Google, so retries count too.
+                .select({ n: sql<number>`coalesce(sum(${emailCampaignRecipients.attempts}), 0)::int` })
                 .from(emailCampaignRecipients)
                 .where(sql`${emailCampaignRecipients.attemptedAt} > ${since.toISOString()}`);
             return row?.n ?? 0;
@@ -317,12 +359,11 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
         },
 
         async blocked(mail) {
-            const found = await database.execute(sql`
-                select
-                    exists(select 1 from email_suppressions where email = ${mail.email}) as unsubscribed,
-                    not exists(select 1 from email_contacts where id = ${mail.contactId} and archived_at is null) as gone`);
-            const row = (found as unknown as Array<{ unsubscribed: boolean; gone: boolean }>)[0]!;
-            return row.unsubscribed ? 'unsubscribed' : row.gone ? 'archived' : null;
+            if ((await suppressedAmong(database, [mail.email])).size > 0) return 'unsubscribed';
+            const [contact] = mail.contactId
+                ? await database.select({ archivedAt: emailContacts.archivedAt }).from(emailContacts).where(eq(emailContacts.id, mail.contactId)).limit(1)
+                : [];
+            return contact && !contact.archivedAt ? null : 'archived';
         },
 
         async markSent(id, at) {
@@ -339,12 +380,25 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
         },
 
         async pauseAll(id, reason) {
-            await database.update(emailCampaignRecipients)
-                .set({ status: 'queued', attemptedAt: null, attempts: sql`${emailCampaignRecipients.attempts} - 1` })
-                .where(eq(emailCampaignRecipients.id, id));
+            await putBack(id);
             await database.update(emailCampaigns)
                 .set({ status: 'paused', pausedReason: reason, updatedAt: new Date().toISOString() })
                 .where(eq(emailCampaigns.status, 'queued'));
+        },
+
+        async pauseCampaign(id, campaignId, reason) {
+            await putBack(id);
+            await database.update(emailCampaigns)
+                .set({ status: 'paused', pausedReason: reason, updatedAt: new Date().toISOString() })
+                .where(and(eq(emailCampaigns.id, campaignId), eq(emailCampaigns.status, 'queued')));
+        },
+
+        async parkQueued() {
+            const rows = await database.update(emailCampaigns)
+                .set({ status: 'paused', pausedReason: 'switched_off', updatedAt: new Date().toISOString() })
+                .where(eq(emailCampaigns.status, 'queued'))
+                .returning({ id: emailCampaigns.id });
+            return rows.length;
         },
 
         async finishIfDone(campaignId, at) {
