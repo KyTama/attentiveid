@@ -2,17 +2,10 @@
  * Every sentence a recipient of a bulk e-mail reads that the sender did not write: footer, tracking notice, unsubscribe page.
  * It is all here so the wording is easy to change.
  *
- * STILL TO BE DECIDED BY THE USER: "kamu" (brand directive) or "Anda" (the site's other forms and e-mails). Change VOICE.
- * The tracking notice also needs the Director's approval and a matching paragraph in the privacy notice.
+ * Indonesian uses "kamu" (the user's choice, 27 Nov 2026, for the bulk e-mail only; the site's other forms and e-mails are
+ * not changed). The tracking notice still needs the Director's approval and a matching paragraph in the privacy notice.
  */
 import type { EmailLanguage } from '@attentiveid/shared';
-
-const VOICE: 'anda' | 'kamu' = 'anda';
-
-const ID = {
-    anda: { you: 'Anda' },
-    kamu: { you: 'kamu' }
-}[VOICE];
 
 export const EMAIL_COPY: Record<EmailLanguage, {
     reason: string;
@@ -26,14 +19,14 @@ export const EMAIL_COPY: Record<EmailLanguage, {
     pageInvalid: string;
 }> = {
     id: {
-        reason: `E-mail ini dikirim kepada ${ID.you} oleh Attentive (attentiveid.com).`,
+        reason: 'E-mail ini dikirim kepadamu oleh Attentive (attentiveid.com).',
         tracking: 'Kami mencatat apakah e-mail ini dibuka dan tautan mana yang diklik, untuk memperbaiki kiriman kami.',
         unsubscribe: 'Berhenti berlangganan',
         privacy: 'Kebijakan privasi',
         pageTitle: 'Berhenti berlangganan',
-        pageAsk: `Tekan tombol di bawah agar ${ID.you} tidak menerima e-mail massal dari Attentive lagi. E-mail layanan (misalnya hasil pemeriksaan atau pembayaran) tetap dikirim.`,
+        pageAsk: 'Tekan tombol di bawah agar kamu tidak menerima e-mail massal dari Attentive lagi. E-mail layanan (misalnya hasil pemeriksaan atau pembayaran) tetap dikirim.',
         pageButton: 'Berhenti berlangganan',
-        pageDone: `Selesai. ${ID.you === 'Anda' ? 'Anda' : 'Kamu'} tidak akan menerima e-mail massal dari Attentive lagi.`,
+        pageDone: 'Selesai. Kamu tidak akan menerima e-mail massal dari Attentive lagi.',
         pageInvalid: 'Tautan ini tidak berlaku. Balas e-mail kami dan tulis "berhenti".'
     },
     en: {

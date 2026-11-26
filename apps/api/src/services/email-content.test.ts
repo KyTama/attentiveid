@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { EMAIL_COPY } from './email-copy';
 import { buildPersonalMail, cleanEmailHtml, htmlToText, readTrackToken, trackToken, trackedLinks } from './email-content';
 
 const SECRET = 'bulk_test_secret_that_is_long_enough_123456';
@@ -80,6 +81,12 @@ describe('one person\'s e-mail', () => {
         expect(test.html).not.toContain('/api/public/e/o/');
         expect(test.text).not.toContain('Kami mencatat');
         expect(build('Ani').text).toContain('Kami mencatat');
+    });
+
+    it('speaks to the recipient as "kamu" in Indonesian', () => {
+        const words = Object.values(EMAIL_COPY.id).join(' ');
+        expect(words).toContain('kepadamu');
+        expect(words).not.toMatch(/Anda/);
     });
 
     it('turns HTML into readable text', () => {
