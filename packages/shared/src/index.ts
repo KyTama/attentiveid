@@ -19,3 +19,4 @@ export type { MhcuSessionInput, MhcuWave, MhcuHistory } from './assessments/mhcu
 export * from './assessments/mhcu-reference'
 export * from './assessments/mhcu-report-builders'
 export * from './team'
+export * from './email-contacts'
