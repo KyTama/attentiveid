@@ -44,6 +44,9 @@ const FILE_PROBLEMS = {
     busy: 'Sedang tidak bisa menerima berkas. Kirim tanpa berkas atau coba lagi nanti.'
 };
 
+// A form field that looks like JSON arrives already parsed; keep it as the text the person typed.
+const asText = (value: unknown) => (value && typeof value === 'object' && !(value instanceof File) ? JSON.stringify(value) : value);
+
 // The ingress appends the real client address, so the last entry is the one to trust.
 const clientKey = (headers: Record<string, string | undefined>) =>
     headers['x-forwarded-for']?.split(',').map((part) => part.trim()).filter(Boolean).pop() ?? 'unknown';
@@ -101,7 +104,7 @@ export const createFeedbackRoutes = (dependencies: FeedbackRoutesDependencies) =
                 set.status = 429;
                 return { status: 'error', message: 'Terlalu banyak kiriman. Coba lagi beberapa menit lagi.' };
             }
-            const result = validateFeedback(body);
+            const result = validateFeedback({ kind: body?.kind, name: asText(body?.name), message: asText(body?.message), page: asText(body?.page) });
             if (!result.ok) {
                 set.status = 400;
                 return { status: 'error', errors: result.errors };
@@ -183,7 +186,8 @@ export const createFeedbackRoutes = (dependencies: FeedbackRoutesDependencies) =
         }, { requireRole: 'admin', detail: { tags: ['Feedback'], summary: 'Change status, type or who processes a report (handlers)' } })
         .post('/api/admin/feedback/:id/notes', async ({ params, body, set, currentUser }: any) => {
             if (!canHandleFeedback(currentUser)) return handlersOnly(set);
-            const text = typeof body?.body === 'string' ? body.body.trim() : '';
+            const raw = asText(body?.body);
+            const text = typeof raw === 'string' ? raw.trim() : '';
             const attached: File[] = [body?.files].flat().filter((file): file is File => file instanceof File);
             if (text.length > FEEDBACK_NOTE_MAX) return badRequest(set, `Catatan maksimal ${FEEDBACK_NOTE_MAX} karakter.`);
             if (!text && attached.length === 0) return badRequest(set, 'Tulis catatan atau lampirkan berkas.');

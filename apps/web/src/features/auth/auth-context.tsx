@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import type { UserDto } from '@attentiveid/shared'
+import { IDLE_TIMEOUT_DEFAULT_MINUTES, type UserDto } from '@attentiveid/shared'
+import { readStoredActivity, writeLastActivity } from './idle-session'
 
 export interface AuthState {
   user: UserDto | null
@@ -47,6 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   const renewedAt = useRef(0)
+  /** Goes up at every sign-out, so a renewal that was already on its way is thrown away. */
+  const signOuts = useRef(0)
 
   const updateAccessToken = useCallback((token: string | null) => {
     renewedAt.current = Date.now()
@@ -67,8 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
+    const before = signOuts.current
     try {
       const res = await requestRefresh()
+      if (before !== signOuts.current) return false
 
       if (!res.ok) {
         setUser(null)
@@ -92,20 +97,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Keeps the sign-in alive while the portal is open. The idle timer (the person's own setting) is what signs them out.
   const signedIn = Boolean(user)
+  const idleMinutes = user?.idleTimeoutMinutes ?? IDLE_TIMEOUT_DEFAULT_MINUTES
   useEffect(() => {
     if (!signedIn) return
     let running = false
     const renew = async () => {
       if (running || Date.now() - renewedAt.current < RENEW_AFTER_MS) return
+      // Idle for longer than their own setting (also on public pages, where there is no idle timer): let it lapse.
+      const active = readStoredActivity()
+      if (active > 0 && Date.now() - active >= idleMinutes * 60_000) return
       running = true
+      const before = signOuts.current
       try {
         const res = await requestRefresh()
+        if (before !== signOuts.current) return
         if (res.status === 401) {
           setUser(null)
           updateAccessToken(null)
         } else if (res.ok) {
           const data = await res.json()
-          if (data.status === 'success' && data.accessToken && data.user) {
+          if (before === signOuts.current && data.status === 'success' && data.accessToken && data.user) {
             updateAccessToken(data.accessToken)
             setUser(data.user)
           }
@@ -125,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [signedIn, requestRefresh, updateAccessToken])
+  }, [signedIn, idleMinutes, requestRefresh, updateAccessToken])
 
   useEffect(() => {
     let mounted = true
@@ -155,6 +166,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const data = await res.json()
       if (res.ok && data.status === 'success') {
+        // A new sign-in starts the idle clock afresh.
+        writeLastActivity(Date.now())
         setUser(data.user)
         updateAccessToken(data.accessToken)
         return { success: true }
@@ -171,12 +184,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+    signOuts.current += 1
     try {
-      const baseUrl = getApiBaseUrl()
-      await fetch(`${baseUrl}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      })
+      // In the same queue as renewals, so it always revokes the newest cookie.
+      await inTurn(() =>
+        fetch(`${getApiBaseUrl()}/api/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        }),
+      )
     } catch {
       // Ignore network errors during logout
     } finally {

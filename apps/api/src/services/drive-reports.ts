@@ -231,9 +231,16 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
             const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
             const range = (a1: string) => encodeURIComponent(`${input.tab}!${a1}`)
             const width = columnName(Math.max(1, ...input.rows.map((row) => row.length)))
-            await sheetsCall('Sheets clear', `${base}/${range(`A:${width}`)}:clear`, { method: 'POST', json: {} })
-            // RAW: stored as plain text, so nothing a visitor wrote can run as a formula.
-            await sheetsCall('Sheets write', `${base}/${range('A1')}?valueInputOption=RAW`, { method: 'PUT', json: { values: input.rows } })
+            try {
+                // Write first, then clear what is left below, so a failure never leaves the sheet empty.
+                // RAW: stored as plain text, so nothing a visitor wrote can run as a formula.
+                await sheetsCall('Sheets write', `${base}/${range('A1')}?valueInputOption=RAW`, { method: 'PUT', json: { values: input.rows } })
+                await sheetsCall('Sheets clear', `${base}/${range(`A${input.rows.length + 1}:${width}`)}:clear`, { method: 'POST', json: {} })
+            } catch (error) {
+                // The sheet may have been deleted: look for it (or make it) again next time.
+                sheetIds.delete(input.title)
+                throw error
+            }
             return { spreadsheetId }
         },
         async saveRequest(input) {

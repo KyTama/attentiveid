@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Clock } from 'lucide-react'
 import { IDLE_TIMEOUT_DEFAULT_MINUTES } from '@attentiveid/shared'
 import { useAuth } from '@/features/auth/auth-context'
-import { ACTIVITY_EVENTS, idleStateAt, readLastActivity, writeLastActivity, type IdleState } from '@/features/auth/idle-session'
+import { ACTIVITY_EVENTS, idleStateAt, readLastActivity, readStoredActivity, writeLastActivity, type IdleState } from '@/features/auth/idle-session'
 import { useTx } from '@/features/i18n/use-tx'
 
 /**
@@ -37,7 +37,8 @@ export function IdleSessionGuard() {
 
   useEffect(() => {
     if (!userId) return
-    last.current = readLastActivity(Date.now())
+    // The saved time, not "now": reloading or coming back to the portal must not restart the idle clock.
+    last.current = readStoredActivity() || Date.now()
     writeLastActivity(last.current)
     for (const name of ACTIVITY_EVENTS) window.addEventListener(name, markActivity, { capture: true, passive: true })
     const timer = window.setInterval(() => {
