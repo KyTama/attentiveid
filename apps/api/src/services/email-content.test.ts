@@ -80,6 +80,8 @@ describe('one person\'s e-mail', () => {
         expect(test.html).not.toContain('/api/public/e/c/');
         expect(test.html).not.toContain('/api/public/e/o/');
         expect(test.text).not.toContain('Kami mencatat');
+        // There is no privacy page on the site yet, so nothing may link to one.
+        expect(`${build('Ani').html}${build('Ani').text}`).not.toContain('/privacy');
         expect(build('Ani').text).toContain('Kami mencatat');
     });
 

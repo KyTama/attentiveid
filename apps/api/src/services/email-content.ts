@@ -170,10 +170,9 @@ export const buildPersonalMail = (input: PersonalInput): PersonalMail => {
     const name = input.name.trim() || NAME_FALLBACK[input.lang];
     const base = `${input.siteOrigin.replace(/\/$/, '')}/api/public/e`;
     const unsubscribe = `${base}/u/${trackToken(input.secret, 'unsubscribe', input.recipientId)}`;
-    const privacy = `${input.siteOrigin.replace(/\/$/, '')}/privacy`;
 
     const filled = fillName(input.html, escapeHtml(name));
-    const text = `${htmlToText(filled)}\n\n--\n${copy.reason}\n${input.track ? `${copy.tracking}\n` : ''}${copy.unsubscribe}: ${unsubscribe}\n${copy.privacy}: ${privacy}`;
+    const text = `${htmlToText(filled)}\n\n--\n${copy.reason}\n${input.track ? `${copy.tracking}\n` : ''}${copy.unsubscribe}: ${unsubscribe}`;
 
     let html = filled;
     if (input.track) {
@@ -188,7 +187,7 @@ export const buildPersonalMail = (input: PersonalInput): PersonalMail => {
         : '';
     const footer = `<div style="margin-top:32px;padding:16px;border-top:1px solid #e2e8f0;font:12px/1.6 Arial,sans-serif;color:#64748b;text-align:center">`
         + `${escapeHtml(copy.reason)}<br>${input.track ? `${escapeHtml(copy.tracking)}<br>` : ''}`
-        + `<a href="${unsubscribe}" style="color:#475569">${escapeHtml(copy.unsubscribe)}</a> · <a href="${privacy}" style="color:#475569">${escapeHtml(copy.privacy)}</a></div>${pixel}`;
+        + `<a href="${unsubscribe}" style="color:#475569">${escapeHtml(copy.unsubscribe)}</a></div>${pixel}`;
     const end = html.toLowerCase().lastIndexOf('</body>');
     html = end >= 0 ? `${html.slice(0, end)}${footer}${html.slice(end)}` : `${html}${footer}`;
 
