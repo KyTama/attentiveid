@@ -3,6 +3,13 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../db/schema';
 import { deleteVersionedMediaFile, isVersionedMediaObjectKey } from './media-storage';
 
+// Hero slides keep their pictures inside saved JSON, not in media_attachments. A file that any saved landing revision still
+// mentions is in use, whatever the attachment table says.
+const notMentionedInContent = sql`not exists (
+  select 1 from ${schema.landingSectionTranslations}
+  where position(${schema.mediaObjects.objectKey} in coalesce(${schema.landingSectionTranslations.contact}, '')) > 0
+)`;
+
 const ABANDONED_UPLOAD_TTL_MS = 60 * 60 * 1000; // 1 hour grace window for active editing sessions
 const CLEANUP_THROTTLE_MS = 10 * 60 * 1000;
 
@@ -40,7 +47,8 @@ export async function sweepAbandonedVersionedMedia(
         sql`not exists (
           select 1 from ${schema.mediaAttachments}
           where ${schema.mediaAttachments.mediaObjectId} = ${schema.mediaObjects.id}
-        )`
+        )`,
+        notMentionedInContent
       ))
       .limit(50);
 
@@ -63,7 +71,8 @@ export async function sweepAbandonedVersionedMedia(
         sql`not exists (
           select 1 from ${schema.mediaAttachments}
           where ${schema.mediaAttachments.mediaObjectId} = ${schema.mediaObjects.id}
-        )`
+        )`,
+        notMentionedInContent
       ));
 
     return deletedIds.length;
