@@ -35,8 +35,8 @@ export const cleanName = (name: string, max = 100): string => {
 };
 
 /** Turns checked uploads into stored files; returns null when a file's content does not match its name. */
-export const readUploads = async (files: File[]): Promise<FeedbackUpload[] | null> => {
-    const used = new Set<string>(['request.txt']);
+export const readUploads = async (files: File[], taken: string[] = []): Promise<FeedbackUpload[] | null> => {
+    const used = new Set<string>(['request.txt', ...taken.map((name) => name.toLowerCase())]);
     const uploads: FeedbackUpload[] = [];
     for (const file of files) {
         const extension = feedbackFileExtension(file.name);
@@ -78,12 +78,14 @@ export const copyReportToDrive = async (id: string, repository: FeedbackReposito
         const saved = await drive.saveRequest({
             folderName: requestFolderName(report),
             at: new Date(report.createdAt),
+            // Once there is a folder it is reused, even if the type (part of its name) is changed later.
+            folderId: report.driveFolderId ?? undefined,
             files: [
                 { name: 'Request.txt', mimeType: 'text/plain', data: requestSummary(report) },
                 ...files.map((file) => ({ name: file.name, mimeType: file.mimeType, data: new Uint8Array(file.data) }))
             ]
         });
-        await repository.markCopied(id, saved.folderId);
+        await repository.markCopied(id, saved.folderId, files.map((file) => file.id));
         return true;
     } catch (error) {
         const reason = error instanceof Error ? error.message : 'error';

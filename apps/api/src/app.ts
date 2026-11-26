@@ -12,6 +12,13 @@ import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
 import { createFeedbackRoutes } from './routes/feedback.routes';
+import { createEmailContactsRoutes } from './routes/email-contacts.routes';
+import { createEmailCampaignsRoutes, type EmailBulkSettings } from './routes/email-campaigns.routes';
+import { createEmailCampaignsRepository, type EmailCampaignsRepository } from './repositories/email-campaigns.repository';
+import { createEmailContactsRepository, type EmailContactsRepository } from './repositories/email-contacts.repository';
+import { createReviewImportsRoutes } from './routes/review-imports.routes';
+import { createReviewImportsRepository, type ReviewImportsRepository } from './repositories/review-imports.repository';
+import type { ReviewSheet } from './services/review-sheet';
 import type { DriveRequests } from './services/drive-reports';
 import { createFeedbackRepository, type FeedbackRepository } from './repositories/feedback.repository';
 import { createAssessmentsRoutes } from './routes/assessments.routes';
@@ -19,6 +26,7 @@ import { createAccountSettingsRoutes } from './routes/account-settings.routes';
 import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import type { Mailer } from './services/mailer';
+import type { FeedbackSheet } from './services/feedback-sheet';
 import type { DriveReports } from './services/drive-reports';
 import { createAssessmentPaymentRoutes } from './routes/assessment-payment.routes';
 import { createMhcuOpsRoutes, type MhcuSettingsStore } from './routes/mhcu-ops.routes';
@@ -30,6 +38,8 @@ import { createPrayersRepository, type PrayersRepository } from './repositories/
 import type { FreeSessionSheetSync } from './services/free-session-sheet-sync';
 import { createFreeSessionRepository, type FreeSessionRepository } from './repositories/free-session.repository';
 import { createSciBriefsRoutes } from './routes/sci-briefs.routes';
+import { createTeamRoutes } from './routes/team.routes';
+import { createTeamRepository, type TeamRepository } from './repositories/team.repository';
 import { createAdminToolsRoutes } from './routes/admin-tools.routes';
 import { createAdminToolsRepository, type AdminToolsRepository } from './repositories/admin-tools.repository';
 import { createSciBriefsRepository, type SciBriefsRepository } from './repositories/sci-briefs.repository';
@@ -44,9 +54,16 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     landingContentRepository?: any;
     contentTransitions?: any;
     db?: any;
+    reviewImportsRepository?: ReviewImportsRepository;
+    reviewSheet?: ReviewSheet;
     freeSessionRepository?: FreeSessionRepository;
     prayersRepository?: PrayersRepository;
     feedbackRepository?: FeedbackRepository;
+    feedbackSheet?: FeedbackSheet;
+    emailContactsRepository?: EmailContactsRepository;
+    emailCampaignsRepository?: EmailCampaignsRepository;
+    /** Bulk e-mail settings; without them nothing can be sent. */
+    emailBulk?: EmailBulkSettings;
     /** Copies website bug reports and update requests into Drive (optional). */
     driveRequests?: DriveRequests;
     assessmentsRepository?: AssessmentsRepository;
@@ -61,6 +78,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     paymentSecret?: string;
     freeSessionSheetSync?: FreeSessionSheetSync;
     sciBriefsRepository?: SciBriefsRepository;
+    teamRepository?: TeamRepository;
     adminToolsRepository?: AdminToolsRepository;
     bookingRepository?: BookingRepository;
     triggerOutboxDrain?: () => Promise<unknown>;
@@ -193,6 +211,12 @@ export const createApp = (dependencies: AppDependencies) => {
                 previewCapabilities: dependencies.previewCapabilities,
                 db: dependencies.db,
             }))
+            .use(createReviewImportsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                reviewImportsRepository: dependencies.reviewImportsRepository || createReviewImportsRepository(dependencies.db),
+                reviewSheet: dependencies.reviewSheet,
+            }))
             .use(createPsychologistsCmsRoutes({
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
@@ -227,7 +251,21 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 feedbackRepository: dependencies.feedbackRepository || createFeedbackRepository(dependencies.db),
+                sheet: dependencies.feedbackSheet,
                 driveRequests: dependencies.driveRequests,
+            }))
+            .use(createEmailContactsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                emailContactsRepository: dependencies.emailContactsRepository || createEmailContactsRepository(dependencies.db),
+            }))
+            .use(createEmailCampaignsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                emailContactsRepository: dependencies.emailContactsRepository || createEmailContactsRepository(dependencies.db),
+                emailCampaignsRepository: dependencies.emailCampaignsRepository || createEmailCampaignsRepository(dependencies.db),
+                // Without settings: sending is off, and the random secret accepts no link.
+                bulk: dependencies.emailBulk || { enabled: false, secret: crypto.randomUUID(), siteOrigin: dependencies.frontendOrigin, replyTo: '' },
             }))
             .use(createPrayersRoutes({
                 tokenService: dependencies.tokenService,
@@ -283,6 +321,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 mailer: dependencies.mailer,
                 paymentSecret: dependencies.paymentSecret,
                 siteOrigin: dependencies.frontendOrigin,
+            }))
+            .use(createTeamRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                teamRepository: dependencies.teamRepository || createTeamRepository(dependencies.db),
             }))
             .use(createSciBriefsRoutes({
                 tokenService: dependencies.tokenService,

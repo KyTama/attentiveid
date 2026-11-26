@@ -176,6 +176,48 @@
       "when": 1795600070637,
       "tag": "0024_feedback_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795699400949,
+      "tag": "0025_feedback_board",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795700631400,
+      "tag": "0026_mhcu_note_english",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795704136418,
+      "tag": "0027_sci_brief_free_and_team",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795704200000,
+      "tag": "0028_email_contacts",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795704313731,
+      "tag": "0029_email_sending",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795715976737,
+      "tag": "0030_review_imports",
+      "breakpoints": true
     }
   ]
 }

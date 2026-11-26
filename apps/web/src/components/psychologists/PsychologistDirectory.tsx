@@ -17,6 +17,7 @@ import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { PsychologistDirectoryCard } from './PsychologistDirectoryCard'
 import { PsychologistDirectoryFilters } from './PsychologistDirectoryFilters'
 import { PsychologistDirectoryReassurance } from './PsychologistDirectoryReassurance'
+import { TeamSections } from './TeamSections'
 
 function DirectoryLoadingState() {
   const { t } = useTranslation()
@@ -108,7 +109,7 @@ export function PsychologistDirectory() {
       : null
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
       <main>
         <section className="relative overflow-hidden bg-white px-5 py-16 text-center lg:px-8 lg:py-20">
@@ -218,6 +219,7 @@ export function PsychologistDirectory() {
           </div>
         </section>
 
+        <TeamSections />
         <PsychologistDirectoryReassurance />
       </main>
       <SiteFooter />

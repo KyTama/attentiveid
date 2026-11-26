@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, ShieldCheck, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { homepageTestimonials } from '@attentiveid/shared'
 import { contact } from '@/data/contact'
 import { INTERACTIVE_SPRING } from '@/lib/motion'
 import { useLandingSection } from '@/features/content/landing-content-context'
@@ -13,8 +14,7 @@ export function ClientStories() {
   const { t } = useTranslation()
   const managed = useLandingSection('clientStories')
   const testimonials = managed
-    ? [...managed.section.items]
-      .sort((left, right) => left.position - right.position)
+    ? homepageTestimonials(managed.section)
       .map((item) => ({ id: item.id, name: item.title[managed.locale], content: item.description[managed.locale] }))
     : (t('testimonials', { returnObjects: true }) as TestimonialItem[]).map((item, index) => ({ ...item, id: `story-${index}` }))
   const title = managed?.section.headline[managed.locale] ?? t('homepage.stories.title')
@@ -58,7 +58,7 @@ export function ClientStories() {
         </div>
 
         {/* Auto-moving Infinite Carousel (Concept inspired by bicarakan.id) */}
-        <div className="mt-14 relative">
+        {testimonials.length > 0 && <div className="mt-14 relative">
           <div className="mb-3 flex items-center justify-between text-xs text-secondary/60">
             <span className="font-semibold uppercase tracking-wider text-[11px] text-[#946a22]">
               {t('homepage.stories.eyebrow', 'Ulasan & Pengalaman Klien')}
@@ -70,7 +70,8 @@ export function ClientStories() {
 
           {/* Horizontal Gradient Mask Container for soft fade edges */}
           <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_3%,white_97%,transparent)]">
-            <div className="animate-marquee flex gap-5 py-3">
+            {/* Same reading speed whatever the number of reviews: more reviews take longer to go round. */}
+            <div className="animate-marquee flex gap-5 py-3" style={{ animationDuration: `${Math.max(35, testimonials.length * 7)}s` }}>
               {marqueeItems.map((testimonial, idx) => {
                 const initials = (testimonial.name.replace(/[^a-zA-Z]/g, '').slice(0, 2) || 'KL').toUpperCase()
                 return (
@@ -111,7 +112,7 @@ export function ClientStories() {
               })}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </section>
   )

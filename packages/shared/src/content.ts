@@ -20,7 +20,8 @@ export const LANDING_REPEATER_BOUNDS = {
   supportExplorer: { min: 3, max: 6 },
   carePromise: { min: 3, max: 4 },
   careJourney: { min: 3, max: 5 },
-  clientStories: { min: 3, max: 8 },
+  /** The maximum is a safety bound, not a product limit: the homepage shows `homepageCount` of them. */
+  clientStories: { min: 3, max: 500 },
   frequentlyAskedQuestions: { min: 3, max: 10 },
 } as const
 
@@ -79,6 +80,28 @@ export const HeroSlideLayoutSchema = Type.Union([
   Type.Literal('wisdom-ella'),
 ])
 
+/** Pictures a slide part may point to: files of this site only, never another address. */
+const SiteMediaSchema = Type.Object({
+  reference: Type.String({ minLength: 1, maxLength: 2_048, pattern: '^/?(media|images)/(?!.*\\.\\.)[A-Za-z0-9._/-]+$' }),
+  width: Type.Optional(Type.Integer({ minimum: 1 })),
+  height: Type.Optional(Type.Integer({ minimum: 1 })),
+  alt: Type.Optional(LocalizedTextSchema),
+}, { additionalProperties: false })
+
+/** Own wording of a part. A blank language means "the built-in wording" and is kept blank. */
+const HeroElementTextSchema = Type.Object({
+  id: Type.String({ maxLength: 2_000 }),
+  en: Type.String({ maxLength: 2_000 }),
+}, { additionalProperties: false })
+
+/** One changed part of a hero slide: hidden, reworded or with another picture. Keys are defined by the website per layout. */
+export const HeroElementOverrideSchema = Type.Object({
+  key: IdentifierSchema,
+  hidden: Type.Optional(Type.Boolean()),
+  text: Type.Optional(HeroElementTextSchema),
+  media: Type.Optional(SiteMediaSchema),
+}, { additionalProperties: false })
+
 export const HeroSlideItemSchema = Type.Object({
   id: IdentifierSchema,
   visible: Type.Optional(Type.Boolean()),
@@ -96,6 +119,9 @@ export const HeroSlideItemSchema = Type.Object({
   secondaryCta: LocalizedTextSchema,
   secondaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   media: Type.Optional(LandingMediaSchema),
+  /** The photo shown on the English site; without it the English site shows `media` too. */
+  mediaEn: Type.Optional(SiteMediaSchema),
+  elements: Type.Optional(Type.Array(HeroElementOverrideSchema, { maxItems: 60 })),
 }, { additionalProperties: false })
 
 export const HeroCampaignThemeSchema = Type.Union([
@@ -182,11 +208,33 @@ const CareJourneySectionSchema = Type.Object({
   }),
 }, { additionalProperties: false })
 
+export const TESTIMONIALS_HOMEPAGE_DEFAULT = 24
+export const TESTIMONIALS_HOMEPAGE_MAX = 60
+
+/** A short fingerprint of a testimonial's own words (FNV-1a), which stays the same through saves and reordering. */
+export const testimonialKey = (item: { title: { id: string }; description: { id: string } }): string => {
+  let hash = 0x811c9dc5
+  for (const char of `${item.title.id.trim()}
+${item.description.id.trim()}`) {
+    hash = Math.imul(hash ^ char.codePointAt(0)!, 0x01000193) >>> 0
+  }
+  return hash.toString(16).padStart(8, '0')
+}
+
+/** Which testimonials the homepage shows: the first `homepageCount` (in list order) that are not hidden. */
+const TestimonialDisplaySchema = Type.Object({
+  homepageCount: Type.Integer({ minimum: 3, maximum: TESTIMONIALS_HOMEPAGE_MAX }),
+  /** `testimonialKey` of each hidden one. Not ids: the database gives items new ids on every save. */
+  hiddenKeys: Type.Array(Type.String({ minLength: 1, maxLength: 16 }), { maxItems: 500 }),
+}, { additionalProperties: false })
+
 const ClientStoriesSectionSchema = Type.Object({
   key: Type.Literal('clientStories'),
   ...sectionCopyProperties,
+  display: Type.Optional(TestimonialDisplaySchema),
   items: Type.Array(LandingItemSchema, {
-    minItems: LANDING_REPEATER_BOUNDS.clientStories.min,
+    // No minimum here: visitors receive only the shown testimonials, which may be fewer than the editor asks to keep.
+    minItems: 0,
     maxItems: LANDING_REPEATER_BOUNDS.clientStories.max,
   }),
 }, { additionalProperties: false })
@@ -589,6 +637,21 @@ const normalizeHeroSlideItems = (slideList: unknown): HeroSlideItem[] | undefine
     const location = normalizeLocalizedPair(slide.location, false)
     const note = normalizeLocalizedPair(slide.note, false)
     const media = normalizeLandingMediaValue(slide.media)
+    const mediaEn = normalizeLandingMediaValue(slide.mediaEn)
+    const elements = Array.isArray(slide.elements)
+      ? slide.elements.flatMap((raw) => {
+        const element = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+        if (typeof element.key !== 'string' || !element.key) return []
+        const raw2 = (element.text && typeof element.text === 'object' ? element.text : {}) as Record<string, unknown>
+        const words = { id: typeof raw2.id === 'string' ? raw2.id.trim() : '', en: typeof raw2.en === 'string' ? raw2.en.trim() : '' }
+        // Not normalizeLocalizedPair: that copies one language into the other.
+        const text = words.id || words.en ? words : undefined
+        const picture = normalizeLandingMediaValue(element.media)
+        const hidden = element.hidden === true
+        if (!hidden && text === undefined && picture === undefined) return []
+        return [{ key: element.key, ...(hidden ? { hidden } : {}), ...(text !== undefined ? { text } : {}), ...(picture !== undefined ? { media: picture } : {}) }]
+      })
+      : undefined
     const steps = Array.isArray(slide.steps)
       ? slide.steps
         .map((step) => normalizeLocalizedPair(step, false))
@@ -617,6 +680,8 @@ const normalizeHeroSlideItems = (slideList: unknown): HeroSlideItem[] | undefine
       secondaryCta: normalizeLocalizedPair(slide.secondaryCta, true),
       ...(typeof slide.secondaryCtaUrl === 'string' ? { secondaryCtaUrl: slide.secondaryCtaUrl.trim() } : {}),
       ...(media !== undefined ? { media } : {}),
+      ...(mediaEn !== undefined ? { mediaEn } : {}),
+      ...(elements && elements.length > 0 ? { elements } : {}),
     }
   })
 }
@@ -716,11 +781,27 @@ export const normalizeLandingContentMutation = <T extends { sections?: unknown }
       }
     }
 
+    if (key === 'clientStories') {
+      const items = normalizeRepeaterItems(section.items, key)
+      const raw = (section.display && typeof section.display === 'object' ? section.display : null) as Record<string, unknown> | null
+      const count = Number(raw?.homepageCount)
+      const keys = new Set(items.map(testimonialKey))
+      return {
+        ...baseSection,
+        ...(raw ? {
+          display: {
+            homepageCount: Number.isInteger(count) ? Math.min(Math.max(count, 3), TESTIMONIALS_HOMEPAGE_MAX) : TESTIMONIALS_HOMEPAGE_DEFAULT,
+            hiddenKeys: Array.isArray(raw.hiddenKeys) ? raw.hiddenKeys.filter((key): key is string => typeof key === 'string' && keys.has(key)) : [],
+          },
+        } : {}),
+        items,
+      }
+    }
+
     if (
       key === 'supportExplorer'
       || key === 'carePromise'
       || key === 'careJourney'
-      || key === 'clientStories'
       || key === 'frequentlyAskedQuestions'
     ) {
       return {
@@ -1052,4 +1133,77 @@ export const validateCreateUserMutation = (value: unknown): value is CreateUserM
 export const validateLoginCredentials = (value: unknown): value is LoginCredentials => (
   Value.Check(LoginCredentialsSchema, value)
 )
+
+/** Parts that disappear with a hidden block: their words and pictures must not travel to visitors either. */
+const HERO_PARTS_OF_BLOCK: Record<string, readonly string[]> = {
+  sticker: ['stickerText'],
+  caption: ['captionTitle', 'captionText'],
+  kittensBox: ['kittens'],
+  tabbyBox: ['tabby'],
+  circle: ['circlePhoto'],
+  normCard: ['normLabel', 'normImage'],
+  typeCard: ['typeLabel', 'typeImage'],
+  matchCard: ['matchTitle', 'matchText', 'matchHint', 'avatars', 'avatar1', 'avatar2', 'avatar3', 'avatar4'],
+  avatars: ['avatar1', 'avatar2', 'avatar3', 'avatar4'],
+  pill: ['pillText'],
+  leftSheet: ['leftImage'],
+  rightSheet: ['rightImage'],
+  badge: ['badgeText'],
+  stat: ['statNumber', 'statText', 'statSource'],
+  quote: ['quoteText', 'quoteAuthor'],
+  focus: ['focusTitle', 'focusList'],
+  facts: ['fact1Title', 'fact1Text', 'fact2Title', 'fact2Text', 'fact3Title', 'fact3Text'],
+}
+
+/** A slide as visitors receive it: what staff hid is left out. (Tag, description and buttons are required fields and stay.) */
+export const stripHiddenHeroSlide = (slide: HeroSlideItem): HeroSlideItem => {
+  const hidden = new Set((slide.elements ?? []).filter((element) => element.hidden).map((element) => element.key))
+  if (hidden.size === 0) return slide
+  const gone = new Set([...hidden].flatMap((key) => HERO_PARTS_OF_BLOCK[key] ?? []))
+  const result: HeroSlideItem = {
+    ...slide,
+    elements: slide.elements!
+      .filter((element) => !gone.has(element.key))
+      .map((element) => (element.hidden ? { key: element.key, hidden: true } : element)),
+  }
+  for (const field of ['location', 'note', 'steps', 'chips'] as const) if (hidden.has(field)) delete result[field]
+  if (hidden.has('photo')) {
+    delete result.media
+    delete result.mediaEn
+  }
+  return result
+}
+
+export const stripHiddenHeroParts = <T extends { content: LandingContentMutation } | null>(landing: T): T => {
+  if (!landing) return landing
+  const sections = landing.content.sections.map((section) =>
+    section.key === 'hero' && section.slideItems ? { ...section, slideItems: section.slideItems.map(stripHiddenHeroSlide) } : section)
+  return { ...landing, content: { ...landing.content, sections } as LandingContentMutation }
+}
+
+/** The testimonials the homepage shows, in order. */
+export const homepageTestimonials = <T extends { position: number; title: { id: string }; description: { id: string } }>(
+  section: { items: readonly T[]; display?: { homepageCount: number; hiddenKeys: readonly string[] } },
+): T[] => {
+  const hidden = new Set(section.display?.hiddenKeys ?? [])
+  return [...section.items]
+    .sort((left, right) => left.position - right.position)
+    .filter((item) => !hidden.has(testimonialKey(item)))
+    .slice(0, section.display?.homepageCount ?? TESTIMONIALS_HOMEPAGE_DEFAULT)
+}
+
+/**
+ * Visitors receive only the testimonials that are shown, however few that is. A hidden one is never sent: the client may
+ * have withdrawn it. The hidden markers are not sent either.
+ */
+export const trimPublicTestimonials = <T extends { content: LandingContentMutation } | null>(landing: T): T => {
+  if (!landing) return landing
+  const sections = landing.content.sections.map((section) => {
+    if (section.key !== 'clientStories') return section
+    const shown = homepageTestimonials(section)
+    const { display: _display, ...rest } = section
+    return { ...rest, items: shown.map((item, position) => ({ ...item, position })) }
+  })
+  return { ...landing, content: { ...landing.content, sections } as LandingContentMutation }
+}
 

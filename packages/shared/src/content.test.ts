@@ -118,7 +118,7 @@ describe('shared content contracts', () => {
       supportExplorer: { min: 3, max: 6 },
       carePromise: { min: 3, max: 4 },
       careJourney: { min: 3, max: 5 },
-      clientStories: { min: 3, max: 8 },
+      clientStories: { min: 3, max: 500 },
       frequentlyAskedQuestions: { min: 3, max: 10 },
     })
   })
@@ -338,4 +338,12 @@ describe('shared content contracts', () => {
     expect(source).not.toMatch(/from\s+['"][^'"]*(?:apps\/|@\/)/)
     expect(source).not.toMatch(/aws|s3|tencent|cloudflare|azure|gcp/i)
   })
+})
+
+it('accepts a public testimonial section with fewer than three shown, so the page still renders', () => {
+  for (const count of [0, 2]) {
+    const content = validLandingMutation()
+    const sections = content.sections.map((section: any) => (section.key === 'clientStories' ? { ...section, items: section.items.slice(0, count) } : section))
+    expect(validateLandingContentMutation({ ...content, sections })).toBe(true)
+  }
 })

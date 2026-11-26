@@ -104,4 +104,21 @@ describe('IdleSessionGuard', () => {
     await act(async () => { vi.advanceTimersByTime(2000) })
     expect(screen.getByRole('alertdialog')).toBeTruthy()
   })
+
+  it("signs out at once when the saved activity is already too old", async () => {
+    window.localStorage.setItem(ACTIVITY_STORAGE_KEY, String(Date.now() - 20 * MIN))
+    mount()
+    await act(async () => {})
+    expect(logout).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not let a movement after sleep restart a clock that has run out", async () => {
+    mount()
+    // The computer slept: the clock moved on but no timer fired.
+    vi.setSystemTime(Date.now() + 20 * MIN)
+    await act(async () => {
+      fireEvent.pointerMove(window)
+    })
+    expect(logout).toHaveBeenCalledTimes(1)
+  })
 })

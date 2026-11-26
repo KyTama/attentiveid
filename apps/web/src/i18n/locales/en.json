@@ -6,6 +6,12 @@
     "groupOperations": "Operations",
     "groupTools": "Tools",
     "groupSettings": "Settings",
+
+    "groupEmail": "Email",
+
+    "navEmailChats": "Conversations",
+    "navEmailContacts": "Contacts",
+    "navEmailSend": "Bulk send",
     "groupForms": "Forms",
     "groupWiki": "Wiki & Guides",
     "navFormsAll": "All Form Activity",

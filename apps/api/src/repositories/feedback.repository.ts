@@ -1,7 +1,7 @@
-import { desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
-import type { FeedbackKind, FeedbackReport, FeedbackSubmission } from '@attentiveid/shared';
+import { asc, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import type { FeedbackEvent, FeedbackKind, FeedbackReport, FeedbackStatus, FeedbackSubmission } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { feedbackFiles, feedbackReports } from '../db/schema';
+import { feedbackEvents, feedbackFiles, feedbackNotes, feedbackReports } from '../db/schema';
 
 export interface FeedbackUpload {
     name: string;
@@ -9,32 +9,54 @@ export interface FeedbackUpload {
     data: Buffer;
 }
 
+export interface PendingFeedbackFile extends FeedbackUpload {
+    id: string;
+}
+
+export interface FeedbackEventInput {
+    actor: string;
+    action: FeedbackEvent['action'];
+    detail?: string;
+}
+
+export interface FeedbackChange {
+    status?: FeedbackStatus;
+    kind?: FeedbackKind;
+    assignee?: string;
+}
+
 export interface FeedbackRepository {
-    create(submission: FeedbackSubmission, files: FeedbackUpload[]): Promise<{ id: string }>;
+    create(submission: FeedbackSubmission, files: FeedbackUpload[], events: FeedbackEventInput[]): Promise<{ id: string }>;
     /** Newest first. */
     list(limit?: number): Promise<FeedbackReport[]>;
     get(id: string): Promise<FeedbackReport | null>;
+    /** Changes status, type or who processes it, and records what happened. */
+    update(id: string, change: FeedbackChange, events: FeedbackEventInput[]): Promise<void>;
+    addNote(id: string, note: { author: string; body: string }, files: FeedbackUpload[]): Promise<void>;
     /** Files whose content is still in the database (not yet in Drive). */
-    pendingFiles(id: string): Promise<FeedbackUpload[]>;
+    pendingFiles(id: string): Promise<PendingFeedbackFile[]>;
     /** Total size of file content still waiting in the database. */
     pendingBytes(): Promise<number>;
-    /** Records the Drive folder and empties the stored file content. */
-    markCopied(id: string, folderId: string): Promise<void>;
+    /** Records the Drive folder and empties the content of the files that were copied. */
+    markCopied(id: string, folderId: string, fileIds: string[]): Promise<void>;
     markCopyFailed(id: string, error: string): Promise<void>;
-    /** Marks done or open again. Returns false when the report does not exist. */
-    setDone(id: string, done: boolean): Promise<boolean>;
     delete(id: string): Promise<boolean>;
 }
 
 type Database = typeof defaultDb;
 
 export const createFeedbackRepository = (db: Database = defaultDb): FeedbackRepository => {
-    const withFiles = async (rows: Array<typeof feedbackReports.$inferSelect>): Promise<FeedbackReport[]> => {
+    const complete = async (rows: Array<typeof feedbackReports.$inferSelect>): Promise<FeedbackReport[]> => {
         if (rows.length === 0) return [];
+        const ids = rows.map((row) => row.id);
         const files = await db
-            .select({ reportId: feedbackFiles.reportId, name: feedbackFiles.name, size: feedbackFiles.byteSize })
+            .select({ reportId: feedbackFiles.reportId, noteId: feedbackFiles.noteId, name: feedbackFiles.name, size: feedbackFiles.byteSize })
             .from(feedbackFiles)
-            .where(inArray(feedbackFiles.reportId, rows.map((row) => row.id)));
+            .where(inArray(feedbackFiles.reportId, ids));
+        const notes = await db.select().from(feedbackNotes).where(inArray(feedbackNotes.reportId, ids)).orderBy(asc(feedbackNotes.createdAt));
+        const events = await db.select().from(feedbackEvents).where(inArray(feedbackEvents.reportId, ids)).orderBy(asc(feedbackEvents.createdAt));
+        const filesOf = (reportId: string, noteId: string | null) =>
+            files.filter((file) => file.reportId === reportId && file.noteId === noteId).map(({ name, size }) => ({ name, size }));
         return rows.map((row) => ({
             id: row.id,
             kind: row.kind as FeedbackKind,
@@ -42,39 +64,60 @@ export const createFeedbackRepository = (db: Database = defaultDb): FeedbackRepo
             message: row.message,
             page: row.page,
             createdAt: row.createdAt,
+            status: row.status as FeedbackStatus,
+            assignee: row.assignee,
             doneAt: row.doneAt,
             driveFolderId: row.driveFolderId,
             driveError: row.driveError,
-            files: files.filter((file) => file.reportId === row.id).map(({ name, size }) => ({ name, size }))
+            files: filesOf(row.id, null),
+            notes: notes
+                .filter((note) => note.reportId === row.id)
+                .map((note) => ({ id: note.id, author: note.author, body: note.body, createdAt: note.createdAt, files: filesOf(row.id, note.id) })),
+            log: events
+                .filter((event) => event.reportId === row.id)
+                .map((event) => ({ id: event.id, at: event.createdAt, actor: event.actor, action: event.action as FeedbackEvent['action'], detail: event.detail }))
         }));
     };
 
+    const fileRows = (reportId: string, files: FeedbackUpload[], noteId: string | null) =>
+        files.map((file) => ({ reportId, noteId, name: file.name, mimeType: file.mimeType, byteSize: file.data.length, data: file.data }));
+
     return {
-        async create(submission, files) {
+        async create(submission, files, events) {
             return db.transaction(async (tx) => {
                 const [row] = await tx.insert(feedbackReports).values(submission).returning({ id: feedbackReports.id });
-                if (files.length > 0) {
-                    await tx.insert(feedbackFiles).values(files.map((file) => ({
-                        reportId: row.id,
-                        name: file.name,
-                        mimeType: file.mimeType,
-                        byteSize: file.data.length,
-                        data: file.data
-                    })));
-                }
+                if (files.length > 0) await tx.insert(feedbackFiles).values(fileRows(row.id, files, null));
+                if (events.length > 0) await tx.insert(feedbackEvents).values(events.map((event) => ({ ...event, reportId: row.id })));
                 return row;
             });
         },
-        async list(limit = 500) {
-            return withFiles(await db.select().from(feedbackReports).orderBy(desc(feedbackReports.createdAt)).limit(limit));
+        async list(limit = 2000) {
+            return complete(await db.select().from(feedbackReports).orderBy(desc(feedbackReports.createdAt)).limit(limit));
         },
         async get(id) {
             const rows = await db.select().from(feedbackReports).where(eq(feedbackReports.id, id)).limit(1);
-            return (await withFiles(rows))[0] ?? null;
+            return (await complete(rows))[0] ?? null;
+        },
+        async update(id, change, events) {
+            await db.transaction(async (tx) => {
+                const values = {
+                    ...change,
+                    ...(change.status ? { doneAt: change.status === 'done' ? new Date().toISOString() : null } : {})
+                };
+                if (Object.keys(values).length > 0) await tx.update(feedbackReports).set(values).where(eq(feedbackReports.id, id));
+                if (events.length > 0) await tx.insert(feedbackEvents).values(events.map((event) => ({ ...event, reportId: id })));
+            });
+        },
+        async addNote(id, note, files) {
+            await db.transaction(async (tx) => {
+                const [row] = await tx.insert(feedbackNotes).values({ reportId: id, ...note }).returning({ id: feedbackNotes.id });
+                if (files.length > 0) await tx.insert(feedbackFiles).values(fileRows(id, files, row.id));
+                await tx.insert(feedbackEvents).values({ reportId: id, actor: note.author, action: 'note', detail: files.map((file) => file.name).join(', ') });
+            });
         },
         async pendingFiles(id) {
             const rows = await db.select().from(feedbackFiles).where(eq(feedbackFiles.reportId, id));
-            return rows.flatMap((row) => (row.data ? [{ name: row.name, mimeType: row.mimeType, data: row.data }] : []));
+            return rows.flatMap((row) => (row.data ? [{ id: row.id, name: row.name, mimeType: row.mimeType, data: row.data }] : []));
         },
         async pendingBytes() {
             const [row] = await db
@@ -83,19 +126,12 @@ export const createFeedbackRepository = (db: Database = defaultDb): FeedbackRepo
                 .where(isNotNull(feedbackFiles.data));
             return Number(row?.total ?? 0);
         },
-        async markCopied(id, folderId) {
+        async markCopied(id, folderId, fileIds) {
             await db.update(feedbackReports).set({ driveFolderId: folderId, driveError: null }).where(eq(feedbackReports.id, id));
-            await db.update(feedbackFiles).set({ data: null }).where(eq(feedbackFiles.reportId, id));
+            if (fileIds.length > 0) await db.update(feedbackFiles).set({ data: null }).where(inArray(feedbackFiles.id, fileIds));
         },
         async markCopyFailed(id, error) {
             await db.update(feedbackReports).set({ driveError: error.slice(0, 300) }).where(eq(feedbackReports.id, id));
-        },
-        async setDone(id, done) {
-            const rows = await db.update(feedbackReports)
-                .set({ doneAt: done ? new Date().toISOString() : null })
-                .where(eq(feedbackReports.id, id))
-                .returning({ id: feedbackReports.id });
-            return rows.length > 0;
         },
         async delete(id) {
             const rows = await db.delete(feedbackReports).where(eq(feedbackReports.id, id)).returning({ id: feedbackReports.id });

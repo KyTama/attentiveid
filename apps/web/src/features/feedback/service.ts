@@ -1,4 +1,4 @@
-import type { FeedbackErrors, FeedbackReport, FeedbackSubmission, UpdateLogEntry } from '@attentiveid/shared'
+import type { FeedbackBoard, FeedbackErrors, FeedbackReport, FeedbackSubmission, UpdateLogEntry } from '@attentiveid/shared'
 import { getActiveAuthHeaders } from '@/features/auth/auth-context'
 
 export type FeedbackSendResult =
@@ -32,17 +32,25 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
     ...init,
     credentials: 'include',
-    headers: { ...getActiveAuthHeaders(), ...(init.body ? { 'Content-Type': 'application/json' } : {}) },
+    // A form upload sets its own content type.
+    headers: { ...getActiveAuthHeaders(), ...(typeof init.body === 'string' ? { 'Content-Type': 'application/json' } : {}) },
   })
   const json = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(json?.message || `Permintaan gagal (${response.status})`)
   return json as T
 }
 
-export const listFeedback = async () => (await request<{ data: FeedbackReport[] }>('/api/admin/feedback')).data
+export const listFeedback = async () => (await request<{ data: FeedbackBoard }>('/api/admin/feedback')).data
 
-export const setFeedbackDone = (id: string, done: boolean) =>
-  request(`/api/admin/feedback/${id}`, { method: 'PUT', body: JSON.stringify({ done }) })
+export const updateFeedback = async (id: string, change: Partial<Pick<FeedbackReport, 'status' | 'kind' | 'assignee'>>) =>
+  (await request<{ data: FeedbackReport }>(`/api/admin/feedback/${id}`, { method: 'PUT', body: JSON.stringify(change) })).data
+
+export const addFeedbackNote = async (id: string, body: string, files: File[]) => {
+  const form = new FormData()
+  form.append('body', body)
+  for (const file of files) form.append('files', file)
+  return (await request<{ data: FeedbackReport }>(`/api/admin/feedback/${id}/notes`, { method: 'POST', body: form })).data
+}
 
 export const copyFeedbackToDrive = async (id: string) =>
   (await request<{ data: FeedbackReport }>(`/api/admin/feedback/${id}/drive`, { method: 'POST' })).data

@@ -12,6 +12,10 @@ export interface MailMessage {
     html: string
     text: string
     attachments?: MailAttachment[]
+    /** Bulk e-mail only: replies go elsewhere, extra headers (unsubscribe), our own Message-ID. */
+    replyTo?: string
+    headers?: Record<string, string>
+    messageId?: string
 }
 
 export interface Mailer {
@@ -56,7 +60,9 @@ export const createMailer = (settings: SmtpSettings, transportFactory = nodemail
             await transport.sendMail({
                 from,
                 to: message.to,
-                replyTo: settings.replyTo || fromAddress,
+                replyTo: message.replyTo || settings.replyTo || fromAddress,
+                ...(message.headers ? { headers: message.headers } : {}),
+                ...(message.messageId ? { messageId: message.messageId } : {}),
                 subject: message.subject,
                 html: message.html,
                 text: message.text,

@@ -17,6 +17,9 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { FeedbackPage } from './pages/FeedbackPage'
 import { FeedbackReportsPage } from './pages/dashboard/FeedbackReportsPage'
+import { EmailChatsPage } from './pages/dashboard/EmailChatsPage'
+import { EmailContactsPage } from './pages/dashboard/EmailContactsPage'
+import { EmailSendPage } from './pages/dashboard/EmailSendPage'
 import { UpdateLogPage } from './pages/dashboard/UpdateLogPage'
 import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { PageViewTracker } from './components/common/PageViewTracker'
@@ -51,6 +54,7 @@ import { UsersManagementPage } from './pages/dashboard/UsersManagementPage'
 import { FreeSessionCmsPage } from './pages/dashboard/FreeSessionCmsPage'
 import { BookingsCmsPage } from './pages/dashboard/BookingsCmsPage'
 import { SciBriefCmsPage } from './pages/dashboard/SciBriefCmsPage'
+import { TeamCmsPage } from './pages/dashboard/TeamCmsPage'
 import { ExperimentalFormsPage } from './pages/dashboard/ExperimentalPages'
 import { SystemMapPage } from './pages/dashboard/SystemMapPage'
 import { EXPERIMENTAL_EMAILS } from './features/experimental/access'
@@ -86,7 +90,7 @@ export function AppRoutes({
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
-          <Route path="our-services" element={<OurServicesPage />} />
+          <Route path="our-services/:slug?" element={<OurServicesPage />} />
           <Route path="assessments" element={<AssessmentsPage />} />
           <Route path="assessments/payment" element={<AssessmentPaymentPage />} />
           {/* The form itself is a standalone page the web server serves; this keeps the address working in development. */}
@@ -136,6 +140,14 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <PsychologistsCmsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="team"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TeamCmsPage />
               </ProtectedRoute>
             }
           />
@@ -298,13 +310,39 @@ export function AppRoutes({
             }
           />
           <Route
-            path="experimental/reports"
+            path="reports"
             element={
-              <ProtectedRoute allowedRoles={['admin']} allowedEmails={EXPERIMENTAL_EMAILS}>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <FeedbackReportsPage />
               </ProtectedRoute>
             }
           />
+          <Route
+            path="email/contacts"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EmailContactsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="email/send"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EmailSendPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="email/chats"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EmailChatsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="email" element={<Navigate to="/dashboard/email/contacts" replace />} />
+          <Route path="experimental/reports" element={<Navigate to="/dashboard/reports" replace />} />
           <Route
             path="updates"
             element={

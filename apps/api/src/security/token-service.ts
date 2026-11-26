@@ -28,7 +28,8 @@ export interface RefreshTokenRecord {
 export interface RefreshTokenStore {
     insert(record: { userId: string; tokenHash: string; expiresAt: string }): Promise<void>;
     findByHash(tokenHash: string): Promise<RefreshTokenRecord | null>;
-    revokeByHash(tokenHash: string, revokedAt: string): Promise<void>;
+    /** False when nothing was left to revoke (someone else got there first). */
+    revokeByHash(tokenHash: string, revokedAt: string): Promise<boolean | void>;
     revokeAllForUser(userId: string, revokedAt: string): Promise<void>;
 }
 
@@ -213,11 +214,11 @@ export const createTokenService = (options: TokenServiceOptions) => {
             await options.store.revokeAllForUser(userId, now().toISOString());
         },
 
-        async revokeRefreshToken(rawToken: string): Promise<void> {
+        async revokeRefreshToken(rawToken: string): Promise<boolean | void> {
             try {
                 if (!rawToken || !rawToken.startsWith('rt_')) return;
                 const tokenHash = hashRefreshToken(rawToken);
-                await options.store.revokeByHash(tokenHash, now().toISOString());
+                return await options.store.revokeByHash(tokenHash, now().toISOString());
             } catch {
                 // Ignore revocation errors to prevent token probing
             }
@@ -254,13 +255,15 @@ export const createDrizzleRefreshTokenStore = (
     },
 
     async revokeByHash(tokenHash, revokedAt) {
-        await database
+        const changed = await database
             .update(schema.userRefreshTokens)
             .set({ revokedAt })
             .where(and(
                 eq(schema.userRefreshTokens.tokenHash, tokenHash),
                 isNull(schema.userRefreshTokens.revokedAt)
-            ));
+            ))
+            .returning({ userId: schema.userRefreshTokens.userId });
+        return changed.length > 0;
     },
 
     async revokeAllForUser(userId, revokedAt) {

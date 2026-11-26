@@ -2,6 +2,8 @@
  * Saves released MHCU reports to Google Drive, in this folder layout:
  *
  *   <root> / MHCU / <year> / <month> / <code> / <code> - MHCU (ID).pdf, <code> - MHCU (EN).pdf
+ *   <root> / MHCU Internal / <year> / <month> / <code> / the psychologist report (ID and EN). A separate tree, so that sharing a
+ *                                                          participant's folder (or the whole MHCU folder) can never include it.
  *   <root> / <spreadsheet>   one Google Sheet with a row per submission (see upsertSheetRow)
  *
  * <root> is the folder with GOOGLE_DRIVE_ROOT_FOLDER_ID when that is set (a folder this app created itself, which the team may move
@@ -34,8 +36,13 @@ export interface ReportFile {
     data: Uint8Array | string
 }
 
+/** Top folder of the internal (psychologist) reports, beside 'MHCU' and never inside it. */
+export const INTERNAL_FOLDER = 'MHCU Internal'
+
 export interface SaveReportInput {
     code: string
+    /** The tree the files go into: 'MHCU' (default, the client reports) or INTERNAL_FOLDER. */
+    folder?: 'MHCU' | typeof INTERNAL_FOLDER
     /** When the report was released (decides the year and month folders, Jakarta time). */
     at: Date
     files: ReportFile[]
@@ -60,8 +67,12 @@ export const REQUEST_FOLDER = 'Update Request'
 export interface DriveRequests {
     /** Creates "Web App Development / Update Request" when missing and returns the inner folder's id. */
     ensureRequestFolder(): Promise<string>
-    /** Saves one request into its own folder under the month it arrived in. */
-    saveRequest(input: { folderName: string; at: Date; files: ReportFile[] }): Promise<{ folderId: string }>
+    /** Saves one request into its own folder under the month it arrived in, or into `folderId` when it already has one. */
+    saveRequest(input: { folderName: string; at: Date; files: ReportFile[]; folderId?: string }): Promise<{ folderId: string }>
+    /** Rewrites a whole sheet in "Update Request", so it always mirrors what the website holds. */
+    replaceRequestSheet(input: { title: string; tab: string; rows: string[][] }): Promise<{ spreadsheetId: string }>
+    /** Reads the rows under the header of a sheet in "Update Request", creating it with the header when missing. Never changes rows. */
+    readRequestSheet(input: { title: string; tab: string; headers: string[]; maxRows: number }): Promise<{ spreadsheetId: string; rows: unknown[][] }>
 }
 
 export interface DriveReports {
@@ -92,6 +103,9 @@ const failure = async (what: string, response: Response) => {
     return new Error(`${what}: HTTP ${response.status}${snippet ? ` ${snippet}` : ''}`)
 }
 
+/** No request to Google may hang for ever: a job that waits on it would hold every job queued behind it. */
+export const DRIVE_REQUEST_TIMEOUT_MS = 60_000
+
 const bytes = (data: Uint8Array | string): Uint8Array => (typeof data === 'string' ? new TextEncoder().encode(data) : data)
 
 /** Year and two-digit month of a moment, in Jakarta time. */
@@ -100,7 +114,8 @@ export const jakartaYearMonth = (at: Date): { year: string; month: string } => {
     return { year: String(jakarta.getUTCFullYear()), month: String(jakarta.getUTCMonth() + 1).padStart(2, '0') }
 }
 
-export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetcher = fetch): DriveReports & DriveRequests => {
+export const createDriveReports = (config: DriveReportsConfig, rawFetch: Fetcher = fetch, timeoutMs = DRIVE_REQUEST_TIMEOUT_MS): DriveReports & DriveRequests => {
+    const fetchImpl: Fetcher = (url, init) => rawFetch(url, { ...init, signal: init.signal ?? AbortSignal.timeout(timeoutMs) })
     const rootName = config.rootName?.trim() || 'Reports'
     const rootFolderId = config.rootFolderId?.trim() || ''
     /** path -> folder id, so a busy day does not search for the same folders again. */
@@ -196,10 +211,10 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
         return response
     }
 
-    const ensureSpreadsheet = async (title: string, tab: string): Promise<string> => {
+    const ensureSpreadsheet = async (title: string, tab: string, parentId?: string): Promise<string> => {
         const cached = sheetIds.get(title)
         if (cached) return cached
-        const parent = await rootId()
+        const parent = parentId ?? await rootId()
         const query = `name = ${quote(title)} and ${quote(parent)} in parents and trashed = false and mimeType = '${SHEET_MIME}'`
         const found = await fetchImpl(`${API}?${new URLSearchParams({ q: query, fields: 'files(id)', spaces: 'drive', pageSize: '1' })}`, { method: 'GET', headers: await headers() })
         if (!found.ok) throw await failure('Drive search', found)
@@ -224,7 +239,41 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
     return {
         isConfigured: true,
         ensureRequestFolder: requestFolderId,
+        async replaceRequestSheet(input) {
+            const spreadsheetId = await ensureSpreadsheet(input.title, input.tab, await requestFolderId())
+            const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
+            const range = (a1: string) => encodeURIComponent(`${input.tab}!${a1}`)
+            const width = columnName(Math.max(1, ...input.rows.map((row) => row.length)))
+            try {
+                // Write first, then clear what is left below, so a failure never leaves the sheet empty.
+                // RAW: stored as plain text, so nothing a visitor wrote can run as a formula.
+                await sheetsCall('Sheets write', `${base}/${range('A1')}?valueInputOption=RAW`, { method: 'PUT', json: { values: input.rows } })
+                await sheetsCall('Sheets clear', `${base}/${range(`A${input.rows.length + 1}:${width}`)}:clear`, { method: 'POST', json: {} })
+            } catch (error) {
+                // The sheet may have been deleted: look for it (or make it) again next time.
+                sheetIds.delete(input.title)
+                throw error
+            }
+            return { spreadsheetId }
+        },
+        async readRequestSheet(input) {
+            const spreadsheetId = await ensureSpreadsheet(input.title, input.tab, await requestFolderId())
+            const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
+            const range = (a1: string) => encodeURIComponent(`'${input.tab}'!${a1}`)
+            const width = columnName(input.headers.length)
+            const read = await sheetsCall('Sheets read', `${base}/${range(`A1:${width}${input.maxRows + 1}`)}`, { method: 'GET' })
+            const values = ((await read.json()) as { values?: unknown[][] }).values ?? []
+            if (values.length === 0) {
+                await sheetsCall('Sheets header', `${base}/${range(`A1:${width}1`)}?valueInputOption=RAW`, { method: 'PUT', json: { values: [input.headers] } })
+            }
+            return { spreadsheetId, rows: values.slice(1) }
+        },
+
         async saveRequest(input) {
+            if (input.folderId) {
+                for (const file of input.files) await upload(file, input.folderId)
+                return { folderId: input.folderId }
+            }
             const { year, month } = jakartaYearMonth(input.at)
             const base = `/${WEBDEV_FOLDER}/${REQUEST_FOLDER}`
             const monthId = await ensureFolder(`${year}-${month}`, await requestFolderId(), `${base}/${year}-${month}`)
@@ -254,7 +303,8 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
         },
         async saveReport(input) {
             const { year, month } = jakartaYearMonth(input.at)
-            const segments = rootFolderId ? ['MHCU', year, month, input.code] : [rootName, 'MHCU', year, month, input.code]
+            const tree = input.folder ?? 'MHCU'
+            const segments = rootFolderId ? [tree, year, month, input.code] : [rootName, tree, year, month, input.code]
             let parent = rootFolderId || 'root'
             let key = rootFolderId ? `/${rootFolderId}` : ''
             for (const segment of segments) {

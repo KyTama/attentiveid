@@ -7,6 +7,7 @@
 /** Pages that are counted. Anything else (including sub pages) is ignored. */
 export const TRACKED_PAGES = [
   '/',
+  '/our-services',
   '/psychologists',
   '/articles',
   '/sci-brief',
@@ -25,7 +26,8 @@ export const isTrackedPage = (path: string): path is TrackedPage => (TRACKED_PAG
 export const normalizeTrackedPath = (value: unknown): TrackedPage | null => {
   if (typeof value !== 'string') return null
   const trimmed = value.trim().split(/[?#]/)[0].toLowerCase().replace(/\/+$/, '')
-  const path = trimmed === '' ? '/' : trimmed
+  // A service has its own address, but it is the one "our services" page.
+  const path = trimmed === '' ? '/' : trimmed.replace(/^\/our-services\/[a-z0-9_-]+$/, '/our-services')
   return isTrackedPage(path) ? path : null
 }
 

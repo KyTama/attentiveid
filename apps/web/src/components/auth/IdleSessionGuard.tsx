@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Clock } from 'lucide-react'
 import { IDLE_TIMEOUT_DEFAULT_MINUTES } from '@attentiveid/shared'
 import { useAuth } from '@/features/auth/auth-context'
-import { ACTIVITY_EVENTS, idleStateAt, readLastActivity, writeLastActivity, type IdleState } from '@/features/auth/idle-session'
+import { ACTIVITY_EVENTS, idleStateAt, readLastActivity, readStoredActivity, writeLastActivity, type IdleState } from '@/features/auth/idle-session'
 import { useTx } from '@/features/i18n/use-tx'
 
 /**
@@ -26,38 +26,45 @@ export function IdleSessionGuard() {
   const warningShown = useRef(false)
   const stage = useRef<IdleState['kind']>('active')
 
+  const expire = useCallback(() => {
+    if (stage.current === 'expired') return
+    stage.current = 'expired'
+    void actions.current.logout().finally(() => actions.current.navigate('/portal-gate', { replace: true }))
+  }, [])
+
   const markActivity = useCallback(() => {
     // While the question is on screen only the Yes button counts, so a passing mouse move cannot dismiss it unseen.
     if (warningShown.current) return
     const now = Date.now()
     if (now - last.current < 1000) return
+    // Waking a computer or reloading: a movement must not restart a clock that has already run out.
+    if (idleStateAt(now, readLastActivity(last.current), minutes).kind === 'expired') return expire()
     last.current = now
     writeLastActivity(now)
-  }, [])
+  }, [minutes, expire])
 
   useEffect(() => {
     if (!userId) return
-    last.current = readLastActivity(Date.now())
+    // The saved time, not "now": reloading or coming back to the portal must not restart the idle clock.
+    last.current = readStoredActivity() || Date.now()
     writeLastActivity(last.current)
+    stage.current = 'active'
+    if (idleStateAt(Date.now(), last.current, minutes).kind === 'expired') expire()
     for (const name of ACTIVITY_EVENTS) window.addEventListener(name, markActivity, { capture: true, passive: true })
     const timer = window.setInterval(() => {
       // Another tab of the portal may have seen activity.
       last.current = readLastActivity(last.current)
       const next = idleStateAt(Date.now(), last.current, minutes)
       warningShown.current = next.kind === 'warning'
-      if (next.kind === 'expired' && stage.current !== 'expired') {
-        stage.current = 'expired'
-        void actions.current.logout().finally(() => actions.current.navigate('/portal-gate', { replace: true }))
-      } else if (next.kind !== 'expired') {
-        stage.current = next.kind
-      }
+      if (next.kind === 'expired') expire()
+      else stage.current = next.kind
       setState((current) => (current.kind === next.kind && (next.kind !== 'warning' || (current.kind === 'warning' && current.secondsLeft === next.secondsLeft)) ? current : next))
     }, 1000)
     return () => {
       window.clearInterval(timer)
       for (const name of ACTIVITY_EVENTS) window.removeEventListener(name, markActivity, { capture: true })
     }
-  }, [userId, minutes, markActivity])
+  }, [userId, minutes, markActivity, expire])
 
   if (!user || state.kind !== 'warning') return null
 

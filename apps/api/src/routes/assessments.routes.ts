@@ -17,7 +17,7 @@ import { renderClientReportHtml, renderClientReportPage, renderPsychologistRepor
 import { findBrowser, renderPdf, type PdfRenderer } from '../services/pdf-render';
 import { RAW_SHEET_TAB, RAW_SHEET_TITLE, rawAnswerHeaders, rawAnswerRow } from '../services/mhcu-raw-sheet';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
-import type { DriveReports, ReportFile } from '../services/drive-reports';
+import { INTERNAL_FOLDER, type DriveReports, type ReportFile } from '../services/drive-reports';
 import { loadReportAssets, makeStandaloneReport } from '../services/mhcu-report-file';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { MhcuSettings } from '../services/mhcu-settings';
@@ -45,6 +45,8 @@ export interface AssessmentsRoutesDependencies {
     siteOrigin?: string;
     /** Saves released reports to Google Drive (optional; without it nothing is saved there). */
     driveReports?: DriveReports;
+    /** How long one submission's draft copy may take before the next one starts. */
+    draftTimeoutMs?: number;
     /** Prints a report page to PDF (default: headless Chromium). Replaceable in tests. */
     pdfRenderer?: PdfRenderer | null;
     rateLimit?: AssessmentsRateLimit;
@@ -229,6 +231,25 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         }
         : undefined;
 
+    /**
+     * The internal (psychologist) report in both languages. It is for the Drive copy ONLY: it must never go into `buildReportFiles`,
+     * whose files are attached to the e-mails, one of which goes to the participant.
+     */
+    const buildInternalFiles = canPrint
+        ? async (row: AssessmentRow): Promise<ReportFile[]> => {
+            const loaded = await loadReportInput(row.id);
+            if (!loaded) return [];
+            const assets = await loadReportAssets(dependencies.siteOrigin || 'https://attentiveid.com');
+            const print = dependencies.pdfRenderer || renderPdf;
+            const files: ReportFile[] = [];
+            for (const lang of ['id', 'en'] as const) {
+                const html = makeStandaloneReport(renderPsychologistReportHtml({ ...loaded.input, lang }), assets);
+                files.push({ name: `${row.code} - MHCU Psikolog (${lang.toUpperCase()}).pdf`, mimeType: 'application/pdf', data: await print(html) });
+            }
+            return files;
+        }
+        : undefined;
+
     /** Drive jobs of the same result run one after the other, so a late draft can never overwrite the final report. */
     const driveTails = new Map<string, Promise<unknown>>();
     const serial = <T>(key: string, job: () => Promise<T>): Promise<T> => {
@@ -255,16 +276,41 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     const saveToDrive = dependencies.driveReports
         ? (row: AssessmentRow, files: ReportFile[]) =>
             serial(row.code, async () => {
-                const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files });
+                const drive = dependencies.driveReports as DriveReports;
+                const at = new Date();
+                // The client report goes first and is kept even when the internal one fails; that failure is then reported.
+                const saved = await drive.saveReport({ code: row.code, at, files });
                 await saveRawRow(row);
+                try {
+                    // The psychologist report goes into its own tree, never into the participant's folder.
+                    const internal = buildInternalFiles ? await buildInternalFiles(row) : [];
+                    if (internal.length) await drive.saveReport({ code: row.code, at, files: internal, folder: INTERNAL_FOLDER });
+                } catch (error) {
+                    logFailure('drive-internal', error);
+                    throw new Error('The client reports were saved, but the psychologist report could not be saved');
+                }
                 return { path: saved.path };
             })
         : undefined;
 
+    /**
+     * Draft copies are made one submission at a time. Chromium itself already prints one page at a time (see pdf-render), but without
+     * this every submission of a burst would load its history and hold its pages in memory while waiting; queued like this a waiting
+     * submission holds only its id.
+     */
+    let draftQueue: Promise<unknown> = Promise.resolve();
+    /** A draft that hangs (a stuck upload) is given up on after this long, so it cannot hold every later draft until a restart. */
+    const DRAFT_TIMEOUT_MS = dependencies.draftTimeoutMs ?? 5 * 60_000;
+    const withDraftTimeout = (job: Promise<unknown>) =>
+        new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('Draft copy timed out')), DRAFT_TIMEOUT_MS);
+            job.then(() => resolve(), reject).finally(() => clearTimeout(timer));
+        });
+
     /** Right after a check-up is submitted: print the reports as they are now and save them (and the raw answers) to Drive. Nothing is sent to the person. Never fails the submission. */
     const saveDraftToDrive = (id: string) => {
         if (!dependencies.driveReports) return;
-        void (async () => {
+        const copy = async () => {
             try {
                 const row = await repository.get(id);
                 if (!row) return;
@@ -274,7 +320,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             } catch (error) {
                 logFailure('drive-draft', error);
             }
-        })();
+        };
+        // Never rejects: the next submission's turn must come whatever happened to this one.
+        draftQueue = draftQueue.then(() => withDraftTimeout(copy())).catch((error) => logFailure('drive-draft', error));
     };
 
     /** Where release e-mails to staff go: the MHCU settings inbox, else the general alert address. */
@@ -616,7 +664,10 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 value === undefined || value === null ? null : typeof value === 'string' ? (value.trim().length <= max ? value.trim() || null : undefined) : undefined;
             const template = text(body?.template, 4000);
             const custom = text(body?.custom, 500);
-            if (template === undefined || custom === undefined || typeof body?.final !== 'boolean') {
+            // The English fields are optional in the request: left out = unchanged, so an older page cannot wipe them.
+            const templateEn = body?.templateEn === undefined ? 'keep' : text(body.templateEn, 4000);
+            const customEn = body?.customEn === undefined ? 'keep' : text(body.customEn, 500);
+            if (template === undefined || custom === undefined || templateEn === undefined || customEn === undefined || typeof body?.final !== 'boolean') {
                 set.status = 400;
                 return { status: 'error', message: 'Catatan tidak valid (catatan khusus maksimal 500 karakter).' };
             }
@@ -626,7 +677,14 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
-                const row = await repository.saveNote(params.id, { template, custom, final: body.final, userId: currentUser.id });
+                const row = await repository.saveNote(params.id, {
+                    template,
+                    custom,
+                    ...(templateEn === 'keep' ? {} : { templateEn }),
+                    ...(customEn === 'keep' ? {} : { customEn }),
+                    final: body.final,
+                    userId: currentUser.id
+                });
                 await auditSafely({ actor: currentUser?.id ?? null, action: 'note', submissionId: params.id, detail: body.final ? 'final' : 'draft' });
                 await automate(params.id);
                 return { status: 'success', data: (await repository.get(params.id)) ?? row };

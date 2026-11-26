@@ -46,6 +46,7 @@ export const PAGE_ACCESS: AccessRow[] = [
   { id: 'share', area: 'Konten Website', label: 'Thumbnail Link', route: '/dashboard/share-previews', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'site-settings', area: 'Konten Website', label: 'Pengaturan Situs', route: '/dashboard/site-settings', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'psychologists', area: 'Tim', label: 'Psychologists', route: '/dashboard/psychologists', superadmin: 'all', admin: 'all', psychologist: 'none' },
+  { id: 'team', area: 'Tim', label: 'Tim di Website', route: '/dashboard/team', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'profile', area: 'Tim', label: 'Profil Saya', route: '/dashboard/profile', superadmin: 'all', admin: 'all', psychologist: 'own', note: 'Psikolog hanya mengubah profilnya sendiri.' },
   { id: 'articles', area: 'Riset', label: 'Articles Management', route: '/dashboard/articles', superadmin: 'all', admin: 'all', psychologist: 'own', note: 'Psikolog mengelola artikelnya sendiri.' },
   { id: 'sci-brief', area: 'Riset', label: 'Sci-Brief', route: '/dashboard/sci-brief', superadmin: 'all', admin: 'all', psychologist: 'none' },
@@ -56,7 +57,7 @@ export const PAGE_ACCESS: AccessRow[] = [
   { id: 'wiki', area: 'Wiki', label: 'Wiki MHCU', route: '/dashboard/wiki/mhcu', superadmin: 'all', admin: 'all', psychologist: 'all' },
   { id: 'account', area: 'Pengaturan', label: 'Pengaturan Akun', route: '/dashboard/account', superadmin: 'all', admin: 'all', psychologist: 'all', note: 'Setiap orang hanya mengubah akunnya sendiri.' },
   { id: 'users', area: 'Pengaturan', label: 'Manajemen Staff', route: '/dashboard/users', superadmin: 'all', admin: 'all', psychologist: 'none', note: 'Admin tidak bisa membuat atau mengubah akun Superadmin.' },
-  { id: 'reports', area: 'Experimental', label: 'Laporan Bug & Saran', route: '/dashboard/experimental/reports', superadmin: 'all', admin: 'none', psychologist: 'none', note: 'Hanya akun pemilik (superadmin pada daftar Experimental).' },
+  { id: 'reports', area: 'Pengaturan', label: 'Laporan Bug & Saran', route: '/dashboard/reports', superadmin: 'all', admin: 'all', psychologist: 'none', note: 'Semua admin membaca; hanya penanggung jawab laporan yang mengubah, dan hanya akun pemilik yang menghapus.' },
   { id: 'updates', area: 'Pengaturan', label: 'Riwayat Update', route: '/dashboard/updates', superadmin: 'all', admin: 'all', psychologist: 'none' },
   { id: 'system-map', area: 'Experimental', label: 'System Map', route: '/dashboard/experimental/system-map', superadmin: 'all', admin: 'all', psychologist: 'none', note: 'Hanya akun yang masuk daftar Experimental.' },
 ]

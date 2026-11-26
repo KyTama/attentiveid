@@ -113,6 +113,20 @@ export const landingSections = pgTable('landing_sections', {
     `)
 ]);
 
+/** Reviews read from the review Sheet. A row stays (also when dismissed) so the same review never comes back. */
+export const reviewImports = pgTable('review_imports', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sourceHash: text('source_hash').notNull(),
+    name: text('name').notNull(),
+    quoteId: text('quote_id').notNull(),
+    quoteEn: text('quote_en').notNull(),
+    status: text('status').default('new').notNull(),
+    importedAt: timestamp('imported_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('review_imports_source_hash_unique').on(table.sourceHash),
+    check('review_imports_status_valid', sql`${table.status} in ('new', 'shown', 'dismissed')`)
+]);
+
 export const landingSectionTranslations = pgTable('landing_section_translations', {
     id: uuid('id').defaultRandom().primaryKey(),
     sectionId: uuid('section_id').notNull().references(() => landingSections.id, { onDelete: 'restrict' }),
@@ -635,6 +649,9 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     /** The psychologist's note for the full report: the editable paragraph, a special note (max 500) and the final flag. */
     noteTemplate: text('note_template'),
     noteCustom: text('note_custom'),
+    /** The English versions of the two fields above, written by the psychologist (nothing is machine-translated). */
+    noteTemplateEn: text('note_template_en'),
+    noteCustomEn: text('note_custom_en'),
     noteFinal: boolean('note_final').default(false).notNull(),
     noteUpdatedBy: uuid('note_updated_by'),
     noteUpdatedAt: timestamp('note_updated_at', { withTimezone: true, mode: 'string' }),
@@ -665,6 +682,7 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     check('assessment_submissions_status', sql`${table.status} in ('new','reviewed','released')`),
     check('assessment_submissions_payment_status', sql`${table.paymentStatus} in ('UNPAID','PAID','FREE','INCLUDED','LEGACY')`),
     check('assessment_submissions_note_custom_len', sql`${table.noteCustom} is null or char_length(${table.noteCustom}) <= 500`),
+    check('assessment_submissions_note_custom_en_len', sql`${table.noteCustomEn} is null or char_length(${table.noteCustomEn}) <= 500`),
     check('assessment_submissions_track', sql`${table.track} in ('mandiri','asesmen','free','paket','lanjutan','legacy')`),
     check('assessment_submissions_price_due', sql`${table.priceDue} is null or ${table.priceDue} >= 0`),
     index('assessment_submissions_invite_idx').on(table.inviteId)
@@ -736,6 +754,8 @@ export const sciBriefs = pgTable('sci_briefs', {
     documentName: text('document_name'),
     totalPages: integer('total_pages'),
     previewPages: integer('preview_pages').default(3).notNull(),
+    /** Free briefs show the whole document to everyone; the others stay locked after the preview pages. */
+    isFree: boolean('is_free').default(false).notNull(),
     ...auditTimestamps
 }, (table) => [
     uniqueIndex('sci_briefs_slug_unique').on(table.slug),
@@ -743,6 +763,21 @@ export const sciBriefs = pgTable('sci_briefs', {
     check('sci_briefs_status_valid', sql`${table.status} in ('draft', 'published')`),
     check('sci_briefs_period_month_format', sql`${table.periodMonth} ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'`),
     check('sci_briefs_preview_pages_range', sql`${table.previewPages} between 1 and 10`)
+]);
+
+/** People shown under the team sub-sections on the Our Practitioners page. */
+export const teamMembers = pgTable('team_members', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    team: text('team').notNull(),
+    name: text('name').notNull(),
+    roleId: text('role_id').default('').notNull(),
+    roleEn: text('role_en').default('').notNull(),
+    photoUrl: text('photo_url'),
+    sortOrder: integer('sort_order').default(0).notNull(),
+    visible: boolean('visible').default(true).notNull(),
+    ...auditTimestamps
+}, (table) => [
+    check('team_members_team_valid', sql`${table.team} in ('psych', 'scientist', 'counsel', 'ops', 'advisor')`)
 ]);
 
 export const sciBriefFiles = pgTable('sci_brief_files', {
@@ -973,7 +1008,7 @@ export const assessmentPaymentProofs = pgTable('assessment_payment_proofs', {
     index('assessment_payment_proofs_submission_idx').on(table.submissionId)
 ]);
 
-// Bug reports and suggestions about the website (public form, read by the owner account only).
+// Bug reports and suggestions about the website (public form; admins read them in the portal).
 export const feedbackReports = pgTable('feedback_reports', {
     id: uuid('id').defaultRandom().primaryKey(),
     kind: text('kind').notNull(),
@@ -981,6 +1016,8 @@ export const feedbackReports = pgTable('feedback_reports', {
     message: text('message').notNull(),
     page: text('page').default('').notNull(),
     doneAt: timestamp('done_at', { withTimezone: true, mode: 'string' }),
+    status: text('status').default('new').notNull(),
+    assignee: text('assignee').default('').notNull(),
     driveFolderId: text('drive_folder_id'),
     driveError: text('drive_error'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
@@ -995,13 +1032,160 @@ export const feedbackFiles = pgTable('feedback_files', {
     name: text('name').notNull(),
     mimeType: text('mime_type').notNull(),
     byteSize: integer('byte_size').notNull(),
-    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data')
+    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data'),
+    /** Set when the file belongs to a note added in the portal, not to the original report. */
+    noteId: uuid('note_id').references(() => feedbackNotes.id, { onDelete: 'cascade' })
 }, (table) => [
     index('feedback_files_report_idx').on(table.reportId)
+]);
+
+// Notes added to a report in the portal.
+export const feedbackNotes = pgTable('feedback_notes', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportId: uuid('report_id').notNull().references(() => feedbackReports.id, { onDelete: 'cascade' }),
+    author: text('author').notNull(),
+    body: text('body').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('feedback_notes_report_idx').on(table.reportId)
+]);
+
+// What happened to each report (received, status changes, notes...).
+export const feedbackEvents = pgTable('feedback_events', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportId: uuid('report_id').notNull().references(() => feedbackReports.id, { onDelete: 'cascade' }),
+    actor: text('actor').default('').notNull(),
+    action: text('action').notNull(),
+    detail: text('detail').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('feedback_events_report_idx').on(table.reportId)
 ]);
 
 export const siteSettings = pgTable('site_settings', {
     key: text('key').primaryKey(),
     value: jsonb('value').notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});
+
+// Contacts of the portal's Email menu (bulk e-mail). A contact has one or more categories.
+export const emailCategories = pgTable('email_categories', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    builtin: boolean('builtin').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('email_categories_name_idx').on(sql`lower(${table.name})`)
+]);
+
+export const emailContacts = pgTable('email_contacts', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    /** Always stored lower-case. */
+    email: text('email').notNull(),
+    name: text('name').default('').notNull(),
+    phone: text('phone').default('').notNull(),
+    /** The phone in one comparable form, to warn about the same person twice. */
+    phoneNormalized: text('phone_normalized').default('').notNull(),
+    source: text('source').default('manual').notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'string' }),
+    createdBy: text('created_by').default('').notNull(),
+    updatedBy: text('updated_by').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('email_contacts_email_idx').on(table.email),
+    index('email_contacts_phone_idx').on(table.phoneNormalized)
+]);
+
+export const emailContactCategories = pgTable('email_contact_categories', {
+    contactId: uuid('contact_id').notNull().references(() => emailContacts.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').notNull().references(() => emailCategories.id, { onDelete: 'restrict' })
+}, (table) => [
+    primaryKey({ columns: [table.contactId, table.categoryId] }),
+    index('email_contact_categories_category_idx').on(table.categoryId)
+]);
+
+// Who did what in the Email menu (no message content, no contact details beyond what the action needs).
+export const emailAudit = pgTable('email_audit', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    actor: text('actor').notNull(),
+    action: text('action').notNull(),
+    detail: text('detail').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('email_audit_created_at_idx').on(table.createdAt)
+]);
+
+// An uploaded Excel file, parsed and waiting for "confirm". Removed after an hour.
+export const emailImports = pgTable('email_imports', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    actor: text('actor').notNull(),
+    plan: jsonb('plan').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'string' }).notNull(),
+    appliedAt: timestamp('applied_at', { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});
+
+// Bulk sends. Recipients keep their own copy of address and name: this is the send log.
+export const emailCampaigns = pgTable('email_campaigns', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    html: text('html').notNull(),
+    lang: text('lang').default('id').notNull(),
+    status: text('status').default('draft').notNull(),
+    pausedReason: text('paused_reason'),
+    audience: jsonb('audience'),
+    /** The addresses clicks are counted for; a tracked link can only lead to one of these. */
+    links: jsonb('links').default([]).notNull(),
+    createdBy: text('created_by').notNull(),
+    sentBy: text('sent_by').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    queuedAt: timestamp('queued_at', { withTimezone: true, mode: 'string' }),
+    finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'string' })
+}, (table) => [
+    index('email_campaigns_status_idx').on(table.status)
+]);
+
+// Attachments. The content is emptied once the campaign is finished or cancelled, to save disk space.
+export const emailCampaignFiles = pgTable('email_campaign_files', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    campaignId: uuid('campaign_id').notNull().references(() => emailCampaigns.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    sha256: text('sha256').notNull(),
+    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data')
+}, (table) => [
+    index('email_campaign_files_campaign_idx').on(table.campaignId)
+]);
+
+export const emailCampaignRecipients = pgTable('email_campaign_recipients', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    campaignId: uuid('campaign_id').notNull().references(() => emailCampaigns.id, { onDelete: 'cascade' }),
+    contactId: uuid('contact_id').references(() => emailContacts.id, { onDelete: 'set null' }),
+    email: text('email').notNull(),
+    name: text('name').default('').notNull(),
+    status: text('status').default('queued').notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    attemptedAt: timestamp('attempted_at', { withTimezone: true, mode: 'string' }),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true, mode: 'string' }),
+    sentAt: timestamp('sent_at', { withTimezone: true, mode: 'string' }),
+    error: text('error').default('').notNull(),
+    openedAt: timestamp('opened_at', { withTimezone: true, mode: 'string' }),
+    lastOpenedAt: timestamp('last_opened_at', { withTimezone: true, mode: 'string' }),
+    openCount: integer('open_count').default(0).notNull(),
+    clickedAt: timestamp('clicked_at', { withTimezone: true, mode: 'string' }),
+    clickCount: integer('click_count').default(0).notNull()
+}, (table) => [
+    uniqueIndex('email_campaign_recipients_once_idx').on(table.campaignId, table.email),
+    index('email_campaign_recipients_queue_idx').on(table.status, table.nextAttemptAt),
+    index('email_campaign_recipients_attempted_idx').on(table.attemptedAt)
+]);
+
+// People who must not get bulk e-mail. Kept even if the contact is removed, so an import cannot subscribe them again.
+export const emailSuppressions = pgTable('email_suppressions', {
+    email: text('email').primaryKey(),
+    reason: text('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 });

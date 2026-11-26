@@ -1,3 +1,6 @@
+import { createEmailCampaignsRepository } from './repositories/email-campaigns.repository';
+import { createEmailSender } from './services/email-sender';
+import { createEmailContactsRepository } from './repositories/email-contacts.repository';
 import { createApp, type App } from './app';
 import { env } from './config/env';
 import { db } from './db';
@@ -11,6 +14,10 @@ import { createAssessmentsRepository } from './repositories/assessments.reposito
 import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createMailer } from './services/mailer';
 import { createDriveReports } from './services/drive-reports';
+import { createFeedbackSheet } from './services/feedback-sheet';
+import { createReviewSheet } from './services/review-sheet';
+import { createReviewImportsRepository } from './repositories/review-imports.repository';
+import { createFeedbackRepository } from './repositories/feedback.repository';
 import { createMhcuOpsRepository } from './repositories/mhcu-ops.repository';
 import { createMhcuSettingsStore } from './services/mhcu-settings-store';
 import { processDueBookingOutbox } from './services/booking-outbox';
@@ -46,6 +53,12 @@ const contentTransitions = createContentTransitions(createDrizzleContentTransiti
 
 const landingRepository = createLandingContentRepository(createDrizzleLandingContentSource(db));
 const bookingRepository = createBookingRepository(db);
+
+// Excel previews of the Email menu hold contact details: remove them when they expire, not only on the next upload.
+const emailImportCleanup = createEmailContactsRepository(db);
+const purgeEmailImports = () => void emailImportCleanup.purgeImports(new Date()).catch(() => console.error('[email] preview cleanup failed'));
+purgeEmailImports();
+setInterval(purgeEmailImports, 10 * 60 * 1000).unref();
 
 const googleOutboxConfig =
     env.GOOGLE_CLIENT_ID &&
@@ -122,6 +135,18 @@ const driveReports = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOO
 // Make "Web App Development / Update Request" exist as soon as the server runs, before the first request arrives.
 void driveReports?.ensureRequestFolder().catch((error) => console.error('[feedback] Drive folder not ready:', error instanceof Error ? error.message : 'error'));
 
+// Feedback reports -> a Google Sheet beside "Update Request". Written once at start, then after every change.
+const feedbackRepository = createFeedbackRepository(db);
+const feedbackSheet = driveReports ? createFeedbackSheet(() => feedbackRepository.list(), driveReports) : undefined;
+void feedbackSheet?.sync();
+
+// Reviews pasted into a Google Sheet -> the portal (hidden until an admin shows them). Read at start and every 30 minutes.
+const reviewImportsRepository = createReviewImportsRepository(db);
+const reviewSheet = driveReports ? createReviewSheet(reviewImportsRepository, driveReports) : undefined;
+const importReviews = () => void reviewSheet?.importNow().catch((error) => console.error('[reviews] Import failed:', error instanceof Error ? error.message : 'error'));
+importReviews();
+setInterval(importReviews, 30 * 60 * 1000).unref();
+
 // Assessments (Mental Health Check-Up...) -> a PRIVATE Google Sheet. Only runs when ASSESSMENTS_SHEET_ID is set.
 const assessmentsRepository = createAssessmentsRepository(db);
 const assessmentsSheetSync = createAssessmentsSheetSync({
@@ -157,8 +182,39 @@ const mailer = createMailer({
     replyTo: env.SMTP_REPLY_TO
 });
 
+// Bulk e-mail of the Email menu. Off unless EMAIL_BULK_ENABLED is "true" and the site has a mail account.
+const emailSiteOrigin = env.FRONTEND_URL || 'http://localhost:5173';
+const emailFrom = env.SMTP_FROM || env.SMTP_USER || '';
+const emailBulk = {
+    enabled: env.EMAIL_BULK_ENABLED === 'true',
+    mailer,
+    secret: jwtSecretValue!,
+    siteOrigin: emailSiteOrigin,
+    replyTo: env.EMAIL_BULK_REPLY_TO || emailFrom.replace('@', '+bulk@')
+};
+const emailCampaignsRepository = createEmailCampaignsRepository(db);
+if (!(emailBulk.enabled && mailer.isConfigured)) {
+    // Switched off: whatever was running is paused and waits for an admin, even after it is switched on again.
+    void emailCampaignsRepository.parkQueued().catch(() => console.error('[email-bulk] could not pause queued sends'));
+} else {
+    const sender = createEmailSender({
+        queue: emailCampaignsRepository,
+        mailer,
+        secret: emailBulk.secret,
+        siteOrigin: emailSiteOrigin,
+        replyTo: emailBulk.replyTo,
+        messageDomain: emailFrom.split('@')[1] || 'attentiveid.com'
+    });
+    // One e-mail every 3 seconds at most.
+    setInterval(() => {
+        void sender.tick().catch((error) => console.error('[email-bulk] sender failed:', error instanceof Error ? error.name : 'error'));
+    }, 3000).unref();
+}
+
 const app = createApp({
     mailer,
+    emailBulk,
+    emailCampaignsRepository,
     alertEmail: env.ASSESSMENTS_ALERT_EMAIL || 'contact@attentiveid.com',
     mhcuSettings,
     mhcuOpsRepository,
@@ -167,6 +223,10 @@ const app = createApp({
     assessmentsSheetSync,
     driveReports,
     driveRequests: driveReports,
+    feedbackRepository,
+    feedbackSheet,
+    reviewImportsRepository,
+    reviewSheet,
     freeSessionRepository,
     freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',

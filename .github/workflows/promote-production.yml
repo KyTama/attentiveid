@@ -126,6 +126,9 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
+          # "true" lets the portal's Email menu send bulk e-mail (empty = it cannot).
+          EMAIL_BULK_ENABLED: ${{ vars.EMAIL_BULK_ENABLED }}
+          EMAIL_BULK_REPLY_TO: ${{ vars.EMAIL_BULK_REPLY_TO }}
           # Google Drive copy of released reports (environment "production"); empty = reports are not saved to Drive.
           GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
           GOOGLE_DRIVE_ROOT_FOLDER_NAME: ${{ vars.GOOGLE_DRIVE_ROOT_FOLDER_NAME }}

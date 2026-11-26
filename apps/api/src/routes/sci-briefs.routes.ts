@@ -62,6 +62,22 @@ export const createSciBriefsRoutes = (dependencies: SciBriefsRoutesDependencies)
       },
       { detail: { tags: ['Sci-Brief'], summary: 'Public preview (first pages only)' } },
     )
+    .get(
+      '/api/content/sci-briefs/:slug/document.pdf',
+      async ({ params: { slug }, set }: any) => {
+        const bytes = await repository.getFreeDocumentBySlug(slug, now())
+        if (!bytes) {
+          set.status = 404
+          return { status: 'notFound', message: 'Document not found.' }
+        }
+        set.headers['content-type'] = 'application/pdf'
+        set.headers['content-disposition'] = 'inline; filename="sci-brief.pdf"'
+        // Not cached, so locking a brief again takes effect at once.
+        set.headers['cache-control'] = 'no-store'
+        return new Response(new Uint8Array(bytes), { headers: set.headers })
+      },
+      { detail: { tags: ['Sci-Brief'], summary: 'Whole document of a free Sci-Brief' } },
+    )
     // ---- Admin ------------------------------------------------------------
     .get(
       '/api/admin/sci-briefs',

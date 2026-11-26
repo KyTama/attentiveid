@@ -35,7 +35,7 @@ done
 # Settings that arrive from GitHub secrets/variables (set on the workflow step). They are written only into the candidate file
 # on the server, never into the release bundle or manifest that GitHub keeps as artifacts. Plain characters only.
 extra_env=''
-for name in SMTP_USER SMTP_PASS SMTP_HOST SMTP_PORT SMTP_FROM SMTP_FROM_NAME SMTP_REPLY_TO GOOGLE_DRIVE_REFRESH_TOKEN GOOGLE_DRIVE_ROOT_FOLDER_NAME GOOGLE_DRIVE_ROOT_FOLDER_ID; do
+for name in SMTP_USER SMTP_PASS SMTP_HOST SMTP_PORT SMTP_FROM SMTP_FROM_NAME SMTP_REPLY_TO EMAIL_BULK_ENABLED EMAIL_BULK_REPLY_TO GOOGLE_DRIVE_REFRESH_TOKEN GOOGLE_DRIVE_ROOT_FOLDER_NAME GOOGLE_DRIVE_ROOT_FOLDER_ID; do
     value="${!name:-}"
     [[ -n "$value" ]] || continue
     [[ "$value" =~ ^[A-Za-z0-9@._:/+=,\ -]+$ ]] || { printf '%s has characters that are not allowed in a deployment setting\n' "$name" >&2; exit 1; }

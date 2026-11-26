@@ -29,6 +29,7 @@ interface FormState {
   releaseAt: string
   status: 'draft' | 'published'
   previewPages: string
+  isFree: boolean
   slug: string
   slugTouched: boolean
   documentName: string | null
@@ -55,6 +56,7 @@ const emptyForm = (): FormState => ({
   releaseAt: toLocalInput(new Date().toISOString()),
   status: 'draft',
   previewPages: String(SCI_BRIEF_DEFAULT_PREVIEW_PAGES),
+  isFree: false,
   slug: '',
   slugTouched: false,
   documentName: null,
@@ -71,6 +73,7 @@ const fromBrief = (brief: SciBriefAdminDto): FormState => ({
   releaseAt: toLocalInput(brief.releaseAt),
   status: brief.status,
   previewPages: String(brief.previewPages),
+  isFree: brief.isFree,
   slug: brief.slug,
   slugTouched: true,
   documentName: brief.documentName,
@@ -154,6 +157,7 @@ export function SciBriefCmsPage() {
         releaseAt: new Date(form.releaseAt).toISOString(),
         status: form.status,
         previewPages: Number(form.previewPages),
+        isFree: form.isFree,
       })
       if (pendingFile) {
         await uploadAdminSciBriefDocument(saved.id, pendingFile)
@@ -271,7 +275,7 @@ export function SciBriefCmsPage() {
                         {brief.hasDocument ? (
                           <span className="inline-flex items-center gap-1">
                             <FileText className="size-3.5 text-slate-400" aria-hidden="true" />
-                            {brief.totalPages} hlm · pratinjau {brief.previewPages}
+                            {brief.totalPages} hlm · {brief.isFree ? 'gratis' : `pratinjau ${brief.previewPages}`}
                           </span>
                         ) : (
                           <span className="text-amber-700">Belum ada PDF</span>
@@ -402,6 +406,14 @@ export function SciBriefCmsPage() {
                 {error_('previewPages')}
               </div>
             </div>
+
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700">
+              <input checked={form.isFree} className="mt-0.5 size-4" onChange={(event) => update({ isFree: event.target.checked })} type="checkbox" />
+              <span>
+                <span className="block font-semibold text-slate-900">Gratis (tidak dikunci)</span>
+                Semua orang bisa membaca seluruh dokumen. Kalau tidak dicentang, hanya halaman pratinjau yang tampil.
+              </span>
+            </label>
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="sb-slug">Slug (alamat halaman)</label>
