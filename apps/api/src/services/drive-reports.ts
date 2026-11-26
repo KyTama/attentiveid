@@ -101,6 +101,9 @@ const failure = async (what: string, response: Response) => {
     return new Error(`${what}: HTTP ${response.status}${snippet ? ` ${snippet}` : ''}`)
 }
 
+/** No request to Google may hang for ever: a job that waits on it would hold every job queued behind it. */
+export const DRIVE_REQUEST_TIMEOUT_MS = 60_000
+
 const bytes = (data: Uint8Array | string): Uint8Array => (typeof data === 'string' ? new TextEncoder().encode(data) : data)
 
 /** Year and two-digit month of a moment, in Jakarta time. */
@@ -109,7 +112,8 @@ export const jakartaYearMonth = (at: Date): { year: string; month: string } => {
     return { year: String(jakarta.getUTCFullYear()), month: String(jakarta.getUTCMonth() + 1).padStart(2, '0') }
 }
 
-export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetcher = fetch): DriveReports & DriveRequests => {
+export const createDriveReports = (config: DriveReportsConfig, rawFetch: Fetcher = fetch, timeoutMs = DRIVE_REQUEST_TIMEOUT_MS): DriveReports & DriveRequests => {
+    const fetchImpl: Fetcher = (url, init) => rawFetch(url, { ...init, signal: init.signal ?? AbortSignal.timeout(timeoutMs) })
     const rootName = config.rootName?.trim() || 'Reports'
     const rootFolderId = config.rootFolderId?.trim() || ''
     /** path -> folder id, so a busy day does not search for the same folders again. */

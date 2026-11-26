@@ -45,6 +45,8 @@ export interface AssessmentsRoutesDependencies {
     siteOrigin?: string;
     /** Saves released reports to Google Drive (optional; without it nothing is saved there). */
     driveReports?: DriveReports;
+    /** How long one submission's draft copy may take before the next one starts. */
+    draftTimeoutMs?: number;
     /** Prints a report page to PDF (default: headless Chromium). Replaceable in tests. */
     pdfRenderer?: PdfRenderer | null;
     rateLimit?: AssessmentsRateLimit;
@@ -297,11 +299,18 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
      * submission holds only its id.
      */
     let draftQueue: Promise<unknown> = Promise.resolve();
+    /** A draft that hangs (a stuck upload) is given up on after this long, so it cannot hold every later draft until a restart. */
+    const DRAFT_TIMEOUT_MS = dependencies.draftTimeoutMs ?? 5 * 60_000;
+    const withDraftTimeout = (job: Promise<unknown>) =>
+        new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('Draft copy timed out')), DRAFT_TIMEOUT_MS);
+            job.then(() => resolve(), reject).finally(() => clearTimeout(timer));
+        });
 
     /** Right after a check-up is submitted: print the reports as they are now and save them (and the raw answers) to Drive. Nothing is sent to the person. Never fails the submission. */
     const saveDraftToDrive = (id: string) => {
         if (!dependencies.driveReports) return;
-        draftQueue = draftQueue.then(async () => {
+        const copy = async () => {
             try {
                 const row = await repository.get(id);
                 if (!row) return;
@@ -311,7 +320,9 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             } catch (error) {
                 logFailure('drive-draft', error);
             }
-        });
+        };
+        // Never rejects: the next submission's turn must come whatever happened to this one.
+        draftQueue = draftQueue.then(() => withDraftTimeout(copy())).catch((error) => logFailure('drive-draft', error));
     };
 
     /** Where release e-mails to staff go: the MHCU settings inbox, else the general alert address. */

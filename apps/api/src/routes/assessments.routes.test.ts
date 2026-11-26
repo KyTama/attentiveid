@@ -65,7 +65,8 @@ const PSY_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail'; pdf?: 'off' | 'internal-fails' } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail' | 'hang-first'; pdf?: 'off' | 'internal-fails'; draftTimeoutMs?: number } = {}) => {
+    let hung = false;
     const printing = { now: 0, most: 0 };
     const sheetRows: Array<{ title: string; tab: string; headers: string[]; key: string; values: string[] }> = [];
     const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; mimeType: string; data: Uint8Array | string }> }> = [];
@@ -189,8 +190,9 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             }))(),
             alertEmail: 'alerts@attentive.id',
             pdfRenderer: options.pdf === 'off' ? null : async (html) => { if (options.pdf === 'internal-fails' && html.includes('MHCU (internal)')) throw new Error('browser crashed'); printing.now += 1; printing.most = Math.max(printing.most, printing.now); await new Promise((done) => setTimeout(done, 2)); printing.now -= 1; printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
+            draftTimeoutMs: options.draftTimeoutMs,
             driveReports: options.drive
-                ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; }, upsertSheetRow: async (input) => { if (options.drive === 'fail') throw new Error('sheet down'); sheetRows.push(input); return { spreadsheetId: 'sheet-1', updated: false }; } }
+                ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); if (options.drive === 'hang-first' && !hung) { hung = true; await new Promise(() => {}); } driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; }, upsertSheetRow: async (input) => { if (options.drive === 'fail') throw new Error('sheet down'); sheetRows.push(input); return { spreadsheetId: 'sheet-1', updated: false }; } }
                 : undefined,
             paymentSecret: 'payment-secret-payment-secret-1234',
             siteOrigin: 'https://attentiveid.com',
@@ -918,6 +920,16 @@ describe('released reports saved to Drive', () => {
         for (let waited = 0; waited < 100 && driveSaved.length < 12; waited += 1) await new Promise((resolve) => setTimeout(resolve, 20));
         expect(driveSaved).toHaveLength(12);
         expect(printing.most).toBe(1);
+    });
+
+    it('a draft that hangs is given up on after the timeout, so later submissions are still copied', async () => {
+        const { app, driveSaved } = createFixture({ drive: 'hang-first', draftTimeoutMs: 150, max: 20 });
+        await submit(app, body({ email: 'stuck@example.com' }), { 'x-forwarded-for': '203.0.113.1' });
+        await submit(app, body({ email: 'next@example.com' }), { 'x-forwarded-for': '203.0.113.2' });
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        expect(driveSaved).toHaveLength(0); // still waiting behind the stuck one
+        for (let waited = 0; waited < 100 && driveSaved.length < 2; waited += 1) await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(driveSaved.map((save) => `${save.code} ${save.folder ?? 'MHCU'}`)).toEqual(['AT-MHCU-2026-101 MHCU', 'AT-MHCU-2026-101 MHCU Internal']);
     });
 
     it('right after a submission the PDFs and the raw-answers row go to Drive, and nothing is sent to the person', async () => {

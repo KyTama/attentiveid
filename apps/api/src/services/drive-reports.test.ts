@@ -67,6 +67,13 @@ describe('Drive reports', () => {
         expect(saved.folderId).not.toBe('c')
     })
 
+    test('a request to Google that never answers fails instead of hanging', async () => {
+        const hanging = (_url: string, init: RequestInit) =>
+            new Promise<Response>((_resolve, reject) => init.signal?.addEventListener('abort', () => reject(init.signal?.reason)))
+        const drives = createDriveReports({ ...config, refreshToken: `rt-${Math.random()}` }, hanging, 30)
+        await expect(drives.saveReport({ code: 'AT-MHCU-2026-120', at: new Date('2026-11-24T10:00:00Z'), files: [{ name: 'a.pdf', mimeType: 'application/pdf', data: '%PDF' }] })).rejects.toThrow()
+    })
+
     test('reuses existing folders and overwrites a file with the same name instead of adding a copy', async () => {
         const drive = fakeDrive({
             folders: { 'root|Reports': 'r', 'r|MHCU': 'm', 'm|2026': 'y', 'y|11': 'mo', 'mo|AT-MHCU-2026-120': 'c' },
