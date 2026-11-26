@@ -69,7 +69,7 @@ export function PsychologistProfilePage() {
   }, [slug, state.status])
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
       <main aria-busy={state.status === 'loading'} aria-live="polite">
         {state.status === 'loading' && (

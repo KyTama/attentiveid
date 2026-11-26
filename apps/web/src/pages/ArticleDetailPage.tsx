@@ -179,7 +179,7 @@ export function ArticleDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+      <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
         <SiteHeader />
         <main className="py-16 px-4 flex justify-center">
           <div className="max-w-3xl w-full space-y-6 animate-pulse">
@@ -195,7 +195,7 @@ export function ArticleDetailPage() {
 
   if (isNotFound || !articleData) {
     return (
-      <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary flex flex-col justify-between">
+      <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary flex flex-col">
         <SiteHeader />
         <main className="py-20 px-4 flex items-center justify-center">
           <div className="text-center max-w-md bg-white p-8 rounded-2xl border border-secondary/15 shadow-sm">
@@ -244,7 +244,7 @@ export function ArticleDetailPage() {
 
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
       <article className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto space-y-8">

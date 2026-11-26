@@ -35,7 +35,8 @@ const PROMO_UNTIL = { id: '30 April 2027', en: '30 April 2027' }
 
 /** The team's stylesheet for the report-access page (RMHCU/new, "Halaman laporan"), scoped to this page. */
 const CSS = `
-.mhcu-unlock{--navy:#142B51;--navy-2:#1D3B6C;--ink:#1B2533;--ink-2:#3C4858;--mute:#667085;--faint:#98A2B3;--line:#DCE2EA;background:#F3F5F8;color:var(--ink);font:400 15px/1.6 Montserrat,'Segoe UI',Arial,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.mhcu-unlock{--navy:#142B51;--navy-2:#1D3B6C;--ink:#1B2533;--ink-2:#3C4858;--mute:#667085;--faint:#98A2B3;--line:#DCE2EA;background:#F3F5F8;color:var(--ink);font:400 15px/1.6 Montserrat,'Segoe UI',Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.mhcu-unlock>main{width:100%}
 .mhcu-unlock *{box-sizing:border-box}
 .mhcu-unlock .hd{background:#fff;border-bottom:1px solid var(--line)}
 .mhcu-unlock .hd .in{max-width:760px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
@@ -97,7 +98,7 @@ const CSS = `
 .mhcu-unlock .drop input{position:absolute;opacity:0;width:1px;height:1px}
 .mhcu-unlock .drop:focus-within{outline:2px solid var(--navy);outline-offset:2px}
 .mhcu-unlock .ok{color:#1E6B42;font-weight:700;font-size:13.5px;margin-top:8px}
-.mhcu-unlock footer{max-width:760px;margin:0 auto;padding:0 20px 30px;font-size:12px;color:var(--mute)}
+.mhcu-unlock footer{width:100%;max-width:760px;margin:auto auto 0;padding:0 20px 30px;font-size:12px;color:var(--mute)}
 @media (max-width:600px){.mhcu-unlock .card{padding:22px 18px}.mhcu-unlock .doc{grid-template-columns:70px 1fr}.mhcu-unlock .paper{width:70px;height:94px}.mhcu-unlock .pay dl{grid-template-columns:1fr}}
 @media (max-width:440px){.mhcu-unlock .doc{grid-template-columns:1fr;justify-items:start;gap:12px}.mhcu-unlock .doc dl{grid-template-columns:6.5rem 1fr}}
 `

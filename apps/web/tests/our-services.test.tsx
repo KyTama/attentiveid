@@ -64,11 +64,11 @@ describe('our services page', () => {
     const frame = view.container.querySelector('iframe') as HTMLIFrameElement
     const source = {}
     Object.defineProperty(frame, 'contentWindow', { value: source, configurable: true })
-    expect(frame.style.height).toBe('calc(100dvh - 4.5rem)')
+    expect(frame.className).toContain('flex-1')
 
     await act(async () => {
       window.dispatchEvent(new MessageEvent('message', { data: { type: 'attentive-services-height', height: 2400 }, origin: OUR_SERVICES_ORIGIN, source: source as any }))
     })
-    expect(frame.style.height).toBe('calc(100dvh - 4.5rem)')
+    expect(frame.className).toContain('flex-1')
   })
 })

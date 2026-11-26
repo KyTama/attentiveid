@@ -14,7 +14,7 @@ export function SiteFooter() {
   const whatsappUrl = `https://wa.me/${footer.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(defaultContactMessage)}`
 
   return (
-    <footer className="border-t border-white/10 bg-secondary px-5 py-12 text-white lg:px-8">
+    <footer className="mt-auto border-t border-white/10 bg-secondary px-5 py-12 text-white lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand statement */}
         <div className="sm:col-span-2 lg:col-span-1">

@@ -20,7 +20,7 @@ export function Homepage() {
   )
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
       <main>
         {visible('hero') && <HomepageHero />}

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type ClipboardEvent, type FormEvent, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   FEEDBACK_FILE_TYPES,
@@ -69,6 +69,24 @@ export function FeedbackPage() {
     return { kind: 'Choose a type.', name: 'Please write your name (2 to 80 characters).', message: 'Please write 10 to 2000 characters.', page: 'Too long.', files: 'These files could not be accepted. Check their type and size.' }[field]
   }
 
+  const addFiles = (next: File[]) => {
+    setFiles(next)
+    setErrors((current) => ({ ...current, files: undefined }))
+  }
+
+  // Ctrl+V anywhere on the form: a screenshot or copied files become attachments. Pasted text is left alone.
+  const pasteFiles = (event: ClipboardEvent<HTMLFormElement>) => {
+    const pasted = Array.from(event.clipboardData?.files ?? [])
+    if (pasted.length === 0) return
+    event.preventDefault()
+    const stamp = new Date().toISOString().slice(11, 19).replace(/:/g, '')
+    // Screenshots all arrive as "image.png"; give each its own name.
+    const named = pasted.map((file, index) =>
+      /^image\.\w+$/i.test(file.name) ? new File([file], `paste-${stamp}-${files.length + index + 1}.${file.name.split('.').pop()}`, { type: file.type }) : file,
+    )
+    addFiles([...files, ...named])
+  }
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     const values = { kind, name, message, page }
@@ -87,9 +105,9 @@ export function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col bg-[#fbf8f2] text-secondary">
       <SiteHeader />
-      <main className="mx-auto max-w-xl px-5 py-12">
+      <main className="mx-auto w-full max-w-xl px-5 py-12">
         <h1 className="text-2xl font-bold sm:text-3xl" data-route-heading tabIndex={-1}>{title}</h1>
 
         {state === 'sent' ? (
@@ -115,7 +133,7 @@ export function FeedbackPage() {
                 'Is something broken, or could the website be better? Tell us here. Do not write health information or passwords. For appointments, contact us on WhatsApp.',
               )}
             </p>
-            <form className="mt-6 space-y-5" noValidate onSubmit={submit}>
+            <form className="mt-6 space-y-5" noValidate onPaste={pasteFiles} onSubmit={submit}>
               <fieldset>
                 <legend className="text-sm font-semibold">{tx('Jenis', 'Type')}</legend>
                 <div className="mt-1.5 flex flex-wrap gap-2">
@@ -152,18 +170,37 @@ export function FeedbackPage() {
                   className={`${fieldClass} file:mr-3 file:cursor-pointer file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white`}
                   multiple
                   onChange={(e) => {
-                    setFiles(Array.from(e.target.files ?? []))
-                    setErrors((current) => ({ ...current, files: undefined }))
+                    addFiles(Array.from(e.target.files ?? []))
+                    // Cleared so a file removed from the list below can be chosen again.
+                    e.target.value = ''
                   }}
                   type="file"
                 />
                 <span className="mt-1 block text-xs font-normal text-secondary/70">
                   {tx(
-                    'Maks 3 berkas, 5 MB per berkas, total 7 MB: gambar, PDF, video MP4/MOV, Word, Excel, PowerPoint, TXT. Jangan unggah data klien.',
-                    'Up to 3 files, 5 MB each, 7 MB together: images, PDF, MP4/MOV video, Word, Excel, PowerPoint, TXT. Do not upload client data.',
+                    'Bisa juga ditempel (Ctrl+V). Maks 3 berkas, 5 MB per berkas, total 7 MB: gambar, PDF, video MP4/MOV, Word, Excel, PowerPoint, TXT. Jangan unggah data klien.',
+                    'You can also paste (Ctrl+V). Up to 3 files, 5 MB each, 7 MB together: images, PDF, MP4/MOV video, Word, Excel, PowerPoint, TXT. Do not upload client data.',
                   )}
                 </span>
               </Field>
+
+              {files.length > 0 && (
+                <ul aria-label={tx('Berkas terlampir', 'Attached files')} className="space-y-1.5">
+                  {files.map((file, index) => (
+                    <li className="flex items-center justify-between gap-3 rounded-lg border border-secondary/15 bg-white px-3 py-1.5 text-sm" key={`${file.name}-${index}`}>
+                      <span className="truncate">{file.name}</span>
+                      <button
+                        aria-label={`${tx('Hapus', 'Remove')} ${file.name}`}
+                        className="min-h-8 cursor-pointer text-xs font-semibold underline"
+                        onClick={() => addFiles(files.filter((_, other) => other !== index))}
+                        type="button"
+                      >
+                        {tx('Hapus', 'Remove')}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {/* Honeypot: real people never see or fill this. */}
               <input aria-hidden="true" autoComplete="off" className="hidden" name="website" onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} value={website} />

@@ -70,7 +70,8 @@ export function ClientStories() {
 
           {/* Horizontal Gradient Mask Container for soft fade edges */}
           <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_3%,white_97%,transparent)]">
-            <div className="animate-marquee flex gap-5 py-3">
+            {/* Same reading speed whatever the number of reviews: more reviews take longer to go round. */}
+            <div className="animate-marquee flex gap-5 py-3" style={{ animationDuration: `${Math.max(35, testimonials.length * 7)}s` }}>
               {marqueeItems.map((testimonial, idx) => {
                 const initials = (testimonial.name.replace(/[^a-zA-Z]/g, '').slice(0, 2) || 'KL').toUpperCase()
                 return (
