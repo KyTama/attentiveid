@@ -16,5 +16,9 @@ export const CARE_AREA_SERVICE_HASH: Record<string, string> = {
 /** The /our-services address for a care area (the services overview when the area is not known). */
 export const careAreaServiceLink = (topicKey: string): string => `/our-services${CARE_AREA_SERVICE_HASH[topicKey] ?? ''}`
 
+/** A service's own address on this site, /our-services/<slug>, opens #detail-<slug> in the frame. */
+export const SERVICE_SLUG = /^[A-Za-z0-9_-]{1,100}$/
+export const serviceSlugHash = (slug: string | undefined): string => (slug && SERVICE_SLUG.test(slug) ? `#detail-${slug}` : '')
+
 /** Only a plain fragment (letters, digits, - _ . %) is passed on to the frame. */
 export const safeServicesHash = (hash: string): string => (/^#[\w%.-]{1,120}$/.test(hash) ? hash : '')

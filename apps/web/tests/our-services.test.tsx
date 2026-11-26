@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../src/i18n'
 import { OurServicesPage, OUR_SERVICES_ORIGIN } from '../src/pages/OurServicesPage'
@@ -72,3 +72,34 @@ describe('our services page', () => {
     expect(frame.className).toContain('flex-1')
   })
 })
+
+describe('/our-services/<slug>', () => {
+  const at = (path: string) =>
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route element={<OurServicesPage />} path="our-services/:slug?" />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+  it('opens that service in the frame and follows the catalog in the address bar', () => {
+    const view = at('/our-services/p-konseling-anak')
+    const frame = view.container.querySelector('iframe') as HTMLIFrameElement
+    expect(frame.src).toContain('#detail-p-konseling-anak')
+    const say = (id: string, origin = OUR_SERVICES_ORIGIN) =>
+      act(() => {
+        window.dispatchEvent(new MessageEvent('message', { data: { type: 'attentive-service', id }, origin, source: frame.contentWindow as any }))
+      })
+    say('p-konseling-family')
+    expect(window.location.pathname).toBe('/our-services/p-konseling-family')
+    say('../dashboard')
+    say('p-other', 'https://example.com')
+    expect(window.location.pathname).toBe('/our-services/p-konseling-family')
+    expect(frame.src).toContain('#detail-p-konseling-anak')
+    say('')
+    expect(window.location.pathname).toBe('/our-services')
+    view.unmount()
+  })
+})
+
