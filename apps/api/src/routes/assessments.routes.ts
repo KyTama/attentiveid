@@ -229,6 +229,25 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
         }
         : undefined;
 
+    /**
+     * The internal (psychologist) report in both languages. It is for the Drive copy ONLY: it must never go into `buildReportFiles`,
+     * whose files are attached to the e-mails, one of which goes to the participant.
+     */
+    const buildInternalFiles = canPrint
+        ? async (row: AssessmentRow): Promise<ReportFile[]> => {
+            const loaded = await loadReportInput(row.id);
+            if (!loaded) return [];
+            const assets = await loadReportAssets(dependencies.siteOrigin || 'https://attentiveid.com');
+            const print = dependencies.pdfRenderer || renderPdf;
+            const files: ReportFile[] = [];
+            for (const lang of ['id', 'en'] as const) {
+                const html = makeStandaloneReport(renderPsychologistReportHtml({ ...loaded.input, lang }), assets);
+                files.push({ name: `${row.code} - MHCU Psikolog (${lang.toUpperCase()}).pdf`, mimeType: 'application/pdf', data: await print(html) });
+            }
+            return files;
+        }
+        : undefined;
+
     /** Drive jobs of the same result run one after the other, so a late draft can never overwrite the final report. */
     const driveTails = new Map<string, Promise<unknown>>();
     const serial = <T>(key: string, job: () => Promise<T>): Promise<T> => {
@@ -255,8 +274,17 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     const saveToDrive = dependencies.driveReports
         ? (row: AssessmentRow, files: ReportFile[]) =>
             serial(row.code, async () => {
-                const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files });
+                // The client report goes first and is kept even when the internal one cannot be printed; that failure is then reported.
+                let internal: ReportFile[] = [];
+                let internalError: unknown;
+                try {
+                    internal = buildInternalFiles ? await buildInternalFiles(row) : [];
+                } catch (error) {
+                    internalError = error;
+                }
+                const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files: [...files, ...internal] });
                 await saveRawRow(row);
+                if (internalError) throw new Error('The client reports were saved, but the psychologist report could not be made');
                 return { path: saved.path };
             })
         : undefined;
@@ -616,7 +644,10 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                 value === undefined || value === null ? null : typeof value === 'string' ? (value.trim().length <= max ? value.trim() || null : undefined) : undefined;
             const template = text(body?.template, 4000);
             const custom = text(body?.custom, 500);
-            if (template === undefined || custom === undefined || typeof body?.final !== 'boolean') {
+            // The English fields are optional in the request: left out = unchanged, so an older page cannot wipe them.
+            const templateEn = body?.templateEn === undefined ? 'keep' : text(body.templateEn, 4000);
+            const customEn = body?.customEn === undefined ? 'keep' : text(body.customEn, 500);
+            if (template === undefined || custom === undefined || templateEn === undefined || customEn === undefined || typeof body?.final !== 'boolean') {
                 set.status = 400;
                 return { status: 'error', message: 'Catatan tidak valid (catatan khusus maksimal 500 karakter).' };
             }
@@ -626,7 +657,14 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
                     set.status = 404;
                     return { status: 'notFound', message: 'Data tidak ditemukan.' };
                 }
-                const row = await repository.saveNote(params.id, { template, custom, final: body.final, userId: currentUser.id });
+                const row = await repository.saveNote(params.id, {
+                    template,
+                    custom,
+                    ...(templateEn === 'keep' ? {} : { templateEn }),
+                    ...(customEn === 'keep' ? {} : { customEn }),
+                    final: body.final,
+                    userId: currentUser.id
+                });
                 await auditSafely({ actor: currentUser?.id ?? null, action: 'note', submissionId: params.id, detail: body.final ? 'final' : 'draft' });
                 await automate(params.id);
                 return { status: 'success', data: (await repository.get(params.id)) ?? row };

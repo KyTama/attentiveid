@@ -1,0 +1,3 @@
+ALTER TABLE "assessment_submissions" ADD COLUMN "note_template_en" text;--> statement-breakpoint
+ALTER TABLE "assessment_submissions" ADD COLUMN "note_custom_en" text;--> statement-breakpoint
+ALTER TABLE "assessment_submissions" ADD CONSTRAINT "assessment_submissions_note_custom_en_len" CHECK ("assessment_submissions"."note_custom_en" is null or char_length("assessment_submissions"."note_custom_en") <= 500);

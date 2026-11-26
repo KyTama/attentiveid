@@ -65,7 +65,7 @@ const PSY_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail'; pdf?: 'off' } = {}) => {
+const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail'; pdf?: 'off' | 'internal-fails' } = {}) => {
     const sheetRows: Array<{ title: string; tab: string; headers: string[]; key: string; values: string[] }> = [];
     const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; mimeType: string; data: Uint8Array | string }> }> = [];
     const printed: string[] = [];
@@ -135,6 +135,8 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             const row = rows.find((entry) => entry.id === id);
             if (!row) return null;
             Object.assign(row, { noteTemplate: input.template, noteCustom: input.custom, noteFinal: input.final });
+            if (input.templateEn !== undefined) Object.assign(row, { noteTemplateEn: input.templateEn });
+            if (input.customEn !== undefined) Object.assign(row, { noteCustomEn: input.customEn });
             return row;
         },
         setPayment: async (id, input) => {
@@ -185,7 +187,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 }
             }))(),
             alertEmail: 'alerts@attentive.id',
-            pdfRenderer: options.pdf === 'off' ? null : async (html) => { printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
+            pdfRenderer: options.pdf === 'off' ? null : async (html) => { if (options.pdf === 'internal-fails' && html.includes('MHCU (internal)')) throw new Error('browser crashed'); printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
             driveReports: options.drive
                 ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; }, upsertSheetRow: async (input) => { if (options.drive === 'fail') throw new Error('sheet down'); sheetRows.push(input); return { spreadsheetId: 'sheet-1', updated: false }; } }
                 : undefined,
@@ -821,7 +823,7 @@ describe('DELETE /api/admin/assessments/:id (owner only)', () => {
 });
 
 describe('released reports saved to Drive', () => {
-    const release = async (options: { drive?: 'ok' | 'fail'; pdf?: 'off' }) => {
+    const release = async (options: { drive?: 'ok' | 'fail'; pdf?: 'off' | 'internal-fails' }) => {
         const fixture = createFixture(options);
         await submit(fixture.app, body());
         // the draft that is made right after the submission is finished first; this checks what the release itself does
@@ -837,16 +839,28 @@ describe('released reports saved to Drive', () => {
         return { ...fixture, done };
     };
 
+    const ALL_DRIVE_FILES = [
+        'AT-MHCU-2026-100 - MHCU (ID).pdf',
+        'AT-MHCU-2026-100 - MHCU (EN).pdf',
+        'AT-MHCU-2026-100 - MHCU Psikolog (ID).pdf',
+        'AT-MHCU-2026-100 - MHCU Psikolog (EN).pdf'
+    ];
+
     it('saves both languages as plain PDFs (the report pages only) and says where', async () => {
         const { done, driveSaved, audits, printed } = await release({ drive: 'ok' });
         expect(done.status).toBe(200);
         expect((await done.json()).data.drivePath).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
         expect(driveSaved).toHaveLength(1);
-        expect(driveSaved[0].files.map((file) => file.name)).toEqual(['AT-MHCU-2026-100 - MHCU (ID).pdf', 'AT-MHCU-2026-100 - MHCU (EN).pdf']);
+        expect(driveSaved[0].files.map((file) => file.name)).toEqual(ALL_DRIVE_FILES);
         expect(driveSaved[0].files.every((file) => file.mimeType === 'application/pdf')).toBe(true);
         // what was printed is the report itself: its pages, in each language, with no page frame, title or buttons
-        expect(printed).toHaveLength(2);
-        for (const html of printed) {
+        expect(printed).toHaveLength(4);
+        // the last two are the internal (psychologist) reports, one per language
+        expect(printed[2]).toContain('MHCU (internal)');
+        expect(printed[2]).toContain('HANYA UNTUK PSIKOLOG');
+        expect(printed[3]).toContain('FOR PSYCHOLOGISTS ONLY');
+        expect(printed[0]).not.toContain('HANYA UNTUK PSIKOLOG');
+        for (const html of printed.slice(0, 2)) {
             expect(html).toContain('<div class="page">');
             expect(html).not.toContain('rp-save');
             expect(html).not.toContain('rp-frame');
@@ -869,6 +883,21 @@ describe('released reports saved to Drive', () => {
         }
     });
 
+    it('never attaches the internal report to an e-mail', async () => {
+        const { sent } = await release({ drive: 'ok' });
+        for (const mail of sent) expect(mail.attachments?.some((file) => /Psikolog/.test(file.filename))).toBe(false);
+    });
+
+    it('keeps the client copy on Drive when the internal report cannot be printed, and says the Drive save failed', async () => {
+        const { done, driveSaved, sent } = await release({ drive: 'ok', pdf: 'internal-fails' });
+        expect(done.status).toBe(200);
+        const data = (await done.json()).data;
+        expect(data).toMatchObject({ released: true, emailed: true, drive: 'failed' });
+        expect(data.driveError).toContain('psychologist report could not be made');
+        expect(driveSaved[0].files.map((file) => file.name)).toEqual(ALL_DRIVE_FILES.slice(0, 2));
+        expect(sent[0].attachments).toHaveLength(2);
+    });
+
     it('without a PDF engine the release still e-mails the links, just without attachments', async () => {
         const { sent, done } = await release({ drive: 'ok', pdf: 'off' });
         expect(done.status).toBe(200);
@@ -882,7 +911,7 @@ describe('released reports saved to Drive', () => {
         await submit(app, body());
         await new Promise((resolve) => setTimeout(resolve, 60));
         expect(driveSaved).toHaveLength(1);
-        expect(driveSaved[0].files.map((file) => file.name)).toEqual(['AT-MHCU-2026-100 - MHCU (ID).pdf', 'AT-MHCU-2026-100 - MHCU (EN).pdf']);
+        expect(driveSaved[0].files.map((file) => file.name)).toEqual(ALL_DRIVE_FILES);
         // the result e-mail and the staff alert carry no report
         expect(sent.length).toBeGreaterThan(0);
         expect(sent.every((mail) => mail.attachments === undefined)).toBe(true);
@@ -937,3 +966,53 @@ describe('released reports saved to Drive', () => {
         expect((await send(ready.app, `/api/admin/assessments/${id}/save-to-drive`, 'POST', undefined, bearer(psychologistToken))).status).toBe(403);
     });
 });
+
+describe('the psychologist note in two languages', () => {
+    const setup = async () => {
+        const fixture = createFixture();
+        await submit(fixture.app, body());
+        const id = fixture.rows[0].id;
+        const put = (payload: unknown) => send(fixture.app, `/api/admin/assessments/${id}/note`, 'PUT', payload, bearer(adminToken));
+        const preview = async (lang: 'id' | 'en') => (await send(fixture.app, `/api/admin/assessments/${id}/report/client?lang=${lang}`, 'GET', undefined, bearer(adminToken))).text();
+        return { ...fixture, put, preview };
+    };
+
+    it('stores the English fields and prints each language with its own text only', async () => {
+        const { put, preview, rows } = await setup();
+        expect((await put({ template: null, custom: 'Tidur lebih teratur.', templateEn: null, customEn: 'Sleep more regularly.', final: true })).status).toBe(200);
+        expect(rows[0]).toMatchObject({ noteCustom: 'Tidur lebih teratur.', noteCustomEn: 'Sleep more regularly.' });
+        const en = await preview('en');
+        expect(en).toContain('Sleep more regularly.');
+        expect(en).not.toContain('Tidur lebih teratur.');
+        const id = await preview('id');
+        expect(id).toContain('Tidur lebih teratur.');
+        expect(id).not.toContain('Sleep more regularly.');
+    });
+
+    it('never prints the Indonesian note in the English report: it says where the note is', async () => {
+        const { put, preview } = await setup();
+        await put({ template: 'Teks rekomendasi saya.', custom: 'Tidur lebih teratur.', templateEn: null, customEn: null, final: true });
+        const en = await preview('en');
+        expect(en).not.toContain('Tidur lebih teratur.');
+        expect(en).not.toContain('Teks rekomendasi saya.');
+        expect(en).toContain('Your psychologist also wrote a personal note, which appears in the Indonesian version of this report.');
+    });
+
+    it('keeps the English text when an older page saves without the English fields, and clears it with null', async () => {
+        const { put, rows } = await setup();
+        await put({ template: null, custom: null, templateEn: 'My text.', customEn: 'Extra.', final: false });
+        await put({ template: null, custom: 'Baru.', final: false });
+        expect(rows[0]).toMatchObject({ noteTemplateEn: 'My text.', noteCustomEn: 'Extra.', noteCustom: 'Baru.' });
+        await put({ template: null, custom: 'Baru.', templateEn: null, customEn: null, final: false });
+        expect(rows[0]).toMatchObject({ noteTemplateEn: null, noteCustomEn: null });
+    });
+
+    it('limits the English fields like the Indonesian ones', async () => {
+        const { put } = await setup();
+        expect((await put({ template: null, custom: null, customEn: 'x'.repeat(501), final: false })).status).toBe(400);
+        expect((await put({ template: null, custom: null, templateEn: 'x'.repeat(4001), final: false })).status).toBe(400);
+        expect((await put({ template: null, custom: null, customEn: 7, final: false })).status).toBe(400);
+        expect((await put({ template: null, custom: null, customEn: 'x'.repeat(500), final: false })).status).toBe(200);
+    });
+});
+

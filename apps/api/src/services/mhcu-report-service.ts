@@ -37,11 +37,34 @@ export interface ReportInput {
 
 const langOf = (input: ReportInput): 'id' | 'en' => input.lang ?? (input.row.lang === 'en' ? 'en' : 'id');
 
-/** The recommendation printed in the report: the level's standard text (or the psychologist's edited version) plus the special note. */
-const recommendationOf = (row: HistoryRow, level: number, lang: 'id' | 'en'): string => {
+/**
+ * Said in a report when the psychologist wrote their own text for one language only: that text is never printed in the other
+ * language and nothing is translated by machine, so the reader is told where to find it.
+ */
+export const NOTE_ONLY_IN_OTHER_LANGUAGE = {
+    en: 'Your psychologist also wrote a personal note, which appears in the Indonesian version of this report.',
+    id: 'Psikolog Anda juga menulis catatan pribadi, yang dapat dibaca pada versi bahasa Inggris laporan ini.'
+} as const;
+
+/**
+ * The recommendation printed in the report: the level's standard text of that language (or the psychologist's own version in
+ * that language) plus the special note in that language.
+ */
+export const recommendationOf = (
+    row: Pick<HistoryRow, 'noteTemplate' | 'noteCustom' | 'noteTemplateEn' | 'noteCustomEn'>,
+    level: number,
+    lang: 'id' | 'en'
+): string => {
     const def = MHCU_LEVELS[Math.min(5, Math.max(1, level)) as 1 | 2 | 3 | 4 | 5];
-    const template = row.noteTemplate?.trim() || (lang === 'en' ? def.actionEn : def.actionId);
-    return [template, row.noteCustom?.trim()].filter(Boolean).join(' ');
+    const clean = (value: string | null | undefined) => value?.trim() || '';
+    const indonesian = { template: clean(row.noteTemplate), custom: clean(row.noteCustom) };
+    const english = { template: clean(row.noteTemplateEn), custom: clean(row.noteCustomEn) };
+    const own = lang === 'en' ? english : indonesian;
+    const other = lang === 'en' ? indonesian : english;
+    const missing = Boolean((other.template && !own.template) || (other.custom && !own.custom));
+    return [own.template || (lang === 'en' ? def.actionEn : def.actionId), own.custom, missing ? NOTE_ONLY_IN_OTHER_LANGUAGE[lang] : '']
+        .filter(Boolean)
+        .join(' ');
 };
 
 const buildInput = (input: ReportInput) => {

@@ -92,29 +92,57 @@ export function defaultRecommendation(level: number | null, lang: string): strin
 export const CUSTOM_NOTE_MAX = 500
 
 export interface NoteDraft {
+  /** Indonesian report */
   template: string
   custom: string
+  /** English report: written by the psychologist, never machine-translated */
+  templateEn: string
+  customEn: string
   final: boolean
 }
 
-export function noteDraftOf(detail: Pick<MhcuDetail, 'noteTemplate' | 'noteCustom' | 'noteFinal' | 'level' | 'lang'>): NoteDraft {
+type NoteSource = Pick<MhcuDetail, 'noteTemplate' | 'noteCustom' | 'noteTemplateEn' | 'noteCustomEn' | 'noteFinal' | 'level'>
+
+export function noteDraftOf(detail: NoteSource): NoteDraft {
   return {
-    template: detail.noteTemplate?.trim() || defaultRecommendation(detail.level, detail.lang),
+    template: detail.noteTemplate?.trim() || defaultRecommendation(detail.level, 'id'),
     custom: detail.noteCustom ?? '',
+    templateEn: detail.noteTemplateEn?.trim() || defaultRecommendation(detail.level, 'en'),
+    customEn: detail.noteCustomEn ?? '',
     final: detail.noteFinal,
   }
 }
 
 /** What goes to the server: the standard text is saved as "no edit" (null), so a later change of the standard still applies. */
-export function noteInputOf(draft: NoteDraft, detail: Pick<MhcuDetail, 'level' | 'lang'>) {
-  const template = draft.template.trim()
-  const unchanged = template === defaultRecommendation(detail.level, detail.lang).trim()
-  return { template: template && !unchanged ? template : null, custom: draft.custom.trim() || null, final: draft.final }
+export function noteInputOf(draft: NoteDraft, detail: Pick<MhcuDetail, 'level'>) {
+  const edited = (value: string, lang: 'id' | 'en') => {
+    const text = value.trim()
+    return text && text !== defaultRecommendation(detail.level, lang).trim() ? text : null
+  }
+  return {
+    template: edited(draft.template, 'id'),
+    custom: draft.custom.trim() || null,
+    templateEn: edited(draft.templateEn, 'en'),
+    customEn: draft.customEn.trim() || null,
+    final: draft.final,
+  }
 }
 
-export const noteChanged = (draft: NoteDraft, detail: Pick<MhcuDetail, 'noteTemplate' | 'noteCustom' | 'noteFinal' | 'level' | 'lang'>): boolean => {
+/** True when the psychologist wrote their own text in Indonesian but not in English: the English report then says so instead of printing it. */
+export function englishNoteMissing(draft: NoteDraft, detail: Pick<MhcuDetail, 'level'>): boolean {
+  const input = noteInputOf(draft, detail)
+  return Boolean((input.template && !input.templateEn) || (input.custom && !input.customEn))
+}
+
+export const noteChanged = (draft: NoteDraft, detail: NoteSource): boolean => {
   const saved = noteDraftOf(detail)
-  return draft.template.trim() !== saved.template.trim() || draft.custom.trim() !== saved.custom.trim() || draft.final !== saved.final
+  return (
+    draft.template.trim() !== saved.template.trim() ||
+    draft.custom.trim() !== saved.custom.trim() ||
+    draft.templateEn.trim() !== saved.templateEn.trim() ||
+    draft.customEn.trim() !== saved.customEn.trim() ||
+    draft.final !== saved.final
+  )
 }
 
 /** Whole rupiah from what was typed ("227.000", "Rp 227000"); '' = none; null = not a number. */

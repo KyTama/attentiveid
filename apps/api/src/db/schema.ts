@@ -635,6 +635,9 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     /** The psychologist's note for the full report: the editable paragraph, a special note (max 500) and the final flag. */
     noteTemplate: text('note_template'),
     noteCustom: text('note_custom'),
+    /** The English versions of the two fields above, written by the psychologist (nothing is machine-translated). */
+    noteTemplateEn: text('note_template_en'),
+    noteCustomEn: text('note_custom_en'),
     noteFinal: boolean('note_final').default(false).notNull(),
     noteUpdatedBy: uuid('note_updated_by'),
     noteUpdatedAt: timestamp('note_updated_at', { withTimezone: true, mode: 'string' }),
@@ -665,6 +668,7 @@ export const assessmentSubmissions = pgTable('assessment_submissions', {
     check('assessment_submissions_status', sql`${table.status} in ('new','reviewed','released')`),
     check('assessment_submissions_payment_status', sql`${table.paymentStatus} in ('UNPAID','PAID','FREE','INCLUDED','LEGACY')`),
     check('assessment_submissions_note_custom_len', sql`${table.noteCustom} is null or char_length(${table.noteCustom}) <= 500`),
+    check('assessment_submissions_note_custom_en_len', sql`${table.noteCustomEn} is null or char_length(${table.noteCustomEn}) <= 500`),
     check('assessment_submissions_track', sql`${table.track} in ('mandiri','asesmen','free','paket','lanjutan','legacy')`),
     check('assessment_submissions_price_due', sql`${table.priceDue} is null or ${table.priceDue} >= 0`),
     index('assessment_submissions_invite_idx').on(table.inviteId)

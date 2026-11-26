@@ -25,6 +25,9 @@ export interface MhcuDetail extends AssessmentDetail {
   waveNo: number | null
   noteTemplate: string | null
   noteCustom: string | null
+  /** The English versions, written by the psychologist; absent on older API versions. */
+  noteTemplateEn?: string | null
+  noteCustomEn?: string | null
   noteFinal: boolean
   noteUpdatedAt: string | null
   paymentStatus: string
@@ -79,6 +82,9 @@ export interface NoteInput {
   template: string | null
   /** The psychologist's own addition, at most 500 characters. */
   custom: string | null
+  /** The English versions of the two fields; null = none (the English report uses the standard English text). */
+  templateEn: string | null
+  customEn: string | null
   final: boolean
 }
 

@@ -20,6 +20,7 @@ import {
   filterItems,
   noteChanged,
   noteDraftOf,
+  englishNoteMissing,
   noteInputOf,
   parseAmount,
   releaseBlocker,
@@ -103,27 +104,40 @@ describe('summarize', () => {
 })
 
 describe('the psychologist note', () => {
-  const base = { level: 4, lang: 'id', noteTemplate: null, noteCustom: null, noteFinal: false }
+  const base = { level: 4, noteTemplate: null, noteCustom: null, noteTemplateEn: null, noteCustomEn: null, noteFinal: false }
+  const nothing = { template: null, custom: null, templateEn: null, customEn: null }
 
-  it('starts from the standard text of the level, in the language of the person', () => {
+  it('starts each language from its own standard text of the level', () => {
     expect(noteDraftOf(base).template).toBe(defaultRecommendation(4, 'id'))
+    expect(noteDraftOf(base).templateEn).toBe(defaultRecommendation(4, 'en'))
     expect(defaultRecommendation(4, 'en')).not.toBe(defaultRecommendation(4, 'id'))
   })
 
   it('saves the unchanged standard text as "no edit"', () => {
     const draft = noteDraftOf(base)
-    expect(noteInputOf(draft, base)).toEqual({ template: null, custom: null, final: false })
+    expect(noteInputOf(draft, base)).toEqual({ ...nothing, final: false })
   })
 
   it('saves an edited text and the own addition, trimmed', () => {
-    const draft = { template: '  Teks sendiri.  ', custom: '  Tambahan.  ', final: true }
-    expect(noteInputOf(draft, base)).toEqual({ template: 'Teks sendiri.', custom: 'Tambahan.', final: true })
+    const draft = { template: '  Teks sendiri.  ', custom: '  Tambahan.  ', templateEn: ' Own text. ', customEn: ' Extra. ', final: true }
+    expect(noteInputOf(draft, base)).toEqual({ template: 'Teks sendiri.', custom: 'Tambahan.', templateEn: 'Own text.', customEn: 'Extra.', final: true })
+  })
+
+  it('warns when the psychologist wrote Indonesian text without an English version', () => {
+    const draft = noteDraftOf(base)
+    expect(englishNoteMissing(draft, base)).toBe(false)
+    expect(englishNoteMissing({ ...draft, custom: 'Tambahan.' }, base)).toBe(true)
+    expect(englishNoteMissing({ ...draft, custom: 'Tambahan.', customEn: 'Extra.' }, base)).toBe(false)
+    expect(englishNoteMissing({ ...draft, template: 'Teks sendiri.' }, base)).toBe(true)
+    expect(englishNoteMissing({ ...draft, template: 'Teks sendiri.', templateEn: 'Own text.' }, base)).toBe(false)
+    expect(englishNoteMissing({ ...draft, customEn: 'Extra.' }, base)).toBe(false)
   })
 
   it('knows when there is something unsaved', () => {
     const saved = noteDraftOf(base)
     expect(noteChanged(saved, base)).toBe(false)
     expect(noteChanged({ ...saved, custom: 'x' }, base)).toBe(true)
+    expect(noteChanged({ ...saved, customEn: 'x' }, base)).toBe(true)
     expect(noteChanged({ ...saved, final: true }, base)).toBe(true)
     expect(noteChanged({ ...saved, template: `${saved.template}  ` }, base)).toBe(false)
   })
