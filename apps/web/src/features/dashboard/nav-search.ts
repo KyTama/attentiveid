@@ -25,6 +25,7 @@ export const NAV_KEYWORDS: Record<string, string> = {
   '/dashboard/experimental/forms': 'forms experiment form formulir eksperimen',
   '/dashboard/email/contacts': 'email e-mail kontak contacts kirim massal bulk send penerima recipients kategori categories client business excel impor ekspor import export alamat address',
   '/dashboard/email/send': 'email e-mail kirim massal bulk send blast newsletter broadcast kampanye campaign draf draft lampiran attachment html log riwayat kiriman history terkirim sent dibuka opened diklik clicked berhenti berlangganan unsubscribe',
+  '/dashboard/email/chats': 'email e-mail percakapan conversations chat chats pesan messages riwayat history kontak contact terkirim sent',
   '/dashboard/traffic': 'traffic visits analytics visitors statistics monitor pages traffic kunjungan analitik pengunjung statistik visitor monitor halaman',
   '/dashboard/account': 'account settings change password reset password dark mode dark theme light theme appearance tema gelap terang tampilan ganti password kata sandi session timeout inactivity idle sign out logout automatic limit minutes security pengaturan akun batas waktu sesi tidak aktif keluar otomatis menit keamanan',
   '/dashboard/forms': 'forms form activity all forms submissions summary mhcu gsc latest new formulir aktivitas semua formulir kiriman ringkasan terbaru',

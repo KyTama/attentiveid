@@ -1,5 +1,5 @@
 import type {
-  EmailAudience, EmailAudiencePreview, EmailCampaign, EmailCampaignFile, EmailLanguage, EmailRecipientRow, EmailSendingState,
+  EmailAudience, EmailAudiencePreview, EmailCampaign, EmailCategory, EmailChat, EmailChatMessage, EmailContact, EmailCampaignFile, EmailLanguage, EmailRecipientRow, EmailSendingState,
 } from '@attentiveid/shared'
 import { request } from './service'
 
@@ -41,3 +41,6 @@ export const sendTest = async (id: string) => (await request<Data<{ to: string }
 export const sendCampaign = (id: string, audience: EmailAudience, expected: number) =>
   request(`${BASE}/campaigns/${id}/send`, json('POST', { audience, expected }))
 export const controlCampaign = (id: string, action: 'pause' | 'resume' | 'cancel') => request(`${BASE}/campaigns/${id}/${action}`, json('POST'))
+export const listChats = async () => (await request<Data<{ chats: EmailChat[]; categories: EmailCategory[] }>>(`${BASE}/chats`)).data
+export const getChat = async (contactId: string) =>
+  (await request<Data<{ contact: EmailContact; messages: EmailChatMessage[] }>>(`${BASE}/chats/${contactId}`)).data

@@ -7,13 +7,13 @@ import { Elysia } from 'elysia';
 import {
     EMAIL_BODY_MAX, EMAIL_DAILY_LIMIT, EMAIL_FILES_MAX_TOTAL, EMAIL_FILE_EXTENSIONS, EMAIL_FILE_MAX_BYTES, EMAIL_FILE_MAX_COUNT,
     EMAIL_TITLE_MAX, FEEDBACK_FILE_TYPES, cleanContactText, feedbackFileExtension,
-    type EmailAudience, type EmailAudiencePreview, type EmailContact, type EmailLanguage, type EmailSendingState
+    type EmailAudience, type EmailAudiencePreview, type EmailChat, type EmailChatMessage, type EmailContact, type EmailLanguage, type EmailSendingState
 } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { CampaignDraft, EmailCampaignsRepository, Recipient } from '../repositories/email-campaigns.repository';
 import type { EmailContactsRepository } from '../repositories/email-contacts.repository';
-import { buildPersonalMail, cleanEmailHtml, escapeHtml, hasNameInAddress, readTrackToken, trackedLinks } from '../services/email-content';
-import { EMAIL_COPY } from '../services/email-copy';
+import { buildPersonalMail, cleanEmailHtml, escapeHtml, hasNameInAddress, htmlToText, readTrackToken, trackedLinks } from '../services/email-content';
+import { EMAIL_COPY, NAME_FALLBACK } from '../services/email-copy';
 import { cleanName, contentMatches } from '../services/feedback-files';
 import type { Mailer } from '../services/mailer';
 import type { AuthTokenService, AuthUserRepository } from './auth';
@@ -107,6 +107,12 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
         return { recipients, preview: { count: recipients.length, archived, unsubscribed: stopped.size } };
     };
 
+    const NAME = /\{\{\s*name\s*\}\}/gi;
+    /** A title as this person received it. */
+    const titleFor = (title: string, name: string) => title.replace(NAME, () => name.trim() || NAME_FALLBACK.id);
+
+    const everyContact = async () => [...(await contacts.listContacts({ archived: false })), ...(await contacts.listContacts({ archived: true }))];
+
     const state = async (): Promise<EmailSendingState> => ({
         enabled: canSend(),
         sentLast24h: await campaigns.attemptsSince(new Date(now().getTime() - 24 * 60 * 60 * 1000)),
@@ -190,6 +196,30 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
             if (campaign.status !== 'draft') return notDraft(set);
             return (await campaigns.removeFile(campaign.id, params.fileId)) ? { status: 'success' } : fail(set, 404, 'Lampiran tidak ditemukan.');
         }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Remove an attachment from a draft' } })
+        .get('/api/admin/email/chats', async ({ set }: any) => {
+            set.headers['cache-control'] = 'no-store';
+            const byId = new Map((await everyContact()).map((contact) => [contact.id, contact]));
+            const chats: EmailChat[] = (await campaigns.chats()).flatMap((chat) => {
+                const contact = byId.get(chat.contactId);
+                return contact
+                    ? [{ ...chat, lastTitle: titleFor(chat.lastTitle, contact.name), email: contact.email, name: contact.name, categoryIds: contact.categoryIds, archived: Boolean(contact.archivedAt), unsubscribed: Boolean(contact.unsubscribed) }]
+                    : [];
+            });
+            return { status: 'success', data: { chats, categories: await contacts.listCategories() } };
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Contacts the site has sent to, newest first' } })
+        .get('/api/admin/email/chats/:contactId', async ({ params, set, currentUser }: any) => {
+            const contact = UUID.test(params.contactId) ? await contacts.getContact(params.contactId) : null;
+            if (!contact) return fail(set, 404, 'Kontak tidak ditemukan.');
+            const messages: EmailChatMessage[] = (await campaigns.conversation(contact.id)).map(({ html, name, ...row }) => ({
+                ...row,
+                title: titleFor(row.title, name),
+                // Plain text only: no HTML of an e-mail is ever rendered in this view.
+                text: htmlToText(html.replace(NAME, () => escapeHtml(name.trim() || NAME_FALLBACK.id)))
+            }));
+            set.headers['cache-control'] = 'no-store';
+            await contacts.audit(currentUser.email, 'conversation_opened', contact.id);
+            return { status: 'success', data: { contact, messages } };
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'What the site sent to one contact' } })
         .post('/api/admin/email/preview', async ({ body, set, currentUser }: any) => {
             const draft = readDraft(body);
             if (typeof draft === 'string') return fail(set, 400, draft);

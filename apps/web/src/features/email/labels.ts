@@ -10,6 +10,6 @@ export function useLabels() {
   return {
     status: (value: EmailCampaignStatus) => names[value],
     /** Date and time in Jakarta, wherever the admin is. */
-    when: (value: string) => `${new Date(value).toLocaleString(isEn ? 'en-GB' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' })} WIB`,
+    when: (value: string) => `${new Date(value.replace(' ', 'T').replace(/\+00$/, 'Z')).toLocaleString(isEn ? 'en-GB' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' })} WIB`,
   }
 }

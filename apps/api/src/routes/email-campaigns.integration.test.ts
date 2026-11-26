@@ -84,7 +84,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
             ['GET', '/api/admin/email/campaigns'], ['POST', '/api/admin/email/campaigns'], ['POST', '/api/admin/email/audience'],
             ['GET', '/api/admin/email/campaigns/x'], ['PUT', '/api/admin/email/campaigns/x'], ['DELETE', '/api/admin/email/campaigns/x'],
             ['POST', '/api/admin/email/campaigns/x/send'], ['POST', '/api/admin/email/campaigns/x/test'], ['POST', '/api/admin/email/campaigns/x/pause'],
-            ['POST', '/api/admin/email/campaigns/x/files'], ['DELETE', '/api/admin/email/campaigns/x/files/y'], ['POST', '/api/admin/email/preview']
+            ['POST', '/api/admin/email/campaigns/x/files'], ['DELETE', '/api/admin/email/campaigns/x/files/y'], ['POST', '/api/admin/email/preview'], ['GET', '/api/admin/email/chats'], ['GET', '/api/admin/email/chats/x']
         ];
         for (const [method, path] of paths) {
             const body = method === 'GET' || method === 'DELETE' ? undefined : draft;
@@ -200,6 +200,25 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
         const ani = log.body.data.recipients.find((r: any) => r.email === 'ani@example.test');
         expect([ani.openCount, ani.clickCount, Boolean(ani.openedAt), Boolean(ani.clickedAt)]).toEqual([2, 1, true, true]);
         expect((await campaigns.get(id))!.counts).toMatchObject({ opened: 1, clicked: 1 });
+    });
+
+    test('conversations list who was sent to, with the text the person got, newest last', async () => {
+        const list = await call('GET', '/api/admin/email/chats');
+        expect(list.headers.get('cache-control')).toBe('no-store');
+        expect(list.body.data.chats.map((c: any) => c.email).sort()).toEqual(['ani@example.test', 'budi@example.test', 'dewi@example.test']);
+        const ani = list.body.data.chats.find((c: any) => c.email === 'ani@example.test');
+        expect(ani).toMatchObject({ count: 1, lastStatus: 'sent', lastTitle: 'Kabar untuk ani' });
+        expect(ani.lastAt).toMatch(/^\d{4}-\d\d-\d\dT/);
+
+        const one = await call('GET', `/api/admin/email/chats/${contactIds.ani}`);
+        expect(one.body.data.messages).toHaveLength(1);
+        expect(one.body.data.messages[0].text).toContain('Halo ani');
+        expect(one.body.data.messages[0].text).not.toContain('<');
+        expect(one.body.data.messages[0].files).toEqual(['brosur.pdf']);
+        expect(one.body.data.messages[0]).not.toHaveProperty('html');
+        const [logged] = await database.execute(sql`select count(*)::int as n from email_audit where action = 'conversation_opened'`) as unknown as Array<{ n: number }>;
+        expect(logged!.n).toBeGreaterThan(0);
+        expect((await call('GET', '/api/admin/email/chats/00000000-0000-4000-8000-000000000000')).status).toBe(404);
     });
 
     test('unsubscribe: visiting the page changes nothing, pressing stops later sends, even queued ones', async () => {

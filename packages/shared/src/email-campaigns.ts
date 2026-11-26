@@ -83,3 +83,32 @@ export interface EmailSendingState {
   sentLast24h: number
   dailyLimit: number
 }
+
+/* ------------------------------------------------------------ conversations: what the site sent to one contact */
+
+export interface EmailChat {
+  contactId: string
+  email: string
+  name: string
+  categoryIds: string[]
+  archived: boolean
+  unsubscribed: boolean
+  lastTitle: string
+  lastStatus: EmailRecipientStatus
+  lastAt: string
+  count: number
+}
+
+export interface EmailChatMessage {
+  id: string
+  campaignId: string
+  title: string
+  /** The body as plain text, with the person's name filled in. */
+  text: string
+  files: string[]
+  sentBy: string
+  status: EmailRecipientStatus
+  at: string
+  openedAt: string | null
+  clickedAt: string | null
+}

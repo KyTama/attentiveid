@@ -71,7 +71,33 @@ export interface EmailQueue {
     finishIfDone(campaignId: string, at: Date): Promise<void>;
 }
 
+export interface ChatSummary {
+    contactId: string;
+    lastTitle: string;
+    lastStatus: EmailRecipientStatus;
+    lastAt: string;
+    count: number;
+}
+
+export interface ChatRow {
+    id: string;
+    campaignId: string;
+    title: string;
+    html: string;
+    sentBy: string;
+    name: string;
+    status: EmailRecipientStatus;
+    at: string;
+    openedAt: string | null;
+    clickedAt: string | null;
+    files: string[];
+}
+
 export interface EmailCampaignsRepository extends EmailQueue {
+    /** One line per contact that was ever a recipient, newest first. */
+    chats(): Promise<ChatSummary[]>;
+    /** What was queued or sent to this contact, oldest first (the last 100). */
+    conversation(contactId: string): Promise<ChatRow[]>;
     list(): Promise<EmailCampaign[]>;
     get(id: string): Promise<EmailCampaign | null>;
     create(draft: CampaignDraft, actor: string): Promise<string>;
@@ -98,6 +124,9 @@ export interface EmailCampaignsRepository extends EmailQueue {
 }
 
 const EMPTY: EmailCampaignCounts = { total: 0, queued: 0, sent: 0, failed: 0, skipped: 0, unknown: 0, opened: 0, clicked: 0 };
+
+/** The database writes times as "2026-11-26 10:00:00+00"; some phone browsers only read the ISO form. */
+const iso = (value: string | null) => (value ? new Date(value).toISOString() : null);
 
 export const createEmailCampaignsRepository = (database: typeof defaultDb = defaultDb): EmailCampaignsRepository => {
     const countsFor = async (ids: string[]) => {
@@ -307,6 +336,50 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
                 openCount: row.openCount,
                 clickedAt: row.clickedAt,
                 clickCount: row.clickCount
+            }));
+        },
+
+        async chats() {
+            const rows = await database.execute(sql`
+                select distinct on (r.contact_id)
+                    r.contact_id as "contactId", c.title as "lastTitle", r.status as "lastStatus",
+                    coalesce(r.sent_at, c.queued_at) as "lastAt", (count(*) over (partition by r.contact_id))::int as count
+                from email_campaign_recipients r join email_campaigns c on c.id = r.campaign_id
+                where r.contact_id is not null
+                order by r.contact_id, coalesce(r.sent_at, c.queued_at) desc`);
+            return (rows as unknown as ChatSummary[])
+                .map((row) => ({ ...row, lastAt: iso(row.lastAt)! }))
+                .sort((a, b) => b.lastAt.localeCompare(a.lastAt));
+        },
+
+        async conversation(contactId) {
+            const rows = await database
+                .select({
+                    id: emailCampaignRecipients.id,
+                    campaignId: emailCampaigns.id,
+                    title: emailCampaigns.title,
+                    html: emailCampaigns.html,
+                    sentBy: emailCampaigns.sentBy,
+                    name: emailCampaignRecipients.name,
+                    status: emailCampaignRecipients.status,
+                    sentAt: emailCampaignRecipients.sentAt,
+                    queuedAt: emailCampaigns.queuedAt,
+                    openedAt: emailCampaignRecipients.openedAt,
+                    clickedAt: emailCampaignRecipients.clickedAt
+                })
+                .from(emailCampaignRecipients)
+                .innerJoin(emailCampaigns, eq(emailCampaigns.id, emailCampaignRecipients.campaignId))
+                .where(eq(emailCampaignRecipients.contactId, contactId))
+                .orderBy(desc(sql`coalesce(${emailCampaignRecipients.sentAt}, ${emailCampaigns.queuedAt})`))
+                .limit(100);
+            const files = await filesFor(rows.map((row) => row.campaignId));
+            return rows.reverse().map(({ sentAt, queuedAt, ...row }) => ({
+                ...row,
+                status: row.status as EmailRecipientStatus,
+                at: iso(sentAt ?? queuedAt)!,
+                openedAt: iso(row.openedAt),
+                clickedAt: iso(row.clickedAt),
+                files: (files.get(row.campaignId) ?? []).map((file) => file.name)
             }));
         },
 
