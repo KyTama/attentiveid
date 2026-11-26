@@ -20,6 +20,10 @@ export function HeroSlideVisual({
 }: HeroSlideVisualProps) {
   const portalPsychologist = useHeroPsychologist(slide.layout === 'wisdom-ella' ? 'gisella' : null, isId ? 'id' : 'en')
   const useWarmBackdrop = slide.layout === 'big10' && slide.hasCustomMedia
+  const show = (key: string) => !slide.hidden.includes(key)
+  const words = (key: string) => slide.texts[key] ?? ''
+  const pic = (key: string) => slide.images[key] ?? ''
+  const lines = (key: string) => words(key).split('\n').filter(Boolean)
   const containerClass = compact
     ? `relative h-[260px] w-full overflow-hidden rounded-tl-[110px] ${useWarmBackdrop ? 'bg-[#F6F0E6]' : 'bg-[#ECE3D4]'}`
     : `relative h-[340px] sm:h-[400px] lg:h-[640px] w-full overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px] ${useWarmBackdrop ? 'bg-[#F6F0E6]' : 'bg-[#ECE3D4]'}`
@@ -29,41 +33,41 @@ export function HeroSlideVisual({
       <div className={containerClass}>
         <div className="grid h-full min-h-[inherit] grid-cols-[1.05fr_0.95fr] grid-rows-[1.05fr_0.95fr] gap-2.5">
           <div className="row-span-2 min-h-0 min-w-0 overflow-hidden rounded-tl-[120px] lg:rounded-tl-[200px]">
-            <img
+            {show('photo') && <img
               src={slide.imageSrc}
               alt={slide.imageAlt}
               width="1200"
               height="1600"
               fetchPriority={isActive ? 'auto' : 'low'}
               className="h-full w-full object-cover object-[50%_60%]"
-            />
+            />}
           </div>
           <div className="min-h-0 min-w-0 overflow-hidden">
-            <img
-              src="/images/hero-v3/slide-02-cat-kittens.jpg"
+            {show('kittensBox') && <img
+              src={pic('kittens')}
               alt={isId ? 'Tiga anak kucing di ruang tunggu Attentive' : 'Three kittens at Attentive'}
               width="960"
               height="1280"
               loading="lazy"
               fetchPriority="low"
               className="h-full w-full object-cover object-[50%_45%]"
-            />
+            />}
           </div>
           <div className="min-h-0 min-w-0 overflow-hidden">
-            <img
-              src="/images/hero-v3/slide-02-cat-tabby.jpg"
+            {show('tabbyBox') && <img
+              src={pic('tabby')}
               alt={isId ? 'Kucing tabby sedang beristirahat' : 'Tabby cat asleep'}
               width="1200"
               height="1600"
               loading="lazy"
               fetchPriority="low"
               className="h-full w-full object-cover object-[50%_24%]"
-            />
+            />}
           </div>
         </div>
 
         {/* Circular cat vignette overlay */}
-        <motion.div
+        {show('circle') && <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease: CONTENT_EASE, delay: 0.2 }}
@@ -74,7 +78,7 @@ export function HeroSlideVisual({
           }`}
         >
           <img
-            src="/images/hero-v3/slide-02-cat-nap.jpg"
+            src={pic('circlePhoto')}
             alt={isId ? 'Kucing putih sedang tidur nyenyak' : 'White cat napping'}
             width="960"
             height="1280"
@@ -82,26 +86,24 @@ export function HeroSlideVisual({
             fetchPriority="low"
             className="h-full w-full object-cover object-[45%_40%]"
           />
-        </motion.div>
+        </motion.div>}
 
         {/* Gold circular sticker */}
-        <div
+        {show('sticker') && <div
           className={`absolute z-10 flex flex-col items-center justify-center rounded-full bg-[#E2AE52] text-center font-bold tracking-[0.08em] text-[#14284B] shadow-lg rotate-[10deg] ${
             compact
               ? 'top-3 right-3 size-16 text-[9px] leading-tight'
               : 'top-6 right-6 size-20 sm:size-[92px] text-[11px] sm:text-[12.5px] leading-[1.15]'
           }`}
         >
-          <span>{isId ? 'KENALI' : 'MEET'}</span>
-          <span>{isId ? 'PENGHUNI' : 'THE'}</span>
-          <span>{isId ? 'KAMI' : 'RESIDENTS'}</span>
-        </div>
+          {lines('stickerText').map((line, idx) => <span key={idx}>{line}</span>)}
+        </div>}
       </div>
     )
   }
 
   if (slide.layout === 'big10') {
-    if (slide.hasCustomMedia) {
+    if (slide.hasCustomMedia && show('photo')) {
       return (
         <div className={containerClass}>
           <img
@@ -125,7 +127,7 @@ export function HeroSlideVisual({
         }}
       >
         {/* Report Excerpt 1: Norm profile */}
-        <motion.div
+        {show('normCard') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.15 }}
@@ -136,10 +138,10 @@ export function HeroSlideVisual({
           }`}
         >
           <span className="absolute -top-3 left-3 sm:left-4 whitespace-nowrap rounded-full bg-[#14284B] px-2.5 py-1 text-[9px] sm:text-[10.5px] font-bold tracking-[0.14em] uppercase text-[#E2AE52]">
-            {isId ? 'Skor kamu vs. norma' : 'Your scores vs. the norm'}
+            {words('normLabel')}
           </span>
           <img
-            src="/images/hero-v3/slide-03-big10-norm.png"
+            src={pic('normImage')}
             alt={slide.imageAlt}
             width="1880"
             height="1280"
@@ -147,10 +149,10 @@ export function HeroSlideVisual({
             fetchPriority="low"
             className="block h-auto w-full rounded-[6px]"
           />
-        </motion.div>
+        </motion.div>}
 
         {/* Report Excerpt 2: 4-letter type */}
-        <motion.div
+        {show('typeCard') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.3 }}
@@ -161,10 +163,10 @@ export function HeroSlideVisual({
           }`}
         >
           <span className="absolute -top-3 left-3 sm:left-4 whitespace-nowrap rounded-full bg-[#14284B] px-2.5 py-1 text-[9px] sm:text-[10.5px] font-bold tracking-[0.14em] uppercase text-[#E2AE52]">
-            {isId ? 'Kode 4-hurufmu' : 'Your 4-letter type'}
+            {words('typeLabel')}
           </span>
           <img
-            src="/images/hero-v3/slide-03-big10-type.png"
+            src={pic('typeImage')}
             alt={isId ? 'Cuplikan kode tipe kepribadian Attentive' : 'Report excerpt: Attentive type code'}
             width="2230"
             height="570"
@@ -172,10 +174,10 @@ export function HeroSlideVisual({
             fetchPriority="low"
             className="block h-auto w-full rounded-[6px]"
           />
-        </motion.div>
+        </motion.div>}
 
         {/* Bottom-left matched psychologist card */}
-        <motion.div
+        {show('matchCard') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.45 }}
@@ -186,23 +188,16 @@ export function HeroSlideVisual({
           }`}
         >
           <span className="block text-[10.5px] font-bold tracking-[0.18em] uppercase text-[#C08A2C]">
-            {isId ? 'SESI PERTAMA · GRATIS' : 'FIRST SESSION · FREE'}
+            {words('matchTitle')}
           </span>
           <p className="mt-1.5 text-[16px] leading-[1.3] font-semibold text-[#14284B]">
-            {isId
-              ? 'Bahas hasilnya bersama psikolog yang cocok.'
-              : 'Talk it through with a psychologist who fits.'}
+            {words('matchText')}
           </p>
           <div className="mt-3 flex items-center">
-            <div className="flex items-center -space-x-2.5">
-              {[
-                '/images/hero-v3/slide-03-avatar-1.jpg',
-                '/images/hero-v3/slide-03-avatar-2.jpg',
-                '/images/hero-v3/slide-03-avatar-3.jpg',
-                '/images/hero-v3/slide-03-avatar-4.jpg',
-              ].map((avatarSrc, idx) => (
+            {show('avatars') && <div className="flex items-center -space-x-2.5">
+              {['avatar1', 'avatar2', 'avatar3', 'avatar4'].map(pic).map((avatarSrc, idx) => (
                 <img
-                  key={avatarSrc}
+                  key={idx}
                   src={avatarSrc}
                   alt=""
                   width="44"
@@ -214,27 +209,13 @@ export function HeroSlideVisual({
                   }`}
                 />
               ))}
-            </div>
-            <span className="ml-3 text-[11.5px] leading-[1.35] text-[#7B8496]">
-              {isId ? (
-                <>
-                  Disesuaikan dengan
-                  <br />
-                  hasil &amp; kebutuhanmu
-                </>
-              ) : (
-                <>
-                  Matched to your
-                  <br />
-                  results &amp; needs
-                </>
-              )}
-            </span>
+            </div>}
+            <span className="ml-3 whitespace-pre-line text-[11.5px] leading-[1.35] text-[#7B8496]">{words('matchHint')}</span>
           </div>
-        </motion.div>
+        </motion.div>}
 
         {/* Top-right example report pill */}
-        <div
+        {show('pill') && <div
           className={`absolute z-[6] inline-flex items-center gap-2 rounded-full bg-white/92 backdrop-blur-md font-bold text-[#14284B] shadow-[0_8px_20px_rgba(20,40,75,0.12)] ${
             compact
               ? 'top-3 right-3 px-2.5 py-1 text-[10px]'
@@ -244,8 +225,8 @@ export function HeroSlideVisual({
           <span className="grid size-[22px] place-items-center rounded-full bg-[#E2AE52] text-[#14284B]">
             <Sparkles size={12} />
           </span>
-          <span>{isId ? 'Contoh laporan' : 'Example report'}</span>
-        </div>
+          <span>{words('pillText')}</span>
+        </div>}
       </div>
     )
   }
@@ -259,14 +240,14 @@ export function HeroSlideVisual({
         }}
       >
         {/* Back Left Brief Sheet */}
-        <motion.div
+        {show('leftSheet') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 0.95, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.15 }}
           className="hidden sm:block absolute left-[76px] lg:left-[96px] top-[78px] w-[42%] max-w-[310px] rounded-[6px] overflow-hidden shadow-[0_26px_50px_-18px_rgba(20,40,75,0.35)] -rotate-[7deg]"
         >
           <img
-            src="/images/hero-v3/slide-04-brief-dec.png"
+            src={pic('leftImage')}
             alt={isId ? 'Ringkasan ilmiah Desember: How We Hold On' : 'How We Hold On, December brief'}
             width="1653"
             height="1150"
@@ -274,17 +255,17 @@ export function HeroSlideVisual({
             fetchPriority="low"
             className="block h-auto w-full"
           />
-        </motion.div>
+        </motion.div>}
 
         {/* Back Right Brief Sheet */}
-        <motion.div
+        {show('rightSheet') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.25 }}
           className="absolute right-2.5 top-5 w-[45%] sm:right-[34px] sm:top-[40px] sm:w-[46%] max-w-[340px] rounded-[6px] overflow-hidden shadow-[0_26px_50px_-18px_rgba(20,40,75,0.35)] rotate-[5deg]"
         >
           <img
-            src="/images/hero-v3/slide-04-brief-catdog.png"
+            src={pic('rightImage')}
             alt={isId ? 'Riset More Than Mine' : 'More Than Mine: would anyone die for their cat or dog?'}
             width="1653"
             height="1150"
@@ -292,10 +273,10 @@ export function HeroSlideVisual({
             fetchPriority="low"
             className="block h-auto w-full"
           />
-        </motion.div>
+        </motion.div>}
 
         {/* Foreground Brief Sheet */}
-        <motion.div
+        {show('photo') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.35 }}
@@ -305,9 +286,9 @@ export function HeroSlideVisual({
               : 'left-5 top-[70px] w-[70%] sm:left-[180px] lg:left-[210px] sm:top-[130px] sm:w-[64%] max-w-[440px]'
           }`}
         >
-          <span className="absolute -top-3.5 right-3 sm:right-[18px] whitespace-nowrap rounded-full bg-[#14284B] px-2.5 py-1 text-[9.5px] sm:text-[10.5px] font-bold tracking-[0.14em] uppercase text-[#E2AE52]">
-            November · More Than Mine
-          </span>
+          {show('badge') && <span className="absolute -top-3.5 right-3 sm:right-[18px] whitespace-nowrap rounded-full bg-[#14284B] px-2.5 py-1 text-[9.5px] sm:text-[10.5px] font-bold tracking-[0.14em] uppercase text-[#E2AE52]">
+            {words('badgeText')}
+          </span>}
           <img
             src={slide.imageSrc}
             alt={slide.imageAlt}
@@ -317,10 +298,10 @@ export function HeroSlideVisual({
             fetchPriority="low"
             className="block h-auto w-full rounded-[6px]"
           />
-        </motion.div>
+        </motion.div>}
 
         {/* Dark Navy Stat Callout Card */}
-        <motion.div
+        {show('stat') && <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.5 }}
@@ -331,25 +312,23 @@ export function HeroSlideVisual({
           }`}
         >
           <b className={`block font-bold leading-none tracking-[-0.03em] text-[#E2AE52] tabular-nums ${compact ? 'text-2xl' : 'text-[28px] sm:text-[40px]'}`}>
-            {isId ? '1 dari 5' : '1 in 5'}
+            {words('statNumber')}
           </b>
           <span className="mt-1.5 block text-[11.5px] sm:text-[13px] leading-[1.4] text-[#DBE2EE]">
-            {isId
-              ? 'Orang dewasa di Indonesia rela berkorban nyawa demi kucing atau anjingnya.'
-              : 'Indonesian adults would give their life for their cat or dog.'}
+            {words('statText')}
           </span>
           <small className="mt-1.5 block text-[10px] sm:text-[10.5px] tracking-[0.04em] text-[#8FA0BD]">
-            N = 2,885 · Nov brief
+            {words('statSource')}
           </small>
-        </motion.div>
+        </motion.div>}
 
         {/* Bottom-right pill */}
-        <div className="hidden sm:inline-flex absolute right-[30px] bottom-[30px] z-[6] items-center gap-2 rounded-full bg-white/92 backdrop-blur-md px-3.5 py-2 text-xs font-bold text-[#14284B] shadow-[0_8px_20px_rgba(20,40,75,0.12)]">
+        {show('pill') && <div className="hidden sm:inline-flex absolute right-[30px] bottom-[30px] z-[6] items-center gap-2 rounded-full bg-white/92 backdrop-blur-md px-3.5 py-2 text-xs font-bold text-[#14284B] shadow-[0_8px_20px_rgba(20,40,75,0.12)]">
           <span className="grid size-[22px] place-items-center rounded-full bg-[#E2AE52] text-[#14284B]">
             <Sparkles size={12} />
           </span>
-          <span>{isId ? 'Terbit tiap bulan' : 'New every month'}</span>
-        </div>
+          <span>{words('pillText')}</span>
+        </div>}
       </div>
     )
   }
@@ -368,17 +347,18 @@ export function HeroSlideVisual({
         ]
     // The quote and focus areas follow the portal (Psychologists menu); the typed text is the fallback.
     const portalFocus = portalPsychologist?.specializations.filter(Boolean).slice(0, 3) ?? []
-    const focusItems = portalFocus.length > 0 ? portalFocus : typedFocusItems
+    const staffFocus = lines('focusList')
+    const focusItems = staffFocus.length > 0 ? staffFocus : portalFocus.length > 0 ? portalFocus : typedFocusItems
     const typedQuote = isId
       ? 'Kamu boleh mulai dari bagian yang terasa paling sulit untuk dijelaskan.'
       : 'You can start with the part that feels hardest to explain.'
-    const quote = portalPsychologist?.conversationQuote?.trim() || typedQuote
+    const quote = words('quoteText') || portalPsychologist?.conversationQuote?.trim() || typedQuote
 
     return (
       <div className={containerClass}>
         {/* Portrait on right edge with rounded arch */}
         <div className="absolute inset-y-0 right-0 w-full lg:w-[64%] overflow-hidden rounded-tl-[120px] lg:rounded-tl-[190px]">
-          <img
+          {show('photo') && <img
             src={slide.imageSrc}
             alt={slide.imageAlt}
             width="600"
@@ -386,11 +366,11 @@ export function HeroSlideVisual({
             loading="lazy"
             fetchPriority="low"
             className="h-full w-full object-cover object-[50%_22%]"
-          />
+          />}
         </div>
 
         {/* Floating quote card */}
-        <motion.div
+        {show('quote') && <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.2 }}
@@ -405,12 +385,12 @@ export function HeroSlideVisual({
             {quote}
           </p>
           <small className="mt-3 block text-[11px] font-semibold tracking-[0.06em] uppercase text-[#7B8496]">
-            — ELLA
+            {words('quoteAuthor')}
           </small>
-        </motion.div>
+        </motion.div>}
 
         {/* Dark Navy focus card */}
-        <motion.div
+        {show('focus') && <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.35 }}
@@ -419,7 +399,7 @@ export function HeroSlideVisual({
           }`}
         >
           <b className="block text-[10.5px] font-bold tracking-[0.18em] uppercase text-[#E2AE52]">
-            {isId ? 'FOKUS PENDAMPINGANNYA' : 'SHE OFTEN WORKS WITH'}
+            {words('focusTitle')}
           </b>
           <ul className="mt-2.5 space-y-0 text-[12.5px] leading-[1.35] text-[#DBE2EE]">
             {focusItems.map((item) => (
@@ -434,10 +414,10 @@ export function HeroSlideVisual({
               </li>
             ))}
           </ul>
-        </motion.div>
+        </motion.div>}
 
         {/* Bottom-right pill */}
-        <div
+        {show('pill') && <div
           className={`absolute z-[6] inline-flex items-center gap-2 rounded-full bg-white/92 backdrop-blur-md font-bold text-[#14284B] shadow-[0_8px_20px_rgba(20,40,75,0.12)] ${
             compact ? 'right-3 bottom-3 px-2.5 py-1 text-[10px]' : 'right-6 bottom-6 px-3.5 py-2 text-xs'
           }`}
@@ -445,8 +425,8 @@ export function HeroSlideVisual({
           <span className="grid size-[22px] place-items-center rounded-full bg-[#E2AE52] text-[#14284B]">
             <Sparkles size={12} />
           </span>
-          <span>{isId ? 'Berpraktik sejak 2010' : 'Practicing since 2010'}</span>
-        </div>
+          <span>{words('pillText')}</span>
+        </div>}
       </div>
     )
   }
@@ -454,31 +434,29 @@ export function HeroSlideVisual({
   // Default layout: Slide 01 (`practice`)
   return (
     <div className={containerClass}>
-      <img
+      {show('photo') && <img
         src={slide.imageSrc}
         alt={slide.imageAlt}
         width="3072"
         height="4096"
         fetchPriority={isActive && slide.index === 0 ? 'high' : undefined}
         className="h-full w-full object-cover object-[48%_42%]"
-      />
+      />}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#14284B]/30 via-transparent to-black/5" />
 
       {/* Top-right SIP RESMI gold circular sticker */}
-      <div
+      {show('sticker') && <div
         className={`absolute z-10 flex flex-col items-center justify-center rounded-full bg-[#E2AE52] text-center font-bold tracking-[0.08em] text-[#14284B] shadow-lg rotate-[10deg] ${
           compact
             ? 'top-3 right-3 size-16 text-[9px] leading-tight'
             : 'top-6 right-6 size-20 sm:size-[92px] text-[11px] sm:text-[12.5px] leading-[1.15]'
         }`}
       >
-        <span>SIP</span>
-        <span>RESMI</span>
-        <span>✦</span>
-      </div>
+        {lines('stickerText').map((line, idx) => <span key={idx}>{line}</span>)}
+      </div>}
 
       {/* Bottom-left white glass caption card */}
-      <motion.div
+      {show('caption') && <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: CONTENT_EASE, delay: 0.2 }}
@@ -489,12 +467,12 @@ export function HeroSlideVisual({
         }`}
       >
         <b className="mb-1 block text-[10px] font-bold tracking-[0.17em] uppercase text-[#C08A2C]">
-          COME AS YOU ARE
+          {words('captionTitle')}
         </b>
         <span className={`font-semibold text-[#14284B] ${compact ? 'text-xs' : 'text-sm sm:text-base'}`}>
-          {isId ? 'Ruang aman untuk didengar.' : 'A safe space to be heard.'}
+          {words('captionText')}
         </span>
-      </motion.div>
+      </motion.div>}
     </div>
   )
 }

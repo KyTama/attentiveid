@@ -79,6 +79,14 @@ export const HeroSlideLayoutSchema = Type.Union([
   Type.Literal('wisdom-ella'),
 ])
 
+/** One changed part of a hero slide: hidden, reworded or with another picture. Keys are defined by the website per layout. */
+export const HeroElementOverrideSchema = Type.Object({
+  key: IdentifierSchema,
+  hidden: Type.Optional(Type.Boolean()),
+  text: Type.Optional(LocalizedTextSchema),
+  media: Type.Optional(LandingMediaSchema),
+}, { additionalProperties: false })
+
 export const HeroSlideItemSchema = Type.Object({
   id: IdentifierSchema,
   visible: Type.Optional(Type.Boolean()),
@@ -96,6 +104,9 @@ export const HeroSlideItemSchema = Type.Object({
   secondaryCta: LocalizedTextSchema,
   secondaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   media: Type.Optional(LandingMediaSchema),
+  /** The photo shown on the English site; without it the English site shows `media` too. */
+  mediaEn: Type.Optional(LandingMediaSchema),
+  elements: Type.Optional(Type.Array(HeroElementOverrideSchema, { maxItems: 60 })),
 }, { additionalProperties: false })
 
 export const HeroCampaignThemeSchema = Type.Union([
@@ -589,6 +600,18 @@ const normalizeHeroSlideItems = (slideList: unknown): HeroSlideItem[] | undefine
     const location = normalizeLocalizedPair(slide.location, false)
     const note = normalizeLocalizedPair(slide.note, false)
     const media = normalizeLandingMediaValue(slide.media)
+    const mediaEn = normalizeLandingMediaValue(slide.mediaEn)
+    const elements = Array.isArray(slide.elements)
+      ? slide.elements.flatMap((raw) => {
+        const element = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+        if (typeof element.key !== 'string' || !element.key) return []
+        const text = normalizeLocalizedPair(element.text, false)
+        const picture = normalizeLandingMediaValue(element.media)
+        const hidden = element.hidden === true
+        if (!hidden && text === undefined && picture === undefined) return []
+        return [{ key: element.key, ...(hidden ? { hidden } : {}), ...(text !== undefined ? { text } : {}), ...(picture !== undefined ? { media: picture } : {}) }]
+      })
+      : undefined
     const steps = Array.isArray(slide.steps)
       ? slide.steps
         .map((step) => normalizeLocalizedPair(step, false))
@@ -617,6 +640,8 @@ const normalizeHeroSlideItems = (slideList: unknown): HeroSlideItem[] | undefine
       secondaryCta: normalizeLocalizedPair(slide.secondaryCta, true),
       ...(typeof slide.secondaryCtaUrl === 'string' ? { secondaryCtaUrl: slide.secondaryCtaUrl.trim() } : {}),
       ...(media !== undefined ? { media } : {}),
+      ...(mediaEn !== undefined ? { mediaEn } : {}),
+      ...(elements && elements.length > 0 ? { elements } : {}),
     }
   })
 }

@@ -30,16 +30,16 @@ import { uploadLandingImage } from '../../features/content/service'
 import {
   buildMergedHeroSlideItems,
   getDefaultHeroSlideItems,
-  getHeroStepsGridLayout,
   HERO_SLIDE_LAYOUT_LABELS,
   resolveHeroSlides,
 } from '../../features/content/hero-slides'
-import { renderDualColorHeading } from '../../components/landing/HomepageHero'
-import { HeroSlideVisual } from '../../components/landing/HeroSlideVisual'
+import { HeroSlideElementsEditor } from './HeroSlideElementsEditor'
+import { HeroSlidePreview } from './HeroSlidePreview'
 import {
   generateSafeCmsId,
   getLandingContentMutationErrors,
   normalizeLandingContentMutation,
+  type HeroSlideItem,
 } from '@attentiveid/shared'
 
 interface LocalizedText {
@@ -503,6 +503,46 @@ export function LandingCmsPage() {
 
     newSections[activeSectionIndex] = updatedHero
     setContent({ ...content, sections: newSections })
+  }
+
+  const updateHeroSlideItem = (slideIndex: number, update: (slide: HeroSlideItem) => HeroSlideItem) => {
+    setContent((prev) => {
+      const hero: any = prev?.sections[activeSectionIndex]
+      if (!prev || hero?.key !== 'hero') return prev
+      const slideItems = buildMergedHeroSlideItems(hero)
+      slideItems[slideIndex] = update(slideItems[slideIndex])
+      const sections = [...prev.sections]
+      sections[activeSectionIndex] = { ...hero, slideItems }
+      return { ...prev, sections }
+    })
+  }
+
+  /** Upload one picture of a slide (a small part or the English photo) and give back how to store it. */
+  const uploadHeroPartImage = async (file: File, name: string) => {
+    const bitmap = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    try {
+      await new Promise((resolve, reject) => {
+        bitmap.onload = resolve
+        bitmap.onerror = () => reject(new Error('Gagal memproses file gambar.'))
+        bitmap.src = objectUrl
+      })
+      const res = await uploadLandingImage(
+        file,
+        {
+          sectionKey: 'hero',
+          slug: `hero-slide-${safeHeroSlideIndex + 1}-${name.toLowerCase()}`,
+          altId: `Gambar slide ${safeHeroSlideIndex + 1}`,
+          altEn: `Hero slide ${safeHeroSlideIndex + 1} picture`,
+          width: bitmap.naturalWidth || 1,
+          height: bitmap.naturalHeight || 1,
+        },
+        { headers: getAuthHeaders() }
+      )
+      return res.media
+    } finally {
+      URL.revokeObjectURL(objectUrl)
+    }
   }
 
   const updateHeroSlideVisible = (slideIndex: number, nextVisible: boolean) => {
@@ -1526,87 +1566,7 @@ export function LandingCmsPage() {
                         <span>(Hanya tampil di simulator)</span>
                       </div>
                     )}
-                    <div className="grid grid-cols-1 items-stretch lg:grid-cols-[46%_54%]">
-                      <div className="p-5 sm:p-6 flex flex-col justify-center">
-                        <span className="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.16em] uppercase text-[#C08A2C]">
-                          <span className="size-1.5 rounded-full bg-[#E2AE52]" />
-                          {activeSimSlide.tag}
-                        </span>
-
-                        <h2 className="mt-3 text-xl font-bold tracking-tight sm:text-2xl lg:leading-[1.1]">
-                          {renderDualColorHeading(activeSimSlide.headline)}
-                        </h2>
-
-                        <p className="mt-2.5 text-xs leading-relaxed text-[#4A566B] line-clamp-3">
-                          {activeSimSlide.description}
-                        </p>
-
-                        {activeSimSlide.layout === 'practice' && activeSimSlide.location && (
-                          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-[#7B8496]">
-                            <MapPin size={12} className="shrink-0 text-[#C08A2C]" />
-                            <span>{activeSimSlide.location}</span>
-                          </div>
-                        )}
-
-                        {activeSimSlide.layout === 'pet-garden' && activeSimSlide.note && (
-                          <div className="mt-2.5 rounded-lg border border-[#E8E1D5] bg-white px-2.5 py-1.5 text-[10.5px] text-[#7B8496]">
-                            {activeSimSlide.note}
-                          </div>
-                        )}
-
-                        {activeSimSlide.layout === 'big10' && activeSimSlide.steps && activeSimSlide.steps.length > 0 && (() => {
-                          const { colCount: simColCount, gridColsClass: simGridCols } = getHeroStepsGridLayout(
-                            activeSimSlide.steps.length
-                          )
-                          return (
-                            <div className={`mt-3 grid grid-cols-1 ${simGridCols} overflow-hidden rounded-xl border border-[#E8E1D5] bg-white`}>
-                              {activeSimSlide.steps.map((step, sIdx) => (
-                                <div
-                                  key={`${activeSimSlide.id}-sim-step-${sIdx}`}
-                                  className={`border-[#E8E1D5] ${sIdx > 0 ? 'border-t' : ''} ${
-                                    sIdx < simColCount ? 'sm:border-t-0' : 'sm:border-t'
-                                  } ${sIdx % simColCount === 0 ? 'sm:border-l-0' : 'sm:border-l'} px-2.5 py-2 text-[10.5px] leading-tight font-semibold text-[#14284B]`}
-                                >
-                                  <small className="mb-0.5 block text-[9.5px] font-bold text-[#C08A2C]">
-                                    {String(sIdx + 1).padStart(2, '0')}
-                                  </small>
-                                  <span>{step}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )
-                        })()}
-
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[11px] font-bold shadow-xs ${
-                              activeSimSlide.primaryCtaUrl.trim()
-                                ? 'bg-[#14284B] text-white'
-                                : 'bg-[#14284B]/60 text-white/80'
-                            }`}
-                          >
-                            <span>{activeSimSlide.primaryCta}</span>
-                            {!activeSimSlide.primaryCtaUrl.trim() && (
-                              <span className="rounded bg-white/15 px-1 text-[9px] text-amber-300">Soon</span>
-                            )}
-                          </span>
-                          <span
-                            className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
-                              activeSimSlide.secondaryCtaUrl.trim() ? 'text-[#1D3560]' : 'text-slate-400'
-                            }`}
-                          >
-                            {activeSimSlide.secondaryCta} →
-                          </span>
-                        </div>
-                      </div>
-
-                      <HeroSlideVisual
-                        slide={activeSimSlide}
-                        isId={languageView !== 'en'}
-                        isActive
-                        compact
-                      />
-                    </div>
+                    <HeroSlidePreview isId={languageView !== 'en'} slide={activeSimSlide} />
                   </div>
 
                   {/* Simulator 5-Tab Progress Strip */}
@@ -2012,6 +1972,13 @@ export function LandingCmsPage() {
                         </div>
                       </div>
                     </div>
+
+                    <HeroSlideElementsEditor
+                      key={safeHeroSlideIndex}
+                      onChange={(update) => updateHeroSlideItem(safeHeroSlideIndex, update)}
+                      slide={activeHeroSlideItem}
+                      upload={uploadHeroPartImage}
+                    />
 
                     {/* Copy Inputs for Active Slide */}
                     <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-4">

@@ -257,7 +257,8 @@ function HeroActionButton({
 function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: boolean }) {
   const portalChips = useSciBriefHeroChips(slide.layout === 'scientific-brief', isId)
   const chips = portalChips ?? slide.chips
-  if (slide.layout === 'practice' && slide.location) {
+  const show = (key: string) => !slide.hidden.includes(key)
+  if (slide.layout === 'practice' && slide.location && show('location')) {
     return (
       <div className="mt-4 flex items-center gap-2 text-[13.5px] text-[#7B8496]">
         <MapPin size={15} className="shrink-0 text-[#C08A2C]" />
@@ -266,7 +267,7 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
     )
   }
 
-  if (slide.layout === 'pet-garden' && slide.note) {
+  if (slide.layout === 'pet-garden' && slide.note && show('note')) {
     return (
       <div className="mt-4 flex w-fit max-w-[470px] items-center gap-2.5 rounded-xl border border-[#E8E1D5] bg-white px-3.5 py-2.5 text-[13.5px] text-[#7B8496]">
         <PawPrint size={16} className="shrink-0 text-[#C08A2C]" />
@@ -275,7 +276,7 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
     )
   }
 
-  if (slide.layout === 'big10' && slide.steps && slide.steps.length > 0) {
+  if (slide.layout === 'big10' && slide.steps && slide.steps.length > 0 && show('steps')) {
     const { colCount, gridColsClass } = getHeroStepsGridLayout(slide.steps.length)
     return (
       <div className={`mt-6 grid grid-cols-1 ${gridColsClass} overflow-hidden rounded-[14px] border border-[#E8E1D5] bg-white`}>
@@ -300,7 +301,7 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
     )
   }
 
-  if (slide.layout === 'scientific-brief' && chips && chips.length > 0) {
+  if (slide.layout === 'scientific-brief' && chips && chips.length > 0 && show('chips')) {
     return (
       <div className="mt-5 flex flex-wrap gap-2">
         {chips.map((chip, idx) => {
@@ -322,18 +323,8 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
     )
   }
 
-  if (slide.layout === 'wisdom-ella') {
-    const facts = isId
-      ? [
-          { title: '15+ thn', sub: 'berpraktik sejak 2010' },
-          { title: 'International experienced', sub: 'dukungan psikososial bagi pekerja kemanusiaan untuk UN-IOM Asia Pacific Regional' },
-          { title: 'Trauma-informed', sub: 'Brainspotting · DBT Art therapy' },
-        ]
-      : [
-          { title: '15+ yrs', sub: 'practicing since 2010' },
-          { title: 'International experienced', sub: 'psychosocial support for humanitarian workers for UN-IOM Asia Pacific Regional' },
-          { title: 'Trauma-informed', sub: 'Brainspotting · DBT Art therapy' },
-        ]
+  if (slide.layout === 'wisdom-ella' && show('facts')) {
+    const facts = [1, 2, 3].map((n) => ({ title: slide.texts[`fact${n}Title`] ?? '', sub: slide.texts[`fact${n}Text`] ?? '' }))
 
     return (
       <div className="mt-5 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-0 border-t border-[#E0D8CA] pt-4">
@@ -353,6 +344,63 @@ function SlideMiddleDetails({ slide, isId }: { slide: ResolvedHeroSlide; isId: b
   }
 
   return null
+}
+
+/** One slide: the copy on the left, the picture on the right. Used by the homepage and by the editor preview. */
+export function HeroSlideBody({ slide, isId, preview }: { slide: ResolvedHeroSlide; isId: boolean; preview?: boolean }) {
+  // The editor preview must not add a second page heading to the portal.
+  const Heading = preview ? 'p' : 'h1'
+  return (
+    <>
+              {/* Left Column: Editorial Copy */}
+              <div className="flex min-h-[440px] sm:min-h-[410px] lg:min-h-0 lg:h-full flex-col justify-center px-6 py-7 sm:px-10 sm:py-9 lg:py-10 lg:pr-8 lg:pl-14">
+                {!slide.hidden.includes('tag') && <div className="mb-4 lg:mb-5 inline-flex items-center gap-2.5 text-[11.5px] font-bold tracking-[0.17em] uppercase text-[#C08A2C]">
+                  <span
+                    className="inline-block size-2 shrink-0 rounded-full bg-[#E2AE52] shadow-[0_0_0_5px_rgba(226,174,82,0.2)]"
+                    aria-hidden="true"
+                  />
+                  <span>{slide.tag}</span>
+                </div>}
+
+                <Heading
+                  className={`text-balance font-sans font-bold tracking-[-0.035em] text-[#14284B] ${
+                    slide.layout === 'practice'
+                      ? 'text-[34px] leading-[1.08] sm:text-[42px] lg:text-[44px] xl:text-[48px] lg:leading-[1.05]'
+                      : 'text-[34px] leading-[1.06] sm:text-[44px] lg:text-[48px] xl:text-[52px] lg:leading-[1.04]'
+                  }`}
+                  {...(preview ? {} : { 'data-route-heading': true, tabIndex: -1 })}
+                >
+                  {renderDualColorHeading(slide.headline)}
+                </Heading>
+
+                {!slide.hidden.includes('description') && <p className="mt-5 max-w-[480px] text-[15px] leading-[1.65] text-[#4A566B] sm:text-[16.5px]">
+                  {slide.description}
+                </p>}
+
+                <SlideMiddleDetails slide={slide} isId={isId} />
+
+                <div className="mt-7 flex flex-wrap items-center gap-5 sm:gap-6">
+                  {!slide.hidden.includes('primaryCta') && <HeroActionButton
+                    label={slide.primaryCta}
+                    url={slide.primaryCtaUrl}
+                    variant="primary"
+                    isId={isId}
+                  />}
+                  {!slide.hidden.includes('secondaryCta') && <HeroActionButton
+                    label={slide.secondaryCta}
+                    url={slide.secondaryCtaUrl}
+                    variant="secondary"
+                    isId={isId}
+                  />}
+                </div>
+              </div>
+
+              {/* Right Column: Arch Visual Composition (first on mobile) */}
+              <div className="order-first lg:order-last">
+                <HeroSlideVisual slide={slide} isId={isId} isActive />
+              </div>
+    </>
+  )
 }
 
 export function HomepageHero() {
@@ -610,54 +658,7 @@ export function HomepageHero() {
               transition={{ duration: 0.3, ease: SLIDE_EASE }}
               className="grid h-full grid-cols-1 lg:h-[640px] lg:grid-cols-[45%_55%]"
             >
-              {/* Left Column: Editorial Copy */}
-              <div className="flex min-h-[440px] sm:min-h-[410px] lg:min-h-0 lg:h-full flex-col justify-center px-6 py-7 sm:px-10 sm:py-9 lg:py-10 lg:pr-8 lg:pl-14">
-                <div className="mb-4 lg:mb-5 inline-flex items-center gap-2.5 text-[11.5px] font-bold tracking-[0.17em] uppercase text-[#C08A2C]">
-                  <span
-                    className="inline-block size-2 shrink-0 rounded-full bg-[#E2AE52] shadow-[0_0_0_5px_rgba(226,174,82,0.2)]"
-                    aria-hidden="true"
-                  />
-                  <span>{currentSlide.tag}</span>
-                </div>
-
-                <h1
-                  className={`text-balance font-sans font-bold tracking-[-0.035em] text-[#14284B] ${
-                    currentSlide.layout === 'practice'
-                      ? 'text-[34px] leading-[1.08] sm:text-[42px] lg:text-[44px] xl:text-[48px] lg:leading-[1.05]'
-                      : 'text-[34px] leading-[1.06] sm:text-[44px] lg:text-[48px] xl:text-[52px] lg:leading-[1.04]'
-                  }`}
-                  data-route-heading
-                  tabIndex={-1}
-                >
-                  {renderDualColorHeading(currentSlide.headline)}
-                </h1>
-
-                <p className="mt-5 max-w-[480px] text-[15px] leading-[1.65] text-[#4A566B] sm:text-[16.5px]">
-                  {currentSlide.description}
-                </p>
-
-                <SlideMiddleDetails slide={currentSlide} isId={isId} />
-
-                <div className="mt-7 flex flex-wrap items-center gap-5 sm:gap-6">
-                  <HeroActionButton
-                    label={currentSlide.primaryCta}
-                    url={currentSlide.primaryCtaUrl}
-                    variant="primary"
-                    isId={isId}
-                  />
-                  <HeroActionButton
-                    label={currentSlide.secondaryCta}
-                    url={currentSlide.secondaryCtaUrl}
-                    variant="secondary"
-                    isId={isId}
-                  />
-                </div>
-              </div>
-
-              {/* Right Column: Arch Visual Composition (first on mobile) */}
-              <div className="order-first lg:order-last">
-                <HeroSlideVisual slide={currentSlide} isId={isId} isActive />
-              </div>
+              <HeroSlideBody slide={currentSlide} isId={isId} />
             </motion.div>
           </div>
 
