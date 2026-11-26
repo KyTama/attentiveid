@@ -76,9 +76,6 @@ export function OurServicesPage() {
     }
   }, [sendViewport])
 
-  const openService = useRef('')
-  openService.current = hash
-
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== OUR_SERVICES_ORIGIN || event.source !== frameRef.current?.contentWindow) return
@@ -92,13 +89,13 @@ export function OurServicesPage() {
       // The catalog says which service is open: the address follows (an empty id goes back to /our-services).
       if (data?.type !== 'attentive-service' || typeof data.id !== 'string') return
       if (data.id && !SERVICE_SLUG.test(data.id)) return
-      if (serviceSlugHash(data.id) === openService.current) return
+      if (serviceSlugHash(data.id) === hash) return
       window.scrollTo({ top: 0, left: 0 })
       navigate(data.id ? `/our-services/${data.id}` : '/our-services', { replace: true, state: { fromCatalog: true } })
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [frame.key, navigate])
+  }, [frame.key, hash, navigate])
 
   // One scrollbar either way: with a height the page scrolls and the footer follows the catalog; without one the page is
   // exactly as tall as the window and the catalog scrolls inside the frame.
