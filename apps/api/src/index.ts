@@ -15,6 +15,8 @@ import { createAssessmentsSheetSync } from './services/assessments-sheet-sync';
 import { createMailer } from './services/mailer';
 import { createDriveReports } from './services/drive-reports';
 import { createFeedbackSheet } from './services/feedback-sheet';
+import { createReviewSheet } from './services/review-sheet';
+import { createReviewImportsRepository } from './repositories/review-imports.repository';
 import { createFeedbackRepository } from './repositories/feedback.repository';
 import { createMhcuOpsRepository } from './repositories/mhcu-ops.repository';
 import { createMhcuSettingsStore } from './services/mhcu-settings-store';
@@ -138,6 +140,13 @@ const feedbackRepository = createFeedbackRepository(db);
 const feedbackSheet = driveReports ? createFeedbackSheet(() => feedbackRepository.list(), driveReports) : undefined;
 void feedbackSheet?.sync();
 
+// Reviews pasted into a Google Sheet -> the portal (hidden until an admin shows them). Read at start and every 30 minutes.
+const reviewImportsRepository = createReviewImportsRepository(db);
+const reviewSheet = driveReports ? createReviewSheet(reviewImportsRepository, driveReports) : undefined;
+const importReviews = () => void reviewSheet?.importNow().catch((error) => console.error('[reviews] Import failed:', error instanceof Error ? error.message : 'error'));
+importReviews();
+setInterval(importReviews, 30 * 60 * 1000).unref();
+
 // Assessments (Mental Health Check-Up...) -> a PRIVATE Google Sheet. Only runs when ASSESSMENTS_SHEET_ID is set.
 const assessmentsRepository = createAssessmentsRepository(db);
 const assessmentsSheetSync = createAssessmentsSheetSync({
@@ -216,6 +225,8 @@ const app = createApp({
     driveRequests: driveReports,
     feedbackRepository,
     feedbackSheet,
+    reviewImportsRepository,
+    reviewSheet,
     freeSessionRepository,
     freeSessionSheetSync,
     frontendOrigin: env.FRONTEND_URL || 'http://localhost:5173',

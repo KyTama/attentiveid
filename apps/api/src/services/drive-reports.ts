@@ -71,6 +71,8 @@ export interface DriveRequests {
     saveRequest(input: { folderName: string; at: Date; files: ReportFile[]; folderId?: string }): Promise<{ folderId: string }>
     /** Rewrites a whole sheet in "Update Request", so it always mirrors what the website holds. */
     replaceRequestSheet(input: { title: string; tab: string; rows: string[][] }): Promise<{ spreadsheetId: string }>
+    /** Reads the rows under the header of a sheet in "Update Request", creating it with the header when missing. Never changes rows. */
+    readRequestSheet(input: { title: string; tab: string; headers: string[]; maxRows: number }): Promise<{ spreadsheetId: string; rows: unknown[][] }>
 }
 
 export interface DriveReports {
@@ -254,6 +256,19 @@ export const createDriveReports = (config: DriveReportsConfig, rawFetch: Fetcher
             }
             return { spreadsheetId }
         },
+        async readRequestSheet(input) {
+            const spreadsheetId = await ensureSpreadsheet(input.title, input.tab, await requestFolderId())
+            const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
+            const range = (a1: string) => encodeURIComponent(`'${input.tab}'!${a1}`)
+            const width = columnName(input.headers.length)
+            const read = await sheetsCall('Sheets read', `${base}/${range(`A1:${width}${input.maxRows + 1}`)}`, { method: 'GET' })
+            const values = ((await read.json()) as { values?: unknown[][] }).values ?? []
+            if (values.length === 0) {
+                await sheetsCall('Sheets header', `${base}/${range(`A1:${width}1`)}?valueInputOption=RAW`, { method: 'PUT', json: { values: [input.headers] } })
+            }
+            return { spreadsheetId, rows: values.slice(1) }
+        },
+
         async saveRequest(input) {
             if (input.folderId) {
                 for (const file of input.files) await upload(file, input.folderId)
