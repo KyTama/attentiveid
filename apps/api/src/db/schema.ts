@@ -1111,3 +1111,67 @@ export const emailImports = pgTable('email_imports', {
     appliedAt: timestamp('applied_at', { withTimezone: true, mode: 'string' }),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 });
+
+// Bulk sends. Recipients keep their own copy of address and name: this is the send log.
+export const emailCampaigns = pgTable('email_campaigns', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    html: text('html').notNull(),
+    lang: text('lang').default('id').notNull(),
+    status: text('status').default('draft').notNull(),
+    pausedReason: text('paused_reason'),
+    audience: jsonb('audience'),
+    /** The addresses clicks are counted for; a tracked link can only lead to one of these. */
+    links: jsonb('links').default([]).notNull(),
+    createdBy: text('created_by').notNull(),
+    sentBy: text('sent_by').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    queuedAt: timestamp('queued_at', { withTimezone: true, mode: 'string' }),
+    finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'string' })
+}, (table) => [
+    index('email_campaigns_status_idx').on(table.status)
+]);
+
+// Attachments. The content is emptied once the campaign is finished or cancelled, to save disk space.
+export const emailCampaignFiles = pgTable('email_campaign_files', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    campaignId: uuid('campaign_id').notNull().references(() => emailCampaigns.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    sha256: text('sha256').notNull(),
+    data: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })('data')
+}, (table) => [
+    index('email_campaign_files_campaign_idx').on(table.campaignId)
+]);
+
+export const emailCampaignRecipients = pgTable('email_campaign_recipients', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    campaignId: uuid('campaign_id').notNull().references(() => emailCampaigns.id, { onDelete: 'cascade' }),
+    contactId: uuid('contact_id').references(() => emailContacts.id, { onDelete: 'set null' }),
+    email: text('email').notNull(),
+    name: text('name').default('').notNull(),
+    status: text('status').default('queued').notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    attemptedAt: timestamp('attempted_at', { withTimezone: true, mode: 'string' }),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true, mode: 'string' }),
+    sentAt: timestamp('sent_at', { withTimezone: true, mode: 'string' }),
+    error: text('error').default('').notNull(),
+    openedAt: timestamp('opened_at', { withTimezone: true, mode: 'string' }),
+    lastOpenedAt: timestamp('last_opened_at', { withTimezone: true, mode: 'string' }),
+    openCount: integer('open_count').default(0).notNull(),
+    clickedAt: timestamp('clicked_at', { withTimezone: true, mode: 'string' }),
+    clickCount: integer('click_count').default(0).notNull()
+}, (table) => [
+    uniqueIndex('email_campaign_recipients_once_idx').on(table.campaignId, table.email),
+    index('email_campaign_recipients_queue_idx').on(table.status, table.nextAttemptAt),
+    index('email_campaign_recipients_attempted_idx').on(table.attemptedAt)
+]);
+
+// People who must not get bulk e-mail. Kept even if the contact is removed, so an import cannot subscribe them again.
+export const emailSuppressions = pgTable('email_suppressions', {
+    email: text('email').primaryKey(),
+    reason: text('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});

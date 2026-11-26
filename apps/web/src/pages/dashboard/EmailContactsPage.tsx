@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { EmailContact } from '@attentiveid/shared'
 import { Archive, ArchiveRestore, FileSpreadsheet, MoreHorizontal, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { CategoryChips } from '@/features/email/CategoryChips'
 import { CategoryDialog } from '@/features/email/CategoryDialog'
 import { ContactDialog } from '@/features/email/ContactDialog'
 import { ExcelDialog } from '@/features/email/ExcelDialog'
@@ -11,11 +12,6 @@ import { buttonDanger, buttonPrimary, buttonSecondary, iconButton, inputClass } 
 import { useTx } from '@/features/i18n/use-tx'
 
 const PAGE = 100
-/** Categories shown as chips; the rest sit in the drop-down. */
-const CHIPS = 4
-
-const chip = (active: boolean) =>
-  `min-h-10 cursor-pointer rounded-full border px-4 text-sm font-medium ${active ? 'border-navy-700 bg-navy-700 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`
 
 /** Email menu > Contacts: who bulk e-mails can go to. Admins and superadmins. */
 export function EmailContactsPage() {
@@ -57,7 +53,6 @@ export function EmailContactsPage() {
   // Only what is on screen can be selected, so a bulk action never touches a contact that is filtered away.
   const marked = selected.filter((id) => page.some((contact) => contact.id === id))
   const nameOf = (id: string) => categories.find((category) => category.id === id)?.name ?? ''
-  const extra = categories.slice(CHIPS)
 
   const choose = (value: ContactFilter) => {
     setFilter(value)
@@ -111,16 +106,7 @@ export function EmailContactsPage() {
       <input aria-label={tx('Cari kontak', 'Search contacts')} className={inputClass} onChange={(e) => { setSearch(e.target.value); setShown(PAGE) }} placeholder={tx('Cari nama, e-mail, atau telepon', 'Search name, e-mail or phone')} type="search" value={search} />
 
       <div aria-label={tx('Saring menurut kategori', 'Filter by category')} className="flex flex-wrap items-center gap-2" role="group">
-        <button aria-pressed={filter === 'all'} className={chip(filter === 'all')} onClick={() => choose('all')} type="button">{tx('Semua', 'All')}</button>
-        {categories.slice(0, CHIPS).map((category) => (
-          <button aria-pressed={filter === category.id} className={chip(filter === category.id)} key={category.id} onClick={() => choose(category.id)} type="button">{category.name}</button>
-        ))}
-        {extra.length > 0 && (
-          <select aria-label={tx('Kategori lainnya', 'More categories')} className={chip(extra.some((c) => c.id === filter))} onChange={(e) => choose(e.target.value || 'all')} value={extra.some((c) => c.id === filter) ? filter : ''}>
-            <option value="">{tx('Lainnya', 'More')}</option>
-            {extra.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-          </select>
-        )}
+        <CategoryChips categories={categories} onChange={choose} value={filter} />
         <label className="ml-auto flex min-h-10 cursor-pointer items-center gap-2 text-sm text-slate-700">
           <input checked={archived} onChange={(e) => switchList(e.target.checked)} type="checkbox" />
           {tx('Lihat arsip', 'Show archived')}
@@ -176,6 +162,7 @@ export function EmailContactsPage() {
                     <p className="truncate text-sm text-slate-600">{contact.email}</p>
                     <p className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                       {contact.phone && <span>{contact.phone}</span>}
+                      {contact.unsubscribed && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">{tx('Berhenti berlangganan', 'Unsubscribed')}</span>}
                       {contact.categoryIds.map((id) => <span className="rounded-full bg-navy-50 px-2 py-0.5 font-medium text-navy-800" key={id}>{nameOf(id)}</span>)}
                     </p>
                   </div>

@@ -17,7 +17,9 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { FeedbackPage } from './pages/FeedbackPage'
 import { FeedbackReportsPage } from './pages/dashboard/FeedbackReportsPage'
+import { EmailChatsPage } from './pages/dashboard/EmailChatsPage'
 import { EmailContactsPage } from './pages/dashboard/EmailContactsPage'
+import { EmailSendPage } from './pages/dashboard/EmailSendPage'
 import { UpdateLogPage } from './pages/dashboard/UpdateLogPage'
 import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { PageViewTracker } from './components/common/PageViewTracker'
@@ -320,6 +322,22 @@ export function AppRoutes({
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <EmailContactsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="email/send"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EmailSendPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="email/chats"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EmailChatsPage />
               </ProtectedRoute>
             }
           />

@@ -38,6 +38,8 @@ import {
   History,
   Mail,
   Contact,
+  Send,
+  MessagesSquare,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { IdleSessionGuard } from '../auth/IdleSessionGuard'
@@ -168,9 +170,21 @@ export function DashboardLayout() {
       show: isAdmin,
       children: [
         {
+          to: '/dashboard/email/chats',
+          label: t('dashboard.navEmailChats', 'Percakapan'),
+          icon: <MessagesSquare className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
           to: '/dashboard/email/contacts',
           label: t('dashboard.navEmailContacts', 'Kontak'),
           icon: <Contact className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
+        },
+        {
+          to: '/dashboard/email/send',
+          label: t('dashboard.navEmailSend', 'Kirim massal'),
+          icon: <Send className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
           show: isAdmin,
         },
       ],

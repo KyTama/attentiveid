@@ -1,7 +1,8 @@
+import { createHash } from 'node:crypto';
 import { and, asc, eq, gt, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import type { EmailCategory, EmailContact, EmailContactInput, EmailContactSource, EmailImportPlan } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { emailAudit, emailCategories, emailContactCategories, emailContacts, emailImports } from '../db/schema';
+import { emailAudit, emailCategories, emailCampaignRecipients, emailContactCategories, emailContacts, emailImports, emailSuppressions } from '../db/schema';
 
 export interface NewEmailContact extends EmailContactInput {
     phoneNormalized: string;
@@ -37,6 +38,18 @@ export interface EmailContactsRepository {
     purgeImports(now: Date): Promise<void>;
 }
 
+/** Which of these addresses unsubscribed, also when that was recorded for an erased contact (by fingerprint). */
+export const suppressedAmong = async (database: typeof defaultDb, emails: string[]): Promise<Set<string>> => {
+    if (emails.length === 0) return new Set();
+    const keys = new Map<string, string>();
+    for (const email of emails) {
+        keys.set(email, email);
+        keys.set(`sha256:${createHash('sha256').update(email).digest('hex')}`, email);
+    }
+    const rows = await database.select({ email: emailSuppressions.email }).from(emailSuppressions).where(inArray(emailSuppressions.email, [...keys.keys()]));
+    return new Set(rows.map((row) => keys.get(row.email)!));
+};
+
 const isUniqueViolation = (error: unknown): boolean => {
     for (let e = error as { code?: string; cause?: unknown } | undefined; e; e = e.cause as typeof e) {
         if (e.code === '23505') return true;
@@ -53,7 +66,10 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
         return map;
     };
 
-    const toContact = (row: typeof emailContacts.$inferSelect, categoryIds: string[]): EmailContact => ({
+    const unsubscribedOf = (emails: string[]) => suppressedAmong(database, emails);
+
+    const toContact = (row: typeof emailContacts.$inferSelect, categoryIds: string[], stopped: ReadonlySet<string>): EmailContact => ({
+        unsubscribed: stopped.has(row.email),
         id: row.id,
         email: row.email,
         name: row.name,
@@ -68,7 +84,7 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
     const getContact = async (id: string) => {
         const [row] = await database.select().from(emailContacts).where(eq(emailContacts.id, id)).limit(1);
         if (!row) return null;
-        return toContact(row, (await categoriesOf([id])).get(id) ?? []);
+        return toContact(row, (await categoriesOf([id])).get(id) ?? [], await unsubscribedOf([row.email]));
     };
 
     const listCategories = async (): Promise<EmailCategory[]> => {
@@ -138,7 +154,8 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
                 .where(archived ? sql`${emailContacts.archivedAt} is not null` : sql`${emailContacts.archivedAt} is null`)
                 .orderBy(sql`${emailContacts.createdAt} desc`, asc(emailContacts.email));
             const links = await categoriesOf(rows.map((row) => row.id));
-            return rows.map((row) => toContact(row, links.get(row.id) ?? []));
+            const stopped = await unsubscribedOf(rows.map((row) => row.email));
+            return rows.map((row) => toContact(row, links.get(row.id) ?? [], stopped));
         },
 
         getContact,
@@ -197,8 +214,15 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
 
         async deleteContacts(ids) {
             if (ids.length === 0) return 0;
-            const rows = await database.delete(emailContacts).where(inArray(emailContacts.id, ids)).returning({ id: emailContacts.id });
-            return rows.length;
+            return database.transaction(async (tx) => {
+                // The send log keeps its counts, not who it was. The address is replaced by its fingerprint, so a later
+                // "unsubscribe" click still counts if the same address is added again.
+                await tx.update(emailCampaignRecipients)
+                    .set({ email: sql`'sha256:' || encode(sha256(convert_to(${emailCampaignRecipients.email}, 'UTF8')), 'hex')`, name: '' })
+                    .where(and(inArray(emailCampaignRecipients.contactId, ids), sql`${emailCampaignRecipients.email} not like 'sha256:%'`));
+                const rows = await tx.delete(emailContacts).where(inArray(emailContacts.id, ids)).returning({ id: emailContacts.id });
+                return rows.length;
+            });
         },
 
         async audit(actor, action, detail) {
