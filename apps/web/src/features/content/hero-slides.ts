@@ -3,6 +3,7 @@ import type {
   HeroSlideLayout,
   LandingContentMutation,
 } from '@attentiveid/shared'
+import { HERO_ELEMENTS } from './hero-elements'
 
 export type HeroLocale = 'id' | 'en'
 
@@ -28,6 +29,12 @@ export interface ResolvedHeroSlide {
   hasCustomMedia: boolean
   imageWidth?: number
   imageHeight?: number
+  /** Keys of the parts staff switched off. */
+  hidden: string[]
+  /** Wording in the current language, per text part: staff's own, else the built-in one. */
+  texts: Record<string, string>
+  /** Picture per image part: staff's own, else the built-in one. */
+  images: Record<string, string>
 }
 
 export const HERO_SLIDE_LAYOUT_LABELS: Record<HeroSlideLayout, string> = {
@@ -245,7 +252,16 @@ export function resolveHeroSlides(
   return merged.map((item, index) => {
     const layout = item.layout || DEFAULT_HERO_SLIDES[index]?.layout || 'practice'
     const fallbackMedia = DEFAULT_SLIDE_IMAGES[layout]
-    const customRef = normalizeMediaReference(item.media?.reference)
+    const media = (locale === 'en' && item.mediaEn) || item.media
+    const customRef = normalizeMediaReference(media?.reference)
+    const overrides = new Map((item.elements ?? []).map((element) => [element.key, element]))
+    const texts: Record<string, string> = {}
+    const images: Record<string, string> = {}
+    for (const element of HERO_ELEMENTS[layout]) {
+      const override = overrides.get(element.key)
+      if (element.kind === 'text') texts[element.key] = override?.text?.[locale] || element.text?.[locale] || ''
+      if (element.kind === 'image') images[element.key] = normalizeMediaReference(override?.media?.reference) || element.src || ''
+    }
     const imageSrc = customRef || fallbackMedia.src
 
     return {
@@ -266,10 +282,13 @@ export function resolveHeroSlides(
       secondaryCta: item.secondaryCta?.[locale] || item.secondaryCta?.id || '',
       secondaryCtaUrl: legacyBriefUrl(layout, item.secondaryCtaUrl),
       imageSrc,
-      imageAlt: item.media?.alt?.[locale] || fallbackMedia.alt[locale],
+      imageAlt: media?.alt?.[locale] || fallbackMedia.alt[locale],
       hasCustomMedia: Boolean(customRef),
-      imageWidth: item.media?.width,
-      imageHeight: item.media?.height,
+      imageWidth: media?.width,
+      imageHeight: media?.height,
+      hidden: (item.elements ?? []).filter((element) => element.hidden).map((element) => element.key),
+      texts,
+      images,
     }
   })
 }
