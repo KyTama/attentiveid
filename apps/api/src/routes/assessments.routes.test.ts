@@ -830,7 +830,14 @@ describe('released reports saved to Drive', () => {
         const fixture = createFixture(options);
         await submit(fixture.app, body());
         // the draft that is made right after the submission is finished first; this checks what the release itself does
-        await new Promise((resolve) => setTimeout(resolve, 60));
+        // A fixed pause is not enough on a slow machine: wait until the draft has stopped printing and saving.
+        let seen = "";
+        for (let quiet = 0, tries = 0; quiet < 5 && tries < 150; tries += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 40));
+            const now = `${fixture.printed.length}/${fixture.driveSaved.length}/${fixture.sheetRows.length}`;
+            quiet = now === seen ? quiet + 1 : 0;
+            seen = now;
+        }
         fixture.driveSaved.length = 0;
         fixture.printed.length = 0;
         fixture.sheetRows.length = 0;
