@@ -55,6 +55,18 @@ describe('Drive reports', () => {
         expect(uploads[1].body).toContain('%PDF-en')
     })
 
+    test('the internal reports go into their own tree beside MHCU, never inside the participant folder', async () => {
+        const drive = fakeDrive({ folders: { 'root|Reports': 'r', 'r|MHCU': 'm', 'm|2026': 'y', 'y|11': 'mo', 'mo|AT-MHCU-2026-120': 'c' } })
+        const drives = createDriveReports({ ...config, refreshToken: `rt-${Math.random()}` }, drive.fetchImpl)
+        const saved = await drives.saveReport({ code: 'AT-MHCU-2026-120', at: new Date('2026-11-24T10:00:00Z'), folder: 'MHCU Internal', files: [{ name: 'x - MHCU Psikolog (ID).pdf', mimeType: 'application/pdf', data: '%PDF' }] })
+        expect(saved.path).toBe('Reports / MHCU Internal / 2026 / 11 / AT-MHCU-2026-120')
+        const created = drive.calls.filter((c) => c.method === 'POST' && c.url.endsWith('/drive/v3/files')).map((c) => JSON.parse(c.body!))
+        expect(created.map((c) => c.name)).toEqual(['MHCU Internal', '2026', '11', 'AT-MHCU-2026-120'])
+        // it hangs from the top folder, not from MHCU or the participant folder
+        expect(created[0].parents).toEqual(['r'])
+        expect(saved.folderId).not.toBe('c')
+    })
+
     test('reuses existing folders and overwrites a file with the same name instead of adding a copy', async () => {
         const drive = fakeDrive({
             folders: { 'root|Reports': 'r', 'r|MHCU': 'm', 'm|2026': 'y', 'y|11': 'mo', 'mo|AT-MHCU-2026-120': 'c' },

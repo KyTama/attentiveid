@@ -66,6 +66,7 @@ const OTHER_PSY_ID = '00000000-0000-4000-8000-0000000000bb';
 const idOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
 const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok' | 'fail' | 'off'; unassigned?: boolean; inviteUnavailable?: boolean; track?: string; creditsRemaining?: number; drive?: 'ok' | 'fail'; pdf?: 'off' | 'internal-fails' } = {}) => {
+    const printing = { now: 0, most: 0 };
     const sheetRows: Array<{ title: string; tab: string; headers: string[]; key: string; values: string[] }> = [];
     const driveSaved: Array<{ code: string; at: Date; files: Array<{ name: string; mimeType: string; data: Uint8Array | string }> }> = [];
     const printed: string[] = [];
@@ -187,7 +188,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
                 }
             }))(),
             alertEmail: 'alerts@attentive.id',
-            pdfRenderer: options.pdf === 'off' ? null : async (html) => { if (options.pdf === 'internal-fails' && html.includes('MHCU (internal)')) throw new Error('browser crashed'); printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
+            pdfRenderer: options.pdf === 'off' ? null : async (html) => { if (options.pdf === 'internal-fails' && html.includes('MHCU (internal)')) throw new Error('browser crashed'); printing.now += 1; printing.most = Math.max(printing.most, printing.now); await new Promise((done) => setTimeout(done, 2)); printing.now -= 1; printed.push(html); return new TextEncoder().encode('%PDF-fake'); },
             driveReports: options.drive
                 ? { isConfigured: true, saveReport: async (input) => { if (options.drive === 'fail') throw new Error('drive down'); driveSaved.push(input); return { path: `Reports / MHCU / 2026 / 11 / ${input.code}`, folderId: 'folder-1', files: input.files.map((file) => file.name) }; }, upsertSheetRow: async (input) => { if (options.drive === 'fail') throw new Error('sheet down'); sheetRows.push(input); return { spreadsheetId: 'sheet-1', updated: false }; } }
                 : undefined,
@@ -197,7 +198,7 @@ const createFixture = (options: { max?: number; failCreate?: boolean; mail?: 'ok
             rateLimit: { max: options.max ?? 6, windowMs: 60_000 }
         })
     );
-    return { app, rows, sent, emailed, alerted, inputs, audits, driveSaved, printed, sheetRows, syncCalls: () => synced };
+    return { app, printing, rows, sent, emailed, alerted, inputs, audits, driveSaved, printed, sheetRows, syncCalls: () => synced };
 };
 
 type TestApp = { handle: (request: Request) => Promise<Response> };
@@ -845,13 +846,18 @@ describe('released reports saved to Drive', () => {
         'AT-MHCU-2026-100 - MHCU Psikolog (ID).pdf',
         'AT-MHCU-2026-100 - MHCU Psikolog (EN).pdf'
     ];
+    /** The two Drive saves of one check-up: the client folder, then the internal tree. */
+    const saves = (list: Array<{ folder?: string; files: Array<{ name: string }> }>) => list.map((save) => ({ folder: save.folder ?? 'MHCU', names: save.files.map((file) => file.name) }));
+    const BOTH_TREES = [
+        { folder: 'MHCU', names: ALL_DRIVE_FILES.slice(0, 2) },
+        { folder: 'MHCU Internal', names: ALL_DRIVE_FILES.slice(2) }
+    ];
 
     it('saves both languages as plain PDFs (the report pages only) and says where', async () => {
         const { done, driveSaved, audits, printed } = await release({ drive: 'ok' });
         expect(done.status).toBe(200);
         expect((await done.json()).data.drivePath).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
-        expect(driveSaved).toHaveLength(1);
-        expect(driveSaved[0].files.map((file) => file.name)).toEqual(ALL_DRIVE_FILES);
+        expect(saves(driveSaved)).toEqual(BOTH_TREES);
         expect(driveSaved[0].files.every((file) => file.mimeType === 'application/pdf')).toBe(true);
         // what was printed is the report itself: its pages, in each language, with no page frame, title or buttons
         expect(printed).toHaveLength(4);
@@ -893,8 +899,8 @@ describe('released reports saved to Drive', () => {
         expect(done.status).toBe(200);
         const data = (await done.json()).data;
         expect(data).toMatchObject({ released: true, emailed: true, drive: 'failed' });
-        expect(data.driveError).toContain('psychologist report could not be made');
-        expect(driveSaved[0].files.map((file) => file.name)).toEqual(ALL_DRIVE_FILES.slice(0, 2));
+        expect(data.driveError).toContain('psychologist report could not be saved');
+        expect(saves(driveSaved)).toEqual(BOTH_TREES.slice(0, 1));
         expect(sent[0].attachments).toHaveLength(2);
     });
 
@@ -906,12 +912,19 @@ describe('released reports saved to Drive', () => {
         expect(sent[0].text).not.toContain('terlampir');
     });
 
+    it('a burst of submissions prints one report at a time', async () => {
+        const { app, printing, driveSaved } = createFixture({ drive: 'ok', max: 20 });
+        await Promise.all([0, 1, 2, 3, 4, 5].map((i) => submit(app, body({ email: `burst${i}@example.com` }), { 'x-forwarded-for': `203.0.113.${i}` })));
+        for (let waited = 0; waited < 100 && driveSaved.length < 12; waited += 1) await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(driveSaved).toHaveLength(12);
+        expect(printing.most).toBe(1);
+    });
+
     it('right after a submission the PDFs and the raw-answers row go to Drive, and nothing is sent to the person', async () => {
         const { app, driveSaved, sheetRows, sent, rows } = createFixture({ drive: 'ok' });
         await submit(app, body());
         await new Promise((resolve) => setTimeout(resolve, 60));
-        expect(driveSaved).toHaveLength(1);
-        expect(driveSaved[0].files.map((file) => file.name)).toEqual(ALL_DRIVE_FILES);
+        expect(saves(driveSaved)).toEqual(BOTH_TREES);
         // the result e-mail and the staff alert carry no report
         expect(sent.length).toBeGreaterThan(0);
         expect(sent.every((mail) => mail.attachments === undefined)).toBe(true);
@@ -954,7 +967,7 @@ describe('released reports saved to Drive', () => {
         const again = await send(ready.app, `/api/admin/assessments/${id}/save-to-drive`, 'POST', undefined, bearer(adminToken));
         expect(again.status).toBe(200);
         expect((await again.json()).data.path).toBe('Reports / MHCU / 2026 / 11 / AT-MHCU-2026-100');
-        expect(ready.driveSaved).toHaveLength(1);
+        expect(ready.driveSaved.map((save) => save.folder ?? 'MHCU')).toEqual(['MHCU', 'MHCU Internal']);
 
         // an unreleased check-up can be saved too (it is a draft report until the psychologist releases it)
         const fresh = createFixture({ drive: 'ok' });

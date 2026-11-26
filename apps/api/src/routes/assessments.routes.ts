@@ -17,7 +17,7 @@ import { renderClientReportHtml, renderClientReportPage, renderPsychologistRepor
 import { findBrowser, renderPdf, type PdfRenderer } from '../services/pdf-render';
 import { RAW_SHEET_TAB, RAW_SHEET_TITLE, rawAnswerHeaders, rawAnswerRow } from '../services/mhcu-raw-sheet';
 import { releaseReport, runAutomation } from '../services/mhcu-release';
-import type { DriveReports, ReportFile } from '../services/drive-reports';
+import { INTERNAL_FOLDER, type DriveReports, type ReportFile } from '../services/drive-reports';
 import { loadReportAssets, makeStandaloneReport } from '../services/mhcu-report-file';
 import type { MhcuOpsRepository } from '../repositories/mhcu-ops.repository';
 import type { MhcuSettings } from '../services/mhcu-settings';
@@ -274,25 +274,34 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
     const saveToDrive = dependencies.driveReports
         ? (row: AssessmentRow, files: ReportFile[]) =>
             serial(row.code, async () => {
-                // The client report goes first and is kept even when the internal one cannot be printed; that failure is then reported.
-                let internal: ReportFile[] = [];
-                let internalError: unknown;
-                try {
-                    internal = buildInternalFiles ? await buildInternalFiles(row) : [];
-                } catch (error) {
-                    internalError = error;
-                }
-                const saved = await (dependencies.driveReports as DriveReports).saveReport({ code: row.code, at: new Date(), files: [...files, ...internal] });
+                const drive = dependencies.driveReports as DriveReports;
+                const at = new Date();
+                // The client report goes first and is kept even when the internal one fails; that failure is then reported.
+                const saved = await drive.saveReport({ code: row.code, at, files });
                 await saveRawRow(row);
-                if (internalError) throw new Error('The client reports were saved, but the psychologist report could not be made');
+                try {
+                    // The psychologist report goes into its own tree, never into the participant's folder.
+                    const internal = buildInternalFiles ? await buildInternalFiles(row) : [];
+                    if (internal.length) await drive.saveReport({ code: row.code, at, files: internal, folder: INTERNAL_FOLDER });
+                } catch (error) {
+                    logFailure('drive-internal', error);
+                    throw new Error('The client reports were saved, but the psychologist report could not be saved');
+                }
                 return { path: saved.path };
             })
         : undefined;
 
+    /**
+     * Draft copies are made one submission at a time. Chromium itself already prints one page at a time (see pdf-render), but without
+     * this every submission of a burst would load its history and hold its pages in memory while waiting; queued like this a waiting
+     * submission holds only its id.
+     */
+    let draftQueue: Promise<unknown> = Promise.resolve();
+
     /** Right after a check-up is submitted: print the reports as they are now and save them (and the raw answers) to Drive. Nothing is sent to the person. Never fails the submission. */
     const saveDraftToDrive = (id: string) => {
         if (!dependencies.driveReports) return;
-        void (async () => {
+        draftQueue = draftQueue.then(async () => {
             try {
                 const row = await repository.get(id);
                 if (!row) return;
@@ -302,7 +311,7 @@ export const createAssessmentsRoutes = (dependencies: AssessmentsRoutesDependenc
             } catch (error) {
                 logFailure('drive-draft', error);
             }
-        })();
+        });
     };
 
     /** Where release e-mails to staff go: the MHCU settings inbox, else the general alert address. */

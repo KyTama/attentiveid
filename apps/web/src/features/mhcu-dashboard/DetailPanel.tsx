@@ -25,6 +25,7 @@ import {
   noteChanged,
   noteDraftOf,
   englishNoteMissing,
+  indonesianNoteMissing,
   noteInputOf,
   parseAmount,
   releaseBlocker,
@@ -328,6 +329,14 @@ function NoteEditor({ detail, onSaved, onError }: BlockProps) {
           </fieldset>
         )
       })}
+      {indonesianNoteMissing(draft, detail) && (
+        <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800" role="status">
+          {tx(
+            'Versi Indonesia belum diisi. Laporan bahasa Indonesia tidak menampilkan teks Inggris Anda: yang tercetak adalah teks standar bahasa Indonesia dan keterangan bahwa catatan pribadi Anda ada di versi Inggris.',
+            'The Indonesian version is empty. The Indonesian report will not show your English text: it prints the standard Indonesian text and says your personal note is in the English version.',
+          )}
+        </p>
+      )}
       {englishNoteMissing(draft, detail) && (
         <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800" role="status">
           {tx(

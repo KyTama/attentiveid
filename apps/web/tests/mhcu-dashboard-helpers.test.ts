@@ -21,6 +21,7 @@ import {
   noteChanged,
   noteDraftOf,
   englishNoteMissing,
+  indonesianNoteMissing,
   noteInputOf,
   parseAmount,
   releaseBlocker,
@@ -131,6 +132,15 @@ describe('the psychologist note', () => {
     expect(englishNoteMissing({ ...draft, template: 'Teks sendiri.' }, base)).toBe(true)
     expect(englishNoteMissing({ ...draft, template: 'Teks sendiri.', templateEn: 'Own text.' }, base)).toBe(false)
     expect(englishNoteMissing({ ...draft, customEn: 'Extra.' }, base)).toBe(false)
+  })
+
+  it('warns the other way round too: English text without an Indonesian version', () => {
+    const draft = noteDraftOf(base)
+    expect(indonesianNoteMissing(draft, base)).toBe(false)
+    expect(indonesianNoteMissing({ ...draft, customEn: 'Extra.' }, base)).toBe(true)
+    expect(indonesianNoteMissing({ ...draft, templateEn: 'Own text.' }, base)).toBe(true)
+    expect(indonesianNoteMissing({ ...draft, customEn: 'Extra.', custom: 'Tambahan.' }, base)).toBe(false)
+    expect(indonesianNoteMissing({ ...draft, custom: 'Tambahan.' }, base)).toBe(false)
   })
 
   it('knows when there is something unsaved', () => {

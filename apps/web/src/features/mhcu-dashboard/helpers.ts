@@ -134,6 +134,12 @@ export function englishNoteMissing(draft: NoteDraft, detail: Pick<MhcuDetail, 'l
   return Boolean((input.template && !input.templateEn) || (input.custom && !input.customEn))
 }
 
+/** The mirror case: own text in English but none in Indonesian; the Indonesian report then says so instead of printing it. */
+export function indonesianNoteMissing(draft: NoteDraft, detail: Pick<MhcuDetail, 'level'>): boolean {
+  const input = noteInputOf(draft, detail)
+  return Boolean((input.templateEn && !input.template) || (input.customEn && !input.custom))
+}
+
 export const noteChanged = (draft: NoteDraft, detail: NoteSource): boolean => {
   const saved = noteDraftOf(detail)
   return (

@@ -2,6 +2,8 @@
  * Saves released MHCU reports to Google Drive, in this folder layout:
  *
  *   <root> / MHCU / <year> / <month> / <code> / <code> - MHCU (ID).pdf, <code> - MHCU (EN).pdf
+ *   <root> / MHCU Internal / <year> / <month> / <code> / the psychologist report (ID and EN). A separate tree, so that sharing a
+ *                                                          participant's folder (or the whole MHCU folder) can never include it.
  *   <root> / <spreadsheet>   one Google Sheet with a row per submission (see upsertSheetRow)
  *
  * <root> is the folder with GOOGLE_DRIVE_ROOT_FOLDER_ID when that is set (a folder this app created itself, which the team may move
@@ -34,8 +36,13 @@ export interface ReportFile {
     data: Uint8Array | string
 }
 
+/** Top folder of the internal (psychologist) reports, beside 'MHCU' and never inside it. */
+export const INTERNAL_FOLDER = 'MHCU Internal'
+
 export interface SaveReportInput {
     code: string
+    /** The tree the files go into: 'MHCU' (default, the client reports) or INTERNAL_FOLDER. */
+    folder?: 'MHCU' | typeof INTERNAL_FOLDER
     /** When the report was released (decides the year and month folders, Jakarta time). */
     at: Date
     files: ReportFile[]
@@ -277,7 +284,8 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
         },
         async saveReport(input) {
             const { year, month } = jakartaYearMonth(input.at)
-            const segments = rootFolderId ? ['MHCU', year, month, input.code] : [rootName, 'MHCU', year, month, input.code]
+            const tree = input.folder ?? 'MHCU'
+            const segments = rootFolderId ? [tree, year, month, input.code] : [rootName, tree, year, month, input.code]
             let parent = rootFolderId || 'root'
             let key = rootFolderId ? `/${rootFolderId}` : ''
             for (const segment of segments) {
