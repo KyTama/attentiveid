@@ -20,7 +20,7 @@ export const LANDING_REPEATER_BOUNDS = {
   supportExplorer: { min: 3, max: 6 },
   carePromise: { min: 3, max: 4 },
   careJourney: { min: 3, max: 5 },
-  clientStories: { min: 3, max: 8 },
+  clientStories: { min: 3, max: 24 },
   frequentlyAskedQuestions: { min: 3, max: 10 },
 } as const
 

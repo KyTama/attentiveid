@@ -38,7 +38,7 @@ export function SciBriefDetailPage() {
   const hiddenPages = brief && brief.totalPages !== null ? Math.max(0, brief.totalPages - brief.previewPages) : 0
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
       <main className="px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">

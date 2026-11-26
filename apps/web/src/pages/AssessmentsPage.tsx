@@ -52,9 +52,9 @@ export function AssessmentsPage() {
   ]
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#fbf8f2] text-secondary">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-[#fbf8f2] text-secondary">
       <SiteHeader />
-      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-secondary/60">{tx('Asesmen', 'Assessments')}</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl" data-route-heading tabIndex={-1}>
           {tx('Kenali diri Anda lebih baik', 'Get to know yourself better')}
