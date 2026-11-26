@@ -19,6 +19,7 @@ import { createAccountSettingsRoutes } from './routes/account-settings.routes';
 import { createAssessmentsRepository, type AssessmentsRepository } from './repositories/assessments.repository';
 import type { AssessmentsSheetSync } from './services/assessments-sheet-sync';
 import type { Mailer } from './services/mailer';
+import type { FeedbackSheet } from './services/feedback-sheet';
 import type { DriveReports } from './services/drive-reports';
 import { createAssessmentPaymentRoutes } from './routes/assessment-payment.routes';
 import { createMhcuOpsRoutes, type MhcuSettingsStore } from './routes/mhcu-ops.routes';
@@ -47,6 +48,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     freeSessionRepository?: FreeSessionRepository;
     prayersRepository?: PrayersRepository;
     feedbackRepository?: FeedbackRepository;
+    feedbackSheet?: FeedbackSheet;
     /** Copies website bug reports and update requests into Drive (optional). */
     driveRequests?: DriveRequests;
     assessmentsRepository?: AssessmentsRepository;
@@ -227,6 +229,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 feedbackRepository: dependencies.feedbackRepository || createFeedbackRepository(dependencies.db),
+                sheet: dependencies.feedbackSheet,
                 driveRequests: dependencies.driveRequests,
             }))
             .use(createPrayersRoutes({

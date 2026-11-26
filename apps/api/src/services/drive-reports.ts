@@ -60,8 +60,10 @@ export const REQUEST_FOLDER = 'Update Request'
 export interface DriveRequests {
     /** Creates "Web App Development / Update Request" when missing and returns the inner folder's id. */
     ensureRequestFolder(): Promise<string>
-    /** Saves one request into its own folder under the month it arrived in. */
-    saveRequest(input: { folderName: string; at: Date; files: ReportFile[] }): Promise<{ folderId: string }>
+    /** Saves one request into its own folder under the month it arrived in, or into `folderId` when it already has one. */
+    saveRequest(input: { folderName: string; at: Date; files: ReportFile[]; folderId?: string }): Promise<{ folderId: string }>
+    /** Rewrites a whole sheet in "Update Request", so it always mirrors what the website holds. */
+    replaceRequestSheet(input: { title: string; tab: string; rows: string[][] }): Promise<{ spreadsheetId: string }>
 }
 
 export interface DriveReports {
@@ -196,10 +198,10 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
         return response
     }
 
-    const ensureSpreadsheet = async (title: string, tab: string): Promise<string> => {
+    const ensureSpreadsheet = async (title: string, tab: string, parentId?: string): Promise<string> => {
         const cached = sheetIds.get(title)
         if (cached) return cached
-        const parent = await rootId()
+        const parent = parentId ?? await rootId()
         const query = `name = ${quote(title)} and ${quote(parent)} in parents and trashed = false and mimeType = '${SHEET_MIME}'`
         const found = await fetchImpl(`${API}?${new URLSearchParams({ q: query, fields: 'files(id)', spaces: 'drive', pageSize: '1' })}`, { method: 'GET', headers: await headers() })
         if (!found.ok) throw await failure('Drive search', found)
@@ -224,7 +226,21 @@ export const createDriveReports = (config: DriveReportsConfig, fetchImpl: Fetche
     return {
         isConfigured: true,
         ensureRequestFolder: requestFolderId,
+        async replaceRequestSheet(input) {
+            const spreadsheetId = await ensureSpreadsheet(input.title, input.tab, await requestFolderId())
+            const base = `${SHEETS}/${encodeURIComponent(spreadsheetId)}/values`
+            const range = (a1: string) => encodeURIComponent(`${input.tab}!${a1}`)
+            const width = columnName(Math.max(1, ...input.rows.map((row) => row.length)))
+            await sheetsCall('Sheets clear', `${base}/${range(`A:${width}`)}:clear`, { method: 'POST', json: {} })
+            // RAW: stored as plain text, so nothing a visitor wrote can run as a formula.
+            await sheetsCall('Sheets write', `${base}/${range('A1')}?valueInputOption=RAW`, { method: 'PUT', json: { values: input.rows } })
+            return { spreadsheetId }
+        },
         async saveRequest(input) {
+            if (input.folderId) {
+                for (const file of input.files) await upload(file, input.folderId)
+                return { folderId: input.folderId }
+            }
             const { year, month } = jakartaYearMonth(input.at)
             const base = `/${WEBDEV_FOLDER}/${REQUEST_FOLDER}`
             const monthId = await ensureFolder(`${year}-${month}`, await requestFolderId(), `${base}/${year}-${month}`)
