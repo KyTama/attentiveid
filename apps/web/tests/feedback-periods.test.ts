@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { feedbackPeriods } from './periods'
+import { feedbackPeriods } from '../src/features/feedback/periods'
 
 const now = new Date('2026-11-26T20:00:00Z') // 27 Nov in Jakarta
 

@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, useAuth } from './auth-context'
+import { AuthProvider, useAuth } from '../src/features/auth/auth-context'
 
 function Who() {
   const { user } = useAuth()
