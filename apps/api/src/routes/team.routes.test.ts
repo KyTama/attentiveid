@@ -8,7 +8,7 @@ describe('team member input', () => {
   })
 
   it('rejects an unknown team and a photo address that could run script or leave the site by protocol', () => {
-    for (const photoUrl of ['javascript:alert(1)', 'http://x.test/a.jpg', '//x.test/a.jpg']) {
+    for (const photoUrl of ['javascript:alert(1)', 'http://x.test/a.jpg', '//x.test/a.jpg', '/\\evil.example/a.png', '/\t/evil.example/a.png']) {
       const result = validateTeamMember({ team: 'sales', name: 'Sari', photoUrl })
       expect(result.ok ? [] : Object.keys(result.errors).sort()).toEqual(['photoUrl', 'team'])
     }

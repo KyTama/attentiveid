@@ -34,7 +34,7 @@ export function TeamSections() {
             <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-[#946a22]">{TEAM_GROUP_LABELS[group][locale]}</h3>
             <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {people.map((person) => (
-                <li className="flex items-center gap-3 rounded-2xl border border-secondary/10 bg-white p-4" key={person.id}>
+                <li className="flex min-w-0 items-center gap-3 rounded-2xl border border-secondary/10 bg-white p-4" key={person.id}>
                   {person.photoUrl ? (
                     <img alt="" className="size-14 shrink-0 rounded-full object-cover" height="56" loading="lazy" src={person.photoUrl} width="56" />
                   ) : (
@@ -42,7 +42,7 @@ export function TeamSections() {
                       {person.name.slice(0, 1).toUpperCase()}
                     </span>
                   )}
-                  <span className="min-w-0">
+                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">
                     <span className="block font-semibold text-secondary">{person.name}</span>
                     <span className="block text-sm text-secondary/70">{locale === 'id' ? person.roleId : person.roleEn}</span>
                   </span>

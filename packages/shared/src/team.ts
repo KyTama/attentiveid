@@ -43,7 +43,8 @@ export const validateTeamMember = (input: unknown): TeamMemberValidation => {
   if (roleId.length > 160) errors.roleId = 'Maks 160 huruf.'
   if (roleEn.length > 160) errors.roleEn = 'Maks 160 huruf.'
   const photoUrl = text(raw.photoUrl)
-  if (photoUrl && (photoUrl.length > 500 || !/^(\/(?!\/)|https:\/\/)/.test(photoUrl))) errors.photoUrl = 'Alamat foto harus diawali / atau https://.'
+  // Browsers read "\" as "/" and drop tabs and line breaks, so either could turn "/..." into another site's address.
+  if (photoUrl && (photoUrl.length > 500 || /[\\\s\u0000-\u001f]/.test(photoUrl) || !/^(\/(?!\/)|https:\/\/)/.test(photoUrl))) errors.photoUrl = 'Alamat foto harus diawali / atau https://.'
   const sortOrder = Number(raw.sortOrder ?? 0)
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 9999) errors.sortOrder = 'Urutan harus angka 0 sampai 9999.'
   if (Object.keys(errors).length > 0) return { ok: false, errors }
