@@ -6,6 +6,10 @@
     "groupOperations": "Operasional",
     "groupTools": "Alat Bantu",
     "groupSettings": "Pengaturan",
+
+    "groupEmail": "Email",
+
+    "navEmailContacts": "Kontak",
     "groupForms": "Formulir",
     "groupWiki": "Wiki & Panduan",
     "navFormsAll": "Semua Aktivitas Formulir",

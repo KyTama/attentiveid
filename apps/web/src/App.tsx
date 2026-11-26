@@ -17,6 +17,7 @@ import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { FreeSessionPage } from './pages/FreeSessionPage'
 import { FeedbackPage } from './pages/FeedbackPage'
 import { FeedbackReportsPage } from './pages/dashboard/FeedbackReportsPage'
+import { EmailContactsPage } from './pages/dashboard/EmailContactsPage'
 import { UpdateLogPage } from './pages/dashboard/UpdateLogPage'
 import { LetThereBeLightPage } from './pages/LetThereBeLightPage'
 import { PageViewTracker } from './components/common/PageViewTracker'
@@ -305,6 +306,15 @@ export function AppRoutes({
               </ProtectedRoute>
             }
           />
+          <Route
+            path="email/contacts"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EmailContactsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="email" element={<Navigate to="/dashboard/email/contacts" replace />} />
           <Route path="experimental/reports" element={<Navigate to="/dashboard/reports" replace />} />
           <Route
             path="updates"

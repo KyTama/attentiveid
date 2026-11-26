@@ -12,6 +12,8 @@ import { createUsersManagementRoutes } from './routes/users-management.routes';
 import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
 import { createFeedbackRoutes } from './routes/feedback.routes';
+import { createEmailContactsRoutes } from './routes/email-contacts.routes';
+import { createEmailContactsRepository, type EmailContactsRepository } from './repositories/email-contacts.repository';
 import type { DriveRequests } from './services/drive-reports';
 import { createFeedbackRepository, type FeedbackRepository } from './repositories/feedback.repository';
 import { createAssessmentsRoutes } from './routes/assessments.routes';
@@ -49,6 +51,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     prayersRepository?: PrayersRepository;
     feedbackRepository?: FeedbackRepository;
     feedbackSheet?: FeedbackSheet;
+    emailContactsRepository?: EmailContactsRepository;
     /** Copies website bug reports and update requests into Drive (optional). */
     driveRequests?: DriveRequests;
     assessmentsRepository?: AssessmentsRepository;
@@ -231,6 +234,11 @@ export const createApp = (dependencies: AppDependencies) => {
                 feedbackRepository: dependencies.feedbackRepository || createFeedbackRepository(dependencies.db),
                 sheet: dependencies.feedbackSheet,
                 driveRequests: dependencies.driveRequests,
+            }))
+            .use(createEmailContactsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                emailContactsRepository: dependencies.emailContactsRepository || createEmailContactsRepository(dependencies.db),
             }))
             .use(createPrayersRoutes({
                 tokenService: dependencies.tokenService,

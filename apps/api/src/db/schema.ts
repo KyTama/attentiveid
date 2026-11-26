@@ -1032,3 +1032,61 @@ export const siteSettings = pgTable('site_settings', {
     value: jsonb('value').notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
 });
+
+// Contacts of the portal's Email menu (bulk e-mail). A contact has one or more categories.
+export const emailCategories = pgTable('email_categories', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    builtin: boolean('builtin').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('email_categories_name_idx').on(sql`lower(${table.name})`)
+]);
+
+export const emailContacts = pgTable('email_contacts', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    /** Always stored lower-case. */
+    email: text('email').notNull(),
+    name: text('name').default('').notNull(),
+    phone: text('phone').default('').notNull(),
+    /** The phone in one comparable form, to warn about the same person twice. */
+    phoneNormalized: text('phone_normalized').default('').notNull(),
+    source: text('source').default('manual').notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'string' }),
+    createdBy: text('created_by').default('').notNull(),
+    updatedBy: text('updated_by').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    uniqueIndex('email_contacts_email_idx').on(table.email),
+    index('email_contacts_phone_idx').on(table.phoneNormalized)
+]);
+
+export const emailContactCategories = pgTable('email_contact_categories', {
+    contactId: uuid('contact_id').notNull().references(() => emailContacts.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').notNull().references(() => emailCategories.id, { onDelete: 'restrict' })
+}, (table) => [
+    primaryKey({ columns: [table.contactId, table.categoryId] }),
+    index('email_contact_categories_category_idx').on(table.categoryId)
+]);
+
+// Who did what in the Email menu (no message content, no contact details beyond what the action needs).
+export const emailAudit = pgTable('email_audit', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    actor: text('actor').notNull(),
+    action: text('action').notNull(),
+    detail: text('detail').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('email_audit_created_at_idx').on(table.createdAt)
+]);
+
+// An uploaded Excel file, parsed and waiting for "confirm". Removed after an hour.
+export const emailImports = pgTable('email_imports', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    actor: text('actor').notNull(),
+    plan: jsonb('plan').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'string' }).notNull(),
+    appliedAt: timestamp('applied_at', { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+});

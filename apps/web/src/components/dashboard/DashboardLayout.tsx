@@ -36,6 +36,8 @@ import {
   LogOut,
   Bug,
   History,
+  Mail,
+  Contact,
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { IdleSessionGuard } from '../auth/IdleSessionGuard'
@@ -156,6 +158,20 @@ export function DashboardLayout() {
           show: true,
         },
           ],
+        },
+      ],
+    },
+    {
+      id: 'email',
+      label: t('dashboard.groupEmail', 'Email'),
+      icon: <Mail className="size-5 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+      show: isAdmin,
+      children: [
+        {
+          to: '/dashboard/email/contacts',
+          label: t('dashboard.navEmailContacts', 'Kontak'),
+          icon: <Contact className="size-4 shrink-0 stroke-[1.75]" aria-hidden="true" />,
+          show: isAdmin,
         },
       ],
     },
