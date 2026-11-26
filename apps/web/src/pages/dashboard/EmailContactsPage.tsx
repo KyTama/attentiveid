@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { EmailContact } from '@attentiveid/shared'
-import { Archive, ArchiveRestore, MoreHorizontal, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, FileSpreadsheet, MoreHorizontal, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { CategoryDialog } from '@/features/email/CategoryDialog'
 import { ContactDialog } from '@/features/email/ContactDialog'
+import { ExcelDialog } from '@/features/email/ExcelDialog'
 import { filterContacts, type ContactFilter } from '@/features/email/filter'
 import { archiveContacts, deleteContacts, listContacts, type EmailBook } from '@/features/email/service'
 import { buttonDanger, buttonPrimary, buttonSecondary, iconButton, inputClass } from '@/features/email/styles'
@@ -29,6 +30,7 @@ export function EmailContactsPage() {
   const [editing, setEditing] = useState<EmailContact | 'new' | null>(null)
   const [removing, setRemoving] = useState<string[] | null>(null)
   const [managing, setManaging] = useState(false)
+  const [excel, setExcel] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [round, setRound] = useState(0)
@@ -94,6 +96,9 @@ export function EmailContactsPage() {
           <p className="mt-1 text-sm text-slate-600">{tx('Daftar penerima untuk e-mail massal. Halaman ini tidak mengirim apa pun.', 'Recipients for bulk e-mail. This page sends nothing.')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button className={buttonSecondary} disabled={!book} onClick={() => setExcel(true)} type="button">
+            <FileSpreadsheet aria-hidden="true" className="size-4" />Excel
+          </button>
           <button className={buttonSecondary} disabled={!book} onClick={() => setManaging(true)} type="button">
             <Tags aria-hidden="true" className="size-4" />{tx('Kategori', 'Categories')}
           </button>
@@ -210,6 +215,7 @@ export function EmailContactsPage() {
           onSaved={() => { setEditing(null); setMenu(null); reload() }}
         />
       )}
+      {book && excel && <ExcelDialog onClose={() => setExcel(false)} onImported={reload} />}
       {book && managing && <CategoryDialog categories={categories} onChanged={reload} onClose={() => setManaging(false)} />}
       {removing && (
         <Dialog open onOpenChange={(open) => !open && setRemoving(null)}>

@@ -65,6 +65,16 @@ describeIntegration('email contacts repository (PostgreSQL)', () => {
         expect(await repository.deleteCategory(made.id)).toBe('ok');
     });
 
+    test('a checked file is handed out once, only to its uploader, before it expires', async () => {
+        const plan = { added: [], edited: [], overlapping: [], invalid: [], conflicts: [], unchanged: 3, newCategories: [] };
+        const later = new Date(Date.now() + 60_000);
+        const id = await repository.saveImport('a', plan, later);
+        expect(await repository.takeImport(id, 'b', new Date())).toBeNull();
+        expect(await repository.takeImport(id, 'a', new Date(later.getTime() + 1))).toBeNull();
+        const both = await Promise.all([repository.takeImport(id, 'a', new Date()), repository.takeImport(id, 'a', new Date())]);
+        expect(both.filter(Boolean)).toEqual([plan]);
+    });
+
     test('archived contacts leave the normal list and can come back', async () => {
         const [first] = await repository.listContacts({ archived: false });
         expect(await repository.setArchived([first!.id], true, 'a')).toBe(1);

@@ -3,6 +3,9 @@ import type { EmailCategory, EmailContact, UserDto } from '@attentiveid/shared';
 import { createTokenService } from '../security/token-service';
 import type { EmailContactsRepository } from '../repositories/email-contacts.repository';
 import { createEmailContactsRoutes } from './email-contacts.routes';
+import { NEW_SHEET } from '../services/email-excel';
+import { writeXlsx } from '../services/xlsx';
+import type { EmailImportPlan } from '@attentiveid/shared';
 
 const tokenService = createTokenService({ jwtSecret: 'email_test_secret_that_is_long_enough_1234567890' });
 const user = (id: string, role: UserDto['role']): UserDto => ({ id, email: `${id}@example.test`, name: id, role, status: 'active', psychologistId: null } as UserDto);
@@ -23,6 +26,7 @@ const make = () => {
     const contacts: EmailContact[] = [];
     const audits: Array<[string, string, string]> = [];
     const archived: Array<[string[], boolean]> = [];
+    const imports = new Map<string, { actor: string; plan: EmailImportPlan }>();
     const repository: EmailContactsRepository = {
         listCategories: async () => categories,
         createCategory: async (name) => categories.some((c) => c.name.toLowerCase() === name.toLowerCase()) ? null : { id: CONTACT, name, builtin: false, count: 0 },
@@ -42,7 +46,14 @@ const make = () => {
         },
         setArchived: async (ids, value) => { archived.push([ids, value]); return ids.length; },
         deleteContacts: async (ids) => ids.length,
-        audit: async (actor, action, detail) => { audits.push([actor, action, detail]); }
+        audit: async (actor, action, detail) => { audits.push([actor, action, detail]); },
+        saveImport: async (actor, plan) => { imports.set(CONTACT, { actor, plan }); return CONTACT; },
+        takeImport: async (id, actor) => {
+            const found = imports.get(id);
+            if (!found || found.actor !== actor) return null;
+            imports.delete(id);
+            return found.plan;
+        }
     };
     const app = createEmailContactsRoutes({
         tokenService,
@@ -60,7 +71,19 @@ const make = () => {
         }));
         return { status: response.status, headers: response.headers, body: await response.json().catch(() => null) as any };
     };
-    return { call, contacts, audits, archived };
+    const upload = async (as: UserDto | null, data: Buffer | null) => {
+        const form = new FormData();
+        if (data) form.append('file', new File([new Uint8Array(data)], 'kontak.xlsx'));
+        else form.append('other', 'x');
+        const response = await app.handle(new Request('http://localhost/api/admin/email/import', {
+            method: 'POST', body: form, headers: as ? { authorization: `Bearer ${tokenService.issueAccessToken(as).accessToken}` } : {}
+        }));
+        return { status: response.status, body: await response.json().catch(() => null) as any };
+    };
+    const download = (as: UserDto | null) => app.handle(new Request('http://localhost/api/admin/email/export', {
+        headers: as ? { authorization: `Bearer ${tokenService.issueAccessToken(as).accessToken}` } : {}
+    }));
+    return { call, upload, download, contacts, audits, archived };
 };
 
 const ROUTES: Array<[string, string]> = [
@@ -71,7 +94,10 @@ const ROUTES: Array<[string, string]> = [
     ['POST', '/api/admin/email/contacts/delete'],
     ['POST', '/api/admin/email/categories'],
     ['PUT', `/api/admin/email/categories/${CONTACT}`],
-    ['DELETE', `/api/admin/email/categories/${CONTACT}`]
+    ['DELETE', `/api/admin/email/categories/${CONTACT}`],
+    ['GET', '/api/admin/email/export'],
+    ['POST', '/api/admin/email/import'],
+    ['POST', `/api/admin/email/import/${CONTACT}/apply`]
 ];
 
 describe('email contacts routes', () => {
@@ -150,5 +176,46 @@ describe('email contacts routes', () => {
         expect((await call('PUT', `/api/admin/email/categories/${CLIENT}`, admin, { name: 'x' })).status).toBe(409);
         expect((await call('DELETE', `/api/admin/email/categories/${CLIENT}`, admin)).status).toBe(409);
         expect((await call('DELETE', `/api/admin/email/categories/${CONTACT}`, admin)).status).toBe(409);
+    });
+});
+
+describe('email contacts Excel', () => {
+    const workbook = (rows: string[][]) => writeXlsx([{ name: NEW_SHEET, rows: [['E-mail', 'Nama', 'Telepon', 'Kategori'], ...rows] }]);
+
+    it('export is a private download and is recorded', async () => {
+        const { download, audits } = make();
+        const response = await download(admin);
+        expect(response.status).toBe(200);
+        expect(response.headers.get('content-disposition')).toContain('.xlsx');
+        expect(response.headers.get('cache-control')).toBe('no-store');
+        expect(audits).toEqual([['admin@example.test', 'contacts_exported', '0']]);
+    });
+
+    it('checking a file changes nothing; confirm applies it once', async () => {
+        const { upload, call, contacts, audits } = make();
+        const checked = await upload(admin, workbook([['a@example.test', 'Ani', '081200000001', '']]));
+        expect(checked.status).toBe(200);
+        expect(checked.body.data.plan.added).toHaveLength(1);
+        expect(contacts).toHaveLength(0);
+        const done = await call('POST', `/api/admin/email/import/${CONTACT}/apply`, admin, {});
+        expect(done.body.data).toEqual({ added: 1, updated: 0, skipped: 0 });
+        expect(contacts.map((c) => [c.email, c.source, c.categoryIds])).toEqual([['a@example.test', 'import', [CLIENT]]]);
+        expect(audits.at(-1)).toEqual(['admin@example.test', 'contacts_imported', 'added 1, updated 0, skipped 0']);
+        expect((await call('POST', `/api/admin/email/import/${CONTACT}/apply`, admin, {})).status).toBe(410);
+    });
+
+    it('only the person who uploaded can confirm', async () => {
+        const { upload, call, contacts } = make();
+        await upload(admin, workbook([['a@example.test', '', '', '']]));
+        expect((await call('POST', `/api/admin/email/import/${CONTACT}/apply`, superadmin, {})).status).toBe(410);
+        expect(contacts).toHaveLength(0);
+    });
+
+    it('refuses a missing or wrong file', async () => {
+        const { upload } = make();
+        expect((await upload(admin, null)).status).toBe(400);
+        const wrong = await upload(admin, Buffer.from('email,a@example.test'));
+        expect(wrong.status).toBe(400);
+        expect(wrong.body.message).toContain('bukan Excel kontak');
     });
 });

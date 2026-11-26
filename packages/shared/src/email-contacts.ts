@@ -104,3 +104,49 @@ export function suggestNameFromEmail(email: string): string {
   if (parts.length < 2 || parts.length > 4 || !parts.every((part) => /^[a-z]{2,}$/i.test(part))) return ''
   return parts.map((part) => part[0]!.toUpperCase() + part.slice(1).toLowerCase()).join(' ')
 }
+
+/* ------------------------------------------------------------ Excel import */
+
+export const EMAIL_IMPORT_MAX_BYTES = 5 * 1024 * 1024
+export const EMAIL_IMPORT_MAX_ROWS = 10_000
+
+export type EmailImportSheet = 'new' | 'existing'
+export type EmailImportOverlapReason = 'email_exists' | 'email_archived' | 'email_in_file' | 'phone_exists' | 'phone_in_file'
+export type EmailImportInvalidReason = 'email' | 'name' | 'phone' | 'category' | 'unknown_id'
+
+export interface EmailImportRow {
+  /** "new:5" or "existing:3": the sheet and the row number a person sees in Excel. */
+  key: string
+  sheet: EmailImportSheet
+  row: number
+  email: string
+  name: string
+  phone: string
+  /** Category names. */
+  categories: string[]
+}
+
+export interface EmailImportEdit extends EmailImportRow {
+  contactId: string
+  /** The contact's updatedAt when the file was checked; a later change stops this row. */
+  version: string
+  changed: Array<'email' | 'name' | 'phone' | 'categories'>
+}
+
+export interface EmailImportPlan {
+  added: EmailImportRow[]
+  edited: EmailImportEdit[]
+  /** Same address or phone as a contact or another row. Only "phone" ones may be added anyway (a shared number). */
+  overlapping: Array<EmailImportRow & { reason: EmailImportOverlapReason; canInclude: boolean }>
+  invalid: Array<{ key: string; sheet: EmailImportSheet; row: number; email: string; reason: EmailImportInvalidReason }>
+  /** Changed in the portal after the file was exported: never overwritten. */
+  conflicts: EmailImportRow[]
+  unchanged: number
+  newCategories: string[]
+}
+
+export interface EmailImportResult {
+  added: number
+  updated: number
+  skipped: number
+}

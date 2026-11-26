@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import type { EmailCategory, EmailContact, UserDto } from '@attentiveid/shared'
+import type { EmailCategory, EmailContact, EmailImportPlan, UserDto } from '@attentiveid/shared'
 import { AppRoutes } from '../src/App'
 import i18n from '../src/i18n'
 import { AuthProvider } from '../src/features/auth/auth-context'
@@ -172,5 +172,65 @@ describe('contact search', () => {
     expect(filterContacts(CONTACTS, 'all', '+62812').map((c) => c.id)).toEqual(['budi'])
     expect(filterContacts(CONTACTS, 'c2', 'budi')).toEqual([])
     expect(filterContacts(CONTACTS, 'c5', '').map((c) => c.id)).toEqual(['sari'])
+  })
+})
+
+describe('contacts in Excel', () => {
+  beforeEach(async () => { await i18n.changeLanguage('id') })
+  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers() })
+
+  const row = (key: string, email: string) => ({ key, sheet: 'new' as const, row: Number(key.split(':')[1]), email, name: '', phone: '', categories: ['client'] })
+  const PLAN: EmailImportPlan = {
+    added: [row('new:2', 'baru@example.test')],
+    edited: [{ ...row('existing:2', 'budi@example.test'), sheet: 'existing', contactId: 'budi', version: 'v', changed: ['name'] }],
+    overlapping: [
+      { ...row('new:3', 'sari@example.test'), reason: 'email_exists', canInclude: false },
+      { ...row('new:4', 'kembar@example.test'), reason: 'phone_exists', canInclude: true },
+    ],
+    invalid: [{ key: 'new:5', sheet: 'new', row: 5, email: 'rusak', reason: 'email' }],
+    conflicts: [], unchanged: 3, newCategories: [],
+  }
+
+  async function openDialog(plan = PLAN) {
+    const calls = setup()
+    const base = globalThis.fetch
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      const reply = (data: unknown) => ({ ok: true, status: 200, json: async () => ({ status: 'success', data }) })
+      if (url.endsWith('/import')) { calls.push({ method: 'POST', url, body: 'file' }); return reply({ id: 'imp1', plan }) }
+      if (url.endsWith('/apply')) { calls.push({ method: 'POST', url, body: JSON.parse(String(init?.body)) }); return reply({ added: 2, updated: 1, skipped: 0 }) }
+      return base(input, init)
+    }))
+    await loaded()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Excel' }))
+    const dialog = screen.getByRole('dialog')
+    await user.upload(within(dialog).getByLabelText(/Unggah berkas/), new File(['x'], 'kontak.xlsx'))
+    await within(dialog).findByText('3 baris tidak berubah.')
+    return { calls, dialog, user }
+  }
+
+  it('shows the counts and keeps confirm grey for five seconds, then sends the chosen rows', async () => {
+    const { calls, dialog, user } = await openDialog()
+    expect(within(dialog).getByText('Baru').nextElementSibling).toHaveTextContent('1')
+    expect(within(dialog).getByText('Diubah').nextElementSibling).toHaveTextContent('1')
+    expect(within(dialog).getByText('Tumpang tindih').nextElementSibling).toHaveTextContent('2')
+    expect(within(dialog).getByText('rusak')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Konfirmasi (5)' })).toBeDisabled()
+    // Only the shared-phone row can be added anyway.
+    expect(within(dialog).getAllByRole('checkbox', { name: 'Tetap tambahkan' })).toHaveLength(1)
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Tetap tambahkan' }))
+    const confirm = await within(dialog).findByRole('button', { name: 'Konfirmasi' }, { timeout: 8000 })
+    expect(confirm).toBeEnabled()
+    await user.click(confirm)
+    expect(await within(dialog).findByText('Selesai: 2 ditambahkan, 1 diperbarui, 0 dilewati.')).toBeInTheDocument()
+    expect(calls.find((c) => c.url.endsWith('/imp1/apply'))?.body).toEqual({ include: ['new:4'] })
+    expect(within(dialog).queryByRole('button', { name: /Konfirmasi/ })).not.toBeInTheDocument()
+  }, 20000)
+
+  it('with nothing to change there is no confirm button', async () => {
+    const { dialog } = await openDialog({ added: [], edited: [], overlapping: [], invalid: [], conflicts: [], unchanged: 3, newCategories: [] })
+    expect(within(dialog).getByText('Tidak ada yang perlu disimpan.')).toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: /Konfirmasi/ })).not.toBeInTheDocument()
   })
 })

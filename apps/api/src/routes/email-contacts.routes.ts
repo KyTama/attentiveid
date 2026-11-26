@@ -4,16 +4,25 @@
  */
 import { Elysia } from 'elysia';
 import {
-    DEFAULT_EMAIL_CATEGORY, normalizeContactPhone, validateCategoryName, validateContact,
-    type EmailContactErrors, type EmailContactInput
+    DEFAULT_EMAIL_CATEGORY, EMAIL_IMPORT_MAX_BYTES, normalizeContactPhone, validateCategoryName, validateContact,
+    type EmailContactErrors, type EmailContactInput, type EmailImportPlan, type EmailImportResult
 } from '@attentiveid/shared';
 import { createRoleGuardPlugin } from '../security/role-guard';
 import type { EmailContactsRepository } from '../repositories/email-contacts.repository';
 import type { AuthTokenService, AuthUserRepository } from './auth';
+import { buildContactsWorkbook, planImport, readContactsWorkbook } from '../services/email-excel';
+import { XlsxError } from '../services/xlsx';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** One bulk action at most (the screen selects what is listed). */
 const MAX_IDS = 2000;
+const IMPORT_TTL_MS = 60 * 60 * 1000;
+
+const FILE_PROBLEMS = {
+    not_xlsx: 'Berkas ini bukan Excel kontak. Unduh dulu berkas dari tombol "Unduh Excel", lalu isi.',
+    too_big: 'Berkas terlalu besar (maksimal 5 MB).',
+    too_many_rows: 'Maksimal 10.000 baris dalam satu berkas.'
+};
 
 export interface EmailContactsRoutesDependencies {
     tokenService: Pick<AuthTokenService, 'verifyAccessToken'>;
@@ -56,8 +65,85 @@ export const createEmailContactsRoutes = (dependencies: EmailContactsRoutesDepen
         return ids.every((id) => typeof id === 'string' && UUID.test(id)) ? [...new Set(ids as string[])] : null;
     };
 
+    /** Applies a confirmed plan. Anything that changed since the check is skipped, never overwritten. */
+    const apply = async (plan: EmailImportPlan, include: ReadonlySet<string>, actor: string): Promise<EmailImportResult> => {
+        const rows = [...plan.added, ...plan.overlapping.filter((row) => row.canInclude && include.has(row.key))];
+        const ids = new Map((await repository.listCategories()).map((category) => [category.name.toLowerCase(), category.id]));
+        for (const name of new Set([...rows, ...plan.edited].flatMap((row) => row.categories))) {
+            if (ids.has(name.toLowerCase())) continue;
+            const made = await repository.createCategory(name);
+            if (made) ids.set(name.toLowerCase(), made.id);
+        }
+        const inputOf = (row: EmailImportPlan['added'][number]) => ({
+            email: row.email,
+            name: row.name,
+            phone: row.phone,
+            phoneNormalized: normalizeContactPhone(row.phone),
+            categoryIds: [...new Set(row.categories.map((name) => ids.get(name.toLowerCase())).filter((id): id is string => Boolean(id)))]
+        });
+        const result: EmailImportResult = { added: 0, updated: 0, skipped: 0 };
+        for (const row of rows) {
+            if (await repository.createContact(inputOf(row), 'import', actor)) result.added += 1;
+            else result.skipped += 1;
+        }
+        for (const edit of plan.edited) {
+            const current = await repository.getContact(edit.contactId);
+            if (!current || current.updatedAt !== edit.version) {
+                result.skipped += 1;
+                continue;
+            }
+            if (typeof (await repository.updateContact(edit.contactId, inputOf(edit), actor)) === 'string') result.skipped += 1;
+            else result.updated += 1;
+        }
+        return result;
+    };
+
+    const everyContact = async () => [
+        ...(await repository.listContacts({ archived: false })),
+        ...(await repository.listContacts({ archived: true }))
+    ];
+
     return new Elysia({ name: 'email-contacts-routes' })
         .use(roleGuard)
+        .get('/api/admin/email/export', async ({ currentUser }: any) => {
+            const contacts = await repository.listContacts({ archived: false });
+            const file = buildContactsWorkbook(contacts, await repository.listCategories());
+            // A download of everyone's contact details: who took it is recorded.
+            await repository.audit(currentUser.email, 'contacts_exported', String(contacts.length));
+            return new Response(new Uint8Array(file), {
+                headers: {
+                    'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'content-disposition': `attachment; filename="kontak-email-${new Date().toISOString().slice(0, 10)}.xlsx"`,
+                    'cache-control': 'no-store'
+                }
+            });
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Download contacts as Excel' } })
+        .post('/api/admin/email/import', async ({ body, set, currentUser }: any) => {
+            const file = body?.file;
+            if (!(file instanceof File)) return fail(set, 400, 'Pilih berkas Excel (.xlsx).');
+            if (file.size > EMAIL_IMPORT_MAX_BYTES) return fail(set, 400, FILE_PROBLEMS.too_big);
+            let plan: EmailImportPlan;
+            try {
+                const rows = readContactsWorkbook(Buffer.from(await file.arrayBuffer()));
+                plan = planImport(rows, await everyContact(), await repository.listCategories());
+            } catch (error) {
+                if (error instanceof XlsxError) return fail(set, 400, FILE_PROBLEMS[error.reason]);
+                throw error;
+            }
+            const id = await repository.saveImport(currentUser.email, plan, new Date(Date.now() + IMPORT_TTL_MS));
+            set.headers['cache-control'] = 'no-store';
+            return { status: 'success', data: { id, plan } };
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Check an Excel file (changes nothing)' } })
+        .post('/api/admin/email/import/:id/apply', async ({ params, body, set, currentUser }: any) => {
+            const gone = () => fail(set, 410, 'Pratinjau sudah dipakai atau kedaluwarsa. Unggah berkasnya lagi.');
+            if (!UUID.test(params.id)) return gone();
+            const include = new Set<string>(Array.isArray(body?.include) ? body.include.filter((key: unknown) => typeof key === 'string') : []);
+            const plan = await repository.takeImport(params.id, currentUser.email, new Date());
+            if (!plan) return gone();
+            const result = await apply(plan, include, currentUser.email);
+            await repository.audit(currentUser.email, 'contacts_imported', `added ${result.added}, updated ${result.updated}, skipped ${result.skipped}`);
+            return { status: 'success', data: result };
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Apply a checked Excel file' } })
         .get('/api/admin/email/contacts', async ({ query, set }: any) => {
             set.headers['cache-control'] = 'no-store';
             const archived = query?.archived === '1';

@@ -1,7 +1,7 @@
-import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm';
-import type { EmailCategory, EmailContact, EmailContactInput, EmailContactSource } from '@attentiveid/shared';
+import { and, asc, eq, gt, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
+import type { EmailCategory, EmailContact, EmailContactInput, EmailContactSource, EmailImportPlan } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { emailAudit, emailCategories, emailContactCategories, emailContacts } from '../db/schema';
+import { emailAudit, emailCategories, emailContactCategories, emailContacts, emailImports } from '../db/schema';
 
 export interface NewEmailContact extends EmailContactInput {
     phoneNormalized: string;
@@ -25,6 +25,11 @@ export interface EmailContactsRepository {
     deleteContacts(ids: string[]): Promise<number>;
 
     audit(actor: string, action: string, detail: string): Promise<void>;
+
+    /** Keeps a checked file waiting for "confirm"; also removes old ones. */
+    saveImport(actor: string, plan: EmailImportPlan, expiresAt: Date): Promise<string>;
+    /** Hands the plan out once, to the person who uploaded it, before it expires; null otherwise. */
+    takeImport(id: string, actor: string, now: Date): Promise<EmailImportPlan | null>;
 }
 
 const isUniqueViolation = (error: unknown): boolean => {
@@ -192,6 +197,22 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
 
         async audit(actor, action, detail) {
             await database.insert(emailAudit).values({ actor, action, detail });
+        },
+
+        async saveImport(actor, plan, expiresAt) {
+            await database.delete(emailImports).where(lt(emailImports.expiresAt, new Date().toISOString()));
+            const [row] = await database.insert(emailImports).values({ actor, plan, expiresAt: expiresAt.toISOString() }).returning({ id: emailImports.id });
+            return row!.id;
+        },
+
+        async takeImport(id, actor, now) {
+            // One statement, so two clicks on "confirm" cannot both get it.
+            const [row] = await database
+                .update(emailImports)
+                .set({ appliedAt: now.toISOString() })
+                .where(and(eq(emailImports.id, id), eq(emailImports.actor, actor), isNull(emailImports.appliedAt), gt(emailImports.expiresAt, now.toISOString())))
+                .returning({ plan: emailImports.plan });
+            return row ? (row.plan as EmailImportPlan) : null;
         }
     };
 };
