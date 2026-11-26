@@ -74,10 +74,11 @@ export function FeedbackPage() {
     setErrors((current) => ({ ...current, files: undefined }))
   }
 
-  // Ctrl+V anywhere on the form: a screenshot or copied files become attachments. Pasted text is left alone.
+  // Ctrl+V anywhere on the form: a screenshot or copied files become attachments. When the clipboard also holds text (a copy
+  // from Excel or Word carries a picture of itself), it is a text paste and is left completely alone.
   const pasteFiles = (event: ClipboardEvent<HTMLFormElement>) => {
     const pasted = Array.from(event.clipboardData?.files ?? [])
-    if (pasted.length === 0) return
+    if (pasted.length === 0 || Array.from(event.clipboardData?.types ?? []).includes('text/plain')) return
     event.preventDefault()
     const stamp = new Date().toISOString().slice(11, 19).replace(/:/g, '')
     // Screenshots all arrive as "image.png"; give each its own name.

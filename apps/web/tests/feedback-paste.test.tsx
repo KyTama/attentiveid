@@ -16,6 +16,8 @@ describe('pasting attachments on /feedback', () => {
     const shot = () => new File(['x'], 'image.png', { type: 'image/png' })
 
     fireEvent.paste(form, { clipboardData: { files: [] } })
+    // A copy from Excel or Word: text plus a picture of it. The text paste must happen, nothing is attached.
+    expect(fireEvent.paste(form, { clipboardData: { files: [shot()], types: ['text/plain', 'Files'] } })).toBe(true)
     expect(screen.queryByRole('list', { name: /Berkas terlampir|Attached files/ })).toBeNull()
 
     fireEvent.paste(form, { clipboardData: { files: [shot()] } })
