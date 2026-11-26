@@ -71,6 +71,8 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
     };
     const noCampaign = (set: Set) => fail(set, 404, 'Kiriman tidak ditemukan.');
     const notDraft = (set: Set) => fail(set, 409, 'Kiriman ini sudah dikirim atau diantrekan, tidak bisa diubah.');
+    const changedSinceTest = (set: Set) =>
+        fail(set, 409, 'Draf ini berubah sejak e-mail uji (mungkin oleh admin lain). Muat ulang halaman, periksa, lalu kirim uji lagi.');
     const switchedOff = (set: Set) => fail(set, 503, 'Pengiriman e-mail massal belum diaktifkan di server.');
     const find = async (id: string) => (UUID.test(id) ? campaigns.get(id) : null);
 
@@ -269,20 +271,24 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
                 return fail(set, 502, 'E-mail uji gagal terkirim.');
             }
             await contacts.audit(currentUser.email, 'test_sent', campaign.id);
-            return { status: 'success', data: { to: currentUser.email } };
+            // Read before the content, so an edit in between can only make the version too old (and the send refused).
+            return { status: 'success', data: { to: currentUser.email, version: campaign.updatedAt } };
         }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Send a test to yourself' } })
         .post('/api/admin/email/campaigns/:id/send', async ({ params, body, set, currentUser }: any) => {
             const campaign = await find(params.id);
             if (!campaign) return noCampaign(set);
             if (campaign.status !== 'draft') return notDraft(set);
             if (!canSend()) return switchedOff(set);
+            if (body?.version !== campaign.updatedAt) return changedSinceTest(set);
             const audience = readAudience(body?.audience);
             if (!audience) return fail(set, 400, 'Pilih penerima.');
             const { recipients, preview } = await resolve(audience);
             if (recipients.length === 0) return fail(set, 400, 'Tidak ada penerima yang bisa dikirimi.');
             // What was confirmed on screen must still be true.
             if (body?.expected !== preview.count) return fail(set, 409, `Jumlah penerima berubah menjadi ${preview.count}. Periksa lagi sebelum mengirim.`);
-            if (!(await campaigns.queue(campaign.id, audience, recipients, trackedLinks(campaign.html), currentUser.email))) return notDraft(set);
+            if (!(await campaigns.queue(campaign.id, campaign.updatedAt, audience, recipients, trackedLinks(campaign.html), currentUser.email))) {
+                return (await find(campaign.id))?.status === 'draft' ? changedSinceTest(set) : notDraft(set);
+            }
             await contacts.audit(currentUser.email, 'send_queued', `${campaign.id}: ${recipients.length}`);
             return { status: 'success', data: await campaigns.get(campaign.id) };
         }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Queue a draft for sending' } })

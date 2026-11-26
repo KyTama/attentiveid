@@ -57,6 +57,8 @@ export interface EmailCampaign {
   createdBy: string
   sentBy: string
   createdAt: string
+  /** Changes with every edit of the draft or its attachments; a send names the version that was tested. */
+  updatedAt: string
   queuedAt: string | null
   finishedAt: string | null
   files: EmailCampaignFile[]

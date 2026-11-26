@@ -96,8 +96,11 @@ export const createEmailSender = (dependencies: EmailSenderDependencies) => {
                 await queue.pauseAll(mail.id, failure);
                 return 'paused';
             }
-            if (failure === 'refused') {
-                const key = `${mail.campaignId} ${refusalKind(error)}`;
+            const kind = refusalKind(error);
+            if (failure === 'refused' && kind.endsWith(' 5.1.1')) {
+                // A dead address says nothing about the message: it neither counts towards the pause nor resets it.
+            } else if (failure === 'refused') {
+                const key = `${mail.campaignId} ${kind}`;
                 streak = { key, n: streak.key === key ? streak.n + 1 : 1 };
                 if (streak.n >= SAME_REFUSALS_PAUSE) {
                     streak = { key: '', n: 0 };

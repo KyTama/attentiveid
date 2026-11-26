@@ -15,7 +15,7 @@ const staff = (role: UserDto['role']): UserDto => ({
 const counts = { total: 0, queued: 0, sent: 0, failed: 0, skipped: 0, unknown: 0, opened: 0, clicked: 0 }
 const campaign = (over: Partial<EmailCampaign> = {}): EmailCampaign => ({
   id: 'k1', title: 'Kabar November', html: '<p>Halo</p>', lang: 'id', status: 'draft', pausedReason: null, audience: null,
-  createdBy: 'admin@example.test', sentBy: '', createdAt: '2026-11-26T01:00:00Z', queuedAt: null, finishedAt: null, files: [], counts, ...over,
+  createdBy: 'admin@example.test', sentBy: '', createdAt: '2026-11-26T01:00:00Z', updatedAt: '2026-11-26T01:00:00Z', queuedAt: null, finishedAt: null, files: [], counts, ...over,
 })
 const SENT = campaign({ id: 'k2', title: 'Undangan', status: 'paused', pausedReason: 'daily_limit', sentBy: 'admin@example.test', queuedAt: '2026-11-26T02:00:00Z', counts: { ...counts, total: 2, sent: 1, queued: 1, opened: 1 } })
 const row = { id: 'r1', email: 'ani@example.test', name: 'Ani', status: 'sent', error: '', sentAt: '2026-11-26T02:01:00Z', openedAt: '2026-11-26T03:00:00Z', openCount: 2, clickedAt: null, clickCount: 0 }
@@ -39,7 +39,7 @@ function setup(path = '/dashboard/email/send', options: { enabled?: boolean; rol
     if (short === '/campaigns/new1?offset=0') return ok({ campaign: campaign({ id: 'new1', status: 'queued' }), recipients: [], offset: 0, pageSize: 500 })
     if (short === '/audience') return ok({ count: 1, archived: 0, unsubscribed: 1 })
     if (short === '/preview') return ok({ subject: 'Judul uji', html: '<p>isi</p>' })
-    if (short.endsWith('/test')) return ok({ to: 'admin@example.test' })
+    if (short.endsWith('/test')) return ok({ to: 'admin@example.test', version: 'v-tested' })
     if (short === '/campaigns' || short === '/campaigns/new1') return ok(campaign({ id: 'new1', html: JSON.parse(String(init?.body)).html }))
     return ok({})
   }))
@@ -102,7 +102,7 @@ describe('bulk send page', () => {
     expect(within(dialog).getByRole('button', { name: 'Ya, kirim (5)' })).toBeDisabled()
     expect(calls.some((c) => c.path.endsWith('/send'))).toBe(false)
     await user.click(await within(dialog).findByRole('button', { name: 'Ya, kirim' }, { timeout: 8000 }))
-    await waitFor(() => expect(calls.filter((c) => c.path === '/campaigns/new1/send')).toEqual([{ method: 'POST', path: '/campaigns/new1/send', body: { audience: { mode: 'categories', ids: ['c1'] }, expected: 1 } }]))
+    await waitFor(() => expect(calls.filter((c) => c.path === '/campaigns/new1/send')).toEqual([{ method: 'POST', path: '/campaigns/new1/send', body: { version: 'v-tested', audience: { mode: 'categories', ids: ['c1'] }, expected: 1 } }]))
     // One draft was made, then updated: never a second one.
     expect(calls.filter((c) => c.method === 'POST' && c.path === '/campaigns')).toHaveLength(1)
     expect(await screen.findByText(/Sedang dikirim/)).toBeInTheDocument()

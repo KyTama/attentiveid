@@ -109,8 +109,11 @@ export interface EmailCampaignsRepository extends EmailQueue {
     removeFile(campaignId: string, fileId: string): Promise<boolean>;
     storedBytes(): Promise<number>;
     suppressed(emails: string[]): Promise<Set<string>>;
-    /** Draft -> queued with its recipients, once: a second call (or a second click) returns false. */
-    queue(id: string, audience: EmailAudience, recipients: Recipient[], links: string[], actor: string): Promise<boolean>;
+    /**
+     * Draft -> queued with its recipients, once: false for a second call (or click), or when the draft is no longer the
+     * version given.
+     */
+    queue(id: string, version: string, audience: EmailAudience, recipients: Recipient[], links: string[], actor: string): Promise<boolean>;
     setStatus(id: string, from: EmailCampaignStatus[], to: EmailCampaignStatus, reason: EmailPauseReason | null): Promise<boolean>;
     recipients(campaignId: string, offset: number, limit: number): Promise<EmailRecipientRow[]>;
     /** Sending is switched off: everything running is paused, so nothing starts by itself when it is switched on again. */
@@ -181,6 +184,7 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
             createdBy: row.createdBy,
             sentBy: row.sentBy,
             createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
             queuedAt: row.queuedAt,
             finishedAt: row.finishedAt,
             files: files.get(row.id) ?? [],
@@ -253,6 +257,7 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
                     .insert(emailCampaignFiles)
                     .values({ campaignId, name: file.name, mimeType: file.mimeType, byteSize: file.data.length, sha256: file.sha256, data: file.data })
                     .returning({ id: emailCampaignFiles.id });
+                await tx.update(emailCampaigns).set({ updatedAt: new Date().toISOString() }).where(eq(emailCampaigns.id, campaignId));
                 return { id: row!.id, name: file.name, size: file.data.length };
             });
         },
@@ -265,6 +270,7 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
                     .delete(emailCampaignFiles)
                     .where(and(eq(emailCampaignFiles.id, fileId), eq(emailCampaignFiles.campaignId, campaignId)))
                     .returning({ id: emailCampaignFiles.id });
+                if (rows.length > 0) await tx.update(emailCampaigns).set({ updatedAt: new Date().toISOString() }).where(eq(emailCampaigns.id, campaignId));
                 return rows.length > 0;
             });
         },
@@ -281,13 +287,13 @@ export const createEmailCampaignsRepository = (database: typeof defaultDb = defa
             return suppressedAmong(database, emails);
         },
 
-        async queue(id, audience, recipients, links, actor) {
+        async queue(id, version, audience, recipients, links, actor) {
             return database.transaction(async (tx) => {
                 const now = new Date().toISOString();
                 const claimed = await tx
                     .update(emailCampaigns)
                     .set({ status: 'queued', audience, links, sentBy: actor, queuedAt: now, updatedAt: now })
-                    .where(and(eq(emailCampaigns.id, id), eq(emailCampaigns.status, 'draft')))
+                    .where(and(eq(emailCampaigns.id, id), eq(emailCampaigns.status, 'draft'), eq(emailCampaigns.updatedAt, version)))
                     .returning({ id: emailCampaigns.id });
                 if (claimed.length === 0) return false;
                 for (let at = 0; at < recipients.length; at += 500) {

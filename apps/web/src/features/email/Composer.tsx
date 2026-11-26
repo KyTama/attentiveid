@@ -42,6 +42,8 @@ export function Composer({ campaign, categories, contacts, sending, onSaved, onS
   const [preview, setPreview] = useState<{ subject: string; html: string } | null>(null)
   /** The content a test was sent for; changing anything asks for a new test. */
   const [tested, setTested] = useState('')
+  /** The server's version of the draft that the test was made from. */
+  const [version, setVersion] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [notice, setNotice] = useState('')
@@ -70,6 +72,8 @@ export function Composer({ campaign, categories, contacts, sending, onSaved, onS
   /** Saves what is on screen; every action that uses the server's copy starts with this. */
   const save = async () => {
     const saved = await saveDraft(id, draft)
+    // A save makes a new version: it has to be tested again.
+    setTested('')
     setId(saved.id)
     // The server removes anything unsafe: show what will really be sent.
     if (mode === 'html') setHtml(saved.html)
@@ -173,7 +177,8 @@ export function Composer({ campaign, categories, contacts, sending, onSaved, onS
         </button>
         <button className={buttonSecondary} disabled={busy || incomplete || !sending.enabled} onClick={() => void run(async () => {
           const saved = await save()
-          const { to } = await sendTest(saved.id)
+          const { to, version: sentVersion } = await sendTest(saved.id)
+          setVersion(sentVersion)
           setTested(JSON.stringify([{ ...draft, html: mode === 'html' ? saved.html : draft.html }, files.map((file) => file.id)]))
           setNotice(tx(`E-mail uji dikirim ke ${to}.`, `Test sent to ${to}.`))
         })} type="button">{tx('Kirim uji ke saya', 'Send me a test')}</button>
@@ -206,7 +211,7 @@ export function Composer({ campaign, categories, contacts, sending, onSaved, onS
             {failure && <p className="text-sm text-rose-700" role="alert">{failure}</p>}
             <div className="flex justify-end gap-2">
               <button className={buttonSecondary} disabled={busy} onClick={() => setConfirming(false)} type="button">{tx('Batal', 'Cancel')}</button>
-              <ConfirmButton disabled={busy} label={tx('Ya, kirim', 'Yes, send')} onClick={() => void run(async () => { await sendCampaign(id!, audience, counted.count); onSent(id!) })} />
+              <ConfirmButton disabled={busy} label={tx('Ya, kirim', 'Yes, send')} onClick={() => void run(async () => { await sendCampaign(id!, version, audience, counted.count); onSent(id!) })} />
             </div>
           </DialogContent>
         </Dialog>

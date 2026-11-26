@@ -57,6 +57,7 @@ const call = async (method: string, path: string, as: UserDto | null = admin, bo
     return { status: response.status, headers: response.headers, text, body: json };
 };
 
+const versionOf = async (campaignId: string) => (await campaigns.get(campaignId))!.updatedAt;
 const draft = { title: 'Kabar untuk {{name}}', html: '<p>Halo {{name}} <a href="https://attentiveid.com/sci-brief?a=1&amp;b=%20x">baca</a></p><script>1</script>' };
 const contactIds: Record<string, string> = {};
 let categoryId = '';
@@ -149,17 +150,49 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
     test('when sending is switched off, nothing can be sent', async () => {
         const off = appWith({ enabled: false });
         expect((await call('POST', `/api/admin/email/campaigns/${id}/test`, admin, {}, off)).status).toBe(503);
-        expect((await call('POST', `/api/admin/email/campaigns/${id}/send`, admin, { audience: { mode: 'all' }, expected: 3 }, off)).status).toBe(503);
+        expect((await call('POST', `/api/admin/email/campaigns/${id}/send`, admin, { version: await versionOf(id), audience: { mode: 'all' }, expected: 3 }, off)).status).toBe(503);
         expect((await call('GET', '/api/admin/email/campaigns', admin, undefined, off)).body.data.sending.enabled).toBe(false);
         expect(outbox).toHaveLength(0);
+    });
+
+    test('a draft changed after the test (text or attachment) cannot be sent', async () => {
+        const made = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
+        const body = async (version: string) => ({ version, audience: { mode: 'all' }, expected: 3 });
+        const send = async (version: string) => call('POST', `/api/admin/email/campaigns/${made}/send`, admin, await body(version));
+        const tested = (await call('POST', `/api/admin/email/campaigns/${made}/test`)).body.data.version;
+        expect(tested).toBe(await versionOf(made));
+
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        await call('PUT', `/api/admin/email/campaigns/${made}`, admin, { ...draft, title: 'Diubah admin lain' });
+        const refused = await send(tested);
+        expect(refused.status).toBe(409);
+        expect(refused.body.message).toContain('berubah sejak e-mail uji');
+
+        const again = await versionOf(made);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        const form = new FormData();
+        form.append('file', new File(['%PDF-1.4 baru'], 'baru.pdf'));
+        const added = await call('POST', `/api/admin/email/campaigns/${made}/files`, admin, form);
+        expect((await send(again)).status).toBe(409);
+        const withFile = await versionOf(made);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        await call('DELETE', `/api/admin/email/campaigns/${made}/files/${added.body.data.id}`);
+        expect((await send(withFile)).status).toBe(409);
+        expect((await call('POST', `/api/admin/email/campaigns/${made}/send`, admin, { audience: { mode: 'all' }, expected: 3 })).status).toBe(409);
+        // The queue itself refuses an old version too (an edit between the check and the write).
+        expect(await campaigns.queue(made, tested, { mode: 'all' }, [], [], 'x')).toBe(false);
+        expect((await campaigns.get(made))!.status).toBe('draft');
+        await call('DELETE', `/api/admin/email/campaigns/${made}`);
+        outbox.length = 0;
     });
 
     test('send needs the confirmed count, and happens once', async () => {
         const audience = { mode: 'categories', ids: [categoryId] };
         const preview = await call('POST', '/api/admin/email/audience', admin, { audience });
         expect(preview.body.data).toEqual({ count: 3, archived: 1, unsubscribed: 0 });
-        expect((await call('POST', `/api/admin/email/campaigns/${id}/send`, admin, { audience, expected: 2 })).status).toBe(409);
-        const both = await Promise.all([1, 2].map(() => call('POST', `/api/admin/email/campaigns/${id}/send`, admin, { audience, expected: 3 })));
+        expect((await call('POST', `/api/admin/email/campaigns/${id}/send`, admin, { version: await versionOf(id), audience, expected: 2 })).status).toBe(409);
+        const version = await versionOf(id);
+        const both = await Promise.all([1, 2].map(() => call('POST', `/api/admin/email/campaigns/${id}/send`, admin, { version, audience, expected: 3 })));
         expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
         const campaign = (await campaigns.get(id))!;
         expect(campaign.counts).toMatchObject({ total: 3, queued: 3 });
@@ -223,7 +256,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
 
     test('unsubscribe: visiting the page changes nothing, pressing stops later sends, even queued ones', async () => {
         const second = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
-        await call('POST', `/api/admin/email/campaigns/${second}/send`, admin, { audience: { mode: 'all' }, expected: 3 });
+        await call('POST', `/api/admin/email/campaigns/${second}/send`, admin, { version: await versionOf(second), audience: { mode: 'all' }, expected: 3 });
         const [row] = await database.select().from(schema.emailCampaignRecipients).where(eq(schema.emailCampaignRecipients.email, 'budi@example.test'));
         const path = `/api/public/e/u/${trackToken(SECRET, 'unsubscribe', row!.id)}`;
 
@@ -250,7 +283,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
 
     test('cancel skips what is waiting; Google\'s limit pauses and keeps it waiting', async () => {
         const third = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
-        await call('POST', `/api/admin/email/campaigns/${third}/send`, admin, { audience: { mode: 'all' }, expected: 2 });
+        await call('POST', `/api/admin/email/campaigns/${third}/send`, admin, { version: await versionOf(third), audience: { mode: 'all' }, expected: 2 });
         const refusing = createEmailSender({
             queue: campaigns, secret: SECRET, siteOrigin: 'https://attentiveid.com', replyTo: 'x@example.test', messageDomain: 'example.test',
             mailer: { isConfigured: true, send: async () => { throw Object.assign(new Error('limit'), { responseCode: 550, response: '550 5.4.5 Daily user sending limit exceeded' }); } }
@@ -265,7 +298,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
 
     test('switched off: running sends are paused and do not start by themselves again', async () => {
         const made = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
-        await call('POST', `/api/admin/email/campaigns/${made}/send`, admin, { audience: { mode: 'contacts', ids: [contactIds.ani] }, expected: 1 });
+        await call('POST', `/api/admin/email/campaigns/${made}/send`, admin, { version: await versionOf(made), audience: { mode: 'contacts', ids: [contactIds.ani] }, expected: 1 });
         expect(await campaigns.parkQueued()).toBe(1);
         outbox.length = 0;
         expect(await tick()).toBe('idle');
@@ -287,7 +320,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
 
     test('an e-mail left half-sent by a restart becomes unknown, not sent again', async () => {
         const fourth = (await call('POST', '/api/admin/email/campaigns', admin, draft)).body.data.id;
-        await call('POST', `/api/admin/email/campaigns/${fourth}/send`, admin, { audience: { mode: 'contacts', ids: [contactIds.ani] }, expected: 1 });
+        await call('POST', `/api/admin/email/campaigns/${fourth}/send`, admin, { version: await versionOf(fourth), audience: { mode: 'contacts', ids: [contactIds.ani] }, expected: 1 });
         expect(await campaigns.claimNext(new Date(Date.now() - 10 * 60_000))).not.toBeNull();
         outbox.length = 0;
         await tick();

@@ -37,9 +37,9 @@ export const previewDraft = async (draft: DraftInput) =>
   (await request<Data<{ subject: string; html: string }>>(`${BASE}/preview`, json('POST', draft))).data
 export const countAudience = async (audience: EmailAudience) =>
   (await request<Data<EmailAudiencePreview>>(`${BASE}/audience`, json('POST', { audience }))).data
-export const sendTest = async (id: string) => (await request<Data<{ to: string }>>(`${BASE}/campaigns/${id}/test`, json('POST'))).data
-export const sendCampaign = (id: string, audience: EmailAudience, expected: number) =>
-  request(`${BASE}/campaigns/${id}/send`, json('POST', { audience, expected }))
+export const sendTest = async (id: string) => (await request<Data<{ to: string; version: string }>>(`${BASE}/campaigns/${id}/test`, json('POST'))).data
+export const sendCampaign = (id: string, version: string, audience: EmailAudience, expected: number) =>
+  request(`${BASE}/campaigns/${id}/send`, json('POST', { version, audience, expected }))
 export const controlCampaign = (id: string, action: 'pause' | 'resume' | 'cancel') => request(`${BASE}/campaigns/${id}/${action}`, json('POST'))
 export const listChats = async () => (await request<Data<{ chats: EmailChat[]; categories: EmailCategory[] }>>(`${BASE}/chats`)).data
 export const getChat = async (contactId: string) =>

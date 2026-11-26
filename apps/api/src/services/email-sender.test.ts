@@ -105,10 +105,25 @@ describe('bulk sender', () => {
         const error = { responseCode: 550, response: '' };
         const mixed = make({ error });
         for (let i = 0; i < SAME_REFUSALS_PAUSE + 2; i += 1) {
-            error.response = i % 2 ? '550 5.1.1 no user' : '550 5.7.1 rejected';
+            error.response = i % 2 ? '550 5.1.2 bad domain' : '550 5.7.1 rejected';
             await mixed.sender.tick();
         }
         expect(mixed.calls.some((c) => c[0] === 'pauseCampaign')).toBe(false);
+    });
+
+    it('dead addresses (5.1.1) never pause, and do not hide a run of real rejections', async () => {
+        const dead = make({ error: { responseCode: 550, response: '550 5.1.1 no such user' } });
+        for (let i = 0; i < SAME_REFUSALS_PAUSE * 3; i += 1) expect(await dead.sender.tick()).toBe('failed');
+        expect(dead.calls.some((c) => c[0] === 'pauseCampaign')).toBe(false);
+
+        const error = { responseCode: 550, response: '' };
+        const mixed = make({ error });
+        const results = [];
+        for (const code of ['5.7.1', '5.7.1', '5.1.1', '5.7.1', '5.1.1', '5.7.1', '5.7.1']) {
+            error.response = `550 ${code} no`;
+            results.push(await mixed.sender.tick());
+        }
+        expect(results.indexOf('paused')).toBe(6);
     });
 
     it('classifies errors', () => {
