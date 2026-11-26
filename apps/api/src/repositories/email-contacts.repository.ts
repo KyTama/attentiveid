@@ -1,7 +1,7 @@
 import { and, asc, eq, gt, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import type { EmailCategory, EmailContact, EmailContactInput, EmailContactSource, EmailImportPlan } from '@attentiveid/shared';
 import { db as defaultDb } from '../db';
-import { emailAudit, emailCategories, emailContactCategories, emailContacts, emailImports } from '../db/schema';
+import { emailAudit, emailCategories, emailContactCategories, emailContacts, emailImports, emailSuppressions } from '../db/schema';
 
 export interface NewEmailContact extends EmailContactInput {
     phoneNormalized: string;
@@ -48,7 +48,14 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
         return map;
     };
 
-    const toContact = (row: typeof emailContacts.$inferSelect, categoryIds: string[]): EmailContact => ({
+    const unsubscribedOf = async (emails: string[]) => {
+        if (emails.length === 0) return new Set<string>();
+        const rows = await database.select({ email: emailSuppressions.email }).from(emailSuppressions).where(inArray(emailSuppressions.email, emails));
+        return new Set(rows.map((row) => row.email));
+    };
+
+    const toContact = (row: typeof emailContacts.$inferSelect, categoryIds: string[], stopped: ReadonlySet<string>): EmailContact => ({
+        unsubscribed: stopped.has(row.email),
         id: row.id,
         email: row.email,
         name: row.name,
@@ -63,7 +70,7 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
     const getContact = async (id: string) => {
         const [row] = await database.select().from(emailContacts).where(eq(emailContacts.id, id)).limit(1);
         if (!row) return null;
-        return toContact(row, (await categoriesOf([id])).get(id) ?? []);
+        return toContact(row, (await categoriesOf([id])).get(id) ?? [], await unsubscribedOf([row.email]));
     };
 
     const listCategories = async (): Promise<EmailCategory[]> => {
@@ -132,7 +139,8 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
                 .where(archived ? sql`${emailContacts.archivedAt} is not null` : sql`${emailContacts.archivedAt} is null`)
                 .orderBy(sql`${emailContacts.createdAt} desc`, asc(emailContacts.email));
             const links = await categoriesOf(rows.map((row) => row.id));
-            return rows.map((row) => toContact(row, links.get(row.id) ?? []));
+            const stopped = await unsubscribedOf(rows.map((row) => row.email));
+            return rows.map((row) => toContact(row, links.get(row.id) ?? [], stopped));
         },
 
         getContact,

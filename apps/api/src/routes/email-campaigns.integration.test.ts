@@ -84,7 +84,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
             ['GET', '/api/admin/email/campaigns'], ['POST', '/api/admin/email/campaigns'], ['POST', '/api/admin/email/audience'],
             ['GET', '/api/admin/email/campaigns/x'], ['PUT', '/api/admin/email/campaigns/x'], ['DELETE', '/api/admin/email/campaigns/x'],
             ['POST', '/api/admin/email/campaigns/x/send'], ['POST', '/api/admin/email/campaigns/x/test'], ['POST', '/api/admin/email/campaigns/x/pause'],
-            ['POST', '/api/admin/email/campaigns/x/files'], ['DELETE', '/api/admin/email/campaigns/x/files/y']
+            ['POST', '/api/admin/email/campaigns/x/files'], ['DELETE', '/api/admin/email/campaigns/x/files/y'], ['POST', '/api/admin/email/preview']
         ];
         for (const [method, path] of paths) {
             const body = method === 'GET' || method === 'DELETE' ? undefined : draft;
@@ -111,6 +111,15 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
         expect((await upload('palsu.pdf', 'not a pdf')).status).toBe(400);
         expect((await upload('brosur.pdf', '%PDF-1.4 uji')).status).toBe(201);
         expect(await campaigns.storedBytes()).toBeGreaterThan(0);
+    });
+
+    test('the preview shows the footer with the notice, is cleaned, and calls nothing', async () => {
+        const preview = await call('POST', '/api/admin/email/preview', admin, draft);
+        expect(preview.body.data.subject).toBe('Kabar untuk Admin Uji');
+        expect(preview.body.data.html).toContain('Berhenti berlangganan');
+        expect(preview.body.data.html).toContain('Kami mencatat');
+        expect(preview.body.data.html).not.toMatch(/<script|\/e\/o\//);
+        expect(outbox).toHaveLength(0);
     });
 
     test('a test goes only to the person pressing, marked TEST, without tracking', async () => {
@@ -196,6 +205,7 @@ describeIntegration('bulk e-mail (PostgreSQL, fake mailer)', () => {
         const done = await app.handle(new Request(`http://localhost${path}`, { method: 'POST', body: form.toString(), headers: { 'content-type': 'application/x-www-form-urlencoded' } }));
         expect(done.status).toBe(200);
         expect((await campaigns.suppressed(['budi@example.test'])).size).toBe(1);
+        expect((await contacts.listContacts({ archived: false })).filter((c) => c.unsubscribed).map((c) => c.email)).toEqual(['budi@example.test']);
         expect((await call('POST', '/api/public/e/u/nonsense', null)).status).toBe(404);
 
         outbox.length = 0;

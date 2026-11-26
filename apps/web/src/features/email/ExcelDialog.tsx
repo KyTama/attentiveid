@@ -1,12 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { EMAIL_IMPORT_MAX_BYTES, type EmailImportOverlapReason, type EmailImportPlan, type EmailImportResult } from '@attentiveid/shared'
 import { Download } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { useTx } from '@/features/i18n/use-tx'
+import { ConfirmButton } from './ConfirmButton'
 import { applyImport, checkImport, downloadContacts } from './service'
-import { buttonPrimary, buttonSecondary } from './styles'
+import { buttonSecondary } from './styles'
 
-export const CONFIRM_DELAY_SECONDS = 5
 /** Rows listed per group; the count in the heading is always complete. */
 const LISTED = 100
 
@@ -21,21 +21,6 @@ function Group({ title, count, tone = 'text-slate-900', open, children }: { titl
       <ul className="mt-2 space-y-1.5 text-xs text-slate-600">{children}</ul>
       {count > LISTED && <p className="mt-1 text-xs text-slate-500">{tx(`Hanya ${LISTED} baris pertama yang ditampilkan.`, `Only the first ${LISTED} rows are listed.`)}</p>}
     </details>
-  )
-}
-
-/** The confirm button stays grey for a few seconds so the counts get read first. Remounted (by key) for each new preview. */
-function ConfirmButton({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
-  const [left, setLeft] = useState(CONFIRM_DELAY_SECONDS)
-  useEffect(() => {
-    if (left === 0) return
-    const timer = setTimeout(() => setLeft(left - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [left])
-  return (
-    <button className={buttonPrimary} disabled={disabled || left > 0} onClick={onClick} type="button">
-      {left > 0 ? `${label} (${left})` : label}
-    </button>
   )
 }
 

@@ -28,6 +28,8 @@ export interface EmailContact {
   categoryIds: string[]
   source: EmailContactSource
   archivedAt: string | null
+  /** True when this address asked not to get bulk e-mail any more. */
+  unsubscribed?: boolean
   createdAt: string
   updatedAt: string
 }

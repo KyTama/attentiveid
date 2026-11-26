@@ -187,6 +187,21 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
             if (campaign.status !== 'draft') return notDraft(set);
             return (await campaigns.removeFile(campaign.id, params.fileId)) ? { status: 'success' } : fail(set, 404, 'Lampiran tidak ditemukan.');
         }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Remove an attachment from a draft' } })
+        .post('/api/admin/email/preview', async ({ body, set, currentUser }: any) => {
+            const draft = readDraft(body);
+            if (typeof draft === 'string') return fail(set, 400, draft);
+            const built = buildPersonalMail({
+                ...draft,
+                name: currentUser.name ?? '',
+                recipientId: '00000000-0000-0000-0000-000000000000',
+                links: [],
+                secret: bulk.secret,
+                siteOrigin: bulk.siteOrigin,
+                track: true
+            });
+            // As a recipient sees it, minus the open image: looking at a preview must not call anything.
+            return { status: 'success', data: { subject: built.subject, html: built.html.replace(/<img [^>]*\/api\/public\/e\/o\/[^>]*>/, '') } };
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'Show how a draft will look' } })
         .post('/api/admin/email/audience', async ({ body, set }: any) => {
             const audience = readAudience(body?.audience);
             if (!audience) return fail(set, 400, 'Pilih penerima.');

@@ -176,6 +176,7 @@ export function EmailContactsPage() {
                     <p className="truncate text-sm text-slate-600">{contact.email}</p>
                     <p className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                       {contact.phone && <span>{contact.phone}</span>}
+                      {contact.unsubscribed && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">{tx('Berhenti berlangganan', 'Unsubscribed')}</span>}
                       {contact.categoryIds.map((id) => <span className="rounded-full bg-navy-50 px-2 py-0.5 font-medium text-navy-800" key={id}>{nameOf(id)}</span>)}
                     </p>
                   </div>
