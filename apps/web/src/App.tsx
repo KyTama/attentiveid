@@ -86,7 +86,7 @@ export function AppRoutes({
           <Route path="articles/:slug" element={<ArticleDetailPage />} />
           <Route path="free-session" element={<FreeSessionPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
-          <Route path="our-services" element={<OurServicesPage />} />
+          <Route path="our-services/:slug?" element={<OurServicesPage />} />
           <Route path="assessments" element={<AssessmentsPage />} />
           <Route path="assessments/payment" element={<AssessmentPaymentPage />} />
           {/* The form itself is a standalone page the web server serves; this keeps the address working in development. */}

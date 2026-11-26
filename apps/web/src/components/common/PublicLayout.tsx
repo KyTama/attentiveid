@@ -44,7 +44,11 @@ export function PublicLayout() {
   const location = useLocation()
   const navigationType = useNavigationType()
 
+  // An address change reported by the embedded services catalog is not a page change: focus stays where the visitor is.
+  const fromCatalog = Boolean((location.state as { fromCatalog?: boolean } | null)?.fromCatalog)
+
   useEffect(() => {
+    if (fromCatalog) return
     if (navigationType !== 'POP') {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }
@@ -54,7 +58,7 @@ export function PublicLayout() {
     })
 
     return () => window.cancelAnimationFrame(frame)
-  }, [location.pathname, navigationType])
+  }, [location.pathname, navigationType, fromCatalog])
 
   return (
     <IntakeModalProvider>
