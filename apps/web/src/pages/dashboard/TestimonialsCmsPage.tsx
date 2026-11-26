@@ -20,6 +20,9 @@ import {
   generateSafeCmsId,
   getLandingContentMutationErrors,
   LANDING_REPEATER_BOUNDS,
+  TESTIMONIALS_HOMEPAGE_DEFAULT,
+  TESTIMONIALS_HOMEPAGE_MAX,
+  testimonialKey,
   normalizeLandingContentMutation,
   type LandingContentMutation,
 } from '@attentiveid/shared'
@@ -44,6 +47,7 @@ export function TestimonialsCmsPage() {
 
   const [landingContent, setLandingContent] = useState<LandingContentMutation | null>(null)
   const [testimonials, setTestimonials] = useState<TestimonialData[]>([])
+  const [display, setDisplay] = useState<{ homepageCount: number; hiddenKeys: string[] }>({ homepageCount: TESTIMONIALS_HOMEPAGE_DEFAULT, hiddenKeys: [] })
   const [headline, setHeadline] = useState({ id: 'Apa kata mereka yang telah berproses', en: 'Client Stories & Experiences' })
   const [description, setDescription] = useState({
     id: 'Setiap proses konseling adalah perjalanan personal yang dibangun atas rasa aman, kepercayaan, dan pendekatan profesional tanpa penghakiman.',
@@ -84,6 +88,7 @@ export function TestimonialsCmsPage() {
             setLandingContent(json.content)
             const storiesSection = json.content.sections?.find((s: any) => s.key === 'clientStories')
             if (storiesSection) {
+              if (storiesSection.display) setDisplay(storiesSection.display)
               if (storiesSection.headline) setHeadline(storiesSection.headline)
               if (storiesSection.description) setDescription(storiesSection.description)
               if (Array.isArray(storiesSection.items)) {
@@ -115,7 +120,7 @@ export function TestimonialsCmsPage() {
     if (testimonials.length >= LANDING_REPEATER_BOUNDS.clientStories.max) {
       setMessage({
         type: 'error',
-        text: `Maksimal ${LANDING_REPEATER_BOUNDS.clientStories.max} testimoni diperbolehkan untuk menjaga performa carousel.`,
+        text: `Maksimal ${LANDING_REPEATER_BOUNDS.clientStories.max} testimoni diperbolehkan sebagai batas aman.`,
       })
       return
     }
@@ -165,6 +170,11 @@ export function TestimonialsCmsPage() {
     }
 
     if (editingIndex !== null) {
+      // A hidden testimonial stays hidden when its words are edited (the marker is made from the words).
+      const before = testimonialKey(testimonials[editingIndex])
+      if (display.hiddenKeys.includes(before)) {
+        setDisplay((current) => ({ ...current, hiddenKeys: current.hiddenKeys.map((key) => (key === before ? testimonialKey(itemData) : key)) }))
+      }
       updated[editingIndex] = itemData
     } else {
       updated.push(itemData)
@@ -226,6 +236,7 @@ export function TestimonialsCmsPage() {
           ...section,
           headline,
           description,
+          display,
           items: testimonials.map((item, idx) => ({
             id: item.id,
             position: idx,
@@ -483,7 +494,7 @@ export function TestimonialsCmsPage() {
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Daftar Testimoni Aktif ({testimonials.length})
+              Semua Testimoni ({testimonials.length})
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Urutan kartu di bawah menentukan urutan tayang pada carousel homepage.
@@ -491,6 +502,27 @@ export function TestimonialsCmsPage() {
           </div>
           <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">
             Min. 3 testimoni
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-6 py-3 text-xs text-slate-700">
+          <label className="flex items-center gap-2 font-semibold">
+            Jumlah yang tampil di beranda
+            <input
+              className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-xs"
+              max={TESTIMONIALS_HOMEPAGE_MAX}
+              min={3}
+              onChange={(event) => {
+                const homepageCount = Math.min(Math.max(Math.round(Number(event.target.value)) || 3, 3), TESTIMONIALS_HOMEPAGE_MAX)
+                setDisplay((current) => ({ ...current, homepageCount }))
+                setHasUnsavedChanges(true)
+              }}
+              type="number"
+              value={display.homepageCount}
+            />
+          </label>
+          <span className="text-slate-500">
+            Yang tampil: urutan teratas yang dicentang, paling banyak {TESTIMONIALS_HOMEPAGE_MAX}. Sisanya tetap tersimpan.
           </span>
         </div>
 
@@ -519,6 +551,25 @@ export function TestimonialsCmsPage() {
                 key={item.id}
                 className="p-5 sm:p-6 hover:bg-slate-50/70 transition-colors flex flex-col sm:flex-row sm:items-start justify-between gap-4"
               >
+                <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold text-slate-600">
+                  <input
+                    aria-label={`Tampilkan testimoni ${item.title.id}`}
+                    checked={!display.hiddenKeys.includes(testimonialKey(item))}
+                    className="size-4"
+                    onChange={(event) => {
+                      const show = event.target.checked
+                      if (!show && testimonials.length - display.hiddenKeys.length <= 3) {
+                        setMessage({ type: 'error', text: 'Minimal 3 testimoni harus tampil.' })
+                        return
+                      }
+                      const key = testimonialKey(item)
+                      setDisplay((current) => ({ ...current, hiddenKeys: show ? current.hiddenKeys.filter((other) => other !== key) : [...current.hiddenKeys, key] }))
+                      setHasUnsavedChanges(true)
+                    }}
+                    type="checkbox"
+                  />
+                  Tampil
+                </label>
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <span className="flex items-center justify-center size-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs shrink-0">
                     #{index + 1}

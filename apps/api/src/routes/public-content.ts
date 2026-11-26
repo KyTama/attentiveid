@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import path from 'node:path';
-import { stripHiddenHeroParts } from '@attentiveid/shared';
+import { stripHiddenHeroParts, trimPublicTestimonials } from '@attentiveid/shared';
 import { getMediaFilePath } from '../services/media-storage';
 import type { LandingContentRead } from '../repositories/landing-content.repository';
 import type {
@@ -85,7 +85,7 @@ export const createPublicContentRoutes = (dependencies: PublicContentDependencie
 })
     .get('/api/content/landing', async () => ({
         status: 'found' as const,
-        landing: stripHiddenHeroParts(await dependencies.landingRepository.getPublished())
+        landing: trimPublicTestimonials(stripHiddenHeroParts(await dependencies.landingRepository.getPublished()))
     }))
     .get('/api/content/og-image', async ({ set }) => {
         try {

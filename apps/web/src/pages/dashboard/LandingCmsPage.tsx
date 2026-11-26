@@ -40,6 +40,7 @@ import {
   getLandingContentMutationErrors,
   normalizeLandingContentMutation,
   type HeroSlideItem,
+  testimonialKey,
 } from '@attentiveid/shared'
 
 interface LocalizedText {
@@ -885,8 +886,15 @@ export function LandingCmsPage() {
         [lang]: value,
       },
     }
+    // A hidden testimonial is marked by its words: move the marker with the edit, or the edit would publish it.
+    let display = (activeSection as any).display
+    if (activeSection.key === 'clientStories' && display) {
+      const before = testimonialKey((activeSection.items as any)[itemIndex])
+      const after = testimonialKey(newItems[itemIndex] as any)
+      display = { ...display, hiddenKeys: display.hiddenKeys.map((key: string) => (key === before ? after : key)) }
+    }
     const newSections = [...content.sections]
-    newSections[activeSectionIndex] = { ...activeSection, items: newItems }
+    newSections[activeSectionIndex] = { ...activeSection, items: newItems, ...(display ? { display } : {}) } as any
     setContent({ ...content, sections: newSections })
   }
 
