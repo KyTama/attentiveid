@@ -48,12 +48,14 @@ const make = () => {
         deleteContacts: async (ids) => ids.length,
         audit: async (actor, action, detail) => { audits.push([actor, action, detail]); },
         saveImport: async (actor, plan) => { imports.set(CONTACT, { actor, plan }); return CONTACT; },
-        takeImport: async (id, actor) => {
+        applyImport: async (id, actor, _now, work) => {
             const found = imports.get(id);
             if (!found || found.actor !== actor) return null;
+            const result = await work(found.plan, repository);
             imports.delete(id);
-            return found.plan;
-        }
+            return result;
+        },
+        purgeImports: async () => {}
     };
     const app = createEmailContactsRoutes({
         tokenService,

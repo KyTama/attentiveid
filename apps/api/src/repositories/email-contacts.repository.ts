@@ -28,8 +28,13 @@ export interface EmailContactsRepository {
 
     /** Keeps a checked file waiting for "confirm"; also removes old ones. */
     saveImport(actor: string, plan: EmailImportPlan, expiresAt: Date): Promise<string>;
-    /** Hands the plan out once, to the person who uploaded it, before it expires; null otherwise. */
-    takeImport(id: string, actor: string, now: Date): Promise<EmailImportPlan | null>;
+    /**
+     * Runs `work` for the person who uploaded the file, before it expires, in one transaction: either everything it writes is
+     * kept and the preview is gone, or nothing is and the preview can be confirmed again. Null when there is no such preview.
+     */
+    applyImport<T>(id: string, actor: string, now: Date, work: (plan: EmailImportPlan, repository: EmailContactsRepository) => Promise<T>): Promise<T | null>;
+    /** Previews hold contact details: removes the expired ones. */
+    purgeImports(now: Date): Promise<void>;
 }
 
 const isUniqueViolation = (error: unknown): boolean => {
@@ -89,7 +94,8 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
 
         async createCategory(name) {
             try {
-                const [row] = await database.insert(emailCategories).values({ name }).returning();
+                // Its own (nested) transaction, so a duplicate does not abort a larger one around it.
+                const [row] = await database.transaction((tx) => tx.insert(emailCategories).values({ name }).returning());
                 return { id: row!.id, name: row!.name, builtin: row!.builtin, count: 0 };
             } catch (error) {
                 if (isUniqueViolation(error)) return null;
@@ -205,14 +211,23 @@ export const createEmailContactsRepository = (database: typeof defaultDb = defau
             return row!.id;
         },
 
-        async takeImport(id, actor, now) {
-            // One statement, so two clicks on "confirm" cannot both get it.
-            const [row] = await database
-                .update(emailImports)
-                .set({ appliedAt: now.toISOString() })
-                .where(and(eq(emailImports.id, id), eq(emailImports.actor, actor), isNull(emailImports.appliedAt), gt(emailImports.expiresAt, now.toISOString())))
-                .returning({ plan: emailImports.plan });
-            return row ? (row.plan as EmailImportPlan) : null;
+        async applyImport(id, actor, now, work) {
+            return database.transaction(async (tx) => {
+                // The row stays locked to the end: a second "confirm" waits, then finds it gone.
+                const [row] = await tx
+                    .select({ plan: emailImports.plan })
+                    .from(emailImports)
+                    .where(and(eq(emailImports.id, id), eq(emailImports.actor, actor), isNull(emailImports.appliedAt), gt(emailImports.expiresAt, now.toISOString())))
+                    .for('update');
+                if (!row) return null;
+                const result = await work(row.plan as EmailImportPlan, createEmailContactsRepository(tx as unknown as typeof defaultDb));
+                await tx.delete(emailImports).where(eq(emailImports.id, id));
+                return result;
+            });
+        },
+
+        async purgeImports(now) {
+            await database.delete(emailImports).where(lt(emailImports.expiresAt, now.toISOString()));
         }
     };
 };

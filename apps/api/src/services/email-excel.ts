@@ -10,6 +10,9 @@ import {
 } from '@attentiveid/shared';
 import { XlsxError, readXlsx, writeXlsx, type SheetData } from './xlsx';
 
+/** Ten category names of 40 characters, with separators and spare room. */
+const MAX_CATEGORY_CELL = 500;
+
 export const NEW_SHEET = 'Baru - New';
 export const EXISTING_SHEET = 'Ada - Existing';
 
@@ -122,6 +125,11 @@ export const planImport = (rows: ReturnType<typeof readContactsWorkbook>, contac
             bad(checked.errors.email ? 'email' : checked.errors.name ? 'name' : 'phone');
             continue;
         }
+        // Checked before splitting: ten rows of one huge cell must not turn into millions of strings.
+        if (file.categories.length > MAX_CATEGORY_CELL) {
+            bad('category');
+            continue;
+        }
         const wanted = file.categories.split(';').map(cleanContactText).filter(Boolean);
         if (wanted.some((name) => !validateCategoryName(name)) || wanted.length > 10) {
             bad('category');
@@ -168,7 +176,8 @@ export const planImport = (rows: ReturnType<typeof readContactsWorkbook>, contac
                 continue;
             }
             // Excel may rewrite the timestamp's form; compare the moment it names.
-            if (file.version && Date.parse(file.version) !== Date.parse(existing.updatedAt)) {
+            // Without the version nobody can tell whether the contact changed meanwhile.
+            if (!file.version || Date.parse(file.version) !== Date.parse(existing.updatedAt)) {
                 plan.conflicts.push(row);
                 continue;
             }
