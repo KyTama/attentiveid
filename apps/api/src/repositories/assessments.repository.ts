@@ -121,7 +121,8 @@ export interface AssessmentsRepository {
     getPsychologistName(id: string): Promise<string | null>;
     /** Assigns (or clears) the psychologist of a check-up; the person keeps the same psychologist for later check-ups. */
     assign(id: string, psychologistId: string | null): Promise<AssessmentRow | null>;
-    saveNote(id: string, input: { template: string | null; custom: string | null; final: boolean; userId: string }): Promise<AssessmentRow | null>;
+    /** `templateEn` / `customEn` left out (an older client) keeps what is stored; null clears it. */
+    saveNote(id: string, input: { template: string | null; custom: string | null; templateEn?: string | null; customEn?: string | null; final: boolean; userId: string }): Promise<AssessmentRow | null>;
     /**
      * Staff confirm (or undo) a payment. A confirmed package of 3 on a 'mandiri' check-up gives the person 3 credits (this check-up is the
      * first, so 2 are left); saving the same payment again adds nothing, and moving it back to UNPAID takes the credits back.
@@ -399,7 +400,15 @@ export const createAssessmentsRepository = (db: typeof defaultDb = defaultDb): A
     async saveNote(id, input) {
         const rows = await db
             .update(assessmentSubmissions)
-            .set({ noteTemplate: input.template, noteCustom: input.custom, noteFinal: input.final, noteUpdatedBy: input.userId, noteUpdatedAt: sql`now()` })
+            .set({
+                noteTemplate: input.template,
+                noteCustom: input.custom,
+                ...(input.templateEn !== undefined ? { noteTemplateEn: input.templateEn } : {}),
+                ...(input.customEn !== undefined ? { noteCustomEn: input.customEn } : {}),
+                noteFinal: input.final,
+                noteUpdatedBy: input.userId,
+                noteUpdatedAt: sql`now()`
+            })
             .where(eq(assessmentSubmissions.id, id))
             .returning();
         return rows[0] ?? null;

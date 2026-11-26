@@ -24,6 +24,8 @@ import {
   fmt1,
   noteChanged,
   noteDraftOf,
+  englishNoteMissing,
+  indonesianNoteMissing,
   noteInputOf,
   parseAmount,
   releaseBlocker,
@@ -215,7 +217,7 @@ export function DetailPanel({ id, isAdmin, psychologists, onClose, onChanged, on
 
       <HistorySection id={detail.id} key={`history:${detail.id}`} onOpenWave={onOpenWave} />
       <AssignBlock key={`assign:${detail.id}:${detail.psychologistId}`} detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} psychologists={psychologists} />
-      <NoteEditor key={`note:${detail.id}:${detail.noteTemplate}:${detail.noteCustom}:${detail.noteFinal}`} detail={detail} onError={fail} onSaved={applied} />
+      <NoteEditor key={`note:${detail.id}:${detail.noteTemplate}:${detail.noteCustom}:${detail.noteTemplateEn}:${detail.noteCustomEn}:${detail.noteFinal}`} detail={detail} onError={fail} onSaved={applied} />
       <PaymentBlock key={`pay:${detail.id}:${detail.paymentStatus}:${detail.paymentPackage}:${detail.paymentAmount}:${detail.paymentRef}`} detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} />
       <DeliveryBlock detail={detail} isAdmin={isAdmin} onError={fail} onNotice={(message) => { setError(null); setNotice(message) }} />
       <ReportBlock detail={detail} isAdmin={isAdmin} onError={fail} onSaved={applied} />
@@ -273,12 +275,17 @@ function AssignBlock({ detail, isAdmin, psychologists, onSaved, onError }: Block
   )
 }
 
+/** The note is written twice, by the psychologist: nothing is translated by machine. */
+const NOTE_LANGUAGES = [
+  { lang: 'id', template: 'template', custom: 'custom', titleId: 'Laporan bahasa Indonesia', titleEn: 'Indonesian report', counter: ['karakter tersisa (agar laporan tetap rapi)', 'characters left (keeps the report tidy)'], recommendation: ['Rekomendasi (teks standar level, boleh diubah)', 'Recommendation (standard text of the level, may be edited)'], addition: ['Catatan khusus psikolog (ditambahkan setelah rekomendasi)', "Psychologist's own addition (added after the recommendation)"], placeholder: 'Mis. Secara khusus, kami menyarankan Anda...' },
+  { lang: 'en', template: 'templateEn', custom: 'customEn', titleId: 'Laporan bahasa Inggris', titleEn: 'English report', counter: ['karakter Inggris tersisa', 'English characters left'], recommendation: ['Rekomendasi dalam bahasa Inggris (teks standar, boleh diubah)', 'Recommendation in English (standard text, may be edited)'], addition: ['Tambahan psikolog dalam bahasa Inggris', 'Your addition in English'], placeholder: 'E.g. In particular, we suggest that you...' },
+] as const
+
 function NoteEditor({ detail, onSaved, onError }: BlockProps) {
   const { tx } = useTx()
   const [draft, setDraft] = useState<NoteDraft>(() => noteDraftOf(detail))
   const [busy, setBusy] = useState(false)
   const dirty = noteChanged(draft, detail)
-  const left = CUSTOM_NOTE_MAX - draft.custom.length
   return (
     <section className="space-y-2">
       <h3 className="text-sm font-bold text-slate-900">{tx('Keterangan psikolog untuk laporan klien', 'Psychologist note for the client report')}</h3>
@@ -288,24 +295,57 @@ function NoteEditor({ detail, onSaved, onError }: BlockProps) {
           'The first paragraph is written automatically from the scores (see the report preview). The recommendation paragraph is below.',
         )}
       </p>
-      <label className="block">
-        <span className="text-xs font-semibold text-slate-600">{tx('Rekomendasi (teks standar level, boleh diubah)', 'Recommendation (standard text of the level, may be edited)')}</span>
-        <textarea className={`${fieldClass} mt-1`} maxLength={4000} onChange={(e) => setDraft({ ...draft, template: e.target.value })} rows={4} value={draft.template} />
-      </label>
-      <label className="block">
-        <span className="text-xs font-semibold text-slate-600">{tx('Catatan khusus psikolog (ditambahkan setelah rekomendasi)', "Psychologist's own addition (added after the recommendation)")}</span>
-        <textarea
-          className={`${fieldClass} mt-1`}
-          maxLength={CUSTOM_NOTE_MAX}
-          onChange={(e) => setDraft({ ...draft, custom: e.target.value })}
-          placeholder={tx('Mis. Secara khusus, kami menyarankan Anda...', 'E.g. In particular, we suggest that you...')}
-          rows={3}
-          value={draft.custom}
-        />
-        <span className={`text-xs ${left < 40 ? 'text-amber-700' : 'text-slate-500'}`}>
-          {left} {tx('karakter tersisa (agar laporan tetap rapi)', 'characters left (keeps the report tidy)')}
-        </span>
-      </label>
+      {NOTE_LANGUAGES.map((field) => {
+        const left = CUSTOM_NOTE_MAX - draft[field.custom].length
+        return (
+          <fieldset className="space-y-2 rounded-lg border border-slate-200 p-3" key={field.lang}>
+            <legend className="px-1 text-xs font-bold text-slate-900">{tx(field.titleId, field.titleEn)}</legend>
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600">{tx(field.recommendation[0], field.recommendation[1])}</span>
+              <textarea
+                className={`${fieldClass} mt-1`}
+                lang={field.lang}
+                maxLength={4000}
+                onChange={(e) => setDraft({ ...draft, [field.template]: e.target.value })}
+                rows={4}
+                value={draft[field.template]}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600">{tx(field.addition[0], field.addition[1])}</span>
+              <textarea
+                className={`${fieldClass} mt-1`}
+                lang={field.lang}
+                maxLength={CUSTOM_NOTE_MAX}
+                onChange={(e) => setDraft({ ...draft, [field.custom]: e.target.value })}
+                placeholder={field.placeholder}
+                rows={3}
+                value={draft[field.custom]}
+              />
+              <span className={`text-xs ${left < 40 ? 'text-amber-700' : 'text-slate-500'}`}>
+                {left} {tx(field.counter[0], field.counter[1])}
+              </span>
+            </label>
+          </fieldset>
+        )
+      })}
+      {indonesianNoteMissing(draft, detail) && (
+        <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800" role="status">
+          {tx(
+            'Versi Indonesia belum diisi. Laporan bahasa Indonesia tidak menampilkan teks Inggris Anda: yang tercetak adalah teks standar bahasa Indonesia dan keterangan bahwa catatan pribadi Anda ada di versi Inggris.',
+            'The Indonesian version is empty. The Indonesian report will not show your English text: it prints the standard Indonesian text and says your personal note is in the English version.',
+          )}
+        </p>
+      )}
+      {englishNoteMissing(draft, detail) && (
+        <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800" role="status">
+          {tx(
+            'Versi Inggris belum diisi. Laporan bahasa Inggris tidak menampilkan teks Indonesia Anda: yang tercetak adalah teks standar bahasa Inggris dan keterangan bahwa catatan pribadi Anda ada di versi Indonesia.',
+            'The English version is empty. The English report will not show your Indonesian text: it prints the standard English text and says your personal note is in the Indonesian version.',
+          )}
+          {detail.lang === 'en' && ` ${tx('Klien ini mengisi dalam bahasa Inggris.', 'This client filled in the form in English.')}`}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input checked={draft.final} onChange={(e) => setDraft({ ...draft, final: e.target.checked })} type="checkbox" />

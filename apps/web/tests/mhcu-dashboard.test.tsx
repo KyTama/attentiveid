@@ -197,7 +197,7 @@ describe('MHCU dashboard', () => {
     await u.click(within(panel).getByRole('checkbox', { name: /catatan final/i }))
     await u.click(save)
     await within(panel).findByText(/catatan disimpan/i)
-    expect(calls.find((c) => c.url.endsWith('/note'))?.body).toEqual({ template: null, custom: 'Tidur teratur.', final: true })
+    expect(calls.find((c) => c.url.endsWith('/note'))?.body).toEqual({ template: null, custom: 'Tidur teratur.', templateEn: null, customEn: null, final: true })
     expect(within(panel).getByRole('button', { name: /simpan catatan/i })).toBeDisabled()
   })
 

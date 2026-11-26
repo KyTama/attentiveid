@@ -183,6 +183,13 @@
       "when": 1795699400949,
       "tag": "0025_feedback_board",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795700631400,
+      "tag": "0026_mhcu_note_english",
+      "breakpoints": true
     }
   ]
 }
