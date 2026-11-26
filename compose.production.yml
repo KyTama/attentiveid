@@ -57,6 +57,8 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
+      # Bulk e-mail of the portal's Email menu: only "true" lets it send.
+      EMAIL_BULK_ENABLED: ${EMAIL_BULK_ENABLED:-}
       # Google Drive copy of released reports, delivered from GitHub secrets at deploy time (empty = not saved to Drive).
       GOOGLE_DRIVE_REFRESH_TOKEN: ${GOOGLE_DRIVE_REFRESH_TOKEN:-}
       GOOGLE_DRIVE_ROOT_FOLDER_NAME: ${GOOGLE_DRIVE_ROOT_FOLDER_NAME:-}

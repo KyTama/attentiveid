@@ -13,6 +13,8 @@ import { createFreeSessionRoutes } from './routes/free-session.routes';
 import { createPrayersRoutes } from './routes/prayers.routes';
 import { createFeedbackRoutes } from './routes/feedback.routes';
 import { createEmailContactsRoutes } from './routes/email-contacts.routes';
+import { createEmailCampaignsRoutes, type EmailBulkSettings } from './routes/email-campaigns.routes';
+import { createEmailCampaignsRepository, type EmailCampaignsRepository } from './repositories/email-campaigns.repository';
 import { createEmailContactsRepository, type EmailContactsRepository } from './repositories/email-contacts.repository';
 import type { DriveRequests } from './services/drive-reports';
 import { createFeedbackRepository, type FeedbackRepository } from './repositories/feedback.repository';
@@ -52,6 +54,9 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     feedbackRepository?: FeedbackRepository;
     feedbackSheet?: FeedbackSheet;
     emailContactsRepository?: EmailContactsRepository;
+    emailCampaignsRepository?: EmailCampaignsRepository;
+    /** Bulk e-mail settings; without them nothing can be sent. */
+    emailBulk?: EmailBulkSettings;
     /** Copies website bug reports and update requests into Drive (optional). */
     driveRequests?: DriveRequests;
     assessmentsRepository?: AssessmentsRepository;
@@ -239,6 +244,14 @@ export const createApp = (dependencies: AppDependencies) => {
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,
                 emailContactsRepository: dependencies.emailContactsRepository || createEmailContactsRepository(dependencies.db),
+            }))
+            .use(createEmailCampaignsRoutes({
+                tokenService: dependencies.tokenService,
+                userRepository: dependencies.userRepository,
+                emailContactsRepository: dependencies.emailContactsRepository || createEmailContactsRepository(dependencies.db),
+                emailCampaignsRepository: dependencies.emailCampaignsRepository || createEmailCampaignsRepository(dependencies.db),
+                // Without settings: sending is off, and the random secret accepts no link.
+                bulk: dependencies.emailBulk || { enabled: false, secret: crypto.randomUUID(), siteOrigin: dependencies.frontendOrigin, replyTo: '' },
             }))
             .use(createPrayersRoutes({
                 tokenService: dependencies.tokenService,

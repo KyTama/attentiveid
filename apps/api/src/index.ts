@@ -1,3 +1,5 @@
+import { createEmailCampaignsRepository } from './repositories/email-campaigns.repository';
+import { createEmailSender } from './services/email-sender';
 import { createApp, type App } from './app';
 import { env } from './config/env';
 import { db } from './db';
@@ -164,8 +166,36 @@ const mailer = createMailer({
     replyTo: env.SMTP_REPLY_TO
 });
 
+// Bulk e-mail of the Email menu. Off unless EMAIL_BULK_ENABLED is "true" and the site has a mail account.
+const emailSiteOrigin = env.FRONTEND_URL || 'http://localhost:5173';
+const emailFrom = env.SMTP_FROM || env.SMTP_USER || '';
+const emailBulk = {
+    enabled: env.EMAIL_BULK_ENABLED === 'true',
+    mailer,
+    secret: jwtSecretValue!,
+    siteOrigin: emailSiteOrigin,
+    replyTo: env.EMAIL_BULK_REPLY_TO || emailFrom.replace('@', '+bulk@')
+};
+const emailCampaignsRepository = createEmailCampaignsRepository(db);
+if (emailBulk.enabled && mailer.isConfigured) {
+    const sender = createEmailSender({
+        queue: emailCampaignsRepository,
+        mailer,
+        secret: emailBulk.secret,
+        siteOrigin: emailSiteOrigin,
+        replyTo: emailBulk.replyTo,
+        messageDomain: emailFrom.split('@')[1] || 'attentiveid.com'
+    });
+    // One e-mail every 3 seconds at most.
+    setInterval(() => {
+        void sender.tick().catch((error) => console.error('[email-bulk] sender failed:', error instanceof Error ? error.name : 'error'));
+    }, 3000).unref();
+}
+
 const app = createApp({
     mailer,
+    emailBulk,
+    emailCampaignsRepository,
     alertEmail: env.ASSESSMENTS_ALERT_EMAIL || 'contact@attentiveid.com',
     mhcuSettings,
     mhcuOpsRepository,
