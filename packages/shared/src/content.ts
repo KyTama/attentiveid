@@ -79,12 +79,26 @@ export const HeroSlideLayoutSchema = Type.Union([
   Type.Literal('wisdom-ella'),
 ])
 
+/** Pictures a slide part may point to: files of this site only, never another address. */
+const SiteMediaSchema = Type.Object({
+  reference: Type.String({ minLength: 1, maxLength: 2_048, pattern: '^/?(media|images)/(?!.*\\.\\.)[A-Za-z0-9._/-]+$' }),
+  width: Type.Optional(Type.Integer({ minimum: 1 })),
+  height: Type.Optional(Type.Integer({ minimum: 1 })),
+  alt: Type.Optional(LocalizedTextSchema),
+}, { additionalProperties: false })
+
+/** Own wording of a part. A blank language means "the built-in wording" and is kept blank. */
+const HeroElementTextSchema = Type.Object({
+  id: Type.String({ maxLength: 2_000 }),
+  en: Type.String({ maxLength: 2_000 }),
+}, { additionalProperties: false })
+
 /** One changed part of a hero slide: hidden, reworded or with another picture. Keys are defined by the website per layout. */
 export const HeroElementOverrideSchema = Type.Object({
   key: IdentifierSchema,
   hidden: Type.Optional(Type.Boolean()),
-  text: Type.Optional(LocalizedTextSchema),
-  media: Type.Optional(LandingMediaSchema),
+  text: Type.Optional(HeroElementTextSchema),
+  media: Type.Optional(SiteMediaSchema),
 }, { additionalProperties: false })
 
 export const HeroSlideItemSchema = Type.Object({
@@ -105,7 +119,7 @@ export const HeroSlideItemSchema = Type.Object({
   secondaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   media: Type.Optional(LandingMediaSchema),
   /** The photo shown on the English site; without it the English site shows `media` too. */
-  mediaEn: Type.Optional(LandingMediaSchema),
+  mediaEn: Type.Optional(SiteMediaSchema),
   elements: Type.Optional(Type.Array(HeroElementOverrideSchema, { maxItems: 60 })),
 }, { additionalProperties: false })
 
@@ -605,7 +619,10 @@ const normalizeHeroSlideItems = (slideList: unknown): HeroSlideItem[] | undefine
       ? slide.elements.flatMap((raw) => {
         const element = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
         if (typeof element.key !== 'string' || !element.key) return []
-        const text = normalizeLocalizedPair(element.text, false)
+        const raw2 = (element.text && typeof element.text === 'object' ? element.text : {}) as Record<string, unknown>
+        const words = { id: typeof raw2.id === 'string' ? raw2.id.trim() : '', en: typeof raw2.en === 'string' ? raw2.en.trim() : '' }
+        // Not normalizeLocalizedPair: that copies one language into the other.
+        const text = words.id || words.en ? words : undefined
         const picture = normalizeLandingMediaValue(element.media)
         const hidden = element.hidden === true
         if (!hidden && text === undefined && picture === undefined) return []
@@ -1077,4 +1094,51 @@ export const validateCreateUserMutation = (value: unknown): value is CreateUserM
 export const validateLoginCredentials = (value: unknown): value is LoginCredentials => (
   Value.Check(LoginCredentialsSchema, value)
 )
+
+/** Parts that disappear with a hidden block: their words and pictures must not travel to visitors either. */
+const HERO_PARTS_OF_BLOCK: Record<string, readonly string[]> = {
+  sticker: ['stickerText'],
+  caption: ['captionTitle', 'captionText'],
+  kittensBox: ['kittens'],
+  tabbyBox: ['tabby'],
+  circle: ['circlePhoto'],
+  normCard: ['normLabel', 'normImage'],
+  typeCard: ['typeLabel', 'typeImage'],
+  matchCard: ['matchTitle', 'matchText', 'matchHint', 'avatars', 'avatar1', 'avatar2', 'avatar3', 'avatar4'],
+  avatars: ['avatar1', 'avatar2', 'avatar3', 'avatar4'],
+  pill: ['pillText'],
+  leftSheet: ['leftImage'],
+  rightSheet: ['rightImage'],
+  badge: ['badgeText'],
+  stat: ['statNumber', 'statText', 'statSource'],
+  quote: ['quoteText', 'quoteAuthor'],
+  focus: ['focusTitle', 'focusList'],
+  facts: ['fact1Title', 'fact1Text', 'fact2Title', 'fact2Text', 'fact3Title', 'fact3Text'],
+}
+
+/** A slide as visitors receive it: what staff hid is left out. (Tag, description and buttons are required fields and stay.) */
+export const stripHiddenHeroSlide = (slide: HeroSlideItem): HeroSlideItem => {
+  const hidden = new Set((slide.elements ?? []).filter((element) => element.hidden).map((element) => element.key))
+  if (hidden.size === 0) return slide
+  const gone = new Set([...hidden].flatMap((key) => HERO_PARTS_OF_BLOCK[key] ?? []))
+  const result: HeroSlideItem = {
+    ...slide,
+    elements: slide.elements!
+      .filter((element) => !gone.has(element.key))
+      .map((element) => (element.hidden ? { key: element.key, hidden: true } : element)),
+  }
+  for (const field of ['location', 'note', 'steps', 'chips'] as const) if (hidden.has(field)) delete result[field]
+  if (hidden.has('photo')) {
+    delete result.media
+    delete result.mediaEn
+  }
+  return result
+}
+
+export const stripHiddenHeroParts = <T extends { content: LandingContentMutation } | null>(landing: T): T => {
+  if (!landing) return landing
+  const sections = landing.content.sections.map((section) =>
+    section.key === 'hero' && section.slideItems ? { ...section, slideItems: section.slideItems.map(stripHiddenHeroSlide) } : section)
+  return { ...landing, content: { ...landing.content, sections } as LandingContentMutation }
+}
 

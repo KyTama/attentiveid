@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
-import { normalizeLandingContentMutation, type HeroSlideItem } from '@attentiveid/shared'
+import { normalizeLandingContentMutation, stripHiddenHeroSlide, type HeroSlideItem } from '@attentiveid/shared'
 import { HeroSlideBody } from '@/components/landing/HomepageHero'
 import { getDefaultHeroSlideItems, resolveHeroSlides } from '@/features/content/hero-slides'
 import { withElement } from '@/pages/dashboard/HeroSlideElementsEditor'
@@ -55,6 +55,24 @@ describe('hero slide parts', () => {
     expect(resolveHeroSlides(section, 'en')[2]!.imageSrc).toBe('/media/id.webp')
     expect(resolveHeroSlides(section, 'en')[3]!.imageSrc).toBe('/media/en.webp')
     expect(resolveHeroSlides(section, 'id')[3]!.imageSrc).toBe('/media/only.webp')
+  })
+
+  it('keeps a blank language blank on save, and shows the built-in wording there', () => {
+    const slide = withElement(getDefaultHeroSlideItems()[0]!, 'captionTitle', { text: { id: 'DATANG SAJA', en: '' } })
+    const saved = normalizeLandingContentMutation({ sections: [{ key: 'hero', slideItems: [slide] }] }) as unknown as { sections: [{ slideItems: HeroSlideItem[] }] }
+    expect(saved.sections[0].slideItems[0]!.elements).toEqual([{ key: 'captionTitle', text: { id: 'DATANG SAJA', en: '' } }])
+    expect(resolveHeroSlides({ slideItems: saved.sections[0].slideItems } as Parameters<typeof resolveHeroSlides>[0], 'en')[0]!.texts.captionTitle).toBe('COME AS YOU ARE')
+  })
+
+  it('sends visitors nothing of what is hidden', () => {
+    let slide = getDefaultHeroSlideItems()[1]!
+    slide = withElement(slide, 'circlePhoto', { media: picture('media/landing/secret.webp') })
+    slide = withElement(slide, 'circle', { hidden: true })
+    slide = withElement(slide, 'note', { hidden: true })
+    const sent = stripHiddenHeroSlide(slide)
+    expect(JSON.stringify(sent)).not.toContain('secret')
+    expect(sent.note).toBeUndefined()
+    expect(sent.elements?.map((element) => element.key).sort()).toEqual(['circle', 'note'])
   })
 
   it('drops an override that has nothing left, and saving keeps the others', () => {
