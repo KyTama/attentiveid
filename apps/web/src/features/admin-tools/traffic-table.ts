@@ -24,6 +24,7 @@ export const emptyTrafficFilters = (): TrafficFilters => ({
 
 export const PAGE_LABELS: Record<string, string> = {
   '/': 'Beranda',
+  '/our-services': 'Layanan kami',
   '/psychologists': 'Psikolog',
   '/articles': 'Artikel',
   '/sci-brief': 'Sci-Brief',
@@ -36,6 +37,7 @@ export const PAGE_LABELS: Record<string, string> = {
 
 export const PAGE_LABELS_EN: Record<string, string> = {
   '/': 'Home',
+  '/our-services': 'Our services',
   '/psychologists': 'Psychologists',
   '/articles': 'Articles',
   '/sci-brief': 'Sci-Brief',

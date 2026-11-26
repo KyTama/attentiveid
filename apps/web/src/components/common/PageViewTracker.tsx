@@ -12,8 +12,10 @@ const SESSION_KEY = 'attentive-visit-counted'
 export function PageViewTracker() {
   const { pathname } = useLocation()
 
+  // The counted page, not the address: moving between addresses of one page (a service on /our-services) counts once.
+  const path = normalizeTrackedPath(pathname)
+
   useEffect(() => {
-    const path = normalizeTrackedPath(pathname)
     if (!path) return
     if (typeof navigator !== 'undefined' && (navigator.doNotTrack === '1' || (window as { doNotTrack?: string }).doNotTrack === '1')) return
 
@@ -25,7 +27,7 @@ export function PageViewTracker() {
       newSession = false
     }
     trackPageView(path, newSession)
-  }, [pathname])
+  }, [path])
 
   return null
 }

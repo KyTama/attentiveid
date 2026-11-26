@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../src/i18n'
 import { OurServicesPage, OUR_SERVICES_ORIGIN } from '../src/pages/OurServicesPage'
@@ -74,32 +74,68 @@ describe('our services page', () => {
 })
 
 describe('/our-services/<slug>', () => {
-  const at = (path: string) =>
+  let go: (to: string) => void
+  let path = ''
+  function Spy() {
+    go = useNavigate()
+    path = useLocation().pathname
+    return null
+  }
+  const at = (start: string) =>
     render(
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter initialEntries={[start]}>
+        <Spy />
         <Routes>
           <Route element={<OurServicesPage />} path="our-services/:slug?" />
         </Routes>
       </MemoryRouter>,
     )
+  const frameOf = (view: ReturnType<typeof at>) => view.container.querySelector('iframe') as HTMLIFrameElement
+  const say = (frame: HTMLIFrameElement, data: unknown, origin = OUR_SERVICES_ORIGIN) =>
+    act(() => {
+      window.dispatchEvent(new MessageEvent('message', { data, origin, source: frame.contentWindow as any }))
+    })
 
-  it('opens that service in the frame and follows the catalog in the address bar', () => {
+  it('opens that service, follows the catalog in the address and the new-tab link, and obeys a later site link', () => {
     const view = at('/our-services/p-konseling-anak')
-    const frame = view.container.querySelector('iframe') as HTMLIFrameElement
+    const frame = frameOf(view)
     expect(frame.src).toContain('#detail-p-konseling-anak')
-    const say = (id: string, origin = OUR_SERVICES_ORIGIN) =>
-      act(() => {
-        window.dispatchEvent(new MessageEvent('message', { data: { type: 'attentive-service', id }, origin, source: frame.contentWindow as any }))
-      })
-    say('p-konseling-family')
-    expect(window.location.pathname).toBe('/our-services/p-konseling-family')
-    say('../dashboard')
-    say('p-other', 'https://example.com')
-    expect(window.location.pathname).toBe('/our-services/p-konseling-family')
+    const newTab = () => view.container.querySelector('a[target="_blank"][href^="' + OUR_SERVICES_ORIGIN + '"]') as HTMLAnchorElement
+
+    say(frame, { type: 'attentive-service', id: 'p-konseling-family' })
+    say(frame, { type: 'attentive-service', id: '../dashboard' })
+    say(frame, { type: 'attentive-service', id: 'p-other' }, 'https://example.com')
+    expect(path).toBe('/our-services/p-konseling-family')
+    expect(newTab().href).toContain('#detail-p-konseling-family')
+    // The frame that already shows it is left alone.
+    expect(frameOf(view)).toBe(frame)
     expect(frame.src).toContain('#detail-p-konseling-anak')
-    say('')
-    expect(window.location.pathname).toBe('/our-services')
+
+    // "Layanan kami" in the header: the catalog starts again at the list.
+    act(() => go('/our-services'))
+    expect(frameOf(view)).not.toBe(frame)
+    expect(frameOf(view).src).not.toContain('#detail-')
+    view.unmount()
+  })
+
+  it('takes a sane height from the catalog: one page scroll, the footer, and the visible part sent back', () => {
+    const view = at('/our-services')
+    const frame = frameOf(view)
+    const post = vi.spyOn(frame.contentWindow as Window, 'postMessage')
+    for (const height of [10, 1e9, Number.NaN, '2000']) say(frame, { type: 'attentive-height', height })
+    say(frame, { type: 'attentive-height', height: 2000 }, 'https://example.com')
+    expect(frame.style.height).toBe('')
+    expect(view.container.querySelector('footer')).toBeNull()
+
+    say(frame, { type: 'attentive-height', height: 2400.2 })
+    expect(frame.style.height).toBe('2401px')
+    expect(view.container.querySelector('footer')).not.toBeNull()
+    expect(post).toHaveBeenCalledWith(expect.objectContaining({ type: 'attentive-viewport' }), OUR_SERVICES_ORIGIN)
+    post.mockClear()
+    act(() => {
+      window.dispatchEvent(new Event('scroll'))
+    })
+    expect(post).toHaveBeenCalledWith(expect.objectContaining({ type: 'attentive-viewport', top: expect.any(Number), height: expect.any(Number) }), OUR_SERVICES_ORIGIN)
     view.unmount()
   })
 })
-
