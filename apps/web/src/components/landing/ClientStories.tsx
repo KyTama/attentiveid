@@ -58,7 +58,7 @@ export function ClientStories() {
         </div>
 
         {/* Auto-moving Infinite Carousel (Concept inspired by bicarakan.id) */}
-        <div className="mt-14 relative">
+        {testimonials.length > 0 && <div className="mt-14 relative">
           <div className="mb-3 flex items-center justify-between text-xs text-secondary/60">
             <span className="font-semibold uppercase tracking-wider text-[11px] text-[#946a22]">
               {t('homepage.stories.eyebrow', 'Ulasan & Pengalaman Klien')}
@@ -112,7 +112,7 @@ export function ClientStories() {
               })}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </section>
   )

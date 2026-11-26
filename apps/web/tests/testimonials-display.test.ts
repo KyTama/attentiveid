@@ -15,4 +15,15 @@ describe('testimonials on the homepage', () => {
     expect(sent.items.map((item) => [item.id, item.position])).toEqual([['s1', 0], ['s2', 1], ['s3', 2], ['s4', 3], ['s5', 4]])
     expect(sent.display).toBeUndefined()
   })
+
+  it('never sends a hidden one, even when fewer than three are left, and that payload is still valid', () => {
+    const few = items.slice(0, 4)
+    const section = { key: 'clientStories', items: few, display: { homepageCount: 3, hiddenKeys: [testimonialKey(few[0]!), testimonialKey(few[1]!)] } }
+    for (const stored of [section, { ...section, display: { homepageCount: 3, hiddenKeys: few.map(testimonialKey) } }]) {
+      const sent = trimPublicTestimonials({ content: { sections: [stored] } as unknown as LandingContentMutation }).content.sections[0] as unknown as typeof section
+      const hidden = new Set(stored.display.hiddenKeys)
+      expect(sent.items.filter((item) => hidden.has(testimonialKey(item)))).toEqual([])
+      expect(sent.display).toBeUndefined()
+    }
+  })
 })

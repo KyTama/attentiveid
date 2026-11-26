@@ -208,7 +208,8 @@ const ClientStoriesSectionSchema = Type.Object({
   ...sectionCopyProperties,
   display: Type.Optional(TestimonialDisplaySchema),
   items: Type.Array(LandingItemSchema, {
-    minItems: LANDING_REPEATER_BOUNDS.clientStories.min,
+    // No minimum here: visitors receive only the shown testimonials, which may be fewer than the editor asks to keep.
+    minItems: 0,
     maxItems: LANDING_REPEATER_BOUNDS.clientStories.max,
   }),
 }, { additionalProperties: false })
@@ -1102,14 +1103,15 @@ export const homepageTestimonials = <T extends { position: number; title: { id: 
     .slice(0, section.display?.homepageCount ?? TESTIMONIALS_HOMEPAGE_DEFAULT)
 }
 
-/** Visitors receive only the testimonials that are shown, so hundreds of stored ones do not weigh on the page. */
+/**
+ * Visitors receive only the testimonials that are shown, however few that is. A hidden one is never sent: the client may
+ * have withdrawn it. The hidden markers are not sent either.
+ */
 export const trimPublicTestimonials = <T extends { content: LandingContentMutation } | null>(landing: T): T => {
   if (!landing) return landing
   const sections = landing.content.sections.map((section) => {
     if (section.key !== 'clientStories') return section
     const shown = homepageTestimonials(section)
-    // A section needs its minimum to be valid; with fewer than that shown, the page does the filtering itself.
-    if (shown.length < LANDING_REPEATER_BOUNDS.clientStories.min) return section
     const { display: _display, ...rest } = section
     return { ...rest, items: shown.map((item, position) => ({ ...item, position })) }
   })

@@ -339,3 +339,11 @@ describe('shared content contracts', () => {
     expect(source).not.toMatch(/aws|s3|tencent|cloudflare|azure|gcp/i)
   })
 })
+
+it('accepts a public testimonial section with fewer than three shown, so the page still renders', () => {
+  for (const count of [0, 2]) {
+    const content = validLandingMutation()
+    const sections = content.sections.map((section: any) => (section.key === 'clientStories' ? { ...section, items: section.items.slice(0, count) } : section))
+    expect(validateLandingContentMutation({ ...content, sections })).toBe(true)
+  }
+})
