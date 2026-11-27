@@ -5,6 +5,8 @@ import { createPublicContentRoutes, type PublicContentDependencies } from './rou
 import { createAuthRoutes, type AuthDependencies } from './routes/auth';
 import { createArticleRoutes } from './routes/articles';
 import { createLandingCmsRoutes } from './routes/landing-cms';
+import { createLandingHistoryRoutes } from './routes/landing-history.routes';
+import type { LandingHistory } from './services/landing-history';
 import { createPsychologistsCmsRoutes } from './routes/psychologists-cms';
 import { createOverviewRoutes } from './routes/overview.routes';
 import { createPsychologistSelfRoutes } from './routes/psychologist-self.routes';
@@ -54,6 +56,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     articlesRepository?: any;
     landingContentRepository?: any;
     contentTransitions?: any;
+    landingHistory?: LandingHistory;
     db?: any;
     reviewImportsRepository?: ReviewImportsRepository;
     reviewSheet?: ReviewSheet;
@@ -205,6 +208,9 @@ export const createApp = (dependencies: AppDependencies) => {
                 contentTransitions: dependencies.contentTransitions,
                 db: dependencies.db,
             }))
+            .use(dependencies.landingHistory
+                ? createLandingHistoryRoutes({ tokenService: dependencies.tokenService, userRepository: dependencies.userRepository, history: dependencies.landingHistory })
+                : new Elysia())
             .use(createLandingCmsRoutes({
                 tokenService: dependencies.tokenService,
                 userRepository: dependencies.userRepository,

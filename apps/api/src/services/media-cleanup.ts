@@ -8,6 +8,10 @@ import { deleteVersionedMediaFile, isVersionedMediaObjectKey } from './media-sto
 const notMentionedInContent = sql`not exists (
   select 1 from ${schema.landingSectionTranslations}
   where position(${schema.mediaObjects.objectKey} in coalesce(${schema.landingSectionTranslations.contact}, '')) > 0
+) and not exists (
+  select 1 from ${schema.landingSchedules}
+  where ${schema.landingSchedules.status} in ('pending', 'publishing')
+    and position(${schema.mediaObjects.objectKey} in ${schema.landingSchedules.hero}::text) > 0
 )`;
 
 // The same for a team member's photo, which is only an address on the team row.

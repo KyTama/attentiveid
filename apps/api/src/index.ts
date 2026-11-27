@@ -1,5 +1,7 @@
 import { createEmailCampaignsRepository } from './repositories/email-campaigns.repository';
 import { createEmailSender } from './services/email-sender';
+import { createLandingHistory } from './services/landing-history';
+import { createAdminCapability } from './services/authorization-capability';
 import { createGmailReader, syncInbox } from './services/email-inbox';
 import { createEmailMessagesRepository } from './repositories/email-messages.repository';
 import { createEmailContactsRepository } from './repositories/email-contacts.repository';
@@ -239,6 +241,16 @@ if (!(emailBulk.enabled && mailer.isConfigured)) {
     }, 3000).unref();
 }
 
+// Earlier homepage versions, and highlight cards waiting for their time (checked every minute).
+const landingHistory = createLandingHistory(db, contentTransitions, async (id) => {
+    const read = await landingRepository.getRevision(id);
+    return read ? { content: read.content, publishedAt: read.revision.publishedAt } : null;
+});
+setInterval(() => {
+    void landingHistory.runDue(createAdminCapability('scheduler'), new Date())
+        .catch((error) => console.error('[landing-schedule] failed:', error instanceof Error ? error.name : 'error'));
+}, 60_000).unref();
+
 const app = createApp({
     mailer,
     emailBulk,
@@ -264,6 +276,7 @@ const app = createApp({
     psychologistsRepository: createPsychologistsRepository(createDrizzlePsychologistQuerySource(db), { publicHosts: [] }),
     articlesRepository,
     contentTransitions,
+    landingHistory,
     previewCapabilities: createPreviewCapabilityService({ secret: previewSecret, store: previewStore }),
     previewSessions: createPreviewSessionService({ secret: previewSecret, store: previewStore }),
     userRepository,

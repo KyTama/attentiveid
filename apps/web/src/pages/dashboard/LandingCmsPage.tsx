@@ -46,6 +46,7 @@ import {
   type HeroSlideLayout,
   testimonialKey,
 } from '@attentiveid/shared'
+import { HighlightHistory } from './HighlightHistory'
 
 interface LocalizedText {
   id: string
@@ -279,7 +280,6 @@ const extractApiErrorMessage = (data: any, fallback: string): string => {
   }
   return fallback
 }
-
 const DEFAULT_HERO_SLIDE_COUNT = getDefaultHeroSlideItems().length
 
 export function LandingCmsPage() {
@@ -1915,6 +1915,14 @@ export function LandingCmsPage() {
                       })}
                     </div>
                   </div>
+
+                  <HighlightHistory
+                    editorHero={() => {
+                      const sections = content.sections.map((section: any) => (section.key === 'hero' ? { ...section, slideItems: getMergedHeroSlideItems() } : section))
+                      const normalized = normalizeLandingContentMutation({ ...content, sections: sections as typeof content.sections })
+                      return (normalized.sections.find((section) => section.key === 'hero') as any) ?? null
+                    }}
+                  />
 
                   {/* Unified Slide Editor Form */}
                   <div className="space-y-4">
