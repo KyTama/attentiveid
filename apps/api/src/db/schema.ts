@@ -1183,6 +1183,26 @@ export const emailCampaignRecipients = pgTable('email_campaign_recipients', {
     index('email_campaign_recipients_attempted_idx').on(table.attemptedAt)
 ]);
 
+// Single e-mails of a conversation: replies written in the portal and replies that came in. Removed with the contact.
+export const emailMessages = pgTable('email_messages', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    contactId: uuid('contact_id').notNull().references(() => emailContacts.id, { onDelete: 'cascade' }),
+    direction: text('direction').notNull(),
+    subject: text('subject').default('').notNull(),
+    body: text('body').default('').notNull(),
+    files: jsonb('files').$type<string[]>().default(sql`'[]'::jsonb`).notNull(),
+    sentBy: text('sent_by').default('').notNull(),
+    status: text('status').notNull(),
+    messageId: text('message_id').default('').notNull(),
+    providerId: text('provider_id'),
+    readAt: timestamp('read_at', { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull()
+}, (table) => [
+    index('email_messages_contact_idx').on(table.contactId, table.createdAt),
+    uniqueIndex('email_messages_provider_idx').on(table.providerId),
+    check('email_messages_direction_valid', sql`${table.direction} in ('in', 'out')`)
+]);
+
 // People who must not get bulk e-mail. Kept even if the contact is removed, so an import cannot subscribe them again.
 export const emailSuppressions = pgTable('email_suppressions', {
     email: text('email').primaryKey(),

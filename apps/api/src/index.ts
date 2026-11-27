@@ -1,9 +1,13 @@
 import { createEmailCampaignsRepository } from './repositories/email-campaigns.repository';
 import { createEmailSender } from './services/email-sender';
+import { createGmailReader, syncInbox } from './services/email-inbox';
+import { createEmailMessagesRepository } from './repositories/email-messages.repository';
 import { createEmailContactsRepository } from './repositories/email-contacts.repository';
 import { createApp, type App } from './app';
 import { env } from './config/env';
 import { db } from './db';
+import { eq } from 'drizzle-orm';
+import * as schema from './db/schema';
 import { createDrizzleLandingContentSource, createLandingContentRepository } from './repositories/landing-content.repository';
 import { createDrizzlePsychologistQuerySource, createPsychologistsRepository } from './repositories/psychologists.repository';
 import { createArticlesRepository, createDrizzleArticleQuerySource } from './repositories/articles.repository';
@@ -185,7 +189,12 @@ const mailer = createMailer({
 // Bulk e-mail of the Email menu. Off unless EMAIL_BULK_ENABLED is "true" and the site has a mail account.
 const emailSiteOrigin = env.FRONTEND_URL || 'http://localhost:5173';
 const emailFrom = env.SMTP_FROM || env.SMTP_USER || '';
+// Reading replies needs its own read-only permission (scripts/google-gmail-token.ts). Without it nothing is read.
+const gmailRead = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GMAIL_READ_REFRESH_TOKEN
+    ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET, refreshToken: env.GMAIL_READ_REFRESH_TOKEN }
+    : null;
 const emailBulk = {
+    inbox: Boolean(gmailRead),
     enabled: env.EMAIL_BULK_ENABLED === 'true',
     mailer,
     secret: jwtSecretValue!,
@@ -193,6 +202,25 @@ const emailBulk = {
     replyTo: env.EMAIL_BULK_REPLY_TO || emailFrom.replace('@', '+bulk@')
 };
 const emailCampaignsRepository = createEmailCampaignsRepository(db);
+const emailMessagesRepository = createEmailMessagesRepository(db);
+if (gmailRead && emailBulk.replyTo) {
+    const reader = createGmailReader(gmailRead);
+    let reading = false;
+    // Every two minutes, one run at a time.
+    setInterval(() => {
+        if (reading) return;
+        reading = true;
+        void syncInbox({
+            reader,
+            messages: emailMessagesRepository,
+            replyAddress: emailBulk.replyTo,
+            contactIdByEmail: async (email) =>
+                (await db.select({ id: schema.emailContacts.id }).from(schema.emailContacts).where(eq(schema.emailContacts.email, email)).limit(1))[0]?.id ?? null
+        })
+            .catch((error) => console.error('[email-inbox] reading replies failed:', error instanceof Error ? error.message : 'error'))
+            .finally(() => { reading = false; });
+    }, 120_000).unref();
+}
 if (!(emailBulk.enabled && mailer.isConfigured)) {
     // Switched off: whatever was running is paused and waits for an admin, even after it is switched on again.
     void emailCampaignsRepository.parkQueued().catch(() => console.error('[email-bulk] could not pause queued sends'));
@@ -215,6 +243,7 @@ const app = createApp({
     mailer,
     emailBulk,
     emailCampaignsRepository,
+    emailMessagesRepository,
     alertEmail: env.ASSESSMENTS_ALERT_EMAIL || 'contact@attentiveid.com',
     mhcuSettings,
     mhcuOpsRepository,

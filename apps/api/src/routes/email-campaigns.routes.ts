@@ -3,9 +3,9 @@
  * three public addresses inside the e-mails (open image, click, unsubscribe).
  */
 import { createHash } from 'node:crypto';
-import { Elysia } from 'elysia';
+import { Elysia, t } from 'elysia';
 import {
-    EMAIL_BODY_MAX, EMAIL_DAILY_LIMIT, EMAIL_FILES_MAX_TOTAL, EMAIL_FILE_EXTENSIONS, EMAIL_FILE_MAX_BYTES, EMAIL_FILE_MAX_COUNT,
+    EMAIL_BODY_MAX, EMAIL_DAILY_LIMIT, EMAIL_REPLY_MAX, EMAIL_FILES_MAX_TOTAL, EMAIL_FILE_EXTENSIONS, EMAIL_FILE_MAX_BYTES, EMAIL_FILE_MAX_COUNT,
     EMAIL_TITLE_MAX, FEEDBACK_FILE_TYPES, cleanContactText, feedbackFileExtension,
     type EmailAudience, type EmailAudiencePreview, type EmailChat, type EmailChatMessage, type EmailContact, type EmailLanguage, type EmailSendingState
 } from '@attentiveid/shared';
@@ -18,10 +18,29 @@ import { cleanName, contentMatches } from '../services/feedback-files';
 import type { Mailer } from '../services/mailer';
 import type { AuthTokenService, AuthUserRepository } from './auth';
 
+import { noEmailMessages, type EmailMessageRow, type EmailMessagesRepository } from '../repositories/email-messages.repository';
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Attachments waiting in the database, all campaigns together (the server disk is shared). */
 const MAX_STORED_BYTES = 200 * 1024 * 1024;
 const PAGE = 500;
+/** Single replies in 24 hours, well inside what the mail account allows next to bulk and service e-mail. */
+const REPLY_DAILY_LIMIT = 200;
+
+const chatMessage = (row: EmailMessageRow): EmailChatMessage => ({
+    id: row.id,
+    campaignId: '',
+    direction: row.direction,
+    kind: 'reply',
+    title: row.subject,
+    text: row.body,
+    files: row.files,
+    sentBy: row.sentBy,
+    status: row.status === 'received' ? 'sent' : row.status,
+    at: row.at,
+    openedAt: null,
+    clickedAt: null
+});
 // A 1x1 transparent GIF.
 const PIXEL = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
 
@@ -41,6 +60,8 @@ export interface EmailBulkSettings {
     secret: string;
     siteOrigin: string;
     replyTo: string;
+    /** True when the server reads replies from the mailbox. */
+    inbox?: boolean;
 }
 
 export interface EmailCampaignsRoutesDependencies {
@@ -48,6 +69,7 @@ export interface EmailCampaignsRoutesDependencies {
     userRepository: Pick<AuthUserRepository, 'findById'>;
     emailContactsRepository: EmailContactsRepository;
     emailCampaignsRepository: EmailCampaignsRepository;
+    emailMessagesRepository?: EmailMessagesRepository;
     bulk: EmailBulkSettings;
     now?: () => Date;
 }
@@ -61,6 +83,7 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
     });
     const campaigns = dependencies.emailCampaignsRepository;
     const contacts = dependencies.emailContactsRepository;
+    const singles = dependencies.emailMessagesRepository ?? noEmailMessages;
     const { bulk } = dependencies;
     const now = dependencies.now ?? (() => new Date());
     const canSend = () => bulk.enabled && Boolean(bulk.mailer?.isConfigured);
@@ -201,7 +224,20 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
         .get('/api/admin/email/chats', async ({ set }: any) => {
             set.headers['cache-control'] = 'no-store';
             const byId = new Map((await everyContact()).map((contact) => [contact.id, contact]));
-            const chats: EmailChat[] = (await campaigns.chats()).flatMap((chat) => {
+            const rows = new Map((await campaigns.chats()).map((chat) => [chat.contactId, { ...chat, unread: 0 }]));
+            for (const single of await singles.summaries()) {
+                const row = rows.get(single.contactId);
+                const newer = !row || single.lastAt > row.lastAt;
+                rows.set(single.contactId, {
+                    contactId: single.contactId,
+                    lastTitle: newer ? single.lastSubject : row.lastTitle,
+                    lastStatus: newer ? 'sent' : row.lastStatus,
+                    lastAt: newer ? single.lastAt : row.lastAt,
+                    count: (row?.count ?? 0) + single.count,
+                    unread: single.unread
+                });
+            }
+            const chats: EmailChat[] = [...rows.values()].sort((a, b) => b.lastAt.localeCompare(a.lastAt)).flatMap((chat) => {
                 const contact = byId.get(chat.contactId);
                 return contact
                     ? [{ ...chat, lastTitle: titleFor(chat.lastTitle, contact.name), email: contact.email, name: contact.name, categoryIds: contact.categoryIds, archived: Boolean(contact.archivedAt), unsubscribed: Boolean(contact.unsubscribed) }]
@@ -212,16 +248,63 @@ export const createEmailCampaignsRoutes = (dependencies: EmailCampaignsRoutesDep
         .get('/api/admin/email/chats/:contactId', async ({ params, set, currentUser }: any) => {
             const contact = UUID.test(params.contactId) ? await contacts.getContact(params.contactId) : null;
             if (!contact) return fail(set, 404, 'Kontak tidak ditemukan.');
-            const messages: EmailChatMessage[] = (await campaigns.conversation(contact.id)).map(({ html, name, ...row }) => ({
+            const bulkMessages: EmailChatMessage[] = (await campaigns.conversation(contact.id)).map(({ html, name, ...row }) => ({
                 ...row,
+                direction: 'out' as const,
+                kind: 'bulk' as const,
                 title: titleFor(row.title, name),
                 // Plain text only: no HTML of an e-mail is ever rendered in this view.
                 text: htmlToText(html.replace(NAME, () => escapeHtml(name.trim() || NAME_FALLBACK.id)))
             }));
+            const own = await singles.conversation(contact.id);
+            const messages = [...bulkMessages, ...own.map(chatMessage)].sort((a, b) => a.at.localeCompare(b.at));
+            await singles.markRead(contact.id, now());
             set.headers['cache-control'] = 'no-store';
             await contacts.audit(currentUser.email, 'conversation_opened', contact.id);
-            return { status: 'success', data: { contact, messages } };
-        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'What the site sent to one contact' } })
+            return { status: 'success', data: { contact, messages, canReply: canSend() && messages.length > 0, inbox: Boolean(bulk.inbox) } };
+        }, { requireRole: 'admin', detail: { tags: ['Email'], summary: 'The conversation with one contact' } })
+        .post('/api/admin/email/chats/:contactId/reply', async ({ params, body, set, currentUser }: any) => {
+            if (!canSend()) return switchedOff(set);
+            const contact = UUID.test(params.contactId) ? await contacts.getContact(params.contactId) : null;
+            if (!contact) return fail(set, 404, 'Kontak tidak ditemukan.');
+            // No line breaks trimmed inside: the reply goes out as typed. A text that looks like JSON stays text.
+            const raw = typeof body?.text === 'string' ? body.text.replace(/\r\n/g, '\n').trim() : '';
+            if (!raw) return fail(set, 400, 'Tulis balasannya dulu.');
+            if (raw.length > EMAIL_REPLY_MAX) return fail(set, 400, `Balasan maksimal ${EMAIL_REPLY_MAX} karakter.`);
+            const own = await singles.conversation(contact.id);
+            // A reply box, not a way to write to anyone: there has to be a conversation already.
+            if (own.length === 0 && !(await singles.wasMailed(contact.id))) return fail(set, 409, 'Belum ada percakapan dengan kontak ini.');
+            const at = now();
+            if (await singles.sentSame(contact.id, raw, new Date(at.getTime() - 60_000))) return fail(set, 409, 'Balasan yang sama baru saja dikirim.');
+            if ((await singles.outgoingSince(new Date(at.getTime() - 24 * 60 * 60 * 1000))) >= REPLY_DAILY_LIMIT) return fail(set, 429, 'Batas balasan hari ini tercapai.');
+
+            const lastIn = [...own].reverse().find((message) => message.direction === 'in');
+            const last = own.at(-1) ?? (await campaigns.conversation(contact.id)).map((row) => ({ subject: titleFor(row.title, row.name) })).at(-1);
+            const topic = (lastIn?.subject || last?.subject || 'Attentive').replace(/^(\s*(re|balas)\s*:\s*)+/i, '').replace(/[\r\n]+/g, ' ').slice(0, 250);
+            const subject = `Re: ${topic}`;
+            const messageId = `<${crypto.randomUUID()}@attentiveid.com>`;
+            const answers = /^<[^<>\s]+>$/.test(lastIn?.messageId ?? '') ? lastIn!.messageId : '';
+            // Written down first, so a reply that left is never missing from the chat.
+            const id = await singles.add({ contactId: contact.id, direction: 'out', subject, body: raw, sentBy: currentUser.email, status: 'sending', messageId, at });
+            try {
+                await bulk.mailer!.send({
+                    to: contact.email,
+                    subject,
+                    text: raw,
+                    html: `<div style="font:14px/1.6 Arial,sans-serif;color:#1f2937;white-space:pre-wrap">${escapeHtml(raw)}</div>`,
+                    replyTo: bulk.replyTo,
+                    messageId,
+                    ...(answers ? { headers: { 'In-Reply-To': answers, References: answers } } : {})
+                });
+            } catch {
+                if (id) await singles.setStatus(id, 'failed');
+                return fail(set, 502, 'Balasan gagal terkirim.');
+            }
+            if (id) await singles.setStatus(id, 'sent');
+            await contacts.audit(currentUser.email, 'reply_sent', contact.id);
+            set.status = 201;
+            return { status: 'success' };
+        }, { requireRole: 'admin', body: t.Any(), detail: { tags: ['Email'], summary: 'Reply to one contact' } })
         .post('/api/admin/email/preview', async ({ body, set, currentUser }: any) => {
             const draft = readDraft(body);
             if (typeof draft === 'string') return fail(set, 400, draft);

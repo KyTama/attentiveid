@@ -16,6 +16,7 @@ const EnvSchema = t.Object({
     GOOGLE_SHEET_ID: t.Optional(t.String()),
     /** Refresh token of the Google account that owns the Drive folder for released reports (scope drive.file). Empty = reports are not saved to Drive. */
     GOOGLE_DRIVE_REFRESH_TOKEN: t.Optional(t.String()),
+    GMAIL_READ_REFRESH_TOKEN: t.Optional(t.String()),
     /** Name of the top folder in My Drive (default: Reports). */
     GOOGLE_DRIVE_ROOT_FOLDER_NAME: t.Optional(t.String()),
     /** Id of the Drive folder the reports go into (a folder this app created; it can be moved anywhere in Drive). Empty = a Reports folder in My Drive. */

@@ -16,6 +16,7 @@ import { createEmailContactsRoutes } from './routes/email-contacts.routes';
 import { createEmailCampaignsRoutes, type EmailBulkSettings } from './routes/email-campaigns.routes';
 import { createEmailCampaignsRepository, type EmailCampaignsRepository } from './repositories/email-campaigns.repository';
 import { createEmailContactsRepository, type EmailContactsRepository } from './repositories/email-contacts.repository';
+import { createEmailMessagesRepository, type EmailMessagesRepository } from './repositories/email-messages.repository';
 import { createReviewImportsRoutes } from './routes/review-imports.routes';
 import { createReviewImportsRepository, type ReviewImportsRepository } from './repositories/review-imports.repository';
 import type { ReviewSheet } from './services/review-sheet';
@@ -62,6 +63,7 @@ export type AppDependencies = PublicContentDependencies & Partial<AuthDependenci
     feedbackSheet?: FeedbackSheet;
     emailContactsRepository?: EmailContactsRepository;
     emailCampaignsRepository?: EmailCampaignsRepository;
+    emailMessagesRepository?: EmailMessagesRepository;
     /** Bulk e-mail settings; without them nothing can be sent. */
     emailBulk?: EmailBulkSettings;
     /** Copies website bug reports and update requests into Drive (optional). */
@@ -264,6 +266,7 @@ export const createApp = (dependencies: AppDependencies) => {
                 userRepository: dependencies.userRepository,
                 emailContactsRepository: dependencies.emailContactsRepository || createEmailContactsRepository(dependencies.db),
                 emailCampaignsRepository: dependencies.emailCampaignsRepository || createEmailCampaignsRepository(dependencies.db),
+                emailMessagesRepository: dependencies.emailMessagesRepository || createEmailMessagesRepository(dependencies.db),
                 // Without settings: sending is off, and the random secret accepts no link.
                 bulk: dependencies.emailBulk || { enabled: false, secret: crypto.randomUUID(), siteOrigin: dependencies.frontendOrigin, replyTo: '' },
             }))

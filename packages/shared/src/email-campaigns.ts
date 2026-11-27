@@ -99,10 +99,19 @@ export interface EmailChat {
   lastStatus: EmailRecipientStatus
   lastAt: string
   count: number
+  /** Replies from this person nobody has opened yet. */
+  unread: number
 }
+
+/** The longest reply written in the portal. */
+export const EMAIL_REPLY_MAX = 5000
 
 export interface EmailChatMessage {
   id: string
+  /** 'in' is the person's own e-mail to us. */
+  direction: 'out' | 'in'
+  /** Sent to many from Bulk send, or a single e-mail of the conversation. */
+  kind: 'bulk' | 'reply'
   campaignId: string
   title: string
   /** The body as plain text, with the person's name filled in. */
