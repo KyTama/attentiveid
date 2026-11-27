@@ -29,6 +29,12 @@ export interface TrustMetric {
 const SLIDE_AUTOPLAY_MS = 7000
 const SLIDE_EASE = [0.2, 0.7, 0.2, 1] as const
 
+/** Slide description as staff typed it: **words** become bold (line breaks are kept by the paragraph's style). */
+export function renderSlideText(text: string) {
+  return text.split(/(\*\*[^*\n]+\*\*)/g).map((part, index) =>
+    /^\*\*[^*\n]+\*\*$/.test(part) ? <strong key={index} className="font-semibold text-[#14284B]">{part.slice(2, -2)}</strong> : part)
+}
+
 export function renderDualColorHeading(text: string) {
   if (!text) return null
 
@@ -373,8 +379,8 @@ export function HeroSlideBody({ slide, isId, preview }: { slide: ResolvedHeroSli
                   {renderDualColorHeading(slide.headline)}
                 </Heading>
 
-                {!slide.hidden.includes('description') && <p className="mt-5 max-w-[480px] text-[15px] leading-[1.65] text-[#4A566B] sm:text-[16.5px]">
-                  {slide.description}
+                {!slide.hidden.includes('description') && <p className="mt-5 max-w-[480px] whitespace-pre-line text-[15px] leading-[1.65] text-[#4A566B] sm:text-[16.5px]">
+                  {renderSlideText(slide.description)}
                 </p>}
 
                 <SlideMiddleDetails slide={slide} isId={isId} />
