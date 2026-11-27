@@ -1,7 +1,8 @@
-import type {
-  HeroSlideItem,
-  HeroSlideLayout,
-  LandingContentMutation,
+import {
+  HERO_SLIDES_MAX,
+  type HeroSlideItem,
+  type HeroSlideLayout,
+  type LandingContentMutation,
 } from '@attentiveid/shared'
 import { HERO_ELEMENTS } from './hero-elements'
 
@@ -204,13 +205,30 @@ export function normalizeMediaReference(ref?: string | null): string | null {
   return ref.startsWith('/') || ref.startsWith('http') ? ref : `/${ref}`
 }
 
-/** Merge persisted CMS slideItems onto the canonical 5 v3 slides. */
+/** A design's name without the "Slide n" of the built-in slide it comes from. */
+export const heroDesignName = (layout: HeroSlideLayout) => HERO_SLIDE_LAYOUT_LABELS[layout].replace(/^Slide \d+ · /, '')
+
+/** A new slide in one of the five designs. It starts hidden, so nothing unfinished reaches the homepage. */
+export function newHeroSlide(layout: HeroSlideLayout, existing: readonly HeroSlideItem[]): HeroSlideItem {
+  const base = DEFAULT_HERO_SLIDES.find((slide) => slide.layout === layout) ?? DEFAULT_HERO_SLIDES[0]!
+  const used = new Set(existing.map((slide) => slide.id))
+  let number = existing.length + 1
+  while (used.has(`hero-slide-extra-${number}`)) number += 1
+  return { ...structuredClone(base), id: `hero-slide-extra-${number}`, layout, visible: false }
+}
+
+/** Merge persisted CMS slideItems onto the canonical 5 v3 slides; slides added by staff follow them. */
 export function buildMergedHeroSlideItems(
   heroSection?: Partial<Extract<LandingContentMutation['sections'][number], { key: 'hero' }>> | null
 ): HeroSlideItem[] {
   const customSlides = heroSection?.slideItems
-  return DEFAULT_HERO_SLIDES.map((base, index) => {
+  const count = Math.max(DEFAULT_HERO_SLIDES.length, Math.min(customSlides?.length ?? 0, HERO_SLIDES_MAX))
+  return Array.from({ length: count }, (_, index) => {
     const saved = customSlides?.[index]
+    // An added slide takes its built-in wording and pictures from the slide whose design it uses.
+    const base = DEFAULT_HERO_SLIDES[index]
+      ?? DEFAULT_HERO_SLIDES.find((slide) => slide.layout === saved?.layout)
+      ?? DEFAULT_HERO_SLIDES[0]!
     const merged: HeroSlideItem = {
       ...structuredClone(base),
       ...(saved ? structuredClone(saved) : {}),
