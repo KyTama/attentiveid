@@ -124,6 +124,13 @@ export interface ContentTransitionDatabase {
 
 const timestamp = () => new Date().toISOString();
 
+type HeroSectionMutation = Extract<LandingContentMutation['sections'][number], { key: 'hero' }>;
+
+const withHero = (content: LandingContentMutation, hero: HeroSectionMutation): LandingContentMutation => ({
+    ...content,
+    sections: content.sections.map((section) => (section.key === 'hero' ? hero : section)) as LandingContentMutation['sections']
+});
+
 const assertAdmin = (capability: AdminCapability) => {
     if (capability.kind !== 'admin' || capability.assurance !== 'callerSupplied') {
         throw new Error('Admin capability required.');
@@ -259,6 +266,46 @@ export const createContentTransitions = (database: ContentTransitionDatabase) =>
                 status: 'published' as const,
                 content: draft.content
             };
+        });
+    },
+
+    /** True when the live homepage with this highlight in place of its own is still valid content. */
+    async heroFitsPublished(capability: AdminCapability, hero: HeroSectionMutation) {
+        assertAdmin(capability);
+        return database.transaction(async (transaction) => {
+            const aggregate = await transaction.getLandingAggregate();
+            const live = aggregate?.publishedRevisionId ? await transaction.getLandingRevision(aggregate.publishedRevisionId) : null;
+            return Boolean(live && validateLandingContentMutation(withHero(live.content, hero)));
+        });
+    },
+
+    /**
+     * Puts one highlight section live and leaves every other section as it is live now. A saved draft is kept: it is
+     * written back after publishing, so the editor still opens it.
+     */
+    async publishHeroSection(capability: AdminCapability, hero: HeroSectionMutation) {
+        assertAdmin(capability);
+        return database.transaction(async (transaction) => {
+            const aggregate = await transaction.getLandingAggregate();
+            const live = aggregate?.publishedRevisionId ? await transaction.getLandingRevision(aggregate.publishedRevisionId) : null;
+            if (!aggregate || !live) {
+                throw new Error('Invalid landing content transition.');
+            }
+            const content = withHero(live.content, hero);
+            if (!validateLandingContentMutation(content)) {
+                throw new Error('Invalid landing content transition.');
+            }
+            const saved = aggregate.activeDraftRevisionId ? await transaction.getLandingRevision(aggregate.activeDraftRevisionId) : null;
+            // A draft that cannot be read must not be thrown away by publishing over it.
+            if (aggregate.activeDraftRevisionId && !saved) {
+                throw new Error('The saved draft cannot be read; publish or save it in the editor first.');
+            }
+            const next = await transaction.createLandingDraft({ content, basedOnRevisionId: live.id });
+            await transaction.publishLandingRevision({ aggregateId: aggregate.id, revisionId: next.id, publishedAt: timestamp() });
+            if (saved) {
+                await transaction.createLandingDraft({ content: saved.content, basedOnRevisionId: next.id });
+            }
+            return { publishedRevisionId: next.id };
         });
     },
 

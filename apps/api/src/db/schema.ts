@@ -1183,6 +1183,20 @@ export const emailCampaignRecipients = pgTable('email_campaign_recipients', {
     index('email_campaign_recipients_attempted_idx').on(table.attemptedAt)
 ]);
 
+// Highlight cards that are to go live later. Only the highlight section is replaced when the time comes.
+export const landingSchedules = pgTable('landing_schedules', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    hero: jsonb('hero').notNull(),
+    publishAt: timestamp('publish_at', { withTimezone: true, mode: 'string' }).notNull(),
+    status: text('status').default('pending').notNull(),
+    createdBy: text('created_by').default('').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'string' }),
+    error: text('error').default('').notNull()
+}, (table) => [
+    index('landing_schedules_due_idx').on(table.status, table.publishAt)
+]);
+
 // Single e-mails of a conversation: replies written in the portal and replies that came in. Removed with the contact.
 export const emailMessages = pgTable('email_messages', {
     id: uuid('id').defaultRandom().primaryKey(),
