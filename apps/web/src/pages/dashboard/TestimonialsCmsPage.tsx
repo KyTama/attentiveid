@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../features/auth/auth-context'
 import { ReviewInbox } from './ReviewInbox'
+import { useTx } from '@/features/i18n/use-tx'
 import {
   generateSafeCmsId,
   getLandingContentMutationErrors,
@@ -45,6 +46,7 @@ const DEMOGRAPHIC_PRESETS = [
 
 export function TestimonialsCmsPage() {
   const { getAuthHeaders } = useAuth()
+  const { tx, isEn } = useTx()
 
   const [landingContent, setLandingContent] = useState<LandingContentMutation | null>(null)
   const [testimonials, setTestimonials] = useState<TestimonialData[]>([])
@@ -107,7 +109,7 @@ export function TestimonialsCmsPage() {
         }
       } catch (err) {
         console.error('Failed to load testimonials', err)
-        setMessage({ type: 'error', text: 'Gagal memuat data testimoni dari server.' })
+        setMessage({ type: 'error', text: 'LOAD_FAILED' })
       } finally {
         setIsLoading(false)
       }
@@ -133,7 +135,7 @@ export function TestimonialsCmsPage() {
     if (testimonials.length >= LANDING_REPEATER_BOUNDS.clientStories.max) {
       setMessage({
         type: 'error',
-        text: `Maksimal ${LANDING_REPEATER_BOUNDS.clientStories.max} testimoni diperbolehkan sebagai batas aman.`,
+        text: tx(`Maksimal ${LANDING_REPEATER_BOUNDS.clientStories.max} testimoni diperbolehkan sebagai batas aman.`, `At most ${LANDING_REPEATER_BOUNDS.clientStories.max} testimonials are allowed.`),
       })
       return
     }
@@ -164,7 +166,7 @@ export function TestimonialsCmsPage() {
   const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault()
     if (!modalForm.nameId.trim() || !modalForm.quoteId.trim()) {
-      setMessage({ type: 'error', text: 'Nama / Inisial Klien dan Isi Ulasan wajib diisi.' })
+      setMessage({ type: 'error', text: tx('Nama / Inisial Klien dan Isi Ulasan wajib diisi.', 'Client name or initials and the testimonial text are required.') })
       return
     }
 
@@ -200,21 +202,21 @@ export function TestimonialsCmsPage() {
     setIsModalOpen(false)
     setMessage({
       type: 'success',
-      text: editingIndex !== null ? 'Testimoni berhasil diperbarui.' : 'Testimoni baru berhasil ditambahkan.',
+      text: editingIndex !== null ? tx('Testimoni berhasil diperbarui.', 'Testimonial updated.') : tx('Testimoni baru berhasil ditambahkan.', 'Testimonial added.'),
     })
   }
 
   // Delete item
   const handleDelete = (index: number) => {
     if (testimonials.length <= 3) {
-      setMessage({ type: 'error', text: 'Minimal harus ada 3 testimoni aktif untuk carousel homepage.' })
+      setMessage({ type: 'error', text: tx('Minimal harus ada 3 testimoni aktif untuk carousel homepage.', 'The homepage carousel needs at least 3 testimonials.') })
       return
     }
     const filtered = testimonials.filter((_, idx) => idx !== index)
     const reordered = filtered.map((item, idx) => ({ ...item, position: idx }))
     setTestimonials(reordered)
     setHasUnsavedChanges(true)
-    setMessage({ type: 'success', text: 'Testimoni berhasil dihapus.' })
+    setMessage({ type: 'success', text: tx('Testimoni berhasil dihapus.', 'Testimonial removed.') })
   }
 
   // Move up
@@ -269,16 +271,16 @@ export function TestimonialsCmsPage() {
   const handleSaveDraft = async () => {
     const payload = buildUpdatedLandingContent()
     if (!payload) {
-      setMessage({ type: 'error', text: 'Data landing content belum siap.' })
+      setMessage({ type: 'error', text: tx('Data landing content belum siap.', 'The landing content is not ready yet.') })
       return
     }
     if (testimonials.length < LANDING_REPEATER_BOUNDS.clientStories.min) {
-      setMessage({ type: 'error', text: `Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni aktif.` })
+      setMessage({ type: 'error', text: tx(`Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni aktif.`, `At least ${LANDING_REPEATER_BOUNDS.clientStories.min} testimonials are needed.`) })
       return
     }
     const validationErrors = getLandingContentMutationErrors(payload)
     if (validationErrors.length > 0) {
-      setMessage({ type: 'error', text: `Validasi gagal: ${validationErrors[0]}` })
+      setMessage({ type: 'error', text: tx(`Validasi gagal: ${validationErrors[0]}`, `Check failed: ${validationErrors[0]}`) })
       return
     }
 
@@ -300,18 +302,18 @@ export function TestimonialsCmsPage() {
         setHasUnsavedChanges(false)
         setMessage({
           type: 'success',
-          text: `Draft ${testimonials.length} testimoni berhasil disimpan!`,
+          text: tx(`Draft ${testimonials.length} testimoni berhasil disimpan!`, `Draft with ${testimonials.length} testimonials saved.`),
         })
       } else {
         const detail = Array.isArray(json.errors) && json.errors.length > 0 ? json.errors[0] : json.message
         setMessage({
           type: 'error',
-          text: `Gagal menyimpan draft testimoni: ${detail || res.statusText}`,
+          text: tx(`Gagal menyimpan draft testimoni: ${detail || res.statusText}`, `Could not save the draft: ${detail || res.statusText}`),
         })
       }
     } catch (err) {
       console.error('Save draft error', err)
-      setMessage({ type: 'error', text: 'Terjadi kesalahan jaringan saat menyimpan draft testimoni.' })
+      setMessage({ type: 'error', text: tx('Terjadi kesalahan jaringan saat menyimpan draft testimoni.', 'Network error while saving the draft.') })
     } finally {
       setIsSaving(false)
     }
@@ -321,18 +323,18 @@ export function TestimonialsCmsPage() {
   const handlePublish = async () => {
     const payload = buildUpdatedLandingContent()
     if (!payload) {
-      setMessage({ type: 'error', text: 'Data landing content belum siap.' })
+      setMessage({ type: 'error', text: tx('Data landing content belum siap.', 'The landing content is not ready yet.') })
       return
     }
 
     if (testimonials.length < LANDING_REPEATER_BOUNDS.clientStories.min) {
-      setMessage({ type: 'error', text: `Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni agar carousel dapat berjalan optimal.` })
+      setMessage({ type: 'error', text: tx(`Minimal dibutuhkan ${LANDING_REPEATER_BOUNDS.clientStories.min} testimoni agar carousel dapat berjalan optimal.`, `The carousel needs at least ${LANDING_REPEATER_BOUNDS.clientStories.min} testimonials.`) })
       return
     }
 
     const validationErrors = getLandingContentMutationErrors(payload)
     if (validationErrors.length > 0) {
-      setMessage({ type: 'error', text: `Validasi gagal sebelum terbit: ${validationErrors[0]}` })
+      setMessage({ type: 'error', text: tx(`Validasi gagal sebelum terbit: ${validationErrors[0]}`, `Check failed before publishing: ${validationErrors[0]}`) })
       return
     }
 
@@ -357,18 +359,18 @@ export function TestimonialsCmsPage() {
         setHasUnsavedChanges(false)
         setMessage({
           type: 'success',
-          text: `🎉 Sukses! ${testimonials.length} testimoni berhasil diterbitkan ke auto-moving carousel di homepage!`,
+          text: tx(`🎉 Sukses! ${testimonials.length} testimoni berhasil diterbitkan ke auto-moving carousel di homepage!`, `Published ${testimonials.length} testimonials to the homepage carousel.`),
         })
       } else {
         const detail = Array.isArray(resJson.errors) && resJson.errors.length > 0 ? resJson.errors[0] : resJson.message
         setMessage({
           type: 'error',
-          text: `Gagal menerbitkan testimoni: ${detail || res.statusText}`,
+          text: tx(`Gagal menerbitkan testimoni: ${detail || res.statusText}`, `Could not publish: ${detail || res.statusText}`),
         })
       }
     } catch (err) {
       console.error('Publish error', err)
-      setMessage({ type: 'error', text: 'Terjadi kesalahan jaringan saat mempublikasikan testimoni.' })
+      setMessage({ type: 'error', text: tx('Terjadi kesalahan jaringan saat mempublikasikan testimoni.', 'Network error while publishing.') })
     } finally {
       setIsSaving(false)
     }
@@ -382,19 +384,19 @@ export function TestimonialsCmsPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-semibold">
               <MessageSquareQuote className="size-3.5" />
-              <span>Modul Testimoni Klien</span>
+              <span>{tx('Modul Testimoni Klien', 'Client testimonials')}</span>
             </span>
             {hasUnsavedChanges && (
               <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-[11px] font-bold animate-pulse">
-                Ada Perubahan Belum Terbit
+                {tx('Ada Perubahan Belum Terbit', 'Unpublished changes')}
               </span>
             )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Manajemen Testimoni Klien
+            {tx('Manajemen Testimoni Klien', 'Client Testimonials')}
           </h1>
           <p className="text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Kelola kutipan ulasan pengalaman klien. Data ini langsung terhubung dengan auto-moving carousel interaktif di homepage dengan verifikasi kode etik HIMPSI.
+            {tx('Kelola kutipan ulasan pengalaman klien. Data ini langsung terhubung dengan auto-moving carousel interaktif di homepage dengan verifikasi kode etik HIMPSI.', 'Manage client quotes. They feed the moving carousel on the homepage and must follow the HIMPSI code of ethics.')}
           </p>
         </div>
 
@@ -405,7 +407,7 @@ export function TestimonialsCmsPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 font-semibold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
           >
             <Plus className="size-4" />
-            <span>Tambah Testimoni</span>
+            <span>{tx('Tambah Testimoni', 'Add testimonial')}</span>
           </button>
 
           <button
@@ -414,7 +416,7 @@ export function TestimonialsCmsPage() {
             disabled={isSaving || isLoading}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gold-50 hover:bg-gold-100 disabled:opacity-50 text-navy-800 border border-gold-200 font-semibold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
           >
-            <span>Simpan Draft</span>
+            <span>{tx('Simpan Draft', 'Save draft')}</span>
           </button>
 
           <button
@@ -424,7 +426,7 @@ export function TestimonialsCmsPage() {
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 hover:bg-navy-900 disabled:opacity-50 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
           >
             {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-            <span>{isSaving ? 'Menerbitkan...' : 'Terbitkan ke Homepage'}</span>
+            <span>{isSaving ? tx('Menerbitkan...', 'Publishing...') : tx('Terbitkan ke Homepage', 'Publish to homepage')}</span>
           </button>
         </div>
       </div>
@@ -448,7 +450,7 @@ export function TestimonialsCmsPage() {
               ) : (
                 <AlertCircle className="size-5 text-rose-600 shrink-0" />
               )}
-              <span className="font-medium">{message.text}</span>
+              <span className="font-medium">{message.text === 'LOAD_FAILED' ? tx('Gagal memuat data testimoni dari server.', 'Could not load the testimonials from the server.') : message.text}</span>
             </div>
             <button
               type="button"
@@ -469,7 +471,7 @@ export function TestimonialsCmsPage() {
             <span>Live Interactive Preview (Auto-moving Carousel Homepage)</span>
           </div>
           <span className="text-[11px] font-normal text-slate-500">
-            Arahkan kursor untuk menjeda putaran
+            {tx('Arahkan kursor untuk menjeda putaran', 'Hover to pause')}
           </span>
         </div>
 
@@ -488,7 +490,7 @@ export function TestimonialsCmsPage() {
                     ))}
                   </div>
                   <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
-                    Terverifikasi
+                    {tx('Terverifikasi', 'Verified')}
                   </span>
                 </div>
                 <p className="text-xs text-slate-700 line-clamp-3 leading-relaxed italic">
@@ -513,7 +515,7 @@ export function TestimonialsCmsPage() {
           ].map((item, position) => ({ ...item, position })))
           setTakenReviews((current) => [...current, review.id])
           setHasUnsavedChanges(true)
-          setMessage({ type: 'success', text: 'Ditambahkan ke urutan teratas. Simpan draft, lalu terbitkan.' })
+          setMessage({ type: 'success', text: tx('Ditambahkan ke urutan teratas. Simpan draft, lalu terbitkan.', 'Added at the top. Save the draft, then publish.') })
         }}
         taken={takenReviews}
       />
@@ -523,20 +525,20 @@ export function TestimonialsCmsPage() {
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Semua Testimoni ({testimonials.length})
+              {tx('Semua Testimoni', 'All testimonials')} ({testimonials.length})
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Urutan kartu di bawah menentukan urutan tayang pada carousel homepage.
+              {tx('Urutan kartu di bawah menentukan urutan tayang pada carousel homepage.', 'The order below is the order on the homepage carousel.')}
             </p>
           </div>
           <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">
-            Min. 3 testimoni
+            {tx('Min. 3 testimoni', 'Min. 3 testimonials')}
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-6 py-3 text-xs text-slate-700">
           <label className="flex items-center gap-2 font-semibold">
-            Jumlah yang tampil di beranda
+            {tx('Jumlah yang tampil di beranda', 'Number shown on the homepage')}
             <input
               className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-xs"
               max={TESTIMONIALS_HOMEPAGE_MAX}
@@ -551,26 +553,26 @@ export function TestimonialsCmsPage() {
             />
           </label>
           <span className="text-slate-500">
-            Yang tampil: urutan teratas yang dicentang, paling banyak {TESTIMONIALS_HOMEPAGE_MAX}. Sisanya tetap tersimpan.
+            {tx(`Yang tampil: urutan teratas yang dicentang, paling banyak ${TESTIMONIALS_HOMEPAGE_MAX}. Sisanya tetap tersimpan.`, `Shown: the topmost ticked ones, at most ${TESTIMONIALS_HOMEPAGE_MAX}. The rest stay saved.`)}
           </span>
         </div>
 
         {isLoading ? (
           <div className="p-12 text-center text-slate-400 flex flex-col items-center gap-2">
             <Loader2 className="size-6 animate-spin text-navy-700" />
-            <p className="text-sm">Memuat data testimoni...</p>
+            <p className="text-sm">{tx('Memuat data testimoni...', 'Loading testimonials...')}</p>
           </div>
         ) : testimonials.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <Quote className="size-10 mx-auto text-slate-300 mb-3" />
-            <p className="font-semibold text-slate-800">Belum ada testimoni tersimpan</p>
-            <p className="text-xs text-slate-400 mt-1 mb-4">Klik tombol di bawah untuk menambahkan testimoni pertama.</p>
+            <p className="font-semibold text-slate-800">{tx('Belum ada testimoni tersimpan', 'No testimonials saved yet')}</p>
+            <p className="text-xs text-slate-400 mt-1 mb-4">{tx('Klik tombol di bawah untuk menambahkan testimoni pertama.', 'Use the button below to add the first one.')}</p>
             <button
               type="button"
               onClick={handleAddNew}
               className="px-4 py-2 bg-navy-800 text-white rounded-xl text-xs font-semibold shadow-xs hover:bg-navy-900 cursor-pointer"
             >
-              + Tambah Testimoni Baru
+              {tx('+ Tambah Testimoni Baru', '+ Add new testimonial')}
             </button>
           </div>
         ) : (
@@ -582,13 +584,13 @@ export function TestimonialsCmsPage() {
               >
                 <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold text-slate-600">
                   <input
-                    aria-label={`Tampilkan testimoni ${item.title.id}`}
+                    aria-label={tx(`Tampilkan testimoni ${item.title.id}`, `Show testimonial ${item.title.id}`)}
                     checked={!display.hiddenKeys.includes(testimonialKey(item))}
                     className="size-4"
                     onChange={(event) => {
                       const show = event.target.checked
                       if (!show && testimonials.length - display.hiddenKeys.length <= 3) {
-                        setMessage({ type: 'error', text: 'Minimal 3 testimoni harus tampil.' })
+                        setMessage({ type: 'error', text: tx('Minimal 3 testimoni harus tampil.', 'At least 3 testimonials must be shown.') })
                         return
                       }
                       const key = testimonialKey(item)
@@ -597,7 +599,7 @@ export function TestimonialsCmsPage() {
                     }}
                     type="checkbox"
                   />
-                  Tampil
+                  {tx('Tampil', 'Shown')}
                 </label>
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <span className="flex items-center justify-center size-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs shrink-0">
@@ -639,7 +641,7 @@ export function TestimonialsCmsPage() {
                     type="button"
                     onClick={() => handleMoveUp(index)}
                     disabled={index === 0}
-                    title="Geser ke atas"
+                    title={tx('Geser ke atas', 'Move up')}
                     className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   >
                     <ArrowUp className="size-4" />
@@ -649,7 +651,7 @@ export function TestimonialsCmsPage() {
                     type="button"
                     onClick={() => handleMoveDown(index)}
                     disabled={index === testimonials.length - 1}
-                    title="Geser ke bawah"
+                    title={tx('Geser ke bawah', 'Move down')}
                     className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   >
                     <ArrowDown className="size-4" />
@@ -658,7 +660,7 @@ export function TestimonialsCmsPage() {
                   <button
                     type="button"
                     onClick={() => handleEdit(index)}
-                    title="Edit testimoni"
+                    title={tx('Edit testimoni', 'Edit testimonial')}
                     className="p-1.5 rounded-lg border border-gold-200 text-navy-700 hover:bg-gold-50 cursor-pointer"
                   >
                     <Edit3 className="size-4" />
@@ -667,7 +669,7 @@ export function TestimonialsCmsPage() {
                   <button
                     type="button"
                     onClick={() => handleDelete(index)}
-                    title="Hapus testimoni"
+                    title={tx('Hapus testimoni', 'Remove testimonial')}
                     className="p-1.5 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 cursor-pointer"
                   >
                     <Trash2 className="size-4" />
@@ -692,7 +694,7 @@ export function TestimonialsCmsPage() {
             >
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-base">
-                  {editingIndex !== null ? 'Edit Testimoni Klien' : 'Tambah Testimoni Baru'}
+                  {editingIndex !== null ? tx('Edit Testimoni Klien', 'Edit testimonial') : tx('Tambah Testimoni Baru', 'Add new testimonial')}
                 </h3>
                 <button
                   type="button"
@@ -707,7 +709,7 @@ export function TestimonialsCmsPage() {
                 {/* Preset Chips */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                    Pilihan Cepat Demografi / Format Klien:
+                    {tx('Pilihan Cepat Demografi / Format Klien:', 'Quick client labels:')}
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {DEMOGRAPHIC_PRESETS.map((preset) => (
@@ -723,7 +725,7 @@ export function TestimonialsCmsPage() {
                         }}
                         className="px-2.5 py-1 bg-slate-50 border border-slate-200 hover:border-gold-500 hover:bg-gold-50 hover:text-navy-800 rounded-md text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
                       >
-                        {preset.id}
+                        {isEn ? preset.en : preset.id}
                       </button>
                     ))}
                   </div>
@@ -732,12 +734,12 @@ export function TestimonialsCmsPage() {
                 {/* Name / Demographic (ID) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Label Klien / Format Sesi (Bahasa Indonesia) *
+                    {tx('Label Klien / Format Sesi (Bahasa Indonesia) *', 'Client label / session format (Indonesian) *')}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Klien - Konseling Online, 28 th"
+                    placeholder={tx('Contoh: Klien - Konseling Online, 28 th', 'Example: Klien - Konseling Online, 28 th')}
                     value={modalForm.nameId}
                     onChange={(e) => setModalForm({ ...modalForm, nameId: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
@@ -747,7 +749,7 @@ export function TestimonialsCmsPage() {
                 {/* Name / Demographic (EN) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Label Klien / Format Sesi (English)
+                    {tx('Label Klien / Format Sesi (English)', 'Client label / session format (English)')}
                   </label>
                   <input
                     type="text"
@@ -761,12 +763,12 @@ export function TestimonialsCmsPage() {
                 {/* Quote (ID) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Isi Ulasan Testimoni (Bahasa Indonesia) *
+                    {tx('Isi Ulasan Testimoni (Bahasa Indonesia) *', 'Testimonial text (Indonesian) *')}
                   </label>
                   <textarea
                     rows={4}
                     required
-                    placeholder="Tuliskan cerita dan pengalaman positif klien selama menjalani sesi konseling..."
+                    placeholder={tx('Tuliskan cerita dan pengalaman positif klien selama menjalani sesi konseling...', 'Write the client\'s experience during their sessions...')}
                     value={modalForm.quoteId}
                     onChange={(e) => setModalForm({ ...modalForm, quoteId: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-gold-500 leading-relaxed"
@@ -776,7 +778,7 @@ export function TestimonialsCmsPage() {
                 {/* Quote (EN) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Isi Ulasan Testimoni (English Translation)
+                    {tx('Isi Ulasan Testimoni (English Translation)', 'Testimonial text (English translation)')}
                   </label>
                   <textarea
                     rows={4}
@@ -793,13 +795,13 @@ export function TestimonialsCmsPage() {
                     onClick={() => setIsModalOpen(false)}
                     className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
-                    Batal
+                    {tx('Batal', 'Cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2 bg-navy-800 hover:bg-navy-900 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
                   >
-                    {editingIndex !== null ? 'Simpan Perubahan' : 'Tambahkan'}
+                    {editingIndex !== null ? tx('Simpan Perubahan', 'Save changes') : tx('Tambahkan', 'Add')}
                   </button>
                 </div>
               </form>

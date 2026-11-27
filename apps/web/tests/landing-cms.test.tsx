@@ -132,12 +132,12 @@ describe('Landing & Testimonials CMS Page Components', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Manajemen Testimoni Klien')).toBeDefined()
+      expect(screen.getByRole('heading', { name: 'Client Testimonials' })).toBeDefined()
       expect(screen.getAllByText('stories title 0 ID').length).toBeGreaterThan(0)
-      expect((screen.getByText('Simpan Draft').closest('button') as HTMLButtonElement).disabled).toBe(false)
+      expect((screen.getByText('Save draft').closest('button') as HTMLButtonElement).disabled).toBe(false)
     })
 
-    fireEvent.click(screen.getByText('Simpan Draft'))
+    fireEvent.click(screen.getByText('Save draft'))
     await waitFor(() => {
       expect(draftBody).not.toBeNull()
       expect(Array.isArray(draftBody.sections)).toBe(true)
@@ -145,10 +145,10 @@ describe('Landing & Testimonials CMS Page Components', () => {
     })
 
     await waitFor(() => {
-      expect((screen.getByText('Terbitkan ke Homepage').closest('button') as HTMLButtonElement).disabled).toBe(false)
+      expect((screen.getByText('Publish to homepage').closest('button') as HTMLButtonElement).disabled).toBe(false)
     })
 
-    fireEvent.click(screen.getByText('Terbitkan ke Homepage'))
+    fireEvent.click(screen.getByText('Publish to homepage'))
     await waitFor(() => {
       expect(publishBody).not.toBeNull()
       expect(Array.isArray(publishBody.sections)).toBe(true)
