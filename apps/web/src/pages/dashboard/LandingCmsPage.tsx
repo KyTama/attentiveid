@@ -30,6 +30,8 @@ import { uploadLandingImage } from '../../features/content/service'
 import {
   buildMergedHeroSlideItems,
   getDefaultHeroSlideItems,
+  heroDesignName,
+  newHeroSlide,
   HERO_SLIDE_LAYOUT_LABELS,
   resolveHeroSlides,
 } from '../../features/content/hero-slides'
@@ -39,7 +41,9 @@ import {
   generateSafeCmsId,
   getLandingContentMutationErrors,
   normalizeLandingContentMutation,
+  HERO_SLIDES_MAX,
   type HeroSlideItem,
+  type HeroSlideLayout,
   testimonialKey,
 } from '@attentiveid/shared'
 
@@ -276,6 +280,8 @@ const extractApiErrorMessage = (data: any, fallback: string): string => {
   return fallback
 }
 
+const DEFAULT_HERO_SLIDE_COUNT = getDefaultHeroSlideItems().length
+
 export function LandingCmsPage() {
   const { getAuthHeaders } = useAuth()
   const [content, setContent] = useState<LandingCmsData>(defaultLandingData)
@@ -287,6 +293,7 @@ export function LandingCmsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [heroSubSection, setHeroSubSection] = useState<'slides' | 'campaigns' | 'metrics'>('slides')
   const [heroPreviewSlide, setHeroPreviewSlide] = useState<number>(0)
+  const [newSlideLayout, setNewSlideLayout] = useState<HeroSlideLayout>('practice')
 
   // Upload state
   const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
@@ -609,7 +616,35 @@ export function LandingCmsPage() {
     updateHeroSlideSteps(slideIndex, (steps) => steps.filter((_, idx) => idx !== stepIndex))
   }
 
+  const setHeroSlideList = (slideItems: HeroSlideItem[]) => {
+    const sections = [...content.sections]
+    sections[activeSectionIndex] = { ...(activeSection as any), slideItems }
+    setContent({ ...content, sections })
+  }
+
+  const addHeroSlide = (layout: HeroSlideLayout) => {
+    const slideItems = getMergedHeroSlideItems()
+    if (slideItems.length >= HERO_SLIDES_MAX) return
+    setHeroSlideList([...slideItems, newHeroSlide(layout, slideItems)])
+    setHeroPreviewSlide(slideItems.length)
+    setMessage({ type: 'success', text: 'Slide baru ditambahkan dalam keadaan disembunyikan. Isi, centang "Tampilkan di Beranda", lalu simpan.' })
+  }
+
+  const removeHeroSlide = (index: number) => {
+    const slideItems = getMergedHeroSlideItems()
+    // The five built-in slides stay; they can be hidden.
+    if (index < DEFAULT_HERO_SLIDE_COUNT || !window.confirm(`Hapus slide ${index + 1}? Isinya hilang setelah disimpan.`)) return
+    const remaining = slideItems.filter((_, position) => position !== index)
+    if (!remaining.some((slide) => slide.visible !== false)) {
+      setMessage({ type: 'error', text: 'Minimal satu slide harus tetap tampil.' })
+      return
+    }
+    setHeroSlideList(remaining)
+    setHeroPreviewSlide(index - 1)
+  }
+
   const resetHeroSlidesToDefault = () => {
+    if (getMergedHeroSlideItems().length > DEFAULT_HERO_SLIDE_COUNT && !window.confirm('Reset juga menghapus slide tambahan. Lanjutkan?')) return
     const defaults = getDefaultHeroSlideItems()
     const newSections = [...content.sections]
     const updatedHero: any = {
@@ -1127,25 +1162,7 @@ export function LandingCmsPage() {
           if (!prev) return prev
           const targetSection = prev.sections[activeSectionIndex]
           if (!targetSection) return prev
-          const defaults = getDefaultHeroSlideItems()
-          const currentSlides = Array.isArray((targetSection as any).slideItems) && (targetSection as any).slideItems.length > 0
-            ? [...(targetSection as any).slideItems]
-            : defaults
-          const slideItems = defaults.map((def, idx) => {
-            const cur = currentSlides[idx] || {}
-            return {
-              ...def,
-              ...cur,
-              visible: cur.visible !== undefined ? cur.visible : def.visible,
-              headline: cur.headline || def.headline,
-              description: cur.description || def.description,
-              primaryCta: cur.primaryCta || def.primaryCta,
-              primaryCtaUrl: cur.primaryCtaUrl || def.primaryCtaUrl,
-              secondaryCta: cur.secondaryCta || def.secondaryCta,
-              secondaryCtaUrl: cur.secondaryCtaUrl || def.secondaryCtaUrl,
-              media: idx === 0 ? (cur.media || (targetSection as any).media || def.media) : (cur.media || def.media),
-            }
-          })
+          const slideItems = buildMergedHeroSlideItems(targetSection as any)
 
           slideItems[slideIndex] = {
             ...slideItems[slideIndex],
@@ -1830,6 +1847,35 @@ export function LandingCmsPage() {
                       </button>
                     </div>
 
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-2 font-semibold text-slate-700">
+                        Tambah slide dengan desain
+                        <select
+                          className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-800"
+                          onChange={(event) => setNewSlideLayout(event.target.value as HeroSlideLayout)}
+                          value={newSlideLayout}
+                        >
+                          {(Object.keys(HERO_SLIDE_LAYOUT_LABELS) as HeroSlideLayout[]).map((layout) => (
+                            <option key={layout} value={layout}>{heroDesignName(layout)}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="cursor-pointer rounded-lg bg-[#132B3A] px-3 py-1.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={heroSlides.length >= HERO_SLIDES_MAX}
+                        onClick={() => addHeroSlide(newSlideLayout)}
+                      >
+                        + Tambah slide
+                      </button>
+                      <span className="text-slate-500">{heroSlides.length} dari {HERO_SLIDES_MAX}</span>
+                      {safeHeroSlideIndex >= DEFAULT_HERO_SLIDE_COUNT && (
+                        <button type="button" className="cursor-pointer font-semibold text-rose-700 underline" onClick={() => removeHeroSlide(safeHeroSlideIndex)}>
+                          Hapus slide {safeHeroSlideIndex + 1}
+                        </button>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {heroSlides.map((slideItem, slideIdx) => {
                         const isActiveSlide = safeHeroSlideIndex === slideIdx
@@ -1880,7 +1926,9 @@ export function LandingCmsPage() {
                         </span>
                         <div>
                           <div className="text-xs font-bold text-slate-900">
-                            {HERO_SLIDE_LAYOUT_LABELS[activeHeroSlideItem.layout || 'practice']}
+                            {safeHeroSlideIndex < DEFAULT_HERO_SLIDE_COUNT
+                              ? HERO_SLIDE_LAYOUT_LABELS[activeHeroSlideItem.layout || 'practice']
+                              : `Slide ${safeHeroSlideIndex + 1} · ${heroDesignName(activeHeroSlideItem.layout || 'practice')}`}
                           </div>
                           <div className="text-[11px] text-slate-500">
                             Tab: {activeHeroSlideItem.tabLabel?.id || activeHeroSlideItem.tag?.id}

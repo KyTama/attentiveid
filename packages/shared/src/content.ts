@@ -102,6 +102,9 @@ export const HeroElementOverrideSchema = Type.Object({
   media: Type.Optional(SiteMediaSchema),
 }, { additionalProperties: false })
 
+/** The five built-in highlight slides, plus any that staff add. */
+export const HERO_SLIDES_MAX = 10
+
 export const HeroSlideItemSchema = Type.Object({
   id: IdentifierSchema,
   visible: Type.Optional(Type.Boolean()),
@@ -168,7 +171,7 @@ const HeroSectionSchema = Type.Object({
   secondaryCta: LocalizedTextSchema,
   secondaryCtaUrl: Type.Optional(Type.String({ maxLength: 2_048 })),
   slides: Type.Optional(Type.Array(LandingMediaSchema, { minItems: 1, maxItems: 10 })),
-  slideItems: Type.Optional(Type.Array(HeroSlideItemSchema, { minItems: 1, maxItems: 5 })),
+  slideItems: Type.Optional(Type.Array(HeroSlideItemSchema, { minItems: 1, maxItems: HERO_SLIDES_MAX })),
   campaigns: Type.Optional(HeroCampaignsSchema),
   items: Type.Array(LandingItemSchema, {
     minItems: LANDING_REPEATER_BOUNDS.hero.min,
