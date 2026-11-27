@@ -55,6 +55,7 @@ interface TestUserRecord {
     status: UserStatus;
     psychologistId: string | null;
     lastLoginAt: string | null;
+    idleTimeoutMinutes?: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -145,7 +146,7 @@ const createTestApp = () => {
         verifyPassword
     });
 
-    return { app, tokenService, memoryStore, verifiedAgainst };
+    return { app, tokenService, memoryStore, verifiedAgainst, usersByEmail };
 };
 
 describe('auth API routes (/api/auth)', () => {
@@ -171,6 +172,19 @@ describe('auth API routes (/api/auth)', () => {
         expect(data.user.email).toBe('admin@attentive.id');
         expect(data.user.role).toBe('admin');
         expect(typeof data.accessToken).toBe('string');
+    });
+
+    test('sign-in carries the saved inactivity limit, so it is not replaced by the default', async () => {
+        const { app, usersByEmail } = createTestApp();
+        usersByEmail.get('admin@attentive.id')!.idleTimeoutMinutes = 20;
+        const response = await app.handle(new Request('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: 'admin@attentive.id', password: 'ValidPassword123!' })
+        }));
+        const body = await response.json() as { user: UserDto & { passwordHash?: string } };
+        expect(body.user.idleTimeoutMinutes).toBe(20);
+        expect(body.user.passwordHash).toBeUndefined();
     });
 
     test('POST /api/auth/login rejects invalid password or inactive user status with HTTP 401', async () => {
