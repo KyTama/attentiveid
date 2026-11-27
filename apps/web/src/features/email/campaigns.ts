@@ -43,4 +43,5 @@ export const sendCampaign = (id: string, version: string, audience: EmailAudienc
 export const controlCampaign = (id: string, action: 'pause' | 'resume' | 'cancel') => request(`${BASE}/campaigns/${id}/${action}`, json('POST'))
 export const listChats = async () => (await request<Data<{ chats: EmailChat[]; categories: EmailCategory[] }>>(`${BASE}/chats`)).data
 export const getChat = async (contactId: string) =>
-  (await request<Data<{ contact: EmailContact; messages: EmailChatMessage[] }>>(`${BASE}/chats/${contactId}`)).data
+  (await request<Data<{ contact: EmailContact; messages: EmailChatMessage[]; canReply?: boolean; inbox?: boolean }>>(`${BASE}/chats/${contactId}`)).data
+export const sendReply = (contactId: string, text: string) => request(`${BASE}/chats/${contactId}/reply`, json('POST', { text }))

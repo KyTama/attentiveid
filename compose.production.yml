@@ -63,6 +63,7 @@ services:
       EMAIL_BULK_REPLY_TO: ${EMAIL_BULK_REPLY_TO:-}
       # Google Drive copy of released reports, delivered from GitHub secrets at deploy time (empty = not saved to Drive).
       GOOGLE_DRIVE_REFRESH_TOKEN: ${GOOGLE_DRIVE_REFRESH_TOKEN:-}
+      GMAIL_READ_REFRESH_TOKEN: ${GMAIL_READ_REFRESH_TOKEN:-}
       GOOGLE_DRIVE_ROOT_FOLDER_NAME: ${GOOGLE_DRIVE_ROOT_FOLDER_NAME:-}
       GOOGLE_DRIVE_ROOT_FOLDER_ID: ${GOOGLE_DRIVE_ROOT_FOLDER_ID:-}
     healthcheck:

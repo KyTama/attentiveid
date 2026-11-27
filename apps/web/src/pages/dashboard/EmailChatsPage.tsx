@@ -1,12 +1,12 @@
-import { Fragment, useEffect, useState } from 'react'
-import type { EmailCategory, EmailChat, EmailChatMessage, EmailContact, EmailRecipientStatus } from '@attentiveid/shared'
+import { Fragment, useEffect, useState, type FormEvent } from 'react'
+import { EMAIL_REPLY_MAX, type EmailCategory, type EmailChat, type EmailChatMessage, type EmailContact, type EmailRecipientStatus } from '@attentiveid/shared'
 import { ArrowLeft, Paperclip } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
-import { getChat, listChats } from '@/features/email/campaigns'
+import { getChat, listChats, sendReply } from '@/features/email/campaigns'
 import { CategoryChips } from '@/features/email/CategoryChips'
 import type { ContactFilter } from '@/features/email/filter'
 import { useLabels } from '@/features/email/labels'
-import { buttonSecondary, inputClass } from '@/features/email/styles'
+import { buttonPrimary, buttonSecondary, inputClass } from '@/features/email/styles'
 import { useTx } from '@/features/i18n/use-tx'
 
 const PAGE = 100
@@ -22,9 +22,10 @@ function Bubble({ message }: { message: EmailChatMessage }) {
     queued: tx('menunggu', 'waiting'), sending: tx('mengirim', 'sending'), sent: tx('terkirim', 'sent'),
     failed: tx('gagal', 'failed'), skipped: tx('tidak dikirim', 'not sent'), unknown: tx('tidak pasti', 'uncertain'),
   }
+  const incoming = message.direction === 'in'
   return (
-    // Our own messages sit on the right, as in a chat app.
-    <li className="ml-auto w-[92%] rounded-2xl rounded-tr-sm border border-navy-100 bg-navy-50 p-3 sm:w-4/5">
+    // As in a chat app: our messages on the right, theirs on the left.
+    <li className={`w-[92%] rounded-2xl border p-3 sm:w-4/5 ${incoming ? 'mr-auto rounded-tl-sm border-slate-200 bg-white' : 'ml-auto rounded-tr-sm border-navy-100 bg-navy-50'}`}>
       <p className="break-words text-sm font-semibold text-slate-900">{message.title}</p>
       <p className="mt-1 whitespace-pre-line break-words text-sm text-slate-800">{long && !open ? `${message.text.slice(0, FOLD)}…` : message.text}</p>
       {long && (
@@ -36,7 +37,8 @@ function Bubble({ message }: { message: EmailChatMessage }) {
         <p className="mt-1 flex items-center gap-1 text-xs text-slate-600" key={file}><Paperclip aria-hidden="true" className="size-3.5 shrink-0" /><span className="break-all">{file}</span></p>
       ))}
       <p className="mt-1 text-right text-xs text-slate-500">
-        {when(message.at)} · {state[message.status]}
+        {when(message.at)} · {incoming ? tx('diterima', 'received') : state[message.status]}
+        {!incoming && message.kind === 'reply' && message.sentBy && ` · ${message.sentBy}`}
         {message.openedAt && ` · ${tx('dibuka', 'opened')}`}
         {message.clickedAt && ` · ${tx('diklik', 'clicked')}`}
       </p>
@@ -44,14 +46,51 @@ function Bubble({ message }: { message: EmailChatMessage }) {
   )
 }
 
-/** Email menu > Conversations: what the site sent to each contact (bulk sends only). Replies stay in Gmail. */
+function ReplyBox({ contactId, unsubscribed, onSent }: { contactId: string; unsubscribed: boolean; onSent: () => void }) {
+  const { tx } = useTx()
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!text.trim() || busy) return
+    setBusy(true)
+    setError('')
+    try {
+      await sendReply(contactId, text)
+      setText('')
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : tx('Balasan gagal terkirim.', 'The reply could not be sent.'))
+    } finally {
+      setBusy(false)
+      // Also after a failure: the attempt is shown in the conversation.
+      onSent()
+    }
+  }
+
+  return (
+    <form className="space-y-2 rounded-2xl border border-slate-200/80 bg-white p-3" onSubmit={submit}>
+      {unsubscribed && <p className="text-xs text-amber-800">{tx('Orang ini berhenti berlangganan kiriman massal. Balas hanya bila mereka menunggu jawaban.', 'This person unsubscribed from bulk e-mail. Reply only if they are waiting for an answer.')}</p>}
+      <textarea aria-label={tx('Tulis balasan', 'Write a reply')} className={`${inputClass} min-h-24`} maxLength={EMAIL_REPLY_MAX} onChange={(e) => setText(e.target.value)} placeholder={tx('Tulis balasan…', 'Write a reply…')} value={text} />
+      {error && <p className="text-xs text-rose-700" role="alert">{error}</p>}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-slate-500">{tx('Dikirim sebagai e-mail dari alamat Attentive.', 'Sent as an e-mail from Attentive\'s address.')}</span>
+        <button className={buttonPrimary} disabled={busy || !text.trim()} type="submit">{busy ? tx('Mengirim…', 'Sending…') : tx('Kirim balasan', 'Send reply')}</button>
+      </div>
+    </form>
+  )
+}
+
+/** Email menu > Conversations: what the portal sent to each contact, their replies, and a box to answer. */
 export function EmailChatsPage() {
   const { tx } = useTx()
   const { when } = useLabels()
   const [params, setParams] = useSearchParams()
   const id = params.get('id')
   const [list, setList] = useState<{ chats: EmailChat[]; categories: EmailCategory[] } | null>(null)
-  const [thread, setThread] = useState<{ contact: EmailContact; messages: EmailChatMessage[] } | null>(null)
+  const [thread, setThread] = useState<{ contact: EmailContact; messages: EmailChatMessage[]; canReply?: boolean; inbox?: boolean } | null>(null)
+  const [round, setRound] = useState(0)
   const [filter, setFilter] = useState<ContactFilter>('all')
   const [search, setSearch] = useState('')
   const [shown, setShown] = useState(PAGE)
@@ -65,7 +104,7 @@ export function EmailChatsPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [round])
 
   useEffect(() => {
     if (!id) return
@@ -74,7 +113,13 @@ export function EmailChatsPage() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, round])
+
+  // New replies show up without reloading the page.
+  useEffect(() => {
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') setRound((value) => value + 1) }, 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const open = (contactId: string | null) => {
     setError('')
@@ -91,7 +136,8 @@ export function EmailChatsPage() {
     <div className="mx-auto max-w-5xl space-y-4 pb-12">
       <div className={id ? 'hidden md:block' : ''}>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 outline-none sm:text-3xl" data-route-heading tabIndex={-1}>{tx('Percakapan e-mail', 'E-mail conversations')}</h1>
-        <p className="mt-1 text-sm text-slate-600">{tx('Hanya kiriman massal dari portal. Balasan belum ditampilkan di sini: baca dan balas di Gmail.', 'Only bulk sends from the portal. Replies are not shown here yet: read and answer them in Gmail.')}</p>
+        <p className="mt-1 text-sm text-slate-600">{tx('Kiriman dari portal dan balasannya.', 'What the portal sent, and the answers.')}
+          {current && !current.inbox && ` ${tx('Balasan dari penerima belum dibaca otomatis: lihat di Gmail, label Bulk.', 'Their replies are not read automatically yet: see Gmail, label Bulk.')}`}</p>
       </div>
       {error && <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{error}</p>}
 
@@ -114,7 +160,10 @@ export function EmailChatsPage() {
                 <button aria-current={chat.contactId === id ? 'true' : undefined} className={`block w-full cursor-pointer px-3 py-2 text-left hover:bg-slate-50 ${chat.contactId === id ? 'bg-navy-50' : ''}`} onClick={() => open(chat.contactId)} type="button">
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="truncate text-sm font-semibold text-slate-900">{chat.name || chat.email}</span>
-                    <span className="shrink-0 text-xs text-slate-500">{day(chat.lastAt)}</span>
+                    <span className="flex shrink-0 items-center gap-1.5 text-xs text-slate-500">
+                      {chat.unread > 0 && chat.contactId !== id && <span className="rounded-full bg-gold-500 px-1.5 font-semibold text-white">{chat.unread}<span className="sr-only"> {tx('belum dibaca', 'unread')}</span></span>}
+                      {day(chat.lastAt)}
+                    </span>
                   </span>
                   <span className="block truncate text-xs text-slate-500">{chat.email}</span>
                   <span className="block truncate text-sm text-slate-600">{chat.lastTitle}</span>
@@ -147,6 +196,7 @@ export function EmailChatsPage() {
                 ))}
               </ol>
               {current.messages.length === 0 && <p className="text-sm text-slate-500">{tx('Belum ada kiriman ke kontak ini.', 'Nothing has been sent to this contact.')}</p>}
+              {current.canReply && <ReplyBox contactId={current.contact.id} key={current.contact.id} onSent={() => setRound((value) => value + 1)} unsubscribed={Boolean(current.contact.unsubscribed)} />}
             </>
           )}
         </section>
