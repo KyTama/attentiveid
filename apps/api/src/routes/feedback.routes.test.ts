@@ -164,6 +164,17 @@ describe('feedback', () => {
         expect(synced()).toBe(before + 2);
     });
 
+    it('lets a handler take a report for their own account only', async () => {
+        const { call, changes } = make();
+        await call('POST', '/api/public/feedback', {}, good);
+        const put = (as: Record<string, string>, assignee: string) => call('PUT', `/api/admin/feedback/${ID}`, as, { assignee });
+        expect((await put(bearer(handler), 'nico.alex.ha@gmail.com')).status).toBe(400);
+        expect((await put(bearer(handler), 'kytama@attentiveid.com')).status).toBe(200);
+        expect(changes).toEqual([{ assignee: 'kytama@attentiveid.com' }]);
+        expect((await put(bearer(handler), '')).status).toBe(200);
+        expect(changes.at(-1)).toEqual({ assignee: '' });
+    });
+
     it('adds notes with files into the report’s Drive folder', async () => {
         const { call, upload, notes, driven } = make();
         await upload([new File(['halo'], 'catatan.txt')]);

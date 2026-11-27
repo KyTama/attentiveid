@@ -4,6 +4,7 @@ import { ArrowLeftRight, ExternalLink, Paperclip, Sheet, Trash2, UploadCloud } f
 import { FeedbackChart } from '@/features/feedback/FeedbackChart'
 import { addFeedbackNote, copyFeedbackToDrive, deleteFeedback, listFeedback, updateFeedback } from '@/features/feedback/service'
 import { useTx } from '@/features/i18n/use-tx'
+import { useAuth } from '@/features/auth/auth-context'
 
 type Filter = FeedbackStatus | 'all'
 
@@ -73,6 +74,8 @@ function NoteForm({ busy, onSend }: { busy: boolean; onSend: (body: string, file
 export function FeedbackReportsPage() {
   const { tx, isEn } = useTx()
   const [board, setBoard] = useState<FeedbackBoard | null>(null)
+  const { user } = useAuth()
+  const me = (user?.email ?? '').toLowerCase()
   const [filter, setFilter] = useState<Filter>('new')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -217,13 +220,20 @@ export function FeedbackReportsPage() {
                         {FEEDBACK_STATUSES.map((value) => <option key={value} value={value}>{statusLabel(value)}</option>)}
                       </select>
                     </label>
-                    <label className="flex items-center gap-1.5">
+                    <span className="flex flex-wrap items-center gap-1.5">
                       {tx('Dikerjakan oleh', 'Processed by')}
-                      <select className={selectClass} disabled={locked} onChange={(e) => void run(report.id, () => updateFeedback(report.id, { assignee: e.target.value }))} value={report.assignee}>
-                        <option value="">{tx('Belum ada', 'Nobody yet')}</option>
-                        {[...new Set([...board.handlers, report.assignee].filter(Boolean))].map((email) => <option key={email} value={email}>{email}</option>)}
-                      </select>
-                    </label>
+                      <span className="font-semibold text-slate-800">{!report.assignee ? tx('Belum ada', 'Nobody yet') : report.assignee === me ? tx('Kamu', 'You') : report.assignee}</span>
+                      {board.canHandle && report.assignee !== me && (
+                        <button className="cursor-pointer rounded-lg border border-slate-300 px-2 py-1 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60" disabled={locked} onClick={() => void run(report.id, () => updateFeedback(report.id, { assignee: me }))} type="button">
+                          {report.assignee ? tx('Ambil alih', 'Take over') : tx('Ambil', 'Take it')}
+                        </button>
+                      )}
+                      {board.canHandle && report.assignee && (report.assignee === me || board.canDelete) && (
+                        <button className="cursor-pointer underline disabled:opacity-60" disabled={locked} onClick={() => void run(report.id, () => updateFeedback(report.id, { assignee: '' }))} type="button">
+                          {tx('Lepas', 'Release')}
+                        </button>
+                      )}
+                    </span>
                     {report.driveFolderId ? (
                       <a className="inline-flex items-center gap-1.5 font-medium text-navy-800 underline" href={`https://drive.google.com/drive/folders/${encodeURIComponent(report.driveFolderId)}`} rel="noopener noreferrer" target="_blank">
                         <ExternalLink aria-hidden="true" className="size-3.5" />

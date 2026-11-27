@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import type { UserDto, UserRole, UserStatus } from '@attentiveid/shared';
 import { RefreshTokenReuseError, type JwtAccessTokenPayload, type RefreshTokenRecord } from '../security/token-service';
 import { clientAddress, createLoginThrottle, type LoginThrottle } from '../security/login-throttle';
+import { sanitizeUserDto } from '../repositories/users.repository';
 
 export interface AuthUserRepository {
     findByEmail(email: string): Promise<{
@@ -13,6 +14,7 @@ export interface AuthUserRepository {
         status: UserStatus;
         psychologistId: string | null;
         lastLoginAt: string | null;
+        idleTimeoutMinutes?: number;
         createdAt: string;
         updatedAt: string;
     } | null>;
@@ -93,17 +95,8 @@ export const createAuthRoutes = (dependencies: AuthDependencies) => {
 
         await dependencies.userRepository.updateLastLogin(user.id);
 
-        const userDto: UserDto = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            status: user.status,
-            psychologistId: user.psychologistId,
-            lastLoginAt: new Date().toISOString(),
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        };
+        // The same shape as a renewal, so the person's own settings (inactivity limit) apply from the first moment.
+        const userDto: UserDto = { ...sanitizeUserDto(user), lastLoginAt: new Date().toISOString() };
 
         const { accessToken, expiresAt: accessExpiresAt } = dependencies.tokenService.issueAccessToken(userDto);
         const { refreshToken, expiresAt: refreshExpiresAt } = await dependencies.tokenService.issueRefreshToken(user.id);

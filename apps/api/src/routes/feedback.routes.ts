@@ -155,10 +155,13 @@ export const createFeedbackRoutes = (dependencies: FeedbackRoutesDependencies) =
             const { status, kind, assignee } = input;
             if (status !== undefined && !FEEDBACK_STATUSES.includes(status as FeedbackStatus)) return badRequest(set, 'Status tidak valid.');
             if (kind !== undefined && !FEEDBACK_KINDS.includes(kind as FeedbackKind)) return badRequest(set, 'Jenis tidak valid.');
-            if (assignee !== undefined && assignee !== '' && !feedbackHandlers().includes(String(assignee))) return badRequest(set, 'Orang itu bukan penanggung jawab laporan.');
+            const me = String(currentUser.email).toLowerCase();
+            if (assignee !== undefined && assignee !== '' && assignee !== me) return badRequest(set, 'Laporan hanya bisa diambil oleh akunmu sendiri.');
             if (status === undefined && kind === undefined && assignee === undefined) return badRequest(set, 'Tidak ada yang diubah.');
             const report = UUID.test(params.id) ? await repository.get(params.id) : null;
             if (!report) return notFound(set);
+
+            if (assignee === '' && report.assignee && report.assignee !== me && !isOwnerUser(currentUser)) return badRequest(set, 'Hanya yang mengambil laporan ini yang bisa melepasnya.');
 
             const actor = currentUser.email as string;
             const change: FeedbackChange = {};
@@ -183,7 +186,7 @@ export const createFeedbackRoutes = (dependencies: FeedbackRoutesDependencies) =
                 syncSheet();
             }
             return { status: 'success', data: await repository.get(params.id) };
-        }, { requireRole: 'admin', detail: { tags: ['Feedback'], summary: 'Change status, type or who processes a report (handlers)' } })
+        }, { requireRole: 'admin', detail: { tags: ['Feedback'], summary: 'Change status or type, take or release a report (handlers)' } })
         .post('/api/admin/feedback/:id/notes', async ({ params, body, set, currentUser }: any) => {
             if (!canHandleFeedback(currentUser)) return handlersOnly(set);
             const raw = asText(body?.body);
